@@ -1,5 +1,3 @@
-![](./images/salarixi-banner.png)
-
 # Warning
 
 **‼️ This client is still under development and may contain frequent errors and bugs. Please use with caution.**
@@ -86,6 +84,7 @@
 # Licence 
 
 MIT License - [LICENSE](./LICENSE)
+
 
 
 
