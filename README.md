@@ -5,7 +5,11 @@
 
 # About the project
 
-[<span style="margin-top:5px;">**Telegram Official**</span>](https://t.me/salarixionion)
+[Telegram Official](https://t.me/salarixionion)
+ 
+[YouTube Official](https://www.youtube.com/@salarixionion)
+
+
 
 ⭐ **Salarixi Onion** allows you to launch a specific number of bots on **Minecraft servers** and manage them in real time. The client is **very user-friendly** and **easy to use**, offering **great flexibility** and **functionality**.
 
@@ -80,5 +84,6 @@
 # Licence 
 
 MIT License - [LICENSE](./LICENSE)
+
 
 
