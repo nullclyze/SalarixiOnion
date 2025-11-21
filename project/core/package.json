@@ -1,0 +1,25 @@
+{
+  "name": "salarixionion",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "generate": "tsc -p tsconfig.json",
+    "start": "tsc -p tsconfig.json && node ./dist/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mineflayer": "^4.33.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "socks": "^2.8.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.9.0",
+    "pkg": "^5.8.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -4,7 +4,7 @@ clear
 
 echo $SEPERATOR
 
-echo "------------------ BUILDER ------------------"
+echo -ne "\n\t-----------------| Билдер Salarixi Onion |-----------------\n\n"
 
 echo $SEPERATOR
 
@@ -102,12 +102,12 @@ echo "( generation / core ) Путь к сгенерированному код�
 
 echo $SEPERATOR
 
-echo "( build / core ) Сборка исполняющегося файла (core)..."
+echo "( build / windows / core ) Сборка исполняющегося файла (core)..."
 
-pkg -t node18-win-x86_64 -o $CURRENT_DIR/dev/build/services/so-core ./dist/index.js > /dev/null
+npx pkg -t node18-win-x86_64 -o $CURRENT_DIR/dev/build/services/so-core ./dist/index.js > /dev/null
 
-echo "( build / core ) Сборка окончена"
-echo "( build / core ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-core"
+echo "( build / windows / core ) Сборка окончена"
+echo "( build / windows / core ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-core"
 
 echo $SEPERATOR
 
@@ -117,7 +117,7 @@ echo $SEPERATOR
 # echo "( compression / core ) Исполняющийся файл успешно сжат"
 # echo $SEPERATOR
 
-echo "( build / interface ) Сборка исполняющегося файла (interface)..."
+echo "( build / windows / interface ) Сборка исполняющегося файла (interface)..."
 
 cd $CURRENT_DIR/project/interface
 
@@ -125,12 +125,12 @@ npm run tauri build > /dev/null
 
 mv ./src-tauri/target/release/salarixionion $CURRENT_DIR/dev/build/services/so-interface
 
-echo "( build / interface ) Сборка окончена"
-echo "( build / interface ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-interface"
+echo "( build / windows / interface ) Сборка окончена"
+echo "( build / windows / interface ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-interface"
 
 echo $SEPERATOR
 
-echo "( build / utils ) Сборка исполняющегося файла (utils)..."
+echo "( build / windows / utils ) Сборка исполняющегося файла (utils)..."
 
 cd $CURRENT_DIR/project/utils/src
 
@@ -142,12 +142,12 @@ mkdir $CURRENT_DIR/dev/build/config
 
 cp ../config/salarixi.config.json $CURRENT_DIR/dev/build/config/salarixi.config.json
 
-echo "( build / utils ) Сборка окончена"
-echo "( build / utils ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-utils"
+echo "( build / windows / utils ) Сборка окончена"
+echo "( build / windows / utils ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/services/so-utils"
 
 echo $SEPERATOR
 
-echo "( build / cli ) Сборка исполняющегося файла (cli / runner)..."
+echo "( build / windows / cli ) Сборка исполняющегося файла (cli / runner)..."
 
 mkdir $CURRENT_DIR/dev/build/services/cli
 mkdir $CURRENT_DIR/dev/build/services/cli/tools
@@ -173,11 +173,11 @@ echo $SEPERATOR
 
 echo "( build / loader ) Создание загрузчика..."
 
-cd $CURRENT_DIR/project/start
+cd $CURRENT_DIR/project/loader
 
-dotnet publish -r win-x64 -c Release --self-contained -o build ./src/loader.cs > /dev/null
+dotnet publish -r win-x64 -c Release --self-contained -o build ./src/Program.cs > /dev/null
 
-mv ./build/loader $CURRENT_DIR/dev/build/salarixi-loader
+mv ./build/Program $CURRENT_DIR/dev/build/salarixi-loader
 
 echo "( build / loader ) Сборка окончена"
 echo "( build / loader ) Путь к исполнимому файлу: $CURRENT_DIR/dev/build/salarixi-loader"

@@ -1,5 +1,3 @@
-![](./images/salarixi-banner.png)
-
 # Warning
 
 **‼️ This client is still under development and may contain frequent errors and bugs. Please use with caution.**
@@ -11,21 +9,15 @@
  
 [YouTube Official](https://www.youtube.com/@salarixionion)
 
-
-
 ⭐ **Salarixi Onion** allows you to launch a specific number of bots on **Minecraft servers** and manage them in real time. The client is **very user-friendly** and **easy to use**, offering **great flexibility** and **functionality**.
 
-✨ The client gives you **full control** over bots, from chat messages to various cheating functions.
-
 📌 This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) library as a base.
-
-![](./images/main-page-screen.png)
 
 
 # Features
 
 - 💫 Easy to use
-- ⚡ Fast
+- ⚡ Fast and smart
 - 💎 Absolutely free
 - 💥 Beautiful design
 - ✨ Clear logic
@@ -39,9 +31,17 @@
 - 💦 Good stability
 - 🧨 Cheat functions
 - 💻 Hack functions
+- 🌏 Support for regular proxies (SOCKS5, SOCKS4, HTTP)
+- 📶 Premium proxy support
+- 🎁 Creating your own scripts
+- 💾 Support for multiple Minecraft versions
 
 
 # Gallery
+
+**Client main page**
+
+![](./images/main-page-screen.png)
 
 **Client settings page**
 
@@ -81,14 +81,3 @@
 5. Run the file **so-utils.exe**
 6. Run the file **so-core.exe**
 7. Run the file **so-interface.exe**
-
-
-# Licence 
-
-MIT License - [LICENSE](./LICENSE)
-
-
-
-
-
-

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "nodenext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    "moduleResolution": "nodenext",
+    /*"allowImportingTsExtensions": true,*/
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src/*.ts", "src/bot/*", "src/tools/*", "src/common/processor.ts"],
+  "exclude": ["node_modules"]
+}

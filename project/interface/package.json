@@ -1,0 +1,25 @@
+{
+  "name": "salarixionion",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "generate": "tsc -p tsconfig.json",
+    "build": "npm run generate && vite build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@types/cors": "^2.8.19",
+    "chart.js": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/express": "^5.0.3",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}
