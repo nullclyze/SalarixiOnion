@@ -1,15 +1,8 @@
-# Warning
-
-**‼️ This client is still under development and may contain frequent errors and bugs. Please use with caution.**
-
-
 # About the project
 
-[Telegram Official](https://t.me/salarixionion)
- 
-[YouTube Official](https://www.youtube.com/@salarixionion)
+[Telegram Official](https://t.me/salarixionion) / [YouTube Official](https://www.youtube.com/@salarixionion)
 
-⭐ **Salarixi Onion** allows you to launch a specific number of bots on **Minecraft servers** and manage them in real time. The client is **very user-friendly** and **easy to use**, offering **great flexibility** and **functionality**.
+⭐ **Salarixi Onion** allows you to launch a specific number of bots on **Minecraft servers** and manage them in real time. The client is **very user-friendly** and **easy to use**, offering **great flexibility** and **functionality**. This client also has **unique** functionality: Flight, Ghost, Spoofing, Sprinter.
 
 📌 This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) library as a base.
 
@@ -39,45 +32,35 @@
 
 # Gallery
 
-**Client main page**
+![](./images/main.png)
 
-![](./images/main-page-screen.png)
+![](./images/settings.png)
 
-**Client settings page**
+![](./images/control.png)
 
-![](./images/settings-page-screen.png)
+![](./images/control-attack.png)
 
-**Client control page**
+![](./images/graphic.png)
 
-![](./images/control-page-screen.png)
-
-**Client graphic page**
-
-![](./images/graphic-page-screen.png)
-
-**Client monitoring page**
-
-![](./images/monitoring-page-screen.png)
+![](./images/monitoring-chat.png)
 
 
 # How to install
 
-## Method 1
+## Windows
 
 1. Install the latest release of the project from **GitHub**
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
-4. Find the file there **salarixi-loader.exe**
-5. Run the loader
-6. Wait until the client is fully launched
+4. Run the file **tools.exe** and wait until it starts completely
+5. Run the main file **salarixionion-YOUR_VERSION.exe**
+6. Ready
 
-
-## Method 2
+## Linux
 
 1. Install the latest release of the project from **GitHub**
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
-4. Go to the directory **./services**
-5. Run the file **so-utils.exe**
-6. Run the file **so-core.exe**
-7. Run the file **so-interface.exe**
+4. Run the file **tools** and wait until it starts completely
+5. Grant execute permission to the file **salarixionion-YOUR_VERSION.AppImage** and run it
+6. Ready
