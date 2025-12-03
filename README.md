@@ -50,7 +50,7 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 - 💾 Support for multiple Minecraft versions
 
 
-## Gallery
+## 📷 Gallery
 
 ![](./images/main.png)
 
@@ -84,3 +84,4 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 4. Run the file **tools** and wait until it starts completely
 5. Grant execute permission to the file **salarixionion-YOUR_VERSION.AppImage** and run it
 6. Ready
+
