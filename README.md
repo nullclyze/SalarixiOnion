@@ -21,11 +21,25 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 - **Processor:** Average
 - **Dependencies:** None
 
-## 📜 Additional Information
+## 📖 Overview
 
-- **Latest Beta-Release:** [Beta-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.1-beta)
-- **Latest Expert-Release:** [Expert-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.0-expert)
-- **License:** [MIT License](./LICENSE)
+**Salarixi Onion** is a massive Minecraft botting client. It can be used for stress testing, server analysis, surveillance, bot attacks, and automated farming. The client is actively being developed, improved, and updated, constantly adding new amazing features, new schemes, new algorithms, and new capabilities.
+
+The client has several large sections, they will be presented below in the table.
+
+| Name |            Description                                |
+|------|-------------------------------------------------------|
+| Main / Главная |  Starting and stopping bots, basic settings           |
+| Settings / Настройки     |      Various bot settings       |
+| Proxy / Прокси    | Setting up a proxy for bots            |
+| Control / Управление     |  Real-time bot management           |
+| Scripting / Скриптинг     |  Writing your own scripts for bots          |
+| Monitoring / Мониторинг     |  Real-time bot monitoring           |
+| Graphic / График     |  Data in the form of graphs          |
+| Analysis / Анализ     |  It doesn't work          |
+| Spy / Шпион     |  It doesn't work          |
+| Log / Журнал     |  Event logging         |
+| About / О проекте     |  Just a section about the project         |
 
 ## 💥 Features
 
@@ -49,7 +63,6 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 - 🎁 Creating your own scripts
 - 💾 Support for multiple Minecraft versions
 
-
 ## 📷 Gallery
 
 ![](./images/main.png)
@@ -64,11 +77,11 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 
 ![](./images/monitoring-chat.png)
 
+![](./images/tab.png)
 
 ## 💾 Installation
 
 ### Windows
-
 1. Install the latest release of the project from **GitHub**
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
@@ -77,7 +90,6 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 6. Ready
 
 ### Linux
-
 1. Install the latest release of the project from **GitHub**
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
@@ -85,3 +97,8 @@ This client uses the [mineflayer](https://github.com/PrismarineJS/mineflayer) li
 5. Grant execute permission to the file **salarixionion-YOUR_VERSION.AppImage** and run it
 6. Ready
 
+## 📜 Additional Information
+
+- **Latest Beta-Release:** [Beta-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.1-beta)
+- **Latest Expert-Release:** [Expert-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.0-expert)
+- **License:** [MIT License](./LICENSE)
