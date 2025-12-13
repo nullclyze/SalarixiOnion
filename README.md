@@ -85,20 +85,21 @@ The client has several large sections, they will be presented below in the table
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
 4. Run the file **tools.exe** and wait until it starts completely
-5. Run the main file **salarixionion-YOUR_VERSION.exe**
-6. Ready
+5. Run the file **collector.exe** and wait until it starts completely
+6. Run the main file **salarixionion-YOUR_VERSION.exe**
+7. Ready
 
 ### Linux
 1. Install the latest release of the project from **GitHub**
 2. Unzip the downloaded archive
 3. Go to the unzipped folder
 4. Run the file **tools** and wait until it starts completely
-5. Grant execute permission to the file **salarixionion-YOUR_VERSION.AppImage** and run it
-6. Ready
+5. Run the file **collector** and wait until it starts completely
+6. Grant execute permission to the file **salarixionion-YOUR_VERSION.AppImage** and run it
+7. Ready
 
 ## 📜 Additional Information
 
-- **Latest Beta-Release:** [Beta-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.1-beta)
+- **Latest Beta-Release:** [Beta-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.2-beta)
 - **Latest Expert-Release:** [Expert-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.1-expert)
 - **License:** [MIT License](./LICENSE)
-
