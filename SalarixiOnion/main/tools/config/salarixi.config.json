@@ -1,0 +1,166 @@
+{
+  "address": {
+    "id": "address",
+    "value": "127.0.0.1:25565"
+  },
+  "chatFrom": {
+    "id": "chat-from",
+    "value": "@all"
+  },
+  "chatHistoryLength": {
+    "id": "chat-history-length",
+    "value": 10
+  },
+  "chatMessage": {
+    "id": "chat-message",
+    "value": ""
+  },
+  "chatSpammingMaxDelay": {
+    "id": "chat-spamming-max-delay",
+    "value": 4000
+  },
+  "chatSpammingMinDelay": {
+    "id": "chat-spamming-min-delay",
+    "value": 2000
+  },
+  "dataUpdateFrequency": {
+    "id": "data-update-frequency",
+    "value": 2000
+  },
+  "delay": {
+    "id": "delay",
+    "value": 1
+  },
+  "loginCommand": {
+    "id": "login-command",
+    "value": "/login"
+  },
+  "loginMaxDelay": {
+    "id": "login-max-delay",
+    "value": "3000"
+  },
+  "loginMinDelay": {
+    "id": "login-min-delay",
+    "value": "2000"
+  },
+  "loginTemplate": {
+    "id": "login-template",
+    "value": "@cmd @pass"
+  },
+  "nickname": {
+    "id": "nickname",
+    "value": "[#w(Y:Y)#n(2-3);#w(Y:Y)_#m;#m(7-10)]"
+  },
+  "onlyActiiveBots": {
+    "id": "only-actiive-bots",
+    "value": "false"
+  },
+  "password": {
+    "id": "password",
+    "value": "[#m(6-12);#s(8-12)]"
+  },
+  "proxyList": {
+    "id": "proxy-list",
+    "value": ""
+  },
+  "quantity": {
+    "id": "quantity",
+    "value": 250
+  },
+  "registerCommand": {
+    "id": "register-command",
+    "value": "/register"
+  },
+  "registerMaxDelay": {
+    "id": "register-max-delay",
+    "value": "5000"
+  },
+  "registerMinDelay": {
+    "id": "register-min-delay",
+    "value": "2000"
+  },
+  "registerTemplate": {
+    "id": "register-template",
+    "value": "@cmd @pass"
+  },
+  "rejoinDelay": {
+    "id": "rejoin-delay",
+    "value": 3000
+  },
+  "rejoinQuantity": {
+    "id": "rejoin-quantity",
+    "value": 6
+  },
+  "script": {
+    "id": "script",
+    "value": ""
+  },
+  "skipValidation": {
+    "id": "skip-validation",
+    "value": "false"
+  },
+  "timeout": {
+    "id": "timeout",
+    "value": 10000
+  },
+  "useAiAgent": {
+    "id": "use-ai-agent",
+    "value": false
+  },
+  "useAutoLogin": {
+    "id": "use-auto-login",
+    "value": true
+  },
+  "useAutoRegister": {
+    "id": "use-auto-register",
+    "value": true
+  },
+  "useAutoRejoin": {
+    "id": "use-auto-rejoin",
+    "value": true
+  },
+  "useDataAnalysis": {
+    "id": "use-data-analysis",
+    "value": true
+  },
+  "useErrorCorrector": {
+    "id": "use-error-corrector",
+    "value": false
+  },
+  "useExtendedLogs": {
+    "id": "use-extended-logs",
+    "value": true
+  },
+  "useKeepAlive": {
+    "id": "use-keep-alive",
+    "value": true
+  },
+  "useLogDeath": {
+    "id": "use-log-death",
+    "value": false
+  },
+  "useOptimization": {
+    "id": "use-optimization",
+    "value": true
+  },
+  "usePhysics": {
+    "id": "use-physics",
+    "value": true
+  },
+  "useProxy": {
+    "id": "use-proxy",
+    "value": false
+  },
+  "useSaveChat": {
+    "id": "use-save-chat",
+    "value": false
+  },
+  "useSavePlayers": {
+    "id": "use-save-players",
+    "value": false
+  },
+  "version": {
+    "id": "version",
+    "value": "1.21.4"
+  }
+}
