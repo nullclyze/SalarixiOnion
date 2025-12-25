@@ -1,6 +1,6 @@
-<p align="center">
-  <b>Salarixi Onion - Minecraft Botting Client </b>
-</p>
+<div align="center">
+  <h1>Salarixi Onion - Minecraft Botting Client </h1>
+</div>
 
 ## 🎯 About
 
@@ -91,5 +91,6 @@ The client has several large sections, they will be presented below in the table
 - **Latest Beta-Release:** [Beta-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.3-beta)
 - **Latest Expert-Release:** [Expert-Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.2-expert)
 - **License:** [MIT License](./LICENSE)
+
 
 
