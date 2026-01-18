@@ -68,13 +68,15 @@ The client has several large sections, they will be presented below in the table
 
 ![](./images/proxy.png)
 
-![](./images/control-chat.png)
-
-![](./images/control-flight.png)
+![](./images/control.png)
 
 ![](./images/monitoring.png)
 
-![](./images/monitoring-chat.png)
+![](./images/radar.png)
+
+![](./images/radar-route.png)
+
+![](./images/journal.png)
 
 ## 💾 Installation
 
