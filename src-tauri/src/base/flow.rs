@@ -219,7 +219,7 @@ impl FlowManager {
         local_set.spawn_local(async move {
           emit_event(EventType::Log(LogEventPayload { 
             name: "extended".to_string(), 
-            message: format!("[ debug ] Подготовка...")
+            message: format!("Подготовка...")
           }));
       
           let mut flow =  SwarmBuilder::new_without_plugins()
@@ -292,7 +292,7 @@ impl FlowManager {
 
           emit_event(EventType::Log(LogEventPayload { 
             name: "extended".to_string(), 
-            message: format!("[ debug ] Подготовка окончена")
+            message: format!("Подготовка окончена")
           }));
 
           let _ = flow.start(options.address).await;

@@ -110,7 +110,7 @@ fn get_memory_usage() -> f64 {
 async fn control(name: String, options: serde_json::Value) {
   emit_event(EventType::Log(LogEventPayload { 
     name: "extended".to_string(), 
-    message: format!("[ debug ] Управление '{}' | Опции: {}", name, options)
+    message: format!("Управление '{}' | Опции: {}", name, options)
   }));
 
   ModuleManager::control(name, options).await;
@@ -121,7 +121,7 @@ async fn control(name: String, options: serde_json::Value) {
 async fn quick_task(name: String) {
   emit_event(EventType::Log(LogEventPayload { 
     name: "extended".to_string(), 
-    message: format!("[ debug ] Быстрая задача '{}'", name)
+    message: format!("Быстрая задача '{}'", name)
   }));
 
   QuickTaskManager::execute(name).await;
