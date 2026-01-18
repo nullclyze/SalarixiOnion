@@ -96,6 +96,7 @@ The client has several large sections, they will be presented below in the table
 
 ## 📜 Additional Information
 
-- **Documentation:** [Docs](./docs/docs.md)
+- **Documentation:** [Docs](./docs/DOCS.md)
+- **FAQ:** [FAQ](./docs/FAQ.md)
 - **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.4-release)
 - **License:** [MIT License](./LICENSE)
