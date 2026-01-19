@@ -17,7 +17,6 @@ const client = {
   version: '1.0.4'
 };
 
-let initialized: boolean = false;
 let process: 'active' | 'sleep' = 'sleep';
 
 const proxyManager = new ProxyManager();
@@ -51,7 +50,7 @@ let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
 let controlContainers: Array<{ id: string; el: HTMLElement }> = [];
 
 async function startBots(): Promise<void> {
-  log('Запуск ботов на сервер...', 'log-info');
+  log('Запуск ботов на сервер...', 'info');
 
   process = 'active';
 
@@ -116,9 +115,9 @@ async function startBots(): Promise<void> {
     proxy_list: proxyList
   }}) as Array<string>;
 
-  log(String(result[1]), `log-${result[0]}`);
+  log(String(result[1]), result[0]);
 
-  log('Включение мониторинга...', 'log-system');
+  log('Включение мониторинга...', 'system');
 
   chartManager.enable();
 
@@ -127,29 +126,41 @@ async function startBots(): Promise<void> {
   monitoringManager.enable();
   monitoringManager.wait();
 
-  log('Мониторинг включён', 'log-system');
+  log('Мониторинг включён', 'system');
 }
 
 async function stopBots(): Promise<void> {
-  log('Остановка ботов...', 'log-info');
+  log('Остановка ботов...', 'info');
 
   try {
     const result = await invoke('stop_bots') as Array<string>;
 
-    log(String(result[1]), `log-${result[0]}`);
+    log(String(result[1]), result[0]);
 
-    log('Выключение мониторинга...', 'log-system');
+    log('Выключение мониторинга...', 'system');
 
     chartManager.disable();
     monitoringManager.disable();
 
-    log('Мониторинг выключен', 'log-system');
+    log('Мониторинг выключен', 'system');
   } catch (error) {
-    log(`Ошибка (stop-bots-process): ${error}`, 'log-error');
+    log(`Ошибка (stop-bots-process): ${error}`, 'error');
   }
 }
 
-class FunctionManager {
+function changeElementsDisplay(condition: boolean, view: string, show: string[] = [], hide: string[] = []): void {
+  hide.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.style.display = condition ? 'none' : view;
+  });
+  
+  show.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.style.display = condition ? view : 'none';
+  });
+}
+
+class ElementManager {
   private latestControlContainer: HTMLElement | null = null;
 
   public async init(): Promise<void> {
@@ -322,6 +333,131 @@ class FunctionManager {
       (document.getElementById('bots-count') as HTMLInputElement).value = '';
       (document.getElementById('join-delay') as HTMLInputElement).value = '';
     });
+
+    document.getElementById('nickname-type-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+      if (this.value === 'custom') {
+        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'flex';
+      } else {
+        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'none';
+      }
+    });
+
+    document.getElementById('password-type-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+      if (this.value === 'custom') {
+        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'flex';
+      } else {
+        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'none';
+      }
+    });
+
+    document.getElementById('chat-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
+      const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
+            
+      const chatDefaultBtnsContainer = document.getElementById('chat-default-btns-container') as HTMLElement;
+      const chatSpammingBtnsContainer = document.getElementById('chat-spamming-btns-container') as HTMLElement;
+
+      if (this.value === 'Spamming') {
+        chatSpammingChbxContainer.style.display = 'flex';
+        chatSpammingInputContainer.style.display = 'flex';
+        chatSpammingBtnsContainer.style.display = 'flex';
+
+        chatDefaultBtnsContainer.style.display = 'none';
+      } else {
+        chatDefaultBtnsContainer.style.display = 'flex';
+
+        chatSpammingChbxContainer.style.display = 'none';
+        chatSpammingInputContainer.style.display = 'none';
+        chatSpammingBtnsContainer.style.display = 'none';
+      }
+    });
+
+    document.getElementById('select-inventory-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
+
+      const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
+      const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
+
+      if (this.value === 'basic') {
+        basicBtnContainer.style.display = 'flex';
+
+        swapInputContainer.style.display = 'none';
+        swapBtnContainer.style.display = 'none';
+      } else if (this.value === 'swap') {
+        swapInputContainer.style.display = 'flex';
+        swapBtnContainer.style.display = 'flex';
+
+        basicBtnContainer.style.display = 'none';
+      } 
+    });
+
+    document.getElementById('select-movement-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
+      const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
+      const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
+
+      if (this.value === 'default') {
+        selectMovementDirectionContainer.style.display = 'flex';
+        movementPathfinderInputContainer.style.display = 'none';
+        movementImpulsivenessContainer.style.display = 'flex';
+      } else {
+        selectMovementDirectionContainer.style.display = 'none';
+        movementPathfinderInputContainer.style.display = 'flex';
+        movementImpulsivenessContainer.style.display = 'none';
+      }
+    });
+
+    document.getElementById('select-flight-settings')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
+      const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
+
+      if (this.value === 'adaptive') {
+        manualSettingsContainer.style.display = 'none';
+        selectAntiCheatContainer.style.display = 'grid';
+      } else {
+        manualSettingsContainer.style.display = 'flex';
+        selectAntiCheatContainer.style.display = 'none';
+      }
+    });
+
+    document.getElementById('select-bow-aim-target')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
+
+      if (this.value === 'custom-goal') {
+        customGoalInputContainer.style.display = 'flex';
+      } else {
+        customGoalInputContainer.style.display = 'none';
+      }
+    });
+
+    document.getElementById('miner-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const selectBlockContainer = document.getElementById('miner-select-block-container') as HTMLElement;
+      const manualSettingsContainer = document.getElementById('miner-manual-options-container') as HTMLElement;
+
+      if (this.value === 'manual') {
+        manualSettingsContainer.style.display = 'flex';
+        selectBlockContainer.style.display = 'none';
+      } else {
+        manualSettingsContainer.style.display = 'none';
+        selectBlockContainer.style.display = 'grid';
+      }
+    });
+
+    (document.getElementById('use-auto-register') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-register-input-container']); });
+    (document.getElementById('use-auto-login') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-login-input-container']); });
+    (document.getElementById('use-auto-rejoin') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']); });
+
+    changeElementsDisplay((document.getElementById('use-auto-register') as HTMLInputElement).checked, 'flex', ['auto-register-input-container']);
+    changeElementsDisplay((document.getElementById('use-auto-login') as HTMLInputElement).checked, 'flex', ['auto-login-input-container']);
+    changeElementsDisplay((document.getElementById('use-auto-rejoin') as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']);
+
+    document.getElementById('show-system-log')?.addEventListener('change', function (this: HTMLInputElement) { 
+      changeLogsVisibility('system', this.checked);
+    });
+
+    document.getElementById('show-extended-log')?.addEventListener('change', function (this: HTMLInputElement) {
+      changeLogsVisibility('extended', this.checked);
+    });
   }
 
   private showGlobalContainer(id: string): void {
@@ -363,194 +499,39 @@ class FunctionManager {
         }
       });
     } catch (error) {
-      log(`Ошибка управления (${name}): ${error}`, 'log-error');
+      log(`Ошибка управления (${name}): ${error}`, 'error');
     }
   }
 }
 
-async function initSocialButtons(): Promise<void> {
-  (document.getElementById('telegram') as HTMLElement).addEventListener('click', async () => await invoke('open_url', { url: 'https://t.me/salarixionion' })); 
-  (document.getElementById('github') as HTMLElement).addEventListener('click', async () => await invoke('open_url', { url: 'https://github.com/nullclyze/SalarixiOnion' }));
-  (document.getElementById('youtube') as HTMLElement).addEventListener('click', async () => await invoke('open_url', { url: 'https://www.youtube.com/@salarixionion' }));
-}
+function addOpeningUrlTo(id: string, event: string, url: string): void {
+  const el = document.getElementById(id);
 
-function updateDisplayOfElements(condition: boolean, view: string, show: string[] = [], hide: string[] = []): void {
-  hide.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) element.style.display = condition ? 'none' : view;
-  });
-  
-  show.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) element.style.display = condition ? view : 'none';
-  });
-}
-
-async function initCheckboxes(): Promise<void> {
-  try {
-    const update = () => {
-      updateDisplayOfElements((document.getElementById('use-auto-register') as HTMLInputElement).checked, 'flex', ['auto-register-input-container']);
-      updateDisplayOfElements((document.getElementById('use-auto-login') as HTMLInputElement).checked, 'flex', ['auto-login-input-container']);
-      updateDisplayOfElements((document.getElementById('use-auto-rejoin') as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']);
-    }
-
-    (document.getElementById('use-auto-register') as HTMLInputElement).addEventListener('change', function () { updateDisplayOfElements((this as HTMLInputElement).checked, 'flex', ['auto-register-input-container']); });
-    (document.getElementById('use-auto-login') as HTMLInputElement).addEventListener('change', function () { updateDisplayOfElements((this as HTMLInputElement).checked, 'flex', ['auto-login-input-container']); });
-    (document.getElementById('use-auto-rejoin') as HTMLInputElement).addEventListener('change', function () { updateDisplayOfElements((this as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']); });
-
-    (document.getElementById('show-system-log') as HTMLInputElement).addEventListener('change', function () { 
-      changeLogsVisibility('system', this.checked);
-    });
-
-    (document.getElementById('show-extended-log') as HTMLInputElement).addEventListener('change', function () {
-      changeLogsVisibility('extended', this.checked);
-    });
-
-    update();
-  } catch (error) {
-    log(`Ошибка операции initCheckboxes: ${error}`, 'log-error');
-  }
-}
-
-async function initSelects(): Promise<void> {
-  try {
-    const nicknameTypeSelect = document.getElementById('nickname-type-select') as HTMLSelectElement;
-    const passwordTypeSelect = document.getElementById('password-type-select') as HTMLSelectElement;
-    const chatModeSelect = document.getElementById('chat-mode') as HTMLSelectElement;
-    const inventoryModeSelect = document.getElementById('select-inventory-mode') as HTMLSelectElement;
-    const movementModeSelect = document.getElementById('select-movement-mode') as HTMLSelectElement;
-    const flightSettings = document.getElementById('select-flight-settings') as HTMLSelectElement;
-    const bowAimTarget = document.getElementById('select-bow-aim-target') as HTMLSelectElement;
-    const minerModeSelect = document.getElementById('miner-mode-select') as HTMLSelectElement;
-
-    nicknameTypeSelect.addEventListener('change', () => {
-      if (nicknameTypeSelect.value === 'custom') {
-        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'flex';
-      } else {
-        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'none';
+  if (el) {
+    el.addEventListener(event, async () => {
+      try {
+        await invoke('open_url', { url: url });
+      } catch (error) {
+        log(`Ошибка открытия URL: ${error}`, 'error');
       }
     });
-
-    passwordTypeSelect.addEventListener('change', () => {
-      if (passwordTypeSelect.value === 'custom') {
-        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'flex';
-      } else {
-        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'none';
-      }
-    });
-
-    chatModeSelect.addEventListener('change', () => {
-      const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
-      const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
-            
-      const chatDefaultBtnsContainer = document.getElementById('chat-default-btns-container') as HTMLElement;
-      const chatSpammingBtnsContainer = document.getElementById('chat-spamming-btns-container') as HTMLElement;
-
-      if (chatModeSelect.value === 'Spamming') {
-        chatSpammingChbxContainer.style.display = 'flex';
-        chatSpammingInputContainer.style.display = 'flex';
-        chatSpammingBtnsContainer.style.display = 'flex';
-
-        chatDefaultBtnsContainer.style.display = 'none';
-      } else {
-        chatDefaultBtnsContainer.style.display = 'flex';
-
-        chatSpammingChbxContainer.style.display = 'none';
-        chatSpammingInputContainer.style.display = 'none';
-        chatSpammingBtnsContainer.style.display = 'none';
-      }
-    });
-
-    inventoryModeSelect.addEventListener('change', () => {
-      const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
-
-      const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
-      const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
-
-      if (inventoryModeSelect.value === 'basic') {
-        basicBtnContainer.style.display = 'flex';
-
-        swapInputContainer.style.display = 'none';
-        swapBtnContainer.style.display = 'none';
-      } else if (inventoryModeSelect.value === 'swap') {
-        swapInputContainer.style.display = 'flex';
-        swapBtnContainer.style.display = 'flex';
-
-        basicBtnContainer.style.display = 'none';
-      } 
-    });
-
-    movementModeSelect.addEventListener('change', () => {
-      const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
-      const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
-      const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
-
-      if (movementModeSelect.value === 'default') {
-        selectMovementDirectionContainer.style.display = 'flex';
-        movementPathfinderInputContainer.style.display = 'none';
-        movementImpulsivenessContainer.style.display = 'flex';
-      } else {
-        selectMovementDirectionContainer.style.display = 'none';
-        movementPathfinderInputContainer.style.display = 'flex';
-        movementImpulsivenessContainer.style.display = 'none';
-      }
-    });
-
-    flightSettings.addEventListener('change', () => {
-      const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
-      const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
-
-      if (flightSettings.value === 'adaptive') {
-        manualSettingsContainer.style.display = 'none';
-        selectAntiCheatContainer.style.display = 'grid';
-      } else {
-        manualSettingsContainer.style.display = 'flex';
-        selectAntiCheatContainer.style.display = 'none';
-      }
-    });
-
-    bowAimTarget.addEventListener('change', () => {
-      const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
-
-      if (bowAimTarget.value === 'custom-goal') {
-        customGoalInputContainer.style.display = 'flex';
-      } else {
-        customGoalInputContainer.style.display = 'none';
-      }
-    });
-
-    minerModeSelect.addEventListener('change', () => {
-      const selectBlockContainer = document.getElementById('miner-select-block-container') as HTMLElement;
-      const manualSettingsContainer = document.getElementById('miner-manual-options-container') as HTMLElement;
-
-      if (minerModeSelect.value === 'manual') {
-        manualSettingsContainer.style.display = 'flex';
-        selectBlockContainer.style.display = 'none';
-      } else {
-        manualSettingsContainer.style.display = 'none';
-        selectBlockContainer.style.display = 'grid';
-      }
-    });
-  } catch (error) {
-    log(`Ошибка операции initSelects: ${error}`, 'log-error');
   }
 }
 
 async function checkUpdate(): Promise<void> {
   try {
-    const closeNoticeBtn = document.getElementById('close-notice-btn');
-
-    closeNoticeBtn?.addEventListener('click', () => {
+    document.getElementById('close-notice-btn')?.addEventListener('click', () => {
       const notice = document.getElementById('notice');
-      if (!notice) return;
-      notice.style.display = 'none';
+
+      if (notice) {
+        notice.style.display = 'none';
+      }
     });
 
     const notice = document.getElementById('notice') as HTMLElement;
     const newVersion = document.getElementById('new-client-version') as HTMLElement;
     const newTag = document.getElementById('new-client-tag') as HTMLElement;
     const newReleaseDate = document.getElementById('new-client-release-date') as HTMLElement;
-    const openClientRelease = document.getElementById('open-client-release') as HTMLElement;
 
     const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.version.json', { method: 'GET' });
 
@@ -565,24 +546,24 @@ async function checkUpdate(): Promise<void> {
       newTag.innerText = tag;
       newReleaseDate.innerText = data.releaseDate;
       
-      openClientRelease.addEventListener('click', async () => await invoke('open_url', { url: `https://github.com/nullclyze/SalarixiOnion/releases/tag/${tag}` }));
+      addOpeningUrlTo('open-client-release', 'click', `https://github.com/nullclyze/SalarixiOnion/releases/tag/${tag}`); 
       
       setTimeout(() => {
         notice.style.display = 'flex';
       }, 4000);
     }
   } catch (error) {
-    log(`Ошибка проверки обновлений: ${error}`, 'log-error');
+    log(`Ошибка проверки обновлений: ${error}`, 'error');
   }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  log('Клиент запущен', 'log-info');
+  log('Клиент запущен', 'info');
 
   try {
-    log('Инициализация...', 'log-extended');
+    log('Инициализация...', 'extended');
 
-    const functionManager = new FunctionManager();
+    const elementManager = new ElementManager();
 
     await listen('log', (event) => {
       try {
@@ -592,7 +573,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         log(message, `log-${name}`);
       } catch (error) {
-        log(`Ошибка принятие log-события: ${error}`, 'log-error');
+        log(`Ошибка принятие log-события: ${error}`, 'error');
       }
     });
 
@@ -604,24 +585,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
     document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
 
+    addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
+    addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
+    addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
+
     initConfig();
     loadConfig();
-
-    await initSocialButtons();
 
     proxyManager.init();
     chartManager.init();
     radarManager.init();
 
-    await functionManager.init();
+    await elementManager.init();
     await monitoringManager.init();
-    
-    await initCheckboxes();
-    await initSelects();
 
-    initialized = true;
-
-    log('Инициализация прошла успешно', 'log-extended');
+    log('Инициализация прошла успешно', 'extended');
 
     const loadingContainer = document.getElementById('loading-container');
 
@@ -636,6 +614,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await checkUpdate();
   } catch (error) {
-    log(`Ошибка инициализации: ${error}`, 'log-error');
+    log(`Ошибка инициализации: ${error}`, 'error');
   }
 });

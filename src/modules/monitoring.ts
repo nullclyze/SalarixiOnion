@@ -223,7 +223,7 @@ export class MonitoringManager {
         }
       }, 1800);
     } catch (error) {
-      log(`Ошибка инициализации мониторинга: ${error}`, 'log-error');
+      log(`Ошибка инициализации мониторинга: ${error}`, 'error');
     }
   }
 
@@ -266,9 +266,9 @@ export class MonitoringManager {
           nickname: nickname
         }) as Array<string>;
 
-        log(result[1], `log-${result[0]}`);
+        log(result[1], result[0]);
       } catch (error) {
-        log(`Ошибка отключения бота ${nickname}: ${error}`, 'log-error');
+        log(`Ошибка отключения бота ${nickname}: ${error}`, 'error');
       }
     });
 
@@ -293,7 +293,7 @@ export class MonitoringManager {
 
         history.forEach(m => this.filterMessage(type.value, m.textContent || '') ? content?.appendChild(m) : null);
       } catch (error) {
-        log(`Ошибка фильтровки чата: ${error}`, 'log-error');
+        log(`Ошибка фильтровки чата: ${error}`, 'error');
       }
     });
 
@@ -315,7 +315,7 @@ export class MonitoringManager {
         message.value = '';
       }
 
-      log(result[1], `log-${result[0]}`);
+      log(result[1], `${result[0]}`);
     }
 
     this.addListener(`chat-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg() : null);

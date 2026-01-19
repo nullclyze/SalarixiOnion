@@ -201,7 +201,7 @@ UUID: ${uuid}
 
           await navigator.clipboard.writeText(text);
         } catch (error) {
-          log(`Ошибка копирования radar-данных: ${error}`, 'log-error');
+          log(`Ошибка копирования radar-данных: ${error}`, 'error');
         }
       });
 
@@ -210,7 +210,7 @@ UUID: ${uuid}
       this.createTargetChart(nickname);
       this.setTargetUpdateInterval(nickname, this.updateFrequency);
     } catch (error) {
-      log(`Ошибка инициализации radar-цели: ${error}`, 'log-error');
+      log(`Ошибка инициализации radar-цели: ${error}`, 'error');
     }
   }
 
@@ -277,7 +277,7 @@ UUID: ${uuid}
             }
           }
         } catch (error) {
-          log(`Ошибка обновления radar-цели ${nickname}: ${error}`, 'log-error');
+          log(`Ошибка обновления radar-цели ${nickname}: ${error}`, 'error');
         }
       }, frequency);
     }

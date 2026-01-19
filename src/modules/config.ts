@@ -40,7 +40,7 @@ export function initConfig(): void {
 }
 
 export function loadConfig(): void {
-  log('Загрузка конфига...', 'log-system');
+  log('Загрузка конфига...', 'system');
 
   try {
     let config = null;
@@ -57,7 +57,7 @@ export function loadConfig(): void {
     }
 
     if (!config) {
-      log('Ошибка загрузки конфига: Файл конфигурации отсутствует или повреждён', 'log-error');
+      log('Ошибка загрузки конфига: Файл конфигурации отсутствует или повреждён', 'error');
       return;
     }
 
@@ -79,8 +79,8 @@ export function loadConfig(): void {
       }
     }
 
-    log('Конфиг успешно загружен', 'log-system');
+    log('Конфиг успешно загружен', 'system');
   } catch (error) {
-    log(`Ошибка загрузки конфига: ${error}`, 'log-error');
+    log(`Ошибка загрузки конфига: ${error}`, 'error');
   }
 }

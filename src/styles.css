@@ -1077,11 +1077,11 @@ p {
   text-rendering: optimizeSpeed;
 }
 
-.log-info { color: #cecfcf; }
-.log-warning { color: #f38c2f; }
-.log-error { color: #ff6b6b; }
-.log-system { color: #919191; }
-.log-extended { color: #10b60a; }
+.log-line-content.info { color: #cecfcf; }
+.log-line-content.warning { color: #f38c2f; }
+.log-line-content.error { color: #ff6b6b; }
+.log-line-content.system { color: #919191; }
+.log-line-content.extended { color: #10b60a; }
 
 .log-options-wrap {
   display: flex; 

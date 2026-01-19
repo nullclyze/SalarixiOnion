@@ -25,7 +25,7 @@ export class ChartManager {
 
       this.statusText = document.getElementById('graphic-status-text');
     } catch (error) {
-      log(`Ошибка инициализации ChartManager: ${error}`, 'log-error');
+      log(`Ошибка инициализации ChartManager: ${error}`, 'error');
     }
   }
 
@@ -51,7 +51,7 @@ export class ChartManager {
           const data = await invoke('get_active_bots_count') as number;
           this.addGraphicDataActiveBots(data || 0);
         } catch (error) {
-          log(`Ошибка ChartManager (active-bots-graphic): ${error}`, 'log-error');
+          log(`Ошибка ChartManager (active-bots-graphic): ${error}`, 'error');
         }
       }, 1800);
 
@@ -65,11 +65,11 @@ export class ChartManager {
           const data = await invoke('get_memory_usage') as number;
           this.addGraphicDataMemoryUsage(parseFloat(data.toFixed(3)) || 0);
         } catch (error) {
-          log(`Ошибка ChartManager (memory-usage-graphic): ${error}`, 'log-error');
+          log(`Ошибка ChartManager (memory-usage-graphic): ${error}`, 'error');
         }
       }, 1800);
     } catch (error) {
-      log(`Ошибка ChartManager: ${error}`, 'log-error');
+      log(`Ошибка ChartManager: ${error}`, 'error');
     }
   }
 

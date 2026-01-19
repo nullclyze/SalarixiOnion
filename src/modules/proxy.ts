@@ -94,13 +94,13 @@ export class ProxyManager {
         this.proxyFinderStatus!.style.color = '#cc1d1dff';
         this.proxyFinderStatus!.innerText = 'Ошибка поиска';
 
-        log(`Ошибка поиска прокси`, 'log-error');
+        log(`Ошибка поиска прокси`, 'error');
       }
     } catch (error) {
       this.proxyFinderStatus!.style.color = '#cc1d1dff';
       this.proxyFinderStatus!.innerText = 'Ошибка поиска';
 
-      log(`Ошибка поиска прокси: ${error}`, 'log-error');
+      log(`Ошибка поиска прокси: ${error}`, 'error');
     } finally {
       this.updateCount();
       setTimeout(() => {

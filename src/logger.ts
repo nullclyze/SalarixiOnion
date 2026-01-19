@@ -32,11 +32,11 @@ export function log(text: string, type: string): void {
 
   line.className = 'log-line';
 
-  if (type === 'log-system') {
+  if (type === 'system') {
     line.className += ' log-line-system';
   }
 
-  if (type === 'log-extended') {
+  if (type === 'extended') {
     line.className += ' log-line-extended';
     text = `[ debug ] ${text}`;
   }
