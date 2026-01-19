@@ -1,4 +1,13 @@
-# ✨ Salarixi Onion - Minecraft Botting Client
+<div align="center">
+  <img src="./src-tauri/icons/icon.png" width="200px;">
+
+  <b></b>
+  
+  <b>
+    Salarixi Onion<br>
+    The best client for Minecraft botting
+  </b>
+</div>
 
 ## 🎯 About
 
