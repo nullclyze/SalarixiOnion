@@ -46,14 +46,14 @@ const pressedKeys: { [x: string]: boolean } = {
   z: false
 };
 
-const plugins: { [x: string]: { enable: boolean, settings: any } } = {
+const plugins: { [x: string]: { enable: boolean, date: string } } = {
   'auto-armor': {
     enable: false,
-    settings: {}
+    date: '21.01.2026'
   },
   'auto-totem': {
     enable: false,
-    settings: {}
+    date: '21.01.2026'
   }
 };
 
@@ -222,17 +222,19 @@ class ElementManager {
           status.innerText = 'Включен';
 
           button.setAttribute('state', 'false');
-          button.innerText = 'Выключить';
+          button.style.color = '#4ed618';
+          button.innerText = 'Включен';
         } else {
           status.innerText = 'Выключен';
 
           button.setAttribute('state', 'true');
-          button.innerText = 'Включить';
+          button.style.color = '#d61818';
+          button.innerText = 'Выключен';
         }
       }
     }));  
 
-    document.querySelectorAll('[plugin-open-settings="true"]').forEach(e => e.addEventListener('click', () => {
+    document.querySelectorAll('[plugin-open-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
 
       if (path) {
@@ -241,7 +243,7 @@ class ElementManager {
       }
     })); 
 
-    document.querySelectorAll('[plugin-close-settings="true"]').forEach(e => e.addEventListener('click', () => {
+    document.querySelectorAll('[plugin-close-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
 
       if (path) {
@@ -249,6 +251,8 @@ class ElementManager {
         container.style.display = 'none';
       }
     })); 
+
+    await this.initPluginDescriptions();
 
     document.querySelectorAll('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
       let state: boolean | string = false;
@@ -513,6 +517,71 @@ class ElementManager {
     document.getElementById('show-extended-log')?.addEventListener('change', function (this: HTMLInputElement) {
       changeLogsVisibility('extended', this.checked);
     });
+  }
+
+  private async initPluginDescriptions(): Promise<void> {
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
+
+      if (response.ok) {
+        const data = await response.json();
+
+        const list = data['list'];
+
+        for (const plugin of list) {
+          const name = plugin['name'];
+          const description = plugin['description'];
+          const latestUpdate = plugin['latest-update'];
+
+          if (plugins[name]?.date) {
+            if (latestUpdate != plugins[name].date) {
+              document.getElementById(`${name}-plugin`)?.classList.add('deprecated');
+              
+              const tag = document.createElement('span');
+              tag.className = 'tag';
+              tag.innerText = 'Deprecated';
+
+              document.getElementById(`${name}-name`)?.appendChild(tag);
+            }
+
+            const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
+            const pluginLatestUpdateContainer = document.getElementById(`${name}-latest-update`) as HTMLElement;
+
+            for (const p of description) {
+              const el = document.createElement('p');
+              el.innerText = p;
+
+              pluginDescriptionContainer.appendChild(el);
+            }
+
+            pluginLatestUpdateContainer.innerText = latestUpdate;
+          } else {
+            const pluginCard = document.createElement('div');
+            pluginCard.className = 'plugin-card';
+            pluginCard.classList.add('unavailable');
+
+            pluginCard.innerHTML = `
+              <div class="head">
+                <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+                </svg>
+
+                <div class="text">
+                  <div class="name">${plugin['header']} <span class="tag">Unavailable</span></div>
+                  <div class="meta">Статус: <span class="status">Недоступен</span></div>
+                </div>
+              </div>
+            `;
+
+            log(`${name}, ${description}`, 'system');
+
+            document.getElementById('plugin-list')?.appendChild(pluginCard);
+          }
+        }
+      }
+    } catch (error) {
+      log(`Ошибка initPluginDescriptions: ${error}`, 'error');
+    }
   }
 
   private showGlobalContainer(id: string): void {
