@@ -1,8 +1,6 @@
 use azalea::prelude::*;
 use azalea::Vec3;
 use azalea::core::position::BlockPos; 
-use azalea::entity::Physics;
-use azalea::block::BlockState;
 use azalea::protocol::common::movements::MoveFlags;
 use azalea::protocol::packets::game::ServerboundMovePlayerPos;
 use serde::{Serialize, Deserialize};
@@ -10,6 +8,7 @@ use std::time::{Duration, Instant};
 
 use crate::TASKS;
 use crate::tools::*;
+use crate::common::{get_block_state, get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,24 +24,13 @@ pub struct AntiFallOptions {
 }
 
 impl AntiFallModule {
-  fn get_block_state(bot: &Client, block_pos: BlockPos) -> Option<BlockState> {
-    let world_clone = bot.world().clone();
-    let world = world_clone.write();
-
-    if let Some(state) = world.get_block_state(block_pos) {
-      return Some(state);
-    }
-
-    None
-  }
-
   fn exist_blocks_below(bot: &Client, distance_to_ground: i32) -> bool {
     let pos = bot.position();
 
     for y in 0..=distance_to_ground {
       let block_pos = BlockPos::new(pos.x.floor() as i32, (pos.y.floor() as i32) - y, pos.z.floor() as i32);
 
-      if let Some(state) = Self::get_block_state(bot, block_pos) {
+      if let Some(state) = get_block_state(bot, block_pos) {
         if !state.is_air() {
           return true;
         }
@@ -52,21 +40,9 @@ impl AntiFallModule {
     false
   }
 
-  fn get_physics(bot: &Client) -> Physics {
-    let mut ecs = bot.ecs.lock(); 
-    ecs.get_mut::<Physics>(bot.entity).unwrap().clone()
-  }
-
-  fn set_velocity_y(bot: &Client, velocity_y: f64) {
-    let mut ecs = bot.ecs.lock(); 
-    let mut physics = ecs.get_mut::<Physics>(bot.entity).unwrap();
-           
-    physics.velocity.y = velocity_y;
-  }
-
   async fn hovering_anti_fall(bot: &Client, options: AntiFallOptions) {
     loop {
-      let velocity_y = Self::get_physics(bot).velocity.y;
+      let velocity_y = get_bot_physics(bot).velocity.y;
 
       if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
         if Self::exist_blocks_below(bot, options.distance_to_ground.unwrap_or(4)) {
@@ -77,9 +53,12 @@ impl AntiFallModule {
               break;
             }
 
-            Self::set_velocity_y(bot, 0.0);
+            set_bot_velocity_y(bot, 0.001);
+            set_bot_on_ground(bot, true);
 
             bot.wait_ticks(1).await;
+
+            set_bot_on_ground(bot, false);
           }
         }
       }
@@ -90,14 +69,14 @@ impl AntiFallModule {
 
   async fn teleport_anti_fall(bot: &Client, options: AntiFallOptions) {
     loop {
-      let velocity_y = Self::get_physics(bot).velocity.y;
+      let velocity_y = get_bot_physics(bot).velocity.y;
 
       if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
         if Self::exist_blocks_below(bot, options.distance_to_ground.unwrap_or(4)) {
           let pos = bot.position();
           let fake_pos = Vec3::new(pos.x, pos.y + randfloat(0.015, 0.022), pos.z);
 
-          let physics = Self::get_physics(bot);
+          let physics = get_bot_physics(bot);
 
           let packet = ServerboundMovePlayerPos {
             pos: fake_pos,

@@ -1,7 +1,6 @@
 use azalea::prelude::*;
 use azalea::Vec3;
 use azalea::core::position::BlockPos; 
-use azalea::entity::Physics;
 use azalea::protocol::common::movements::MoveFlags;
 use azalea::protocol::packets::game::ServerboundMovePlayerPos;
 use serde::{Serialize, Deserialize};
@@ -10,6 +9,7 @@ use tokio::time::sleep;
 
 use crate::TASKS;
 use crate::tools::*;
+use crate::common::{get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,32 +88,13 @@ impl FlightModule {
     config
   }
 
-  fn get_physics(bot: &Client) -> Physics {
-    let mut ecs = bot.ecs.lock(); 
-    ecs.get_mut::<Physics>(bot.entity).unwrap().clone()
-  }
-
-  fn set_velocity_y(bot: &Client, velocity_y: f64) {
-    let mut ecs = bot.ecs.lock(); 
-    let mut physics = ecs.get_mut::<Physics>(bot.entity).unwrap();
-           
-    physics.velocity.y = velocity_y;
-  }
-
-  fn set_on_ground(bot: &Client, on_ground: bool) {
-    let mut ecs = bot.ecs.lock(); 
-    let mut physics = ecs.get_mut::<Physics>(bot.entity).unwrap();
-           
-    physics.set_on_ground(on_ground);
-  }
-
   async fn hover(bot: &Client, time: Instant) {
     loop {
       if Instant::now() >= time {
         break;
       }
 
-      Self::set_velocity_y(bot, 0.0);
+      set_bot_velocity_y(bot, 0.0);
 
       bot.wait_ticks(1).await;
     }
@@ -135,22 +116,22 @@ impl FlightModule {
 
     loop {
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, true);
+        set_bot_on_ground(bot, true);
       }
 
       sleep(Duration::from_millis(randuint(50, 80))).await;
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          Self::set_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
+          set_bot_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
           bot.wait_ticks(1).await;
         }
       } else {
-        Self::set_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
+        set_bot_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
       }
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, false);
+        set_bot_on_ground(bot, false);
       }
 
       bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
@@ -158,7 +139,7 @@ impl FlightModule {
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, false);
+        set_bot_on_ground(bot, false);
       }
     }
   }
@@ -183,7 +164,7 @@ impl FlightModule {
       counter += 1;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, true);
+        set_bot_on_ground(bot, true);
       }
 
       if counter == 2 {
@@ -194,7 +175,7 @@ impl FlightModule {
       sleep(Duration::from_millis(randuint(50, 80))).await;
 
       let pos = bot.position();
-      let physics = Self::get_physics(bot);
+      let physics = get_bot_physics(bot);
 
       let packet = ServerboundMovePlayerPos {
         pos: Vec3::new(pos.x, pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8), pos.z),
@@ -218,7 +199,7 @@ impl FlightModule {
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, false);
+        set_bot_on_ground(bot, false);
       }
     }
   }
@@ -241,11 +222,11 @@ impl FlightModule {
       sleep(Duration::from_millis(randuint(50, 100))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, true);
+        set_bot_on_ground(bot, true);
       }
 
       let pos = bot.position();
-      let physics = Self::get_physics(bot);
+      let physics = get_bot_physics(bot);
 
       let packet = ServerboundMovePlayerPos {
         pos: Vec3::new(pos.x, pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8), pos.z),
@@ -269,7 +250,7 @@ impl FlightModule {
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, false);
+        set_bot_on_ground(bot, false);
       }
     }
   }
@@ -292,7 +273,7 @@ impl FlightModule {
       sleep(Duration::from_millis(randuint(100, 200))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, true);
+        set_bot_on_ground(bot, true);
       }
 
       let pos = bot.position();
@@ -315,11 +296,11 @@ impl FlightModule {
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          Self::set_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
+          set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
           bot.wait_ticks(1).await;
         }
       } else {
-        Self::set_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
+        set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
       }
 
       bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
@@ -327,7 +308,7 @@ impl FlightModule {
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(600, 800))).await;
 
       if config.use_ground_spoof {
-        Self::set_on_ground(bot, false);
+        set_bot_on_ground(bot, false);
       }
     }
   }

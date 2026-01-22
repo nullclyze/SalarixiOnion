@@ -8,6 +8,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::TASKS;
 use crate::tools::*;
+use crate::common::convert_inventory_slot_to_hotbar_slot;
 
 
 #[derive(Debug)]
@@ -97,22 +98,7 @@ impl KillauraModule {
 
     if let Some(slot) = best_weapon.slot {
       if bot.selected_hotbar_slot() != slot {
-        let mut hotbar_slot = None;
-
-        match slot {
-          36 => { hotbar_slot = Some(0); },
-          37 => { hotbar_slot = Some(1); },
-          38 => { hotbar_slot = Some(2); },
-          39 => { hotbar_slot = Some(3); },
-          40 => { hotbar_slot = Some(4); },
-          41 => { hotbar_slot = Some(5); },
-          42 => { hotbar_slot = Some(6); },
-          43 => { hotbar_slot = Some(7); },
-          44 => { hotbar_slot = Some(8); },
-          _ => {}
-        }
-
-        if let Some(s) = hotbar_slot {
+        if let Some(s) = convert_inventory_slot_to_hotbar_slot(slot as u16) {
           bot.set_selected_hotbar_slot(s);
         }
       }
