@@ -13,6 +13,8 @@ pub struct BotState {
   pub version: String,
   pub password: String,
   pub proxy: String,
+  pub health: u32,
+  pub satiety: u32,
   pub registered: bool,
   pub captcha_url: Option<String>
 }
@@ -25,6 +27,8 @@ impl BotState {
       version: version,
       password: password,
       proxy: "-".to_string(),
+      health: 0,
+      satiety: 0,
       registered: false,
       captcha_url: None
     }
@@ -40,6 +44,14 @@ impl BotState {
 
   pub fn set_proxy(&mut self, proxy: &str) {
     self.proxy = proxy.to_string();
+  }
+
+  pub fn set_health(&mut self, health: &u32) {
+    self.health = *health;
+  }
+
+  pub fn set_satiety(&mut self, satiety: &u32) {
+    self.satiety = *satiety;
   }
 
   pub fn set_registered(&mut self, registered: bool) {
@@ -82,6 +94,8 @@ impl BotStateManager {
         "status" => state.set_status(&value),
         "password" => state.set_password(&value),
         "proxy" => state.set_proxy(&value),
+        "health" => state.set_health(&value.parse().unwrap()),
+        "satiety" => state.set_satiety(&value.parse().unwrap()),
         "registered" => state.set_registered(value.parse().unwrap()),
         "captcha_url" => state.set_captcha_url(value.parse().unwrap()),
         _ => {}
