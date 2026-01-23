@@ -46,11 +46,11 @@ The client has several large sections, they will be presented below in the table
 | Settings / Настройки     |      Various bot settings       |
 | Proxy / Прокси    | Setting up a proxy for bots            |
 | Control / Управление     |  Real-time bot management           |
-| Scripting / Скриптинг     |  It doesn't work          |
+| Scripting / Скриптинг     |  Temporarily unavailable          |
 | Monitoring / Мониторинг     |  Real-time bot monitoring           |
 | Graphic / График     |  Data in the form of graphs          |
-| Analysis / Анализ     |  It doesn't work          |
-| Spy / Шпион     |  It doesn't work          |
+| Analysis / Анализ     |  In development         |
+| Spy / Шпион     |  In development          |
 | Radar / Радар     |  Detection of players and their positions          |
 | Log / Журнал     |  Event logging         |
 | About / О проекте     |  Just a section about the project         |
@@ -89,23 +89,35 @@ The client has several large sections, they will be presented below in the table
 
 ## 💾 Installation
 
-### Windows
+### Windows (MSI)
 
 1. Download **.msi** file from GitHub
 2. Run downloaded file
 3. Go through installation process
 4. Ready
 
-### Linux
+### Windows (EXE)
+1. Download **.exe** file from GitHub
+2. Run downloaded file
+3. Ready
+
+### Ubuntu Linux
 
 1. Download **.deb** file from GitHub
 2. Open directory with downloaded file in terminal
 3. Write ```sudo dpkg -i FILENAME.deb```
 4. Ready
 
+### Fedora Linux
+
+1. Download **.rpm** file from GitHub
+2. Open directory with downloaded file in terminal
+3. Write ```sudo dnf install FILENAME.rpm```
+4. Ready
+
 ## 📜 Additional Information
 
 - **Documentation:** [Docs](./docs/DOCS.md)
 - **FAQ:** [FAQ](./docs/FAQ.md)
-- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.4-release)
+- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.5-release)
 - **License:** [MIT License](./LICENSE)
