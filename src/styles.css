@@ -115,6 +115,7 @@
   justify-content: start;
   box-sizing: border-box;
   z-index: 1;
+  gap: 3px;
 }
 
 .left-panel .separator {
@@ -186,7 +187,6 @@
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  margin-bottom: 4px;
   border-left: 2px solid transparent;
   color: #cac7c7;
   outline: none;
@@ -1424,7 +1424,12 @@ textarea::-webkit-resizer {
   display: flex;
   overflow: hidden;  
   flex-direction: column;
-  animation: show-bot-card 0.2s;
+  transition: border 0.1s ease;
+  animation: show-bot-card 0.2s ease;
+}
+
+.bot-card.glow {
+  border-color: #9f84ebd6;
 }
 
 @keyframes show-bot-card {
@@ -1520,7 +1525,11 @@ textarea::-webkit-resizer {
   color: #b6b6b6;
   font-size: 15px;
   margin-bottom: 4px;
-  gap: 0.5px;
+  gap: 0.8px;
+}
+
+.bot-advanced-info p .value {
+  margin-left: 4px;
 }
 
 .info-text {

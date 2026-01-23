@@ -154,6 +154,8 @@ async function stopBots(): Promise<void> {
 
     log(String(result[1]), result[0]);
 
+    process = 'sleep';
+
     log('Выключение мониторинга...', 'system');
 
     chartManager.disable();
@@ -218,23 +220,25 @@ class ElementManager {
       const state = e.getAttribute('state') === 'true';
 
       if (pluginName) {
-        plugins[pluginName].enable = state;
+        if (process === 'sleep') {
+          plugins[pluginName].enable = state;
 
-        const status = document.getElementById(`${pluginName}-status`) as HTMLElement;
-        const button = document.getElementById(`${pluginName}-toggler`) as HTMLButtonElement;
+          const status = document.getElementById(`${pluginName}-status`) as HTMLElement;
+          const button = document.getElementById(`${pluginName}-toggler`) as HTMLButtonElement;
 
-        if (state) {
-          status.innerText = 'Включен';
+          if (state) {
+            status.innerText = 'Включен';
 
-          button.setAttribute('state', 'false');
-          button.style.color = '#4ed618';
-          button.innerText = 'Включен';
-        } else {
-          status.innerText = 'Выключен';
+            button.setAttribute('state', 'false');
+            button.style.color = '#4ed618';
+            button.innerText = 'Включен';
+          } else {
+            status.innerText = 'Выключен';
 
-          button.setAttribute('state', 'true');
-          button.style.color = '#d61818';
-          button.innerText = 'Выключен';
+            button.setAttribute('state', 'true');
+            button.style.color = '#d61818';
+            button.innerText = 'Выключен';
+          }
         }
       }
     }));  
@@ -481,6 +485,16 @@ class ElementManager {
       } else {
         manualSettingsContainer.style.display = 'flex';
         selectAntiCheatContainer.style.display = 'none';
+      }
+    });
+
+    document.getElementById('select-killaura-settings')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
+
+      if (this.value === 'adaptive') {
+        manualSettingsContainer.style.display = 'none';
+      } else {
+        manualSettingsContainer.style.display = 'flex';
       }
     });
 

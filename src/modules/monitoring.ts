@@ -140,16 +140,32 @@ export class MonitoringManager {
             }
 
             if (this.usernameList.includes(nickname)) {
-              (document.getElementById(`bot-status-${nickname}`) as HTMLElement).innerHTML = `<span style="color: ${statusColor};">• ${profile.status}</span>`;
-              (document.getElementById(`bot-version-${nickname}`) as HTMLElement).innerHTML = `  ${profile.version}`;
-              (document.getElementById(`bot-password-${nickname}`) as HTMLElement).innerHTML = `  ${profile.password}`;
-              (document.getElementById(`bot-proxy-${nickname}`) as HTMLElement).innerHTML = `  ${profile.proxy}`;
-              (document.getElementById(`bot-health-${nickname}`) as HTMLElement).innerHTML = `  ${profile.health} / 20`;
-              (document.getElementById(`bot-satiety-${nickname}`) as HTMLElement).innerHTML = `  ${profile.satiety} / 20`;
-              (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).setAttribute('captcha-url', profile.captcha_url ? profile.captcha_url : 'none');
+              const status = document.getElementById(`bot-status-${nickname}`) as HTMLElement;
+              const proxy = document.getElementById(`bot-proxy-${nickname}`) as HTMLElement;
+              const health = document.getElementById(`bot-health-${nickname}`) as HTMLElement;
+              const satiety = document.getElementById(`bot-satiety-${nickname}`) as HTMLElement;
+              const captcha = document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement
+
+              if (health.innerText.split('/')[0].replace(' ', '') != profile.health.toString() || satiety.innerText.split('/')[0].replace(' ', '') != profile.satiety.toString()) {
+                const card = document.getElementById(`bot-card-${nickname}`);
+                
+                card?.classList.add('glow');
+
+                setTimeout(() => {
+                  card?.classList.remove('glow');
+                }, 300);
+              }
+
+              status.innerHTML = `<span style="color: ${statusColor};">• ${profile.status}</span>`;
+              proxy.innerText = profile.proxy;
+              health.innerText = `${profile.health} / 20`;
+              satiety.innerText = `${profile.satiety} / 20`;
+
+              captcha.setAttribute('captcha-url', profile.captcha_url ? profile.captcha_url : 'none');
             } else {
               const card = document.createElement('div');
               card.className = 'bot-card';
+              card.id = `bot-card-${nickname}`;
 
               card.innerHTML = `
                 <div class="bot-card-head">
@@ -163,11 +179,11 @@ export class MonitoringManager {
                 </div>
 
                 <div class="bot-advanced-info">
-                  <p>Версия:<span id="bot-version-${nickname}">  ${profile.version}</span></p>
-                  <p>Пароль:<span id="bot-password-${nickname}">  ${profile.password}</span></p>
-                  <p>Прокси:<span id="bot-proxy-${nickname}">  ${profile.proxy}</span></p>
-                  <p>Здоровье:<span id="bot-health-${nickname}">  ${profile.health} / 20</span></p>
-                  <p>Сытость:<span id="bot-satiety-${nickname}">  ${profile.satiety} / 20</span></p>
+                  <p>Версия:<span class="value" id="bot-version-${nickname}">${profile.version}</span></p>
+                  <p>Пароль:<span class="value" id="bot-password-${nickname}">${profile.password}</span></p>
+                  <p>Прокси:<span class="value" id="bot-proxy-${nickname}">${profile.proxy}</span></p>
+                  <p>Здоровье:<span class="value" id="bot-health-${nickname}">${profile.health} / 20</span></p>
+                  <p>Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>
                 </div>
 
                 <button class="btn spec" id="open-chat-${nickname}">Открыть чат</button>
