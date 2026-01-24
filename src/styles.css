@@ -1603,13 +1603,6 @@ textarea::-webkit-resizer {
   height: 0;
 }
 
-.chat-container .signature {
-  font-family: var(--d-font-family);
-  font-size: 15px;
-  font-weight: normal;
-  color: rgb(143, 139, 139);
-}
-
 .monitoring-content {
   margin-top: 20px;
   background-color: transparent;
@@ -1676,6 +1669,26 @@ textarea::-webkit-resizer {
   border: 1px solid #363636;
   border-radius: 4px;
   padding: 3px 10px;
+}
+
+.bot-captcha-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  margin-left: 160px;
+  width: 420px;
+  height: 380px;
+  border-radius: 6px;
+  border: 2px solid #313131;
+  box-shadow: 0 0 12px #0f0f0f;
+}
+
+.signature {
+  font-family: var(--d-font-family);
+  font-size: 15px;
+  font-weight: normal;
+  color: rgb(143, 139, 139);
 }
 
 .notice-wrap {

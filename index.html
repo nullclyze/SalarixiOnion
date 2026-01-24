@@ -702,7 +702,7 @@
           <select id="select-captcha-type">
             <option value="web">Web</option>
             <option value="map">Map</option>
-            <option value="frame">Frame</option>
+            <option value="frame" disabled>Frame</option>
           </select>
         </div>
 
@@ -715,13 +715,6 @@
           <div class="form-input">
             <label for="required-captcha-url-part" class="text">Обязательная часть ссылки</label>
             <input type="text" anti-captcha-option="web" id="required-captcha-url-part" placeholder="anti-bot" name="required_url_part">
-          </div>
-        </div>
-
-        <div class="options" id="anti-frame-captcha-options" style="display: none;">
-          <div class="form-input">
-            <label for="scanning-radius" class="text">Радиус сканирования</label>
-            <input type="text" anti-captcha-option="frame" id="scanning-radius" placeholder="10" value="10" name="radius">
           </div>
         </div>
       </div>

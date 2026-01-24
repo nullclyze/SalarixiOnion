@@ -10,6 +10,11 @@ interface ChatEventPayload {
   message: string;
 }
 
+interface AntiMapCaptchaEventPayload {
+  base64_code: string;
+  nickname: string;
+}
+
 interface BotProfile {
   status: string;
   nickname: string;
@@ -18,9 +23,10 @@ interface BotProfile {
   proxy: string;
   health: number;
   satiety: number;
-  captcha_url: string | null;
   registered: boolean;
   skin_is_set: boolean;
+  captcha_url: string | null;
+  captcha_img: string | null;
 }
 
 export class MonitoringManager {
@@ -31,11 +37,13 @@ export class MonitoringManager {
   private statusText: HTMLElement | null = null;
   private botCardsContainer: HTMLElement | null = null;
 
-  public maxChatHistoryLength: number | null = null;
   private chatMessageCounter: Record<string, number> = {};
   private chatHistoryFilters: Record<string, string> = {};
 
   private listeners: Map<string, any> = new Map();
+
+  public maxChatHistoryLength: number | null = null;
+  public antiCaptchaType: string | null = null;
 
   public async init(): Promise<void> {
     this.statusText = document.getElementById('monitoring-status-text');
@@ -89,7 +97,24 @@ export class MonitoringManager {
           }
         }
       } catch (error) {
-        log('error', `Ошибка мониторинга чата: ${error}`);
+        log(`Ошибка мониторинга (receive-chat-payload): ${error}`, 'error');
+      }
+    });
+
+    await listen('anti-map-captcha', (event) => {
+      try {
+        const payload = event.payload as AntiMapCaptchaEventPayload;
+        const base64 = payload.base64_code;
+        const nickname = payload.nickname;
+
+        const img = document.createElement('img');
+        img.className = 'bot-captcha-image';
+        img.src = `data:image/png;base64,${base64}`;
+        img.draggable = false;
+
+        document.getElementById(`map-captcha-image-container-${nickname}`)?.appendChild(img);
+      } catch (error) {
+        log(`Ошибка мониторинга (receive-anti-map-captcha-payload): ${error}`, 'error');
       }
     });
   }
@@ -162,7 +187,9 @@ export class MonitoringManager {
               health.innerText = `${profile.health} / 20`;
               satiety.innerText = `${profile.satiety} / 20`;
 
-              captcha.setAttribute('captcha-url', profile.captcha_url ? profile.captcha_url : 'none');
+              if (this.antiCaptchaType === 'web') {
+                captcha.setAttribute('captcha-url', profile.captcha_url ? profile.captcha_url : 'none');
+              }
             } else {
               const card = document.createElement('div');
               card.className = 'bot-card';
@@ -188,7 +215,7 @@ export class MonitoringManager {
                 </div>
 
                 <button class="btn spec" id="open-chat-${nickname}">Открыть чат</button>
-                <button class="btn spec" id="solve-captcha-${nickname}" captcha-url="none">Решить капчу</button>
+                <button class="btn spec" id="solve-captcha-${nickname}" style="display: none;">Решить капчу</button>
                 <button class="btn red spec" id="disconnect-${nickname}" style="margin-bottom: 12px;">Отключить</button>
 
                 <div class="chat-container cover" id="chat-${nickname}">
@@ -285,6 +312,10 @@ export class MonitoringManager {
   private initializeBotCard(nickname: string): void {
     const chat = document.getElementById(`chat-${nickname}`);
 
+    if (this.antiCaptchaType) {
+      (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).style.display = 'flex';
+    }
+
     this.addListener(`open-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'flex');
     this.addListener(`close-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'none');
 
@@ -297,14 +328,6 @@ export class MonitoringManager {
         log(result[1], result[0]);
       } catch (error) {
         log(`Ошибка отключения бота ${nickname}: ${error}`, 'error');
-      }
-    });
-
-    this.addListener(`solve-captcha-${nickname}`, 'click', () => {
-      const captcha_url = (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).getAttribute('captcha-url');
-
-      if (captcha_url && captcha_url !== 'none') {
-        invoke('open_url', { url: captcha_url });
       }
     });
 
@@ -331,8 +354,8 @@ export class MonitoringManager {
       this.chatMessageCounter[nickname] = 0;
     });
 
-    const sendMsg = async () => {
-      const message = document.getElementById(`this-chat-message-${nickname}`) as HTMLInputElement;
+    const sendMsg = async (input_id: string) => {
+      const message = document.getElementById(input_id) as HTMLInputElement;
 
       const result = await invoke('send_message', { 
         nickname: nickname,
@@ -346,7 +369,61 @@ export class MonitoringManager {
       log(result[1], `${result[0]}`);
     }
 
-    this.addListener(`chat-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg() : null);
+    this.addListener(`chat-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`this-chat-message-${nickname}`) : null);
+  
+    switch (this.antiCaptchaType) {
+      case 'web':
+        document.getElementById(`solve-captcha-${nickname}`)?.setAttribute('captcha-url', 'none');
+
+        this.addListener(`solve-captcha-${nickname}`, 'click', () => {
+          const captcha_url = (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).getAttribute('captcha-url');
+
+          if (captcha_url && captcha_url !== 'none') {
+            invoke('open_url', { url: captcha_url });
+          }
+        });
+
+        break;
+
+      case 'map':
+        const container = document.createElement('div');
+        container.className = 'cover';
+        container.id = `map-captcha-image-${nickname}`;
+
+        container.innerHTML = `
+          <div class="panel">
+            <div class="right">
+              <button class="btn min pretty" id="close-map-captcha-image-${nickname}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                  <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="map-captcha-image-container-${nickname}" style="width: 100%; height: 410px;"></div>
+
+          <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+            <p class="signature">${nickname}:</p>
+
+            <input type="text" id="send-captcha-code-${nickname}" placeholder="Введите код" style="height: 28px; width: 250px;">
+          </div>
+        `;
+
+        document.getElementById(`bot-card-${nickname}`)?.appendChild(container);
+
+        this.addListener(`map-captcha-image-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`send-captcha-code-${nickname}`) : null);
+
+        this.addListener(`solve-captcha-${nickname}`, 'click', () => {
+          (document.getElementById(`map-captcha-image-${nickname}`) as HTMLElement).style.display = 'flex';
+        });
+
+        this.addListener(`close-map-captcha-image-${nickname}`, 'click', () => {
+          (document.getElementById(`map-captcha-image-${nickname}`) as HTMLElement).style.display = 'none';
+        });
+
+        break;
+    }
   }
 
   private createTrigrams(word: string): string[] {

@@ -1,6 +1,7 @@
 use azalea::entity::metadata::Health;
 use azalea::local_player::Hunger;
 use azalea::protocol::common::client_information::ParticleStatus;
+use azalea::protocol::packets::game::ClientboundGamePacket;
 use azalea::swarm::*;
 use azalea::prelude::*;
 use azalea::entity::HumanoidArm;
@@ -13,7 +14,7 @@ use crate::state::{STATES, BotState};
 use crate::tasks::TASKS;
 use crate::base::*;
 use crate::emit::*;
-use crate::CaptchaCatcher;
+use crate::{AntiWebCaptcha, AntiMapCaptcha};
 
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -114,18 +115,6 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
           if options.plugins.auto_eat {
             AutoEatPlugin::enable(bot.clone());
-          }
-        }
-      }
-
-      if let Some(arc) = get_flow_manager() {
-        if let Some(options) = arc.read().options.clone() {
-          if options.use_anti_captcha {
-            let opts = options.anti_captcha_settings.options.frame.clone();
-
-            if options.anti_captcha_settings.captcha_type.as_str() == "frame" {
-              CaptchaCatcher::catch_image_from_frame(&bot, opts.radius.unwrap_or(10.0));
-            }
           }
         }
       }
@@ -256,6 +245,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         tasks.write().unwrap().stop_all_tasks();
       }
 
+      if let Some(arc) = STATES.get(&nickname) {
+        let mut state = arc.write().unwrap();
+
+        state.captcha_url = None;
+        state.captcha_img = None;
+      }
+
       TASKS.remove(&nickname);
 
       STATES.set(&nickname, "status", "Оффлайн".to_string());
@@ -294,10 +290,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             let opts = options.anti_captcha_settings.options.web.clone();
 
             if options.anti_captcha_settings.captcha_type.as_str() == "web" {
-              if let Some(link) = CaptchaCatcher::catch_url_from_message(packet.message().to_string(), opts.regex.as_str(), opts.required_url_part) {
-                if let Some(state) = STATES.get(&nickname) {
-                  if state.read().unwrap().captcha_url.is_none() {
-                    STATES.set(&nickname, "captcha_url", link);
+              if let Some(url) = AntiWebCaptcha::catch_url_from_message(packet.message().to_string(), opts.regex.as_str(), opts.required_url_part) {
+                if let Some(arc) = STATES.get(&nickname) {
+                  let mut state = arc.write().unwrap();
+
+                  if state.captcha_url.is_none() {
+                    state.set_captcha_url(url);
                   }
                 }
               }
@@ -321,6 +319,29 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         }
       }
     },
+    Event::Packet(packet) => match &*packet {
+      ClientboundGamePacket::MapItemData(data) => {
+        let nickname = bot.username();
+
+        if let Some(map_patch) = data.color_patch.0.clone() {
+          if let Some(arc) = STATES.get(&nickname) {
+            let mut state = arc.write().unwrap();
+
+            if state.captcha_img.is_none() {
+              state.set_captcha_img(map_patch.map_colors.clone());
+
+              let base64_code = AntiMapCaptcha::create_and_save_png_image(map_patch.map_colors);
+
+              emit_event(EventType::AntiMapCaptcha(AntiMapCaptchaEventPayload {  
+                base64_code: base64_code,
+                nickname: nickname.to_string()
+              }));
+            }
+          }
+        }
+      },
+      _ => {}
+    }
     _ => {}
   }
 

@@ -1,3 +1,3 @@
-mod captcha;
+mod anti_captcha;
 
-pub use captcha::*;
+pub use anti_captcha::*;

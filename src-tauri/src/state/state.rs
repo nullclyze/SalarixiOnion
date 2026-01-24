@@ -16,7 +16,9 @@ pub struct BotState {
   pub health: u32,
   pub satiety: u32,
   pub registered: bool,
-  pub captcha_url: Option<String>
+  pub skin_is_set: bool,
+  pub captcha_url: Option<String>,
+  pub captcha_img: Option<Vec<u8>>
 }
 
 impl BotState {
@@ -30,7 +32,9 @@ impl BotState {
       health: 0,
       satiety: 0,
       registered: false,
-      captcha_url: None
+      skin_is_set: false,
+      captcha_url: None,
+      captcha_img: None
     }
   }
 
@@ -54,12 +58,20 @@ impl BotState {
     self.satiety = *satiety;
   }
 
-  pub fn set_registered(&mut self, registered: bool) {
-    self.registered = registered;
+  pub fn set_registered(&mut self, state: bool) {
+    self.registered = state;
+  }
+
+  pub fn set_skin_is_set(&mut self, state: bool) {
+    self.skin_is_set = state;
   }
 
   pub fn set_captcha_url(&mut self, url: String) {
     self.captcha_url = Some(url);
+  }
+
+  pub fn set_captcha_img(&mut self, array: Vec<u8>) {
+    self.captcha_img = Some(array);
   }
 }
 
@@ -97,7 +109,9 @@ impl BotStateManager {
         "health" => state.set_health(&value.parse().unwrap()),
         "satiety" => state.set_satiety(&value.parse().unwrap()),
         "registered" => state.set_registered(value.parse().unwrap()),
+        "skin_is_set" => state.set_skin_is_set(value.parse().unwrap()),
         "captcha_url" => state.set_captcha_url(value.parse().unwrap()),
+        "captcha_img" => state.set_captcha_img(value.as_bytes().to_vec()),
         _ => {}
       }
     }

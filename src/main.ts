@@ -116,12 +116,6 @@ async function startBots(): Promise<void> {
     required_url_part: null
   };
 
-  const antiFrameCaptchaOptions: {
-    radius: null | number
-  } = { 
-    radius: null
-  };
-
   document.querySelectorAll<HTMLInputElement>('[anti-captcha-option="web"]').forEach(o => {
     switch (o.name) {
       case 'regex':
@@ -129,14 +123,6 @@ async function startBots(): Promise<void> {
         break;
       case 'required_url_part':
         antiWebCaptchaOptions.required_url_part = o.value;
-        break;
-    }
-  });
-
-  document.querySelectorAll<HTMLInputElement>('[anti-captcha-option="frame"]').forEach(o => {
-    switch (o.name) {
-      case 'radius':
-        antiFrameCaptchaOptions.radius = parseFloat(o.value) ? parseFloat(o.value) : 10;
         break;
     }
   });
@@ -177,8 +163,7 @@ async function startBots(): Promise<void> {
     anti_captcha_settings: {
       captcha_type: captchaType,
       options: {
-        web: antiWebCaptchaOptions,
-        frame: antiFrameCaptchaOptions
+        web: antiWebCaptchaOptions
       }
     },
     plugins: {
@@ -193,6 +178,8 @@ async function startBots(): Promise<void> {
   chartManager.enable();
 
   monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
+  monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
+
   monitoringManager.enable();
   monitoringManager.wait();
 
@@ -416,14 +403,13 @@ class ElementManager {
 
     document.getElementById('select-captcha-type')?.addEventListener('change', function (this: HTMLSelectElement) {
       const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
-      const antiFrameCaptchaOptionsContainer = document.getElementById('anti-frame-captcha-options') as HTMLElement;
 
       if (this.value === 'web') {
         antiWebCaptchaOptionsContainer.style.display = 'flex';
-        antiFrameCaptchaOptionsContainer.style.display = 'none';
+      } else if (this.value === 'map') {
+        antiWebCaptchaOptionsContainer.style.display = 'none';
       } else if (this.value === 'frame') {
         antiWebCaptchaOptionsContainer.style.display = 'none';
-        antiFrameCaptchaOptionsContainer.style.display = 'flex';
       }
     }); 
 

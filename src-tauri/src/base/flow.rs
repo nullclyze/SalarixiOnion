@@ -183,19 +183,13 @@ pub struct AntiCaptchaSettings {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiCaptchaOptions {
-  pub web: AntiWebCaptchaOptions,
-  pub frame: AntiFrameCaptchaOptions
+  pub web: AntiWebCaptchaOptions
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiWebCaptchaOptions {
   pub regex: String,
   pub required_url_part: Option<String>
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AntiFrameCaptchaOptions {
-  pub radius: Option<f64>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
