@@ -89,6 +89,13 @@
       <span class="text">Прокси</span>
     </button>
 
+    <button class="panel-btn" id="anti-captcha" path="anti-captcha-container">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bug" viewBox="0 0 16 16">
+        <path d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A5 5 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A5 5 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623M4 7v4a4 4 0 0 0 3.5 3.97V7zm4.5 0v7.97A4 4 0 0 0 12 11V7zM12 6a4 4 0 0 0-1.334-2.982A3.98 3.98 0 0 0 8 2a3.98 3.98 0 0 0-2.667 1.018A4 4 0 0 0 4 6z"/>
+      </svg>
+      <span class="text">Анти-Капча</span>
+    </button>
+
     <div class="separator"></div>
 
     <button class="panel-btn" id="control" path="control-container">
@@ -403,6 +410,12 @@
               Использовать прокси
             </label>
 
+            <label class="checkbox-container">
+              <input type="checkbox" name="useAntiCaptcha" id="use-anti-captcha" keep="true">
+              <span class="checkmark"></span>
+              Использовать анти-капчу
+            </label>
+
             <div class="simple-sep"></div>
 
             <label class="checkbox-container">
@@ -427,6 +440,131 @@
 
             <div class="simple-sep"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-container" id="plugins-container" style="display: none;" global="true">
+      <h1 class="title">Плагины</h1>
+
+      <div class="plugins-wrap">
+        <div class="list" id="plugin-list">
+          <div class="plugin-card" id="auto-armor-plugin">
+            <div class="head">
+              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+              </svg>
+
+              <div class="text">
+                <div class="name" id="auto-armor-name">Авто Доспехи</div>
+                <div class="meta">Статус: <span class="status" id="auto-armor-status">Выключен</span></div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="button" plugin-toggler="true" plugin-name="auto-armor" state="true" id="auto-armor-toggler" style="color: #d61818;">Выключен</button>
+              <button class="button" plugin-open-description="true" path="auto-armor-plugin-description">Описание</button>
+            </div>
+          </div>
+
+          <div class="plugin-card" id="auto-totem-plugin">
+            <div class="head">
+              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+              </svg>
+
+              <div class="text">
+                <div class="name" id="auto-totem-name">Авто Тотем</div>
+                <div class="meta">Статус: <span class="status" id="auto-totem-status">Выключен</span></div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="button" plugin-toggler="true" plugin-name="auto-totem" state="true" id="auto-totem-toggler" style="color: #d61818;">Выключен</button>
+              <button class="button" plugin-open-description="true" path="auto-totem-plugin-description">Описание</button>
+            </div>
+          </div>
+
+          <div class="plugin-card" id="auto-eat-plugin">
+            <div class="head">
+              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+              </svg>
+
+              <div class="text">
+                <div class="name" id="auto-eat-name">Авто Еда</div>
+                <div class="meta">Статус: <span class="status" id="auto-eat-status">Выключен</span></div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="button" plugin-toggler="true" plugin-name="auto-eat" state="true" id="auto-eat-toggler" style="color: #d61818;">Выключен</button>
+              <button class="button" plugin-open-description="true" path="auto-eat-plugin-description">Описание</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="plugin-description" id="auto-armor-plugin-description">
+        <div class="panel">
+          <div class="left">
+            <div class="name">Авто Доспехи - Описание</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" plugin-close-description="true" path="auto-armor-plugin-description">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="description-body">
+          <div class="description" id="auto-armor-description"></div>
+          <p>Последнее обновление: <span id="auto-armor-latest-update">?</span></p>
+        </div>
+      </div>
+
+      <div class="plugin-description" id="auto-totem-plugin-description">
+        <div class="panel">
+          <div class="left">
+            <div class="name">Авто Тотем - Описание</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" plugin-close-description="true" path="auto-totem-plugin-description">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="description-body">
+          <div class="description" id="auto-totem-description"></div>
+          <p>Последнее обновление: <span id="auto-totem-latest-update">?</span></p>
+        </div>
+      </div>
+
+      <div class="plugin-description" id="auto-eat-plugin-description">
+        <div class="panel">
+          <div class="left">
+            <div class="name">Авто Еда - Описание</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" plugin-close-description="true" path="auto-eat-plugin-description">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="description-body">
+          <div class="description" id="auto-eat-description"></div>
+          <p>Последнее обновление: <span id="auto-eat-latest-update">?</span></p>
         </div>
       </div>
     </div>
@@ -532,127 +670,36 @@
       </div>
     </div>
 
-    <div class="form-container" id="plugins-container" style="display: none;" global="true">
-      <h1 class="title">Плагины</h1>
+    <div class="form-container" id="anti-captcha-container" style="display: none;" global="true">
+      <h1 class="title">Анти-Капча</h1>
 
-      <div class="plugins-wrap">
-        <div class="list" id="plugin-list">
-          <div class="plugin-card" id="auto-armor-plugin">
-            <div class="head">
-              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
-              </svg>
-
-              <div class="text">
-                <div class="name" id="auto-armor-name">Авто Доспехи</div>
-                <div class="meta">Статус: <span class="status" id="auto-armor-status">Выключен</span></div>
-              </div>
-            </div>
-
-            <div class="controls">
-              <button class="button" plugin-toggler="true" plugin-name="auto-armor" state="true" id="auto-armor-toggler" style="color: #d61818;">Выключен</button>
-              <button class="button" plugin-open-description="true" path="auto-armor-plugin-description">Описание</button>
-            </div>
-          </div>
-
-          <div class="plugin-card" id="auto-totem-plugin">
-            <div class="head">
-              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
-              </svg>
-
-              <div class="text">
-                <div class="name" id="auto-totem-name">Авто Тотем</div>
-                <div class="meta">Статус: <span class="status" id="auto-totem-status">Выключен</span></div>
-              </div>
-            </div>
-
-            <div class="controls">
-              <button class="button" plugin-toggler="true" plugin-name="auto-totem" state="true" id="auto-totem-toggler" style="color: #d61818;">Выключен</button>
-              <button class="button" plugin-open-description="true" path="auto-totem-plugin-description">Описание</button>
-            </div>
-          </div>
-
-          <div class="plugin-card" id="auto-eat-plugin">
-            <div class="head">
-              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
-              </svg>
-
-              <div class="text">
-                <div class="name" id="auto-eat-name">Авто Еда</div>
-                <div class="meta">Статус: <span class="status" id="auto-eat-status">Выключен</span></div>
-              </div>
-            </div>
-
-            <div class="controls">
-              <button class="button" plugin-toggler="true" plugin-name="auto-eat" state="true" id="auto-eat-toggler" style="color: #d61818;">Выключен</button>
-              <button class="button" plugin-open-description="true" path="auto-eat-plugin-description">Описание</button>
-            </div>
-          </div>
+      <div class="anti-captcha-wrap">
+        <div class="custom-select">
+          <label>Тип капчи: </label>
+          <select id="select-captcha-type">
+            <option value="web">Web</option>
+            <option value="map">Map</option>
+            <option value="frame">Frame</option>
+          </select>
         </div>
-      </div>
 
-      <div class="plugin-description" id="auto-armor-plugin-description">
-        <div class="panel">
-          <div class="left">
-            <div class="name">Авто Доспехи - Описание</div>
+        <div class="options" id="anti-web-captcha-options">
+          <div class="form-input">
+            <label for="regular-expression-for-captcha-url" class="text">Регулярное выражение</label>
+            <input type="text" anti-captcha-option="web" id="regular-expression-for-captcha-url" placeholder="https?://[^\s]+" value="https?://[^\s]+" name="regex">
           </div>
 
-          <div class="right">
-            <button class="btn min pretty" plugin-close-description="true" path="auto-armor-plugin-description">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-              </svg>
-            </button>
+          <div class="form-input">
+            <label for="required-captcha-url-part" class="text">Обязательная часть ссылки</label>
+            <input type="text" anti-captcha-option="web" id="required-captcha-url-part" placeholder="anti-bot" name="required_url_part">
           </div>
         </div>
 
-        <div class="description-body">
-          <div class="description" id="auto-armor-description"></div>
-          <p>Последние обновление: <span id="auto-armor-latest-update">?</span></p>
-        </div>
-      </div>
-
-      <div class="plugin-description" id="auto-totem-plugin-description">
-        <div class="panel">
-          <div class="left">
-            <div class="name">Авто Тотем - Описание</div>
+        <div class="options" id="anti-frame-captcha-options" style="display: none;">
+          <div class="form-input">
+            <label for="scanning-radius" class="text">Радиус сканирования</label>
+            <input type="text" anti-captcha-option="frame" id="scanning-radius" placeholder="10" value="10" name="radius">
           </div>
-
-          <div class="right">
-            <button class="btn min pretty" plugin-close-description="true" path="auto-totem-plugin-description">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="description-body">
-          <div class="description" id="auto-totem-description"></div>
-          <p>Последние обновление: <span id="auto-totem-latest-update">?</span></p>
-        </div>
-      </div>
-
-      <div class="plugin-description" id="auto-eat-plugin-description">
-        <div class="panel">
-          <div class="left">
-            <div class="name">Авто Еда - Описание</div>
-          </div>
-
-          <div class="right">
-            <button class="btn min pretty" plugin-close-description="true" path="auto-eat-plugin-description">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="description-body">
-          <div class="description" id="auto-eat-description"></div>
-          <p>Последние обновление: <span id="auto-eat-latest-update">?</span></p>
         </div>
       </div>
     </div>
@@ -1457,7 +1504,7 @@
           </select>
         </div>
 
-        <div style="margin-top: 20px;">
+        <div class="auto-save-settings">
           <div class="form-input">
             <label for="radar-path" class="text">Полный путь</label>
             <input type="text" id="radar-path" placeholder="/home/User/MyFolder/">
@@ -1467,13 +1514,13 @@
             <label for="radar-filename" class="text">Имя файла</label>
             <input type="text" id="radar-filename" placeholder="radar_#t" value="radar_#t">
           </div>
-        </div>
 
-        <label class="checkbox-container radar-chbx" style="margin-top: 20px;">
-          <input type="checkbox" id="radar-auto-save">
-          <span class="checkmark"></span>
-          Авто сохранение
-        </label>
+          <label class="checkbox-container radar-chbx" style="margin-top: 20px;">
+            <input type="checkbox" id="radar-auto-save">
+            <span class="checkmark"></span>
+            Авто сохранение
+          </label>
+        </div>
       </div>
 
       <div class="radar-wrap" id="radar-target-cards-container"></div>

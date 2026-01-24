@@ -98,8 +98,44 @@ async function startBots(): Promise<void> {
   const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
   const useAutoLogin = (document.getElementById('use-auto-login') as HTMLInputElement).checked;
   const useProxy = (document.getElementById('use-proxy') as HTMLInputElement).checked;
+  const useAntiCaptcha = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked;
 
   const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
+
+  const captchaType = (document.getElementById('select-captcha-type') as HTMLSelectElement).value;
+
+  const antiWebCaptchaOptions: {
+    regex: null | string;
+    required_url_part: null | string;
+  } = { 
+    regex: null,
+    required_url_part: null
+  };
+
+  const antiFrameCaptchaOptions: {
+    radius: null | number
+  } = { 
+    radius: null
+  };
+
+  document.querySelectorAll<HTMLInputElement>('[anti-captcha-option="web"]').forEach(o => {
+    switch (o.name) {
+      case 'regex':
+        antiWebCaptchaOptions.regex = o.value ? o.value : 'https?://[^\s]+';
+        break;
+      case 'required_url_part':
+        antiWebCaptchaOptions.required_url_part = o.value;
+        break;
+    }
+  });
+
+  document.querySelectorAll<HTMLInputElement>('[anti-captcha-option="frame"]').forEach(o => {
+    switch (o.name) {
+      case 'radius':
+        antiFrameCaptchaOptions.radius = parseFloat(o.value) ? parseFloat(o.value) : 10;
+        break;
+    }
+  });
 
   const result = await invoke('launch_bots', { options: {
     address: address || 'localhost',
@@ -122,12 +158,20 @@ async function startBots(): Promise<void> {
     view_distance: viewDistance || 8,
     language: language || 'en_us',
     chat_colors: chatColors === 'true',
-    humanoid_arm: humanoidArm || 'right',
+    humanoid_arm: humanoidArm,
     use_auto_register: useAutoRegister,
     use_auto_rejoin: useAutoRejoin,
     use_auto_login: useAutoLogin,
     use_proxy: useProxy,
     proxy_list: proxyList,
+    use_anti_captcha: useAntiCaptcha,
+    anti_captcha_settings: {
+      captcha_type: captchaType,
+      options: {
+        web: antiWebCaptchaOptions,
+        frame: antiFrameCaptchaOptions
+      }
+    },
     plugins: {
       auto_armor: plugins['auto-armor'].enable,
       auto_totem: plugins['auto-totem'].enable,
@@ -361,6 +405,19 @@ class ElementManager {
 
     switcher(useProxyChbx.checked);
 
+    document.getElementById('select-captcha-type')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
+      const antiFrameCaptchaOptionsContainer = document.getElementById('anti-frame-captcha-options') as HTMLElement;
+
+      if (this.value === 'web') {
+        antiWebCaptchaOptionsContainer.style.display = 'flex';
+        antiFrameCaptchaOptionsContainer.style.display = 'none';
+      } else if (this.value === 'frame') {
+        antiWebCaptchaOptionsContainer.style.display = 'none';
+        antiFrameCaptchaOptionsContainer.style.display = 'flex';
+      }
+    }); 
+
     startBotsProcessBtn.addEventListener('click', async () => await startBots());
     stopBotsProcessBtn.addEventListener('click', async () => await stopBots());
 
@@ -536,7 +593,17 @@ class ElementManager {
     document.getElementById('show-extended-log')?.addEventListener('change', function (this: HTMLInputElement) {
       changeLogsVisibility('extended', this.checked);
     });
-  }
+
+    document.getElementById('proxy-finder-algorithm')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const selectProxyFinderCountry = document.getElementById('proxy-finder-country') as HTMLSelectElement;
+
+      if (this.value === 'apic') {
+        selectProxyFinderCountry.disabled = false;
+      } else {
+        selectProxyFinderCountry.disabled = true;
+      }
+    });
+  } 
 
   private async initPluginDescriptions(): Promise<void> {
     try {
@@ -591,8 +658,6 @@ class ElementManager {
                 </div>
               </div>
             `;
-
-            log(`${name}, ${description}`, 'system');
 
             document.getElementById('plugin-list')?.appendChild(pluginCard);
           }
@@ -744,7 +809,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     log('Инициализация прошла успешно', 'extended');
 
-    await checkUpdate();
+    //await checkUpdate();
   } catch (error) {
     log(`Ошибка инициализации: ${error}`, 'error');
   }

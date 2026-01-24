@@ -229,7 +229,7 @@ export class MonitoringManager {
                     <div class="monitoring-content" id="monitoring-chat-content-${nickname}"></div>
                   </div>
 
-                  <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                  <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
                     <p class="signature">${nickname}:</p>
 
                     <input type="text" control="this" id="this-chat-message-${nickname}" placeholder="Сообщение" style="height: 28px; width: 250px;">
@@ -246,7 +246,7 @@ export class MonitoringManager {
             }
           }
         } catch (error) {
-          log('error', `Ошибка мониторинга профилей: ${error}`);
+          log(`Ошибка мониторинга профилей: ${error}`, 'error');
         }
       }, 1800);
     } catch (error) {
