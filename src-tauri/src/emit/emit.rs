@@ -8,6 +8,7 @@ use crate::base::get_flow_manager;
 pub enum EventType {
   Log(LogEventPayload),
   Chat(ChatEventPayload),
+  AntiWebCaptcha(AntiWebCaptchaEventPayload),
   AntiMapCaptcha(AntiMapCaptchaEventPayload)
 }
 
@@ -23,6 +24,13 @@ pub struct LogEventPayload {
 pub struct ChatEventPayload {
   pub receiver: String,
   pub message: String
+}
+
+// Структура данных в anti-web-captcha-payload
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AntiWebCaptchaEventPayload {
+  pub captcha_url: String,
+  pub nickname: String
 }
 
 // Структура данных в anti-map-captcha-payload
@@ -44,6 +52,9 @@ pub fn emit_event(event: EventType) {
         },
         EventType::Chat(payload) => {
           let _ = fm.app_handle.as_ref().unwrap().emit("chat", payload);
+        },
+        EventType::AntiWebCaptcha(payload) => {
+          let _ = fm.app_handle.as_ref().unwrap().emit("anti-web-captcha", payload);
         },
         EventType::AntiMapCaptcha(payload) => {
           let _ = fm.app_handle.as_ref().unwrap().emit("anti-map-captcha", payload);

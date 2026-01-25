@@ -419,12 +419,6 @@
               Авто логин
             </label>
 
-            <label class="checkbox-container">
-              <input type="checkbox" name="useAutoRejoin" id="use-auto-rejoin" keep="true">
-              <span class="checkmark"></span>
-              Авто переподключение
-            </label>
-
             <div class="simple-sep"></div>
 
             <label class="checkbox-container">
@@ -459,6 +453,20 @@
               <input type="checkbox" name="useGarbageCollector" id="use-garbage-collector" keep="true" disabled>
               <span class="checkmark"></span>
               Сборщик мусора
+            </label>
+
+            <div class="simple-sep"></div>
+
+            <label class="checkbox-container">
+              <input type="checkbox" name="useAutoRejoin" id="use-auto-rejoin" keep="true">
+              <span class="checkmark"></span>
+              Использовать auto-rejoin
+            </label>
+
+            <label class="checkbox-container">
+              <input type="checkbox" name="useChatSigning" id="use-chat-signing" keep="true">
+              <span class="checkmark"></span>
+              Использовать chat-signing
             </label>
 
             <div class="simple-sep"></div>
@@ -618,8 +626,8 @@
           <div class="sep"></div>
 
           <div class="proxy-finder">
-            <div class="column-wrap">
-              <div class="custom-select between" style="margin-top: 6px;">
+            <div class="column-wrap" style="gap: 6px;">
+              <div class="custom-select between">
                 <label>Алгоритм: </label>
                 <select id="proxy-finder-algorithm">
                   <option value="upc">UPc</option>
@@ -629,7 +637,7 @@
                 </select>
               </div>
 
-              <div class="custom-select between" style="margin-top: 6px;">
+              <div class="custom-select between">
                 <label>Протокол: </label>
                 <select id="proxy-finder-protocol">
                   <option value="socks5">SOCKS5</option>
@@ -638,7 +646,7 @@
                 </select>
               </div>
 
-              <div class="custom-select between" style="margin-top: 6px;">
+              <div class="custom-select between">
                 <label>Страна: </label>
                 <select id="proxy-finder-country">
                   <option value="any">Любая</option>
@@ -657,7 +665,21 @@
                 </select>
               </div>
 
-              <div class="custom-select between" style="margin-top: 6px;">
+              <div class="custom-select between">
+                <label>Порт: </label>
+                <select id="proxy-finder-port">
+                  <option value="any">Любой</option>
+                  <option value="4145">4145</option>
+                  <option value="1080">1080</option>
+                  <option value="5566">5566</option>
+                  <option value="9090">9090</option>
+                  <option value="7302">7302</option>
+                  <option value="9064">9064</option>
+                  <option value="5555">5555</option>
+                </select>
+              </div>
+
+              <div class="custom-select between">
                 <label>Кол-во: </label>
                 <select id="proxy-finder-count">
                   <option value="20">20</option>

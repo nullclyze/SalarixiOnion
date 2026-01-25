@@ -14,7 +14,7 @@ import { RadarManager } from './modules/radar';
 Chart.register(...registerables);
 
 const client = {
-  version: '1.0.5'
+  version: '1.0.6'
 };
 
 let process: 'active' | 'sleep' = 'sleep';
@@ -95,10 +95,11 @@ async function startBots(): Promise<void> {
   const humanoidArm = (document.getElementById('humanoid-arm') as HTMLInputElement).value;
 
   const useAutoRegister = (document.getElementById('use-auto-register') as HTMLInputElement).checked;
-  const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
   const useAutoLogin = (document.getElementById('use-auto-login') as HTMLInputElement).checked;
   const useProxy = (document.getElementById('use-proxy') as HTMLInputElement).checked;
   const useAntiCaptcha = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked;
+  const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
+  const useChatSigning = (document.getElementById('use-chat-signing') as HTMLInputElement).checked;
 
   const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
 
@@ -150,9 +151,10 @@ async function startBots(): Promise<void> {
     chat_colors: chatColors === 'true',
     humanoid_arm: humanoidArm,
     use_auto_register: useAutoRegister,
-    use_auto_rejoin: useAutoRejoin,
     use_auto_login: useAutoLogin,
     use_proxy: useProxy,
+    use_auto_rejoin: useAutoRejoin,
+    use_chat_signing: useChatSigning,
     proxy_list: proxyList,
     use_anti_captcha: useAntiCaptcha,
     skin_settings: {

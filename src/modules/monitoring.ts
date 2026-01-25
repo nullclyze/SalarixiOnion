@@ -10,6 +10,11 @@ interface ChatEventPayload {
   message: string;
 }
 
+interface AntiWebCaptchaEventPayload {
+  captcha_url: string;
+  nickname: string;
+}
+
 interface AntiMapCaptchaEventPayload {
   base64_code: string;
   nickname: string;
@@ -25,8 +30,7 @@ interface BotProfile {
   satiety: number;
   registered: boolean;
   skin_is_set: boolean;
-  captcha_url: string | null;
-  captcha_img: string | null;
+  captcha_caught: boolean;
 }
 
 export class MonitoringManager {
@@ -101,15 +105,27 @@ export class MonitoringManager {
       }
     });
 
+    await listen('anti-web-captcha', (event) => {
+      try {
+        const payload = event.payload as AntiWebCaptchaEventPayload;
+        const captcha_url = payload.captcha_url;
+        const nickname = payload.nickname;
+
+        document.getElementById(`solve-captcha-${nickname}`)?.setAttribute('captcha-url', captcha_url);
+      } catch (error) {
+        log(`Ошибка мониторинга (receive-anti-web-captcha-payload): ${error}`, 'error');
+      }
+    });
+
     await listen('anti-map-captcha', (event) => {
       try {
         const payload = event.payload as AntiMapCaptchaEventPayload;
-        const base64 = payload.base64_code;
+        const base64_code = payload.base64_code;
         const nickname = payload.nickname;
 
         const img = document.createElement('img');
         img.className = 'bot-captcha-image';
-        img.src = `data:image/png;base64,${base64}`;
+        img.src = `data:image/png;base64,${base64_code}`;
         img.draggable = false;
 
         document.getElementById(`map-captcha-image-container-${nickname}`)?.appendChild(img);
@@ -170,7 +186,6 @@ export class MonitoringManager {
               const proxy = document.getElementById(`bot-proxy-${nickname}`) as HTMLElement;
               const health = document.getElementById(`bot-health-${nickname}`) as HTMLElement;
               const satiety = document.getElementById(`bot-satiety-${nickname}`) as HTMLElement;
-              const captcha = document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement
 
               if (health.innerText.split('/')[0].replace(' ', '') != profile.health.toString() || satiety.innerText.split('/')[0].replace(' ', '') != profile.satiety.toString()) {
                 const card = document.getElementById(`bot-card-${nickname}`);
@@ -186,10 +201,6 @@ export class MonitoringManager {
               proxy.innerText = profile.proxy;
               health.innerText = `${profile.health} / 20`;
               satiety.innerText = `${profile.satiety} / 20`;
-
-              if (this.antiCaptchaType === 'web') {
-                captcha.setAttribute('captcha-url', profile.captcha_url ? profile.captcha_url : 'none');
-              }
             } else {
               const card = document.createElement('div');
               card.className = 'bot-card';

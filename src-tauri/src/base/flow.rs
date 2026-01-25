@@ -1,7 +1,6 @@
 use azalea::prelude::*;
 use azalea::swarm::*;
 use azalea::app::AppExit;
-use azalea::auto_reconnect::AutoReconnectDelay;
 use azalea::JoinOpts;
 use azalea::app::PluginGroup;
 use azalea::protocol::connect::Proxy; 
@@ -163,6 +162,7 @@ pub struct LaunchOptions {
   pub proxy_list: Option<String>,
   pub use_proxy: bool,
   pub use_anti_captcha: bool,
+  pub use_chat_signing: bool,
   pub skin_settings: SkinSettings,
   pub anti_captcha_settings: AntiCaptchaSettings,
   pub plugins: Plugins
@@ -237,18 +237,15 @@ impl FlowManager {
       rt.block_on(async move {
         let local_set = tokio::task::LocalSet::new();
 
-        let plugins = azalea::DefaultPlugins;
-        let plugin_builder;
+        let default_plugins = azalea::DefaultPlugins;
+        let mut plugins = default_plugins.build();
 
-        if options.use_auto_rejoin {
-          plugin_builder = plugins.build()
-            .disable::<azalea::chat_signing::ChatSigningPlugin>();
+        if !options.use_auto_rejoin {
+          plugins = plugins.disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
+        }
 
-          AutoReconnectDelay::new(Duration::from_millis(options.rejoin_delay));
-        } else {
-          plugin_builder = plugins.build()
-            .disable::<azalea::chat_signing::ChatSigningPlugin>()
-            .disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
+        if !options.use_chat_signing {
+          plugins = plugins.disable::<azalea::chat_signing::ChatSigningPlugin>();
         }
 
         local_set.spawn_local(async move {
@@ -258,10 +255,11 @@ impl FlowManager {
           }));
       
           let mut flow =  SwarmBuilder::new_without_plugins()
-            .add_plugins(plugin_builder)
+            .add_plugins(plugins)
             .add_plugins(azalea::bot::DefaultBotPlugins)
             .add_plugins(azalea::swarm::DefaultSwarmPlugins)
             .join_delay(Duration::from_millis(options.join_delay))
+            .reconnect_after(Duration::from_millis(options.rejoin_delay))
             .set_swarm_handler(swarm_handler)
             .set_handler(single_handler);
 
@@ -306,7 +304,7 @@ impl FlowManager {
 
                       if let Some(state) = STATES.get(&account.username) {
                         let split_address: Vec<&str> = address.split(":").collect();
-                        state.write().unwrap().set_proxy(split_address.get(0).unwrap());
+                        state.write().set_proxy(split_address.get(0).unwrap());
                       }
                     }  
                   }  
@@ -324,7 +322,9 @@ impl FlowManager {
               flow = flow.add_account(account);  
             } 
 
-            flow = flow.add_plugins(ViaVersionPlugin::start(options.version).await)
+            if options.version.as_str() != "1.21.11" {
+              flow = flow.add_plugins(ViaVersionPlugin::start(options.version).await);
+            }
           }
 
           emit_event(EventType::Log(LogEventPayload { 

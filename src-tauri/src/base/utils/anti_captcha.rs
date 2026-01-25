@@ -243,7 +243,7 @@ impl AntiMapCaptcha {
     }
   }
 
-  pub fn create_and_save_png_image(map: Vec<u8>) -> String {
+  pub fn create_and_save_png_image(map: &Vec<u8>) -> String {
     let width = 128;
     let height = 128;
 
@@ -263,8 +263,6 @@ impl AntiMapCaptcha {
     let _ = img.write_to(&mut cursor, ImageFormat::Png);
 
     let base64_code = encode(&bytes);
-
-    println!("{}", base64_code);
 
     base64_code
   }
