@@ -2,6 +2,7 @@ use serde_json::Value;
 
 use crate::base::get_flow_manager;
 use crate::tasks::TASKS;
+use crate::state::STATES;
 use super::*;
 
 
@@ -9,7 +10,7 @@ use super::*;
 pub struct ModuleManager;
 
 impl ModuleManager {
-  pub async fn control(name: String, options: Value) {
+  pub async fn control(name: String, options: Value, group: String) {
     if let Some(arc) = get_flow_manager() {
       let fm = arc.write();
 
@@ -21,6 +22,12 @@ impl ModuleManager {
             let o: ChatOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let options_task = o.clone();
               let nickname = bot.username().clone();
@@ -51,6 +58,12 @@ impl ModuleManager {
             let o: ActionOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let options_task = o.clone();
               let nickname = bot.username().clone();
@@ -77,6 +90,12 @@ impl ModuleManager {
             let o: InventoryOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_task = o.clone();
 
               tokio::spawn(async move {
@@ -88,6 +107,12 @@ impl ModuleManager {
             let o: MovementOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -108,6 +133,12 @@ impl ModuleManager {
             let o: AntiAfkOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -128,6 +159,12 @@ impl ModuleManager {
             let o: FlightOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -148,6 +185,12 @@ impl ModuleManager {
             let o: KillauraOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -168,6 +211,12 @@ impl ModuleManager {
             let o: ScaffoldOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -188,6 +237,12 @@ impl ModuleManager {
             let o: AntiFallOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -208,6 +263,12 @@ impl ModuleManager {
             let o: BowAimOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+              
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -228,6 +289,12 @@ impl ModuleManager {
             let o: StealerOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
@@ -248,6 +315,12 @@ impl ModuleManager {
             let o: MinerOptions = serde_json::from_value(options).map_err(|e| format!("Ошибка парсинга опций: {}", e)).unwrap();
 
             for bot in bots.into_values() {
+              if let Some(state) = STATES.get(&bot.username()) {
+                if state.read().unwrap().group != group {
+                  continue;
+                }
+              }
+              
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 

@@ -17,7 +17,8 @@ pub struct BotState {
   pub satiety: u32,
   pub registered: bool,
   pub skin_is_set: bool,
-  pub captcha_caught: bool
+  pub captcha_caught: bool,
+  pub group: String
 }
 
 impl BotState {
@@ -32,7 +33,8 @@ impl BotState {
       satiety: 0,
       registered: false,
       skin_is_set: false,
-      captcha_caught: false
+      captcha_caught: false,
+      group: "global".to_string()
     }
   }
 
@@ -66,6 +68,10 @@ impl BotState {
 
   pub fn set_captcha_caught(&mut self, state: bool) {
     self.captcha_caught = state;
+  }
+
+  pub fn set_group(&mut self, group: String) {
+    self.group = group;
   }
 }
 
@@ -105,6 +111,7 @@ impl BotStateManager {
         "registered" => state.set_registered(value.parse().unwrap()),
         "skin_is_set" => state.set_skin_is_set(value.parse().unwrap()),
         "captcha_caught" => state.set_captcha_caught(value.parse().unwrap()),
+        "group" => state.set_group(value.parse().unwrap()),
         _ => {}
       }
     }

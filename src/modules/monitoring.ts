@@ -225,6 +225,12 @@ export class MonitoringManager {
                   <p>Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>
                 </div>
 
+                <div class="sep"></div>
+
+                <input type="text" class="group-input" id="bot-group-${nickname}" placeholder="Группа">
+
+                <div class="sep"></div>
+
                 <button class="btn spec" id="open-chat-${nickname}">Открыть чат</button>
                 <button class="btn spec" id="solve-captcha-${nickname}" style="display: none;">Решить капчу</button>
                 <button class="btn red spec" id="disconnect-${nickname}" style="margin-bottom: 12px;">Отключить</button>
@@ -326,6 +332,19 @@ export class MonitoringManager {
     if (this.antiCaptchaType) {
       (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).style.display = 'flex';
     }
+
+    this.addListener(`bot-group-${nickname}`, 'input', async () => {
+      try {
+        const group = (document.getElementById(`bot-group-${nickname}`) as HTMLInputElement).value.replace(' ', '');
+
+        await invoke('set_group', {
+          nickname: nickname,
+          group: group !== '' ? group : 'global'
+        });
+      } catch (error) {
+        log(`Ошибка изменения группы ${nickname}: ${error}`, 'error');
+      }
+    });
 
     this.addListener(`open-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'flex');
     this.addListener(`close-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'none');

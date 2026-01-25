@@ -73,6 +73,24 @@ fn disconnect_bot(nickname: String) -> (String, String) {
   ("error".to_string(), format!("Не удалось отключить бота {}", nickname))
 }
 
+// Функция изменения группы бота
+#[tauri::command]
+fn set_group(nickname: String, group: String) {
+  if let Some(arc) = get_flow_manager() {
+    let fm = arc.write();
+
+    if fm.active {
+      if let Some(swarm) = fm.swarm.clone() {
+        for bot in swarm {
+          if bot.username() == nickname {
+            STATES.set(&nickname, "group", group.clone());
+          }
+        }
+      }
+    }
+  }
+}
+
 // Функция получения radar-данных
 #[tauri::command]
 fn get_radar_data(target: String) -> Option<RadarInfo> {
@@ -108,13 +126,13 @@ fn get_memory_usage() -> f64 {
 
 // Функция управления ботами
 #[tauri::command]
-async fn control(name: String, options: serde_json::Value) {
+async fn control(name: String, options: serde_json::Value, group: String) {
   emit_event(EventType::Log(LogEventPayload { 
     name: "extended".to_string(), 
     message: format!("Управление '{}' | Опции: {}", name, options)
   }));
 
-  ModuleManager::control(name, options).await;
+  ModuleManager::control(name, options, group).await;
 }
 
 // Функция выполнения быстрых задач
@@ -155,7 +173,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       exit, launch_bots, stop_bots, 
       get_bot_profiles, send_message, disconnect_bot,
-      get_radar_data, save_radar_data,
+      get_radar_data, save_radar_data, set_group,
       get_active_bots_count, get_memory_usage,
       control, quick_task, open_url
     ])

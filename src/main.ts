@@ -701,12 +701,15 @@ class ElementManager {
         }
       });
 
+      const group = (document.getElementById('control-group') as HTMLInputElement).value.replace(' ', '');
+
       await invoke('control', {
         name: name,
         options: {
           ...options,
           state: state
-        }
+        },
+        group: group !== '' ? group : 'global'
       });
     } catch (error) {
       log(`Ошибка управления (${name}): ${error}`, 'error');
