@@ -111,17 +111,17 @@ impl StealerModule {
       for pos in target_positions {  
         bot.look_at(pos.center());  
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
             
         if let Some(container) = bot.open_container_at(pos).await {  
           Self::extract_all_items(&container).await;  
-          bot.wait_ticks(randuint(4, 6) as usize).await;
+          bot.wait_ticks(randticks(4, 6)).await;
         }  
       } 
 
       bot.set_direction(direction.0, direction.1);
 
-      bot.wait_ticks(options.delay.unwrap_or_else(|| { 20 })).await;
+      bot.wait_ticks(options.delay.unwrap_or(20)).await;
     }
   } 
 

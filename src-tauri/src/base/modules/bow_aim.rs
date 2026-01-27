@@ -41,7 +41,6 @@ impl BowAimModule {
       if let Some(item) = menu.slot(slot) {
         if !item.is_empty() {
           if item.kind() == ItemKind::Bow {
-            println!("FIND SLOT WITH BOW: {}", slot);
             return Some(slot);
           }
         }
@@ -81,8 +80,6 @@ impl BowAimModule {
         } else {
           let random_slot = randuint(36, 44) as usize;
 
-          println!("BOW SLOT: {} | RANDOM SLOT: {}", slot, random_slot);
-
           inventory.shift_click(random_slot);
 
           bot.wait_ticks(1).await;
@@ -94,8 +91,6 @@ impl BowAimModule {
           final_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
         }
       }
-
-      println!("FINAL SLOT: {}", final_slot);
 
       if bot.selected_hotbar_slot() != final_slot {
         bot.set_selected_hotbar_slot(final_slot);

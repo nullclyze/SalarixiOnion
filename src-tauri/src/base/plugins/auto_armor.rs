@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
-use crate::tools::randuint;
+use crate::tools::randticks;
 use crate::common::find_empty_slot_in_invenotry;
 
 
@@ -98,7 +98,7 @@ impl AutoArmorPlugin {
         if !item.is_empty() {
           if let Some(empty_slot) = find_empty_slot_in_invenotry(bot) {
             inventory.left_click(armor_slot);
-            bot.wait_ticks(randuint(1, 2) as usize).await;
+            bot.wait_ticks(randticks(1, 2)).await;
             inventory.left_click(empty_slot);
           } else {
             return;

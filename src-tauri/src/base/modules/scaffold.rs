@@ -56,7 +56,7 @@ impl ScaffoldModule {
           physics.set_on_ground(true); 
         }
 
-        bot.wait_ticks(randuint(4, 6) as usize).await;
+        bot.wait_ticks(randticks(4, 6)).await;
                       
         bot.ecs.lock().trigger(SwingArmEvent { entity: bot.entity });  
         bot.block_interact(block_under);  
@@ -65,7 +65,7 @@ impl ScaffoldModule {
 
         Self::simulate_inaccuracy(bot, bot.direction());
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
 
         {
           let mut ecs = bot.ecs.lock(); 
@@ -73,10 +73,10 @@ impl ScaffoldModule {
           physics.set_on_ground(false); 
         }
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
       }
               
-      bot.wait_ticks(options.delay.unwrap_or_else(|| { 1 })).await;
+      bot.wait_ticks(options.delay.unwrap_or(1)).await;
     }    
   }
 
@@ -98,7 +98,7 @@ impl ScaffoldModule {
           physics.set_on_ground(true); 
         }
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
                       
         bot.ecs.lock().trigger(SwingArmEvent { entity: bot.entity });  
         bot.block_interact(block_under);  
@@ -111,10 +111,10 @@ impl ScaffoldModule {
           physics.set_on_ground(false); 
         }
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
       }
               
-      bot.wait_ticks(options.delay.unwrap_or_else(|| { 1 })).await;
+      bot.wait_ticks(options.delay.unwrap_or(1)).await;
     }    
   }
 
@@ -155,10 +155,10 @@ impl ScaffoldModule {
           physics.set_on_ground(false); 
         }
 
-        bot.wait_ticks(randuint(1, 2) as usize).await;
+        bot.wait_ticks(randticks(1, 2)).await;
       }  
               
-      bot.wait_ticks(options.delay.unwrap_or_else(|| { 1 })).await;
+      bot.wait_ticks(options.delay.unwrap_or(1)).await;
     }    
   }
 

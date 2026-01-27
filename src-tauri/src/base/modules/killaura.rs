@@ -154,7 +154,7 @@ impl KillauraModule {
           if let Some(entity_id) = bot.get_entity_component::<MinecraftEntityId>(entity) {
             if bot_id != entity_id {
               bot.look_at(Self::get_entity_position(bot, entity));
-              bot.wait_ticks(randuint(3, 5) as usize).await;
+              bot.wait_ticks(randticks(3, 5)).await;
               bot.attack(entity);
             }
           }
@@ -196,7 +196,7 @@ impl KillauraModule {
         if let Some(bot_id) = bot.get_entity_component::<MinecraftEntityId>(bot.entity) {
           if let Some(entity_id) = bot.get_entity_component::<MinecraftEntityId>(entity) {
             if bot_id != entity_id {
-              bot.wait_ticks(randuint(3, 4) as usize).await;
+              bot.wait_ticks(randticks(3, 4)).await;
               bot.attack(entity);
             }
           }

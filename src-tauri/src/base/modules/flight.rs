@@ -20,8 +20,8 @@ pub struct FlightOptions {
   pub mode: String,
   pub settings: String,
   pub anti_cheat: String,
-  pub min_delay: Option<u64>,
-  pub max_delay: Option<u64>,
+  pub min_delay: Option<usize>,
+  pub max_delay: Option<usize>,
   pub min_change_y: Option<f64>,
   pub max_change_y: Option<f64>,
   pub use_ground_spoof: Option<String>,
@@ -30,8 +30,8 @@ pub struct FlightOptions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FlightConfig {
-  min_delay: u64,
-  max_delay: u64,
+  min_delay: usize,
+  max_delay: usize,
   min_change_y: f64,
   max_change_y: f64,
   use_ground_spoof: bool,
@@ -134,7 +134,7 @@ impl FlightModule {
         set_bot_on_ground(bot, false);
       }
 
-      bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
+      bot.wait_ticks(randticks(config.min_delay, config.max_delay)).await;
 
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
@@ -194,7 +194,7 @@ impl FlightModule {
         bot.write_packet(packet);
       }
 
-      bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
+      bot.wait_ticks(randticks(config.min_delay, config.max_delay)).await;
 
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
@@ -245,7 +245,7 @@ impl FlightModule {
         bot.write_packet(packet);
       }
 
-      bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
+      bot.wait_ticks(randticks(config.min_delay, config.max_delay)).await;
 
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
 
@@ -303,7 +303,7 @@ impl FlightModule {
         set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
       }
 
-      bot.wait_ticks(randuint(config.min_delay, config.max_delay) as usize).await;
+      bot.wait_ticks(randticks(config.min_delay, config.max_delay)).await;
 
       Self::hover(bot, Instant::now() + Duration::from_millis(randuint(600, 800))).await;
 

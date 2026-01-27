@@ -35,7 +35,7 @@ impl AntiAfkModule {
         bot.ecs.lock().trigger(SwingArmEvent { entity: bot.entity });  
       }
 
-      bot.wait_ticks(randuint(8, 16) as usize).await;
+      bot.wait_ticks(randticks(8, 16)).await;
 
       bot.set_direction(original_direction.0 + randfloat(-8.0, 8.0) as f32, original_direction.1 + randfloat(-4.5, 4.5) as f32);
     }
