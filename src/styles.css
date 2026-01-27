@@ -14,6 +14,8 @@
 
   --global-font-family: 'Inter', sans-serif;
 
+  --title-color: #7e47ff;
+
   --spec-color: #7946f0;
   --dull-spec-color: #5426be;
 
@@ -71,12 +73,12 @@
 }
 
 .title-bar .title .name {
-  color: var(--spec-color);
+  color: var(--title-color);
 }
 
 .title-bar .title .version {
   margin-left: 6px;
-  color: var(--spec-color);
+  color: var(--title-color);
 }
 
 .title-bar .controls {
@@ -712,11 +714,11 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 25px;
   background: transparent;
   padding: 4px;
   border: none;
-  margin-top: 20px;
+  margin-top: 50px;
 }
 
 .btn-social {
@@ -731,10 +733,11 @@ p {
   width: 40px;
   height: 40px;
   margin-top: 6px;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-social svg:hover {
+  transform: scale(1.1);
   color: var(--spec-color);
 }
 
@@ -888,7 +891,7 @@ p {
   top: 0; 
   left: 35%;
   transform: translateY(-50%);
-  background: #11111175;
+  background: #171716;
   color: #cecece;
   font-weight: normal;
   font-size: 14px;
@@ -899,6 +902,10 @@ p {
   backdrop-filter: blur(4px);
   pointer-events: none;
   white-space: nowrap;
+  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .proxy-list textarea {
@@ -1056,7 +1063,7 @@ p {
 }
 
 .features-title {
-  color: var(--spec-color);
+  color: var(--dull-spec-color);
   font-weight: 600;
   font-size: 1rem;
   text-align: center;
@@ -1085,48 +1092,21 @@ p {
   border: 1px solid rgba(52, 51, 53, 0.8);
   font-family: var(--global-font-family);
   font-size: 14px;
-  color: #815dd9;
+  color: var(--dull-spec-color);
   font-weight: bold;
   transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .feature-list:hover {
-  background-image: 
-    linear-gradient(0deg, transparent 24%, rgba(53, 52, 138, 0.28) 25%, rgba(53, 52, 138, 0.28) 26%, transparent 27%, transparent 74%, rgba(53, 52, 138, 0.28) 75%, rgba(53, 52, 138, 0.28) 76%, transparent 77%, transparent),
-    linear-gradient(90deg, transparent 24%, rgba(53, 52, 138, 0.28) 25%, rgba(53, 52, 138, 0.28) 26%, transparent 27%, transparent 74%, rgba(53, 52, 138, 0.28) 75%, rgba(53, 52, 138, 0.28) 76%, transparent 77%, transparent);
-  color: #5d5be0;
-  border-color: #5d5be0;
+  color: var(--spec-color);
+  border-color: var(--dull-spec-color);
   transform: translateY(-2px);
 }
 
 .highlight {
-  color: #9469ff;
+  color: var(--dull-spec-color);
   font-weight: 600;
-}
-
-.social-links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 50px;
-}
-
-.btn-social {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background-color: transparent;
-  color: #fff;
-  border: none;
-  transition: all 0.2s ease;
-}
-
-.btn-social:hover {
-  transform: scale(1.1);
 }
 
 .checkbox-container {
@@ -1258,7 +1238,7 @@ p {
 	transform: translate(0, -50%);
 	width: 12px;
 	height: 12px;
-	background-color: #fff;
+	background-color: var(--spec-color);
 	clip-path: polygon(50% 80%, 0 20%, 100% 20%);
 }
 
@@ -1539,6 +1519,7 @@ textarea::-webkit-resizer {
 
 .bot-advanced-info p .value {
   margin-left: 4px;
+  font-family: var(--global-font-family);
 }
 
 .bot-card .group-input {
@@ -1654,7 +1635,7 @@ textarea::-webkit-resizer {
 }
 
 .monitoring-line-content .bot-tag {
-  color: #56dd30ff; 
+  color: var(--spec-color); 
   font-weight: normal;
   border: 1px solid #363636;
   border-radius: 4px;
@@ -1917,7 +1898,7 @@ textarea::-webkit-resizer {
 }
 
 .radar-wrap .radar-target.glow .icon {
-  color: #248a21;
+  color: var(--spec-color);
 }
 
 @keyframes show-target-card {

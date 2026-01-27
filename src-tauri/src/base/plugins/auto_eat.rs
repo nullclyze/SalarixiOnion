@@ -52,7 +52,7 @@ impl AutoEatPlugin {
             bot.wait_ticks(randuint(1, 2) as usize).await;
             inventory.left_click(empty_slot);
 
-            if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as u16) {
+            if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
               if bot.selected_hotbar_slot() != slot {
                 bot.set_selected_hotbar_slot(slot);
                 bot.wait_ticks(2).await;
@@ -62,7 +62,7 @@ impl AutoEatPlugin {
             }
           } else {
             if food_slot >= 36 && food_slot <= 44 {
-              if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(food_slot) {
+              if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(food_slot as usize) {
                 if bot.selected_hotbar_slot() != hotbar_slot {
                   bot.set_selected_hotbar_slot(hotbar_slot);
                   bot.wait_ticks(2).await;
@@ -74,7 +74,7 @@ impl AutoEatPlugin {
               for food in food_list.clone() {
                 if let Some(slot) = food.slot {
                   if slot >= 36 && slot <= 44 {
-                    if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
+                    if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot as usize) {
                       if bot.selected_hotbar_slot() != hotbar_slot {
                         bot.set_selected_hotbar_slot(hotbar_slot);
                         bot.wait_ticks(2).await;

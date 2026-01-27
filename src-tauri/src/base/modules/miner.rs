@@ -18,6 +18,7 @@ pub struct MinerModule;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinerOptions {
+  pub mode: String,
   pub tunnel: String,
   pub look: String,
   pub direction_x: Option<f32>,
@@ -52,8 +53,6 @@ impl MinerModule {
 
   async fn micro_offset(bot: &Client) {
     if randchance(0.8) {
-      println!("offset");
-
       let walk_directions = vec![
         WalkDirection::Left, WalkDirection::Right, 
         WalkDirection::ForwardLeft, WalkDirection::ForwardRight,
@@ -64,7 +63,7 @@ impl MinerModule {
 
       if let Some(dir) = walk_direction {
         bot.walk(*dir);
-        sleep(Duration::from_millis(randuint(200, 300))).await;
+        bot.wait_ticks(randticks(3, 5)).await;
         bot.walk(WalkDirection::None);
       }
     }
@@ -82,7 +81,7 @@ impl MinerModule {
 
       bot.look_at(pre);
 
-      sleep(Duration::from_millis(randuint(100, 150))).await;
+      bot.wait_ticks(randticks(1, 3)).await;
     }
 
     if randchance(0.7) {
@@ -101,21 +100,17 @@ impl MinerModule {
   }
 
   async fn move_forward(bot: &Client, territory: Vec<BlockPos>) {
-    let mut existing_blocks = 0;
-
     for block_pos in territory {
       if let Some(state) = get_block_state(bot, block_pos) {
         if !state.is_air() && Self::is_breakable_block(state) {
-          existing_blocks += 1;
+          return;
         }
       }
     }
 
-    if existing_blocks == 0 {
-      bot.walk(WalkDirection::Forward);
-      sleep(Duration::from_millis(randuint(50, 150))).await;
-      bot.walk(WalkDirection::None);
-    }
+    bot.walk(WalkDirection::Forward);
+    bot.wait_ticks(randticks(1, 3)).await;
+    bot.walk(WalkDirection::None);
   }
 
   fn get_territory(pos: Vec3, tunnel: String) -> Vec<BlockPos> {
@@ -127,6 +122,14 @@ impl MinerModule {
 
     match tunnel.as_str() {
       "2x2x2" => {
+        territory = vec![
+          BlockPos::new(x + 1, y, z),
+          BlockPos::new(x - 1, y, z),
+          BlockPos::new(x, y, z + 1),
+          BlockPos::new(x, y, z - 1)
+        ];
+      },
+      "3x2x2" => {
         territory = vec![
           BlockPos::new(x + 1, y, z),
           BlockPos::new(x - 1, y, z),
@@ -167,7 +170,13 @@ impl MinerModule {
     territory
   }
 
-  async fn mine(bot: &Client, options: MinerOptions) {
+  async fn default_mine(bot: &Client, options: MinerOptions) {
+    bot.left_click_mine(true);
+    bot.walk(WalkDirection::Forward);
+    bot.set_direction(options.direction_x.unwrap_or(0.0), 40.0 + randfloat(-3.5, 3.5) as f32);
+  }
+
+  async fn extended_mine(bot: &Client, options: MinerOptions) {
     loop {
       let position = bot.position();
 
@@ -175,6 +184,7 @@ impl MinerModule {
 
       for pos in territory.clone() {
         let heights = match options.tunnel.as_str() {
+          "3x2x2" => vec![2, 1, 0],
           "3x3x3" => vec![2, 1, 0],
           _ => vec![1, 0]
         };
@@ -184,9 +194,15 @@ impl MinerModule {
           
           if let Some(state) = get_block_state(bot, block_pos) {
             if !state.is_air() && Self::is_breakable_block(state) && Self::can_reach_block(bot.eye_position(), block_pos) {
+              let should_shift = randchance(0.2);
+
+              if should_shift {
+                bot.set_crouching(true);
+              }
+              
               Self::look_at_block(bot, block_pos, options.look.clone()).await;
 
-              sleep(Duration::from_millis(randuint(300, 800))).await;
+              bot.wait_ticks(randticks(2, 4)).await;
 
               if let Some(slot) = options.slot {
                 bot.set_selected_hotbar_slot(slot);
@@ -197,13 +213,15 @@ impl MinerModule {
                 }
               }
 
+              if should_shift {
+                bot.set_crouching(false);
+              }
+
               Self::micro_offset(bot).await;
 
               bot.start_mining(block_pos);
-              
-              loop {
-                println!("Wait...");
 
+              loop {
                 if let Some(s) = get_block_state(bot, block_pos) {
                   if state.is_air() || !Self::is_breakable_block(s) {
                     break;
@@ -217,14 +235,14 @@ impl MinerModule {
 
               Self::micro_offset(bot).await;
 
-              println!("Block broke");
+              bot.wait_ticks(randticks(1, 2)).await;
 
-              sleep(Duration::from_millis(randuint(50, 150))).await;
+              sleep(Duration::from_millis(randuint(50, 100))).await;
 
               if let Some(s) = get_block_state(bot, block_pos) {
                 if !s.is_air() || Self::is_breakable_block(s) {
                   bot.walk(WalkDirection::Backward);
-                  sleep(Duration::from_millis(randuint(50, 80))).await;
+                  bot.wait_ticks(randticks(1, 2)).await;
                   bot.walk(WalkDirection::None);
                 }
               }
@@ -236,12 +254,16 @@ impl MinerModule {
       let direction = bot.direction();
 
       if randchance(0.5) {
-        bot.set_direction(options.direction_x.unwrap_or(0.0) + randfloat(-0.3, 0.3) as f32, direction.1 + randfloat(-0.3, 0.3) as f32);
+        bot.set_direction(options.direction_x.unwrap_or(0.0) + randfloat(-2.5, 2.5) as f32, direction.1 + randfloat(-2.5, 2.5) as f32);
       } else {
-        bot.set_direction(options.direction_x.unwrap_or(0.0), direction.1);
+        if randchance(0.3) {
+          bot.set_direction(options.direction_x.unwrap_or(0.0) + randfloat(-1.3, 1.3) as f32, direction.1 + randfloat(-1.3, 1.3) as f32);
+        } else {
+          bot.set_direction(options.direction_x.unwrap_or(0.0), direction.1);
+        }
       }
 
-      sleep(Duration::from_millis(randuint(50, 150))).await;
+      sleep(Duration::from_millis(randuint(50, 100))).await;
 
       Self::move_forward(bot, territory).await;
 
@@ -250,11 +272,17 @@ impl MinerModule {
   } 
 
   pub async fn enable(bot: &Client, options: MinerOptions) {
-    Self::mine(bot, options).await;
+    match options.mode.as_str() {
+      "default" => { Self::default_mine(bot, options).await; },
+      "extended" => { Self::extended_mine(bot, options).await; }
+      _ => {}
+    }
   } 
 
   pub fn stop(bot: &Client) {
     TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("miner");
+    bot.left_click_mine(false);
     bot.walk(WalkDirection::None);
+    bot.set_crouching(false);
   }
 }

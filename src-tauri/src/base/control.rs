@@ -272,7 +272,7 @@ impl ModuleManager {
               let options_clone = o.clone();  
               let nickname = bot.username().clone();
 
-              BowAimModule::stop(&nickname);
+              BowAimModule::stop(&bot);
 
               if options_clone.state {
                 let task = tokio::spawn(async move {
@@ -281,7 +281,7 @@ impl ModuleManager {
 
                 TASKS.get(&nickname).unwrap().write().unwrap().set_task("bow-aim", task);
               } else {
-                BowAimModule::stop(&nickname);
+                BowAimModule::stop(&bot);
               }
             }
           },

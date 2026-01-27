@@ -1,3 +1,5 @@
+use std::collections::btree_set::Range;
+
 use rand::Rng;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -48,6 +50,10 @@ pub fn randfloat(min: f64, max: f64) -> f64 {
 
 pub fn randelem<T>(vec: &[T]) -> Option<&T> {
   vec.choose(&mut thread_rng())
+}
+
+pub fn randticks(min: usize, max: usize) -> usize {
+  thread_rng().gen_range(min..=max)
 }
 
 pub fn randchance(percent: f64) -> bool {

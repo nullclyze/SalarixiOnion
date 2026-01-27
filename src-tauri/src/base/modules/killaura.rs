@@ -114,7 +114,7 @@ impl KillauraModule {
     }
 
     if let Some(slot) = best_weapon.slot {
-      if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot as u16) {
+      if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
         if bot.selected_hotbar_slot() != hotbar_slot {
           bot.set_selected_hotbar_slot(hotbar_slot);
         }

@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use once_cell::sync::Lazy;
+use tokio::task::JoinHandle;
 
 
 pub static TASKS: Lazy<Arc<BotTaskManager>> = Lazy::new(|| Arc::new(BotTaskManager::new()));
 
 pub struct BotTasks {
-  pub tasks: HashMap<String, Option<tokio::task::JoinHandle<()>>>
+  pub tasks: HashMap<String, Option<JoinHandle<()>>>
 }
 
 impl BotTasks {
@@ -30,7 +31,7 @@ impl BotTasks {
     }
   }
 
-  pub fn set_task(&mut self, task: &str, handle: tokio::task::JoinHandle<()>) {
+  pub fn set_task(&mut self, task: &str, handle: JoinHandle<()>) {
     self.tasks.insert(task.to_string(), Some(handle));
   }
 

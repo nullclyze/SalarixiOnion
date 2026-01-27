@@ -553,15 +553,15 @@ class ElementManager {
     });
 
     document.getElementById('miner-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const selectBlockContainer = document.getElementById('miner-select-block-container') as HTMLElement;
-      const manualSettingsContainer = document.getElementById('miner-manual-options-container') as HTMLElement;
+      const tunnelSelectContainer = document.getElementById('miner-tunnel-select-container') as HTMLElement;
+      const lookSelectContainer = document.getElementById('miner-look-select-container') as HTMLElement;
 
-      if (this.value === 'manual') {
-        manualSettingsContainer.style.display = 'flex';
-        selectBlockContainer.style.display = 'none';
+      if (this.value === 'default') {
+        tunnelSelectContainer.style.display = 'none';
+        lookSelectContainer.style.display = 'none';
       } else {
-        manualSettingsContainer.style.display = 'none';
-        selectBlockContainer.style.display = 'grid';
+        tunnelSelectContainer.style.display = 'grid';
+        lookSelectContainer.style.display = 'grid';
       }
     });
 
@@ -645,40 +645,46 @@ class ElementManager {
 
       switch (theme) {
         case 'onion': 
-          root.style.setProperty('--spec-color', '#7946f0');
-          root.style.setProperty('--dull-spec-color', '#5426be');
-          root.style.setProperty('--chbx-spec-color', '#7946f0');
+          root.style.setProperty('--title-color', '#7e47ff');
+          root.style.setProperty('--spec-color', '#6523ff');
+          root.style.setProperty('--dull-spec-color', '#6a39dd');
+          root.style.setProperty('--chbx-spec-color', '#6a3fce');
           root.style.setProperty('--chbx-dull-spec-color', '#5426be');
           break;
         case 'toxic': 
-          root.style.setProperty('--spec-color', '#54f046');
+          root.style.setProperty('--title-color', '#3ec71c');
+          root.style.setProperty('--spec-color', '#40cf33');
           root.style.setProperty('--dull-spec-color', '#51be26');
           root.style.setProperty('--chbx-spec-color', '#25a115');
           root.style.setProperty('--chbx-dull-spec-color', '#1b7210');
           break;
         case 'ice': 
+          root.style.setProperty('--title-color', '#1c96c7');
           root.style.setProperty('--spec-color', '#46b2f0');
           root.style.setProperty('--dull-spec-color', '#26b9be');
           root.style.setProperty('--chbx-spec-color', '#26a9e6');
           root.style.setProperty('--chbx-dull-spec-color', '#0d7696');
           break;
         case 'blood':
+          root.style.setProperty('--title-color', '#e42525');
           root.style.setProperty('--spec-color', '#f03333');
           root.style.setProperty('--dull-spec-color', '#d62727');
           root.style.setProperty('--chbx-spec-color', '#ce2323');
-          root.style.setProperty('--chbx-dull-spec-color', '#801111');
+          root.style.setProperty('--chbx-dull-spec-color', '#991717');
           break;
         case 'gold': 
-          root.style.setProperty('--spec-color', '#f0df46');
+          root.style.setProperty('--title-color', '#c4c71c');
+          root.style.setProperty('--spec-color', '#ccbd33');
           root.style.setProperty('--dull-spec-color', '#bbbe26');
-          root.style.setProperty('--chbx-spec-color', '#bdce23');
-          root.style.setProperty('--chbx-dull-spec-color', '#807e11');
+          root.style.setProperty('--chbx-spec-color', '#95a319');
+          root.style.setProperty('--chbx-dull-spec-color', '#7e7c0f');
           break;
         case 'dark': 
-          root.style.setProperty('--spec-color', '#616161');
-          root.style.setProperty('--dull-spec-color', '#3d3d3d');
-          root.style.setProperty('--chbx-spec-color', '#3b3b3b');
-          root.style.setProperty('--chbx-dull-spec-color', '#2e2e2e');
+          root.style.setProperty('--title-color', '#818181');
+          root.style.setProperty('--spec-color', '#646464');
+          root.style.setProperty('--dull-spec-color', '#555555');
+          root.style.setProperty('--chbx-spec-color', '#494949');
+          root.style.setProperty('--chbx-dull-spec-color', '#3f3f3f');
           break;
       }
     } catch (error) {
