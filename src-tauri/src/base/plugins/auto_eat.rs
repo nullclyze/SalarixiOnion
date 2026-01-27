@@ -1,14 +1,18 @@
+use azalea::entity::metadata::Health;
 use azalea::inventory::ItemStack;
-use azalea::prelude::*;
+use azalea::local_player::Hunger;
+use azalea::{BlockPos, prelude::*};
 use azalea::prelude::ContainerClientExt;
-use azalea::protocol::packets::game::ServerboundUseItem;
+use azalea::protocol::packets::game::{ServerboundPlayerAction, ServerboundUseItem};
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
+use azalea::protocol::packets::game::s_player_action::Action;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
-use crate::tools::randuint;
+use crate::state::STATES;
+use crate::tools::{randticks, randuint};
 use crate::common::{find_empty_slot_in_hotbar, convert_inventory_slot_to_hotbar_slot};
 
 
@@ -28,9 +32,9 @@ impl AutoEatPlugin {
           if !arc.read().active {
             break;
           }
-
-          Self::eat(&bot).await;
         }
+
+        Self::eat(&bot).await;
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -45,47 +49,47 @@ impl AutoEatPlugin {
 
       if let Some(best_food) = Self::get_best_food(bot, food_list.clone()) {
         if let Some(food_slot) = best_food.slot {
-          if let Some(empty_slot) = find_empty_slot_in_hotbar(bot) {
+          if !STATES.get_plugin_activity(&bot.username(), "auto-potion") {
+            STATES.set_plugin_activity(&bot.username(), "auto-eat", true);
+
             let inventory = bot.get_inventory();
 
-            inventory.left_click(food_slot);
-            bot.wait_ticks(randuint(1, 2) as usize).await;
-            inventory.left_click(empty_slot);
+            if let Some(empty_slot) = find_empty_slot_in_hotbar(bot) {
+              inventory.left_click(food_slot);
+              bot.wait_ticks(randticks(1, 2)).await;
+              inventory.left_click(empty_slot);
 
-            if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
-              if bot.selected_hotbar_slot() != slot {
-                bot.set_selected_hotbar_slot(slot);
-                bot.wait_ticks(2).await;
-              }
-
-              Self::start_eating(bot).await;
-            }
-          } else {
-            if food_slot >= 36 && food_slot <= 44 {
-              if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(food_slot as usize) {
-                if bot.selected_hotbar_slot() != hotbar_slot {
-                  bot.set_selected_hotbar_slot(hotbar_slot);
-                  bot.wait_ticks(2).await;
+              if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
+                if bot.selected_hotbar_slot() != slot {
+                  bot.set_selected_hotbar_slot(slot);
+                  bot.wait_ticks(1).await;
                 }
 
                 Self::start_eating(bot).await;
               }
             } else {
-              for food in food_list.clone() {
-                if let Some(slot) = food.slot {
-                  if slot >= 36 && slot <= 44 {
-                    if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot as usize) {
-                      if bot.selected_hotbar_slot() != hotbar_slot {
-                        bot.set_selected_hotbar_slot(hotbar_slot);
-                        bot.wait_ticks(2).await;
-                      }
+              let random_slot = randuint(36, 44) as usize;
 
-                      Self::start_eating(bot).await;
-                    }
-                  }
-                }
+              inventory.shift_click(random_slot);
+
+              bot.wait_ticks(1).await;
+
+              inventory.left_click(food_slot);
+              bot.wait_ticks(randticks(1, 2)).await;
+              inventory.left_click(random_slot);
+
+              let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
+
+              if bot.selected_hotbar_slot() != hotbar_slot {
+                bot.set_selected_hotbar_slot(hotbar_slot);
               }
+
+              bot.wait_ticks(1).await;
+
+              Self::start_eating(bot).await;
             }
+
+            STATES.set_plugin_activity(&bot.username(), "auto-eat", false);
           }
         }
       }
@@ -95,77 +99,88 @@ impl AutoEatPlugin {
   async fn start_eating(bot: &Client) {
     let direction = bot.direction();
 
-    let packet = ServerboundUseItem {
+    bot.write_packet(ServerboundUseItem {
       hand: InteractionHand::MainHand,
       seq: 0,
       y_rot: direction.0,
       x_rot: direction.1
-    };
+    });
 
-    bot.write_packet(packet);
+    sleep(Duration::from_millis(3000)).await;
 
-    sleep(Duration::from_millis(4000)).await;
+    bot.write_packet(ServerboundPlayerAction {
+      action: Action::ReleaseUseItem,
+      pos: BlockPos::new(0, 0, 0),
+      direction: azalea::core::direction::Direction::Down,
+      seq: 0
+    });
   }
 
   fn get_best_food(bot: &Client, food_list: Vec<Food>) -> Option<Food> {
-    let health = bot.health() as u32;
-    let hunger = bot.hunger().food;
+    if let Some(health_component) = bot.get_component::<Health>() {
+      if let Some(hunger_component) = bot.get_component::<Hunger>() {
+        let health = health_component.0;
+        let hunger = hunger_component.food;
 
-    let mut best_food = None;
+        let mut best_food = None;
 
-    if food_list.len() > 1 {
-      let desired_health_priority;
-      let desired_hunger_priority;
+        if food_list.len() > 1 {
+          let desired_health_priority;
+          let desired_hunger_priority;
 
-      if health < 20 && health >= 18 {
-        desired_health_priority = 0;
-      } else if health < 18 && health >= 14 {
-        desired_health_priority = 1;
-      } else if health < 14 && health >= 10 {
-        desired_health_priority = 2;
-      } else {
-        desired_health_priority = 3;
-      }
-
-      if hunger < 20 && hunger >= 18 {
-        desired_hunger_priority = 0;
-      } else if hunger < 18 && hunger >= 14 {
-        desired_hunger_priority = 1;
-      } else if hunger < 14 && hunger >= 10 {
-        desired_hunger_priority = 2;
-      } else {
-        desired_hunger_priority = 3;
-      }
-
-      let mut current_priority;
-
-      if desired_health_priority > desired_hunger_priority {
-        current_priority = desired_health_priority;
-      } else {
-        current_priority = (desired_health_priority + desired_hunger_priority) / 2;
-      }
-
-      for attempt in 0..3 {
-        for food in food_list.clone() {
-          if food.priority == current_priority {
-            best_food = Some(food);
-            break;
-          }
-        }
-
-        if attempt > 0 {
-          if current_priority + 1 <= 3 {
-            current_priority += 1;
+          if health < 20.0 && health >= 18.0 {
+            desired_health_priority = 0;
+          } else if health < 18.0 && health >= 14.0 {
+            desired_health_priority = 1;
+          } else if health < 14.0 && health >= 10.0 {
+            desired_health_priority = 2;
           } else {
-            current_priority -= 1;
+            desired_health_priority = 3;
           }
+
+          if hunger < 20 && hunger >= 18 {
+            desired_hunger_priority = 0;
+          } else if hunger < 18 && hunger >= 14 {
+            desired_hunger_priority = 1;
+          } else if hunger < 14 && hunger >= 10 {
+            desired_hunger_priority = 2;
+          } else {
+            desired_hunger_priority = 3;
+          }
+
+          let mut current_priority;
+
+          if desired_health_priority > desired_hunger_priority {
+            current_priority = desired_health_priority;
+          } else {
+            current_priority = (desired_health_priority + desired_hunger_priority) / 2;
+          }
+
+          for attempt in 0..3 {
+            for food in food_list.clone() {
+              if food.priority == current_priority {
+                best_food = Some(food);
+                break;
+              }
+            }
+
+            if attempt > 0 {
+              if current_priority + 1 <= 3 {
+                current_priority += 1;
+              } else {
+                current_priority -= 1;
+              }
+            }
+          }
+        } else {
+          best_food = food_list.get(0).cloned();
         }
+
+        return best_food;
       }
-    } else {
-      best_food = food_list.get(0).cloned();
     }
 
-    best_food
+    None
   }
 
   fn find_food_in_inventory(bot: &Client) -> Vec<Food> {

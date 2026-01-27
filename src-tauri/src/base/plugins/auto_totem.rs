@@ -5,6 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
+use crate::state::STATES;
 use crate::tools::randticks;
 use crate::common::is_this_slot_empty;
 
@@ -19,9 +20,9 @@ impl AutoTotemPlugin {
           if !arc.read().active {
             break;
           }
-
-          Self::take_totem(&bot).await;
         }
+
+        Self::take_totem(&bot).await;
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -33,11 +34,15 @@ impl AutoTotemPlugin {
       for (slot, item) in bot.menu().slots().iter().enumerate(){  
         if slot != 45 {
           if item.kind() == ItemKind::TotemOfUndying {
+            STATES.set_plugin_activity(&bot.username(), "auto-totem", true);
+            
             let inventory = bot.get_inventory();
 
             inventory.left_click(slot);
             bot.wait_ticks(randticks(1, 2)).await;
             inventory.left_click(45 as usize);
+
+            STATES.set_plugin_activity(&bot.username(), "auto-totem", false);
           }
         }
       }

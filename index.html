@@ -540,6 +540,24 @@
               <button class="button" plugin-open-description="true" path="auto-eat-plugin-description">Описание</button>
             </div>
           </div>
+
+          <div class="plugin-card" id="auto-potion-plugin">
+            <div class="head">
+              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+              </svg>
+
+              <div class="text">
+                <div class="name" id="auto-potion-name">Авто Зелье</div>
+                <div class="meta"><span translator-tag="label:plugin-status">Статус:</span> <span class="status" id="auto-potion-status">Выключен</span></div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="button" plugin-toggler="true" plugin-name="auto-potion" state="true" id="auto-potion-toggler" style="color: #d61818;">Выключен</button>
+              <button class="button" plugin-open-description="true" path="auto-potion-plugin-description">Описание</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -582,6 +600,27 @@
         <div class="description-body">
           <div class="description" id="auto-totem-description"></div>
           <p>Последнее обновление: <span id="auto-totem-latest-update">?</span></p>
+        </div>
+      </div>
+
+      <div class="plugin-description" id="auto-potion-plugin-description">
+        <div class="panel">
+          <div class="left">
+            <div class="name">Авто Зелье - Описание</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" plugin-close-description="true" path="auto-potion-plugin-description">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="description-body">
+          <div class="description" id="auto-potion-description"></div>
+          <p>Последнее обновление: <span id="auto-potion-latest-update">?</span></p>
         </div>
       </div>
 

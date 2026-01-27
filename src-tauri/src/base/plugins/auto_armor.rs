@@ -6,6 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
+use crate::state::STATES;
 use crate::tools::randticks;
 use crate::common::find_empty_slot_in_invenotry;
 
@@ -35,9 +36,9 @@ impl AutoArmorPlugin {
           if !arc.read().active {
             break;
           }
-
-          Self::equip_armor(&bot).await;
         }
+
+        Self::equip_armor(&bot).await;
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -91,6 +92,8 @@ impl AutoArmorPlugin {
   }
 
   async fn equip(bot: &Client, armor_slot: u16, target_slot: u16) {
+    STATES.set_plugin_activity(&bot.username(), "auto-armor", true);
+
     let inventory = bot.get_inventory();
 
     if let Some(menu) = inventory.menu() {
@@ -108,6 +111,8 @@ impl AutoArmorPlugin {
     }
     
     inventory.shift_click(target_slot);
+
+    STATES.set_plugin_activity(&bot.username(), "auto-armor", false);
   }
 
   fn is_armor(item: &ItemStack, slot: Option<u16>) -> Option<Armor> {

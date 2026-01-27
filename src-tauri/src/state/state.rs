@@ -18,7 +18,16 @@ pub struct BotState {
   pub registered: bool,
   pub skin_is_set: bool,
   pub captcha_caught: bool,
-  pub group: String
+  pub group: String,
+  pub plugin_activity: PluginActivity
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginActivity {
+  pub auto_armor: bool,
+  pub auto_totem: bool,
+  pub auto_eat: bool,
+  pub auto_potion: bool
 }
 
 impl BotState {
@@ -34,7 +43,13 @@ impl BotState {
       registered: false,
       skin_is_set: false,
       captcha_caught: false,
-      group: "global".to_string()
+      group: "global".to_string(),
+      plugin_activity: PluginActivity { 
+        auto_armor: false, 
+        auto_totem: false, 
+        auto_eat: false, 
+        auto_potion: false 
+      }
     }
   }
 
@@ -50,12 +65,12 @@ impl BotState {
     self.proxy = proxy.to_string();
   }
 
-  pub fn set_health(&mut self, health: &u32) {
-    self.health = *health;
+  pub fn set_health(&mut self, health: u32) {
+    self.health = health;
   }
 
-  pub fn set_satiety(&mut self, satiety: &u32) {
-    self.satiety = *satiety;
+  pub fn set_satiety(&mut self, satiety: u32) {
+    self.satiety = satiety;
   }
 
   pub fn set_registered(&mut self, state: bool) {
@@ -106,12 +121,50 @@ impl BotStateManager {
         "status" => state.set_status(&value),
         "password" => state.set_password(&value),
         "proxy" => state.set_proxy(&value),
-        "health" => state.set_health(&value.parse().unwrap()),
-        "satiety" => state.set_satiety(&value.parse().unwrap()),
+        "health" => state.set_health(value.parse().unwrap()),
+        "satiety" => state.set_satiety(value.parse().unwrap()),
         "registered" => state.set_registered(value.parse().unwrap()),
         "skin_is_set" => state.set_skin_is_set(value.parse().unwrap()),
         "captcha_caught" => state.set_captcha_caught(value.parse().unwrap()),
         "group" => state.set_group(value.parse().unwrap()),
+        _ => {}
+      }
+    }
+  }
+
+  pub fn get_plugin_activity(&self, nickname: &String, plugin: &str) -> bool {
+    if let Some(arc) = self.states.read().unwrap().get(nickname) {
+      let state = arc.read().unwrap();
+
+      match plugin {
+        "auto-armor" => return state.plugin_activity.auto_armor,
+        "auto-totem" => return state.plugin_activity.auto_totem,
+        "auto-eat" => return state.plugin_activity.auto_eat,
+        "auto-potion" => return state.plugin_activity.auto_potion,
+        _ => {}
+      }
+    }
+
+    false
+  }
+
+  pub fn set_plugin_activity(&self, nickname: &String, plugin: &str, value: bool) {
+    if let Some(arc) = self.states.write().unwrap().get(nickname) {
+      let mut state = arc.write().unwrap();
+
+      match plugin {
+        "auto-armor" => {
+          state.plugin_activity.auto_armor = value;
+        },
+        "auto-totem" => {
+          state.plugin_activity.auto_totem = value;
+        },
+        "auto-eat" => {
+          state.plugin_activity.auto_eat = value;
+        },
+        "auto-potion" => {
+          state.plugin_activity.auto_potion = value;
+        },
         _ => {}
       }
     }

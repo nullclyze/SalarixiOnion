@@ -116,6 +116,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           if options.plugins.auto_eat {
             AutoEatPlugin::enable(bot.clone());
           }
+
+          if options.plugins.auto_potion {
+            AutoPotionPlugin::enable(bot.clone());
+          }
         }
       }
 
@@ -318,13 +322,20 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       if let Some(state) = STATES.get(&nickname) {
         if state.read().unwrap().status.as_str().to_lowercase() == "онлайн" {
-          if let Some(health) = bot.get_component::<Health>() {
-            STATES.set(&nickname, "health", (health.floor() as u32).to_string());
-          }
+          let health = if let Some(health) = bot.get_component::<Health>() {
+            health.0.round() as u32
+          } else {
+            0
+          };
 
-          if let Some(hunger) = bot.get_component::<Hunger>() {
-            STATES.set(&nickname, "satiety", hunger.food.to_string());
-          }
+          let satiety = if let Some(hunger) = bot.get_component::<Hunger>() {
+            hunger.food
+          } else {
+            0
+          };
+          
+          STATES.set(&nickname, "health", health.to_string());
+          STATES.set(&nickname, "satiety", satiety.to_string());
         }
       }
     },
