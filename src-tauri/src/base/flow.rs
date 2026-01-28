@@ -197,7 +197,8 @@ pub struct Plugins {
   pub auto_armor: bool,
   pub auto_totem: bool,
   pub auto_eat: bool,
-  pub auto_potion: bool
+  pub auto_potion: bool,
+  pub auto_look: bool
 }
 
 // Структура FlowManager

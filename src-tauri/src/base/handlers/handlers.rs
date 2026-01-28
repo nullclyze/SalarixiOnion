@@ -120,6 +120,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           if options.plugins.auto_potion {
             AutoPotionPlugin::enable(bot.clone());
           }
+
+          if options.plugins.auto_look {
+            AutoLookPlugin::enable(bot.clone());
+          }
         }
       }
 

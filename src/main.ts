@@ -15,7 +15,7 @@ import { translate, Language } from './modules/translator';
 Chart.register(...registerables);
 
 const client = {
-  version: '1.0.6'
+  version: '1.0.7'
 };
 
 let process: 'active' | 'sleep' = 'sleep';
@@ -61,6 +61,10 @@ const plugins: { [x: string]: { enable: boolean, date: string } } = {
     date: '27.01.2026'
   },
   'auto-potion': {
+    enable: false,
+    date: '27.01.2026'
+  },
+  'auto-look': {
     enable: false,
     date: '27.01.2026'
   }
@@ -166,7 +170,8 @@ async function startBots(): Promise<void> {
       auto_armor: plugins['auto-armor'].enable,
       auto_totem: plugins['auto-totem'].enable,
       auto_eat: plugins['auto-eat'].enable,
-      auto_potion: plugins['auto-potion'].enable
+      auto_potion: plugins['auto-potion'].enable,
+      auto_look: plugins['auto-look'].enable
     }
   }}) as Array<string>;
 
@@ -252,37 +257,34 @@ class ElementManager {
       });
     });
 
-    document.querySelectorAll('[plugin-toggler="true"]').forEach(e => e.addEventListener('click', () => {
-      const pluginName = e.getAttribute('plugin-name');
-      const state = e.getAttribute('state') === 'true';
+    document.querySelectorAll('[plugin-toggler="true"]').forEach(t => t.addEventListener('click', () => {
+      const name = t.getAttribute('plugin-name');
+      const state = t.getAttribute('state') === 'true';
+      
+      if (name && process === 'sleep') {
+        plugins[name].enable = state;
 
-      if (pluginName) {
-        if (process === 'sleep') {
-          plugins[pluginName].enable = state;
+        const status = document.getElementById(`${name}-status`) as HTMLElement;
+        const button = document.getElementById(`${name}-toggler`) as HTMLButtonElement;
 
-          const status = document.getElementById(`${pluginName}-status`) as HTMLElement;
-          const button = document.getElementById(`${pluginName}-toggler`) as HTMLButtonElement;
+        if (state) {
+          status.innerText = 'Включен';
 
-          if (state) {
-            status.innerText = 'Включен';
+          button.setAttribute('state', 'false');
+          button.style.color = '#4ed618';
+          button.innerText = 'Включен';
+        } else {
+          status.innerText = 'Выключен';
 
-            button.setAttribute('state', 'false');
-            button.style.color = '#4ed618';
-            button.innerText = 'Включен';
-          } else {
-            status.innerText = 'Выключен';
-
-            button.setAttribute('state', 'true');
-            button.style.color = '#d61818';
-            button.innerText = 'Выключен';
-          }
+          button.setAttribute('state', 'true');
+          button.style.color = '#d61818';
+          button.innerText = 'Выключен';
         }
       }
     }));  
 
     document.querySelectorAll('[plugin-open-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
-
       if (path) {
         const container = document.getElementById(path) as HTMLElement;
         container.style.display = 'flex';
@@ -291,7 +293,6 @@ class ElementManager {
 
     document.querySelectorAll('[plugin-close-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
-
       if (path) {
         const container = document.getElementById(path) as HTMLElement;
         container.style.display = 'none';
@@ -302,7 +303,6 @@ class ElementManager {
 
     document.querySelectorAll('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
       let state: boolean | string = false;
-
       let attribute = e.getAttribute('state');
 
       switch (attribute) {
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     log('Инициализация прошла успешно', 'extended');
 
-    await checkUpdate();
+    //await checkUpdate();
   } catch (error) {
     log(`Ошибка инициализации: ${error}`, 'error');
   }
