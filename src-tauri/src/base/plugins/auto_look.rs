@@ -1,6 +1,8 @@
-use azalea::{Vec3, prelude::*};
+use azalea::prelude::*;
+use azalea::Vec3;
 use azalea::ecs::prelude::*;
-use azalea::entity::{Dead, LocalEntity, Position};
+use azalea::world::MinecraftEntityId;
+use azalea::entity::{Dead, Position};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -32,28 +34,36 @@ impl AutoLookPlugin {
   async fn look(bot: &Client) {
     let eye_pos = bot.eye_position();
 
-    let nearest_entity = bot.nearest_entity_by::<&Position, (Without<LocalEntity>, Without<Dead>)>(|position: &Position| {
-      eye_pos.distance_to(**position) <= 14.0
+    let bot_id = if let Some(bot_id) = bot.get_entity_component::<MinecraftEntityId>(bot.entity) {
+      bot_id
+    } else {
+      return;
+    };
+
+    let nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), Without<Dead>>(|data: (&Position, &MinecraftEntityId)| {
+      eye_pos.distance_to(**data.0) <= 14.0 && *data.1 != bot_id
     });
 
     if let Some(entity) = nearest_entity {
       if let Some(entity_pos) = bot.get_entity_component::<Position>(entity) {
         let nickname = bot.username();
 
-        if !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.get_plugin_activity(&nickname, "auto-shield") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") {
-          STATES.set_plugin_activity(&nickname, "auto-look", true);
+        if bot.is_goto_target_reached() {
+          if !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.get_plugin_activity(&nickname, "auto-shield") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") {
+            STATES.set_plugin_activity(&nickname, "auto-look", true);
 
-          let pos = Vec3::new(
-            entity_pos.x + randfloat(-0.1, 0.1), 
-            entity_pos.y + randfloat(-0.1, 0.1), 
-            entity_pos.z + randfloat(-0.1, 0.1)
-          );
+            let pos = Vec3::new(
+              entity_pos.x + randfloat(-0.1, 0.1), 
+              entity_pos.y + randfloat(-0.1, 0.1), 
+              entity_pos.z + randfloat(-0.1, 0.1)
+            );
 
-          bot.look_at(pos);
+            bot.look_at(pos);
 
-          bot.wait_ticks(1).await;
+            bot.wait_ticks(1).await;
 
-          STATES.set_plugin_activity(&nickname, "auto-look", false);
+            STATES.set_plugin_activity(&nickname, "auto-look", false);
+          }
         }
       }
     }

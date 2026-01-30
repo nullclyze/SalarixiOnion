@@ -1,3 +1,5 @@
+use azalea::SprintDirection;
+use azalea::WalkDirection;
 use azalea::entity::Position;
 use azalea::prelude::*;
 use azalea::Vec3;
@@ -5,8 +7,12 @@ use azalea::core::position::BlockPos;
 use azalea::entity::Physics;
 use azalea::block::BlockState;
 use bevy_ecs::entity::Entity;
+use std::time::Duration;
+use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
+use crate::state::STATES;
+use crate::tools::randuint;
 
 
 // Функция нахождения пустого слота в инвентаре
@@ -156,6 +162,7 @@ pub fn get_player_uuid(nickname: String) -> Option<String> {
   None
 }
 
+// Функция получения позиции сущности
 pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
   let position = bot.get_entity_component::<Position>(entity);
 
@@ -164,4 +171,66 @@ pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
   }
 
   Vec3::new(0.0, 0.0, 0.0)
+}
+
+// Функция перемещения предмета в hotbar
+pub async fn move_item_to_hotbar(bot: &Client, source_slot: usize) {
+  let nickname = bot.username();
+
+  STATES.set(&nickname, "can_walk", "false".to_string());
+  
+  let inventory = bot.get_inventory();
+
+  if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
+    if bot.selected_hotbar_slot() != hotbar_slot {
+      bot.set_selected_hotbar_slot(hotbar_slot);
+    }
+  } else {
+    if let Some(empty_slot) = find_empty_slot_in_hotbar(bot) {
+      bot.walk(WalkDirection::None);
+
+      inventory.left_click(source_slot);
+      sleep(Duration::from_millis(50)).await;
+      inventory.left_click(empty_slot);
+
+      if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
+        if bot.selected_hotbar_slot() != slot {
+          bot.set_selected_hotbar_slot(slot);
+          sleep(Duration::from_millis(50)).await;
+        }
+      }
+    } else {
+      let random_slot = randuint(36, 44) as usize;
+      
+      bot.walk(WalkDirection::None);
+
+      inventory.shift_click(random_slot);
+      sleep(Duration::from_millis(50)).await;
+      inventory.left_click(source_slot);
+      sleep(Duration::from_millis(50)).await;
+      inventory.left_click(random_slot);
+
+      let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
+
+      if bot.selected_hotbar_slot() != hotbar_slot {
+        bot.set_selected_hotbar_slot(hotbar_slot);
+      }
+    }
+  }
+
+  STATES.set(&nickname, "can_walk", "true".to_string());
+}
+
+// Функция безопасного задания направления хотьбы для бота
+pub fn go(bot: &Client, direction: WalkDirection) {
+  if STATES.can_walk(&bot.username()) {
+    bot.walk(direction);
+  }
+}
+
+// Функция безопасного задания направления бега для бота
+pub fn run(bot: &Client, direction: SprintDirection) {
+  if STATES.can_walk(&bot.username()) {
+    bot.sprint(direction);
+  }
 }

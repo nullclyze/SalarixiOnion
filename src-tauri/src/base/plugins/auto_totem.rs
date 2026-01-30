@@ -1,4 +1,4 @@
-use azalea::prelude::*;
+use azalea::{WalkDirection, prelude::*};
 use azalea::prelude::ContainerClientExt;
 use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
@@ -6,7 +6,6 @@ use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
 use crate::state::STATES;
-use crate::tools::randticks;
 
 
 pub struct AutoTotemPlugin;
@@ -41,8 +40,10 @@ impl AutoTotemPlugin {
                 
                 let inventory = bot.get_inventory();
 
+                bot.walk(WalkDirection::None);
+
                 inventory.left_click(slot);
-                bot.wait_ticks(randticks(1, 2)).await;
+                bot.wait_ticks(1).await;
                 inventory.left_click(45 as usize);
 
                 STATES.set_plugin_activity(&nickname, "auto-totem", false);

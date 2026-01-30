@@ -19,6 +19,7 @@ pub struct BotState {
   pub skin_is_set: bool,
   pub captcha_caught: bool,
   pub group: String,
+  pub can_walk: bool,
   pub plugin_activity: PluginActivity
 }
 
@@ -46,6 +47,7 @@ impl BotState {
       skin_is_set: false,
       captcha_caught: false,
       group: "global".to_string(),
+      can_walk: true,
       plugin_activity: PluginActivity { 
         auto_armor: false, 
         auto_totem: false, 
@@ -92,6 +94,10 @@ impl BotState {
   pub fn set_group(&mut self, group: String) {
     self.group = group;
   }
+
+  pub fn set_can_walk(&mut self, state: bool) {
+    self.can_walk = state;
+  }
 }
 
 pub struct BotStateManager {
@@ -131,6 +137,7 @@ impl BotStateManager {
         "skin_is_set" => state.set_skin_is_set(value.parse().unwrap()),
         "captcha_caught" => state.set_captcha_caught(value.parse().unwrap()),
         "group" => state.set_group(value.parse().unwrap()),
+        "can_walk" => state.set_can_walk(value.parse().unwrap()),
         _ => {}
       }
     }
@@ -185,6 +192,14 @@ impl BotStateManager {
   pub fn clear(&self) {
     let mut states = self.states.write().unwrap();
     states.clear();
+  }
+
+  pub fn can_walk(&self, nickname: &String) -> bool {
+    if let Some(arc) = self.states.read().unwrap().get(nickname) {
+      return arc.read().unwrap().can_walk;
+    }
+
+    true
   }
 
   pub fn get_all_profiles(&self) -> HashMap<String, BotState> {

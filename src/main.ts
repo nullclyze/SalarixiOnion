@@ -567,6 +567,16 @@ class ElementManager {
       }
     });
 
+    document.getElementById('use-killaura-chase')?.addEventListener('input', function (this: HTMLInputElement) {
+      const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
+
+      if (this.checked) {
+        chaseSettingsContainer.style.display = 'flex';
+      } else {
+        chaseSettingsContainer.style.display = 'none';
+      }
+    });
+
     document.getElementById('select-bow-aim-target')?.addEventListener('change', function (this: HTMLSelectElement) {
       const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
 

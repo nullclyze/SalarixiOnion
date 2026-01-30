@@ -1379,6 +1379,14 @@
                     <option value="animal">Животное</option>
                   </select>
                 </div>
+
+                <div class="custom-select between">
+                  <label>Оружие: </label>
+                  <select control="killaura" name="weapon">
+                    <option value="sword">Меч</option>
+                    <option value="axe">Топор</option>
+                  </select>
+                </div>
               </div>
 
               <div class="input-wrap">
@@ -1394,8 +1402,20 @@
                   </div>
 
                   <div class="form-input">
-                    <label for="killaura-delay" class="text">Задержка в тиках</label>
-                    <input type="number" control="killaura" id="killaura-delay" placeholder="1" value="1" name="delay">
+                    <label for="killaura-delay" class="text">Задержка</label>
+                    <input type="number" control="killaura" id="killaura-delay" placeholder="500" value="500" name="delay">
+                  </div>
+                </div>
+
+                <div class="hidden-wrapper input" id="killaura-chase-settings-container">
+                  <div class="form-input">
+                    <label for="killaura-chase-distance" class="text">Дистанция преследования</label>
+                    <input type="number" control="killaura" id="killaura-chase-distance" placeholder="10.0" value="10.0" name="chase_distance">
+                  </div>
+
+                  <div class="form-input">
+                    <label for="killaura-min-distance-to-target" class="text">Минимальная дистанция до цели</label>
+                    <input type="number" control="killaura" id="killaura-min-distance-to-target" placeholder="3.0" value="3.0" name="min_distance_to_target">
                   </div>
                 </div>
               </div>
@@ -1403,6 +1423,30 @@
               <div class="btn-group-flex" style="margin-top: 25px;">
                 <button class="btn green toggler" control-toggler="true" name="killaura" state="true">Старт</button>
                 <button class="btn red toggler" control-toggler="true" name="killaura" state="false">Стоп</button>
+              </div>
+            </div>
+
+            <div class="wrap right">
+              <div class="checkbox-group">
+                <label class="checkbox-container">
+                  <input type="checkbox" control="killaura" id="use-killaura-dodging" name="use_dodging">
+                  <span class="checkmark"></span>
+                  Доджинг
+                </label>
+
+                <label class="checkbox-container">
+                  <input type="checkbox" control="killaura" id="use-killaura-chase" name="use_chase">
+                  <span class="checkmark"></span>
+                  Преследование
+                </label>
+
+                <div class="simple-sep"></div>
+
+                <label class="checkbox-container">
+                  <input type="checkbox" control="killaura" id="use-killaura-critical" name="use_critical">
+                  <span class="checkmark"></span>
+                  Критические удары
+                </label>
               </div>
             </div>
           </div>
@@ -1512,8 +1556,8 @@
                 </div>
 
                 <div class="form-input">
-                  <label for="bow-aim-delay" class="text">Задержка в тиках</label>
-                  <input type="number" control="bow-aim" id="bow-aim-delay" placeholder="1" value="1" name="delay">
+                  <label for="bow-aim-delay" class="text">Задержка</label>
+                  <input type="number" control="bow-aim" id="bow-aim-delay" placeholder="50" value="50" name="delay">
                 </div>
               </div>
 

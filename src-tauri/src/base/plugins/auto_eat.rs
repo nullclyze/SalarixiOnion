@@ -12,8 +12,10 @@ use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
 use crate::state::STATES;
-use crate::tools::randticks;
 use crate::common::move_item_to_hotbar;
+use crate::tasks::TASKS;
+use crate::tools::randchance;
+use crate::tools::randuint;
 
 
 #[derive(Clone)]
@@ -42,21 +44,35 @@ impl AutoEatPlugin {
   } 
 
   async fn eat(bot: &Client) {
-    let hunger = bot.hunger();
+    let satiety = if let Some(hunger) = bot.get_component::<Hunger>() {
+      hunger.food
+    } else {
+      20
+    };
 
-    if hunger.food < 20 {
+    let nickname = bot.username();
+
+    if satiety < 20 {
       let food_list = Self::find_food_in_inventory(bot);
 
       if let Some(best_food) = Self::get_best_food(bot, food_list.clone()) {
         if let Some(food_slot) = best_food.slot {
-          if !STATES.get_plugin_activity(&bot.username(), "auto-potion") {
-            STATES.set_plugin_activity(&bot.username(), "auto-eat", true);
+          if !STATES.get_plugin_activity(&nickname, "auto-potion") {
+            let mut should_eat = true;
 
-            move_item_to_hotbar(bot, food_slot).await;
-            bot.wait_ticks(randticks(1, 2)).await;
-            Self::start_eating(bot).await;
+            if TASKS.get_task_activity(&nickname, "killaura") {
+              should_eat = randchance(0.5);
+            }
 
-            STATES.set_plugin_activity(&bot.username(), "auto-eat", false);
+            if should_eat {
+              STATES.set_plugin_activity(&nickname, "auto-eat", true);
+
+              move_item_to_hotbar(bot, food_slot).await;
+              sleep(Duration::from_millis(randuint(50, 100))).await;
+              Self::start_eating(bot).await;
+
+              STATES.set_plugin_activity(&nickname, "auto-eat", false);
+            }
           }
         }
       }

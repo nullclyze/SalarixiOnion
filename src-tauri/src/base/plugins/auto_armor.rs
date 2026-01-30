@@ -94,23 +94,23 @@ impl AutoArmorPlugin {
   async fn equip(bot: &Client, armor_slot: usize, target_slot: usize) {
     STATES.set_plugin_activity(&bot.username(), "auto-armor", true);
 
-    let inventory = bot.get_inventory();
-
-    if let Some(menu) = inventory.menu() {
-      if let Some(item) = menu.slot(armor_slot) {
-        if !item.is_empty() {
-          if let Some(empty_slot) = find_empty_slot_in_invenotry(bot) {
-            inventory.left_click(armor_slot);
-            bot.wait_ticks(randticks(1, 2)).await;
-            inventory.left_click(empty_slot);
-          } else {
-            return;
+    if let Some(inventory) = bot.open_inventory() {
+      if let Some(menu) = inventory.menu() {
+        if let Some(item) = menu.slot(armor_slot) {
+          if !item.is_empty() {
+            if let Some(empty_slot) = find_empty_slot_in_invenotry(bot) {
+              inventory.left_click(armor_slot);
+              bot.wait_ticks(randticks(1, 2)).await;
+              inventory.left_click(empty_slot);
+            } else {
+              return;
+            }
           }
         }
       }
+      
+      inventory.shift_click(target_slot);
     }
-    
-    inventory.shift_click(target_slot);
 
     STATES.set_plugin_activity(&bot.username(), "auto-armor", false);
   }
