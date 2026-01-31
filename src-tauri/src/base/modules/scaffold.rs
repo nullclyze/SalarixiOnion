@@ -1,11 +1,12 @@
 use azalea::prelude::*;
 use azalea::core::position::BlockPos;
-use azalea::entity::Physics;
 use azalea::registry::builtin::ItemKind;
 use serde::{Serialize, Deserialize};
+use std::time::Duration;
+use tokio::time::sleep;
 
 use crate::TASKS;
-use crate::common::{convert_inventory_slot_to_hotbar_slot, move_item_to_hotbar, swing_arm};
+use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, move_item_to_hotbar, swing_arm};
 use crate::tools::*;
 
 
@@ -15,7 +16,7 @@ pub struct ScaffoldModule;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScaffoldOptions {
   pub mode: String,
-  pub delay: Option<usize>,
+  pub delay: Option<u64>,
   pub min_gaze_degree_x: Option<f32>,
   pub max_gaze_degree_x: Option<f32>,
   pub state: bool
@@ -128,7 +129,7 @@ impl ScaffoldModule {
     false
   }
 
-  async fn take_block(bot: &Client) {
+  async fn take_block(bot: &Client) -> bool {
     let menu = bot.menu();
 
     let mut block_slot = None;
@@ -139,7 +140,7 @@ impl ScaffoldModule {
           if Self::is_block(item.kind()) {
             if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
               if bot.selected_hotbar_slot() == hotbar_slot {
-                return;
+                return true;
               }
             }
 
@@ -151,7 +152,10 @@ impl ScaffoldModule {
 
     if let Some(slot) = block_slot {
       move_item_to_hotbar(bot, slot).await;
+      return true;
     }
+
+    false
   }
 
   fn simulate_inaccuracy(bot: &Client, direction: (f32, f32)) {
@@ -175,123 +179,131 @@ impl ScaffoldModule {
         bot.set_crouching(true);
       }
 
-      Self::take_block(bot).await;
+      if Self::take_block(bot).await {
+        Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
-      Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
+        let position = bot.position();
+        let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
 
-      let position = bot.position();
-      let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
+        let is_air = if let Some(state) = get_block_state(bot, block_under) {
+          state.is_air()
+        } else {
+          false
+        };
 
-      let is_air = {
-        bot.world().read().get_block_state(block_under).map_or(true, |state| state.is_air())
-      };
+        if is_air {    
+          swing_arm(bot);
 
-      if is_air {    
-        swing_arm(bot);
+          bot.start_use_item();
 
-        bot.start_use_item();
+          sleep(Duration::from_millis(randuint(100, 200))).await;
 
-        bot.wait_ticks(randticks(2, 4)).await;
+          Self::simulate_inaccuracy(bot, bot.direction());
 
-        Self::simulate_inaccuracy(bot, bot.direction());
-
-        bot.wait_ticks(randticks(2, 3)).await;
+          sleep(Duration::from_millis(randuint(100, 150))).await;
+        }
       }
-              
-      bot.wait_ticks(options.delay.unwrap_or(1)).await;
+
+      sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
     }    
   }
 
   async fn ninja_bridge_scaffold(bot: &Client, options: ScaffoldOptions) {
     loop { 
-      Self::take_block(bot).await;
+      if Self::take_block(bot).await { 
+        Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
-      Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
+        let pos = bot.position();
+        let block_under = BlockPos::new(pos.x.floor() as i32, (pos.y - 0.5).floor() as i32 , pos.z.floor() as i32);
 
-      let pos = bot.position();
-      let block_under = BlockPos::new(pos.x.floor() as i32, (pos.y - 0.5).floor() as i32 , pos.z.floor() as i32);
+        let is_air = if let Some(state) = get_block_state(bot, block_under) {
+          state.is_air()
+        } else {
+          false
+        };
 
-      let is_air = {
-        bot.world().read().get_block_state(block_under).map_or(true, |state| state.is_air())
-      };
+        if is_air {
+          bot.set_crouching(true);
 
-      if is_air || pos.x - pos.x.floor() > 1.0 || pos.z - pos.z.floor() > 1.0 {
-        bot.set_crouching(true);
+          sleep(Duration::from_millis(50)).await;
+                        
+          swing_arm(bot);
 
-        bot.wait_ticks(1).await;
-                      
-        swing_arm(bot);
+          bot.start_use_item();
 
-        bot.start_use_item();
+          sleep(Duration::from_millis(randuint(50, 100))).await;
 
-        bot.wait_ticks(randticks(2, 3)).await;
+          Self::simulate_inaccuracy(bot, bot.direction());
 
-        Self::simulate_inaccuracy(bot, bot.direction());
+          sleep(Duration::from_millis(50)).await;
 
-        bot.set_crouching(false);
-
-        bot.wait_ticks(1).await;
+          bot.set_crouching(false);
+        }
       }
               
-      bot.wait_ticks(options.delay.unwrap_or(1)).await;
+      sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
     }    
   }
 
   async fn god_bridge_scaffold(bot: &Client, options: ScaffoldOptions) {
     loop { 
-      Self::take_block(bot).await;
+      if Self::take_block(bot).await { 
+        Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
-      Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
+        let position = bot.position();
+        let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
 
-      let position = bot.position();
-      let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
+        let is_air = if let Some(state) = get_block_state(bot, block_under) {
+          state.is_air()
+        } else {
+          false
+        };
 
-      let is_air = {
-        bot.world().read().get_block_state(block_under).map_or(true, |state| state.is_air())
-      };
+        if is_air {              
+          swing_arm(bot);
 
-      if is_air  {              
-        swing_arm(bot);
+          bot.start_use_item(); 
 
-        bot.start_use_item(); 
-
-        Self::simulate_inaccuracy(bot, bot.direction());
+          Self::simulate_inaccuracy(bot, bot.direction());
+        }
       }
               
-      bot.wait_ticks(options.delay.unwrap_or(1)).await;
+      sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
     }    
   }
 
   async fn jump_bridge_scaffold(bot: &Client, options: ScaffoldOptions) {
     loop { 
-      Self::take_block(bot).await;
+      if Self::take_block(bot).await { 
+        Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
-      Self::direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
+        let position = bot.position();
+        let velocity = get_bot_physics(bot).velocity;
 
-      let position = bot.position();
-      let velocity = bot.ecs.lock().get::<Physics>(bot.entity).unwrap().clone().velocity;
+        let block_under = BlockPos::new(
+          position.x.floor() as i32, 
+          (if velocity.y != 0.0 { position.y - 1.0 } else { position.y - 0.5 }).floor() as i32,
+          position.z.floor() as i32
+        );
 
-      let block_under = BlockPos::new(
-        position.x.floor() as i32, 
-        (if velocity.y != 0.0 { position.y - 1.0 } else { position.y - 0.5 }).floor() as i32,
-        position.z.floor() as i32
-      );
+        let is_air = if let Some(state) = get_block_state(bot, block_under) {
+          state.is_air()
+        } else {
+          false
+        };
+                
+        if is_air {  
+          bot.jump();
+                        
+          swing_arm(bot);
+          
+          bot.start_use_item();
 
-      let is_air = {
-        bot.world().read().get_block_state(block_under).map_or(true, |state| state.is_air())
-      };
+          Self::simulate_inaccuracy(bot, bot.direction());
+        }  
+      }
               
-      if is_air {  
-        bot.jump();
-                      
-        swing_arm(bot);
-        
-        bot.start_use_item();
-
-        Self::simulate_inaccuracy(bot, bot.direction());
-      }  
-              
-      bot.wait_ticks(options.delay.unwrap_or(1)).await;
+      sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
     }    
   }
 

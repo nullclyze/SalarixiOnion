@@ -20,6 +20,7 @@ pub struct BotState {
   pub captcha_caught: bool,
   pub group: String,
   pub can_walk: bool,
+  pub attacks: bool,
   pub plugin_activity: PluginActivity
 }
 
@@ -48,6 +49,7 @@ impl BotState {
       captcha_caught: false,
       group: "global".to_string(),
       can_walk: true,
+      attacks: false,
       plugin_activity: PluginActivity { 
         auto_armor: false, 
         auto_totem: false, 
@@ -98,6 +100,10 @@ impl BotState {
   pub fn set_can_walk(&mut self, state: bool) {
     self.can_walk = state;
   }
+
+  pub fn set_attacks(&mut self, state: bool) {
+    self.attacks = state;
+  }
 }
 
 pub struct BotStateManager {
@@ -138,6 +144,7 @@ impl BotStateManager {
         "captcha_caught" => state.set_captcha_caught(value.parse().unwrap()),
         "group" => state.set_group(value.parse().unwrap()),
         "can_walk" => state.set_can_walk(value.parse().unwrap()),
+        "attacks" => state.set_attacks(value.parse().unwrap()),
         _ => {}
       }
     }
@@ -197,6 +204,14 @@ impl BotStateManager {
   pub fn can_walk(&self, nickname: &String) -> bool {
     if let Some(arc) = self.states.read().unwrap().get(nickname) {
       return arc.read().unwrap().can_walk;
+    }
+
+    true
+  }
+
+  pub fn attacks(&self, nickname: &String) -> bool {
+    if let Some(arc) = self.states.read().unwrap().get(nickname) {
+      return arc.read().unwrap().attacks;
     }
 
     true

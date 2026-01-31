@@ -17,7 +17,7 @@ impl BotTasks {
       "spamming", "movement", "jumping", 
       "shifting", "waving", "anti-afk",
       "flight", "killaura", "scaffold",
-      "anti-fall", "bow-aim", "stealer",
+      "anti-fall", "bow-aim", "stealer", 
       "miner", "farmer"
     ];
     

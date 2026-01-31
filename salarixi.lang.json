@@ -456,6 +456,13 @@
       }
     },
     { 
+      "tags": ["checkbox:webhook"], 
+      "lang": {
+        "ru": "Использовать вебхук",
+        "en": "Use Webhook"
+      }
+    },
+    { 
       "tags": ["checkbox:data-analysis"], 
       "lang": {
         "ru": "Анализ данных",
@@ -488,27 +495,6 @@
       "lang": {
         "ru": "Использовать Chat-Signing",
         "en": "Use Chat-Signing"
-      }
-    },
-    { 
-      "tags": ["plugin:auto-armor"], 
-      "lang": {
-        "ru": "Авто Доспехи",
-        "en": "Auto Armor"
-      }
-    },
-    { 
-      "tags": ["plugin:auto-totem"], 
-      "lang": {
-        "ru": "Авто Тотем",
-        "en": "Auto Totem"
-      }
-    },
-    { 
-      "tags": ["plugin:auto-eat"], 
-      "lang": {
-        "ru": "Авто Еда",
-        "en": "Auto Eat"
       }
     },
     { 
@@ -757,6 +743,13 @@
       }
     },
     { 
+      "tags": ["control:farmer"], 
+      "lang": {
+        "ru": "Фермер",
+        "en": "Farmer"
+      }
+    },
+    { 
       "tags": ["header:control-chat"], 
       "lang": {
         "ru": "Управление / Чат",
@@ -838,6 +831,13 @@
       "lang": {
         "ru": "Управление / Майнер",
         "en": "Control / Miner"
+      }
+    },
+    { 
+      "tags": ["header:control-farmer"], 
+      "lang": {
+        "ru": "Управление / Фермер",
+        "en": "Control / Farmer"
       }
     },
     {
@@ -957,6 +957,13 @@
       "lang": {
         "ru": "Размер шрифта:",
         "en": "Font Size:"
+      }
+    },
+    {
+      "tags": ["label:interface-internal-gap"],
+      "lang": {
+        "ru": "Внутренний отступ:",
+        "en": "Internal Gap:"
       }
     },
     {

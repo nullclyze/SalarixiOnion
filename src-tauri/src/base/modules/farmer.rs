@@ -108,7 +108,7 @@ impl FarmerModule {
     if let Some(slot) = ferilizer_slot {
       move_item_to_hotbar(bot, slot).await;
       
-      for _ in 0..=3 {
+      for _ in 0..=4 {
         sleep(Duration::from_millis(if mode.as_str() == "normal" { randuint(50, 100) } else { 50 })).await;
         bot.start_use_item();
       }

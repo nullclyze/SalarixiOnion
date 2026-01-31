@@ -2,19 +2,18 @@ use azalea::entity::metadata::Health;
 use azalea::inventory::ItemStack;
 use azalea::inventory::components::PotionContents;
 use azalea::registry::builtin::Potion as PotionKind;
-use azalea::{BlockPos, prelude::*};
-use azalea::protocol::packets::game::{ServerboundPlayerAction, ServerboundUseItem};
+use azalea::prelude::*;
+use azalea::protocol::packets::game::ServerboundUseItem;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
-use azalea::protocol::packets::game::s_player_action::Action;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
 use crate::state::STATES;
 use crate::tasks::TASKS;
-use crate::tools::{randchance, randfloat, randticks};
-use crate::common::{get_bot_physics, move_item_to_hotbar};
+use crate::tools::{randchance, randfloat, randuint};
+use crate::common::{get_bot_physics, move_item_to_hotbar, release_use_item};
 
 
 #[derive(Clone)]
@@ -69,7 +68,7 @@ impl AutoPotionPlugin {
                 STATES.set_plugin_activity(&nickname, "auto-potion", true);
 
                 move_item_to_hotbar(bot, slot).await;
-                bot.wait_ticks(randticks(1, 2)).await;
+                sleep(Duration::from_millis(randuint(50, 100))).await;
                 Self::use_potion(bot, potion.kind).await;
 
                 STATES.set_plugin_activity(&nickname, "auto-potion", false);
@@ -95,19 +94,14 @@ impl AutoPotionPlugin {
 
         sleep(Duration::from_millis(3000)).await;
 
-        bot.write_packet(ServerboundPlayerAction {
-          action: Action::ReleaseUseItem,
-          pos: BlockPos::new(0, 0, 0),
-          direction: azalea::core::direction::Direction::Down,
-          seq: 0
-        });
+        release_use_item(bot);
       },
       "splash" => {
         let direction = bot.direction();
 
         bot.set_direction(direction.0 + randfloat(-5.5, 5.5) as f32, randfloat(87.0, 90.0) as f32);
 
-        bot.wait_ticks(randticks(15, 20)).await;
+        sleep(Duration::from_millis(randuint(400, 600))).await;
 
         bot.write_packet(ServerboundUseItem {
           hand: InteractionHand::MainHand,
@@ -116,7 +110,7 @@ impl AutoPotionPlugin {
           x_rot: direction.1
         });
 
-        bot.wait_ticks(randticks(4, 7)).await;
+        sleep(Duration::from_millis(randuint(30, 500))).await;
 
         bot.set_direction(direction.0 + randfloat(-2.5, 2.5) as f32, direction.1 + randfloat(-2.5, 2.5) as f32);
       },

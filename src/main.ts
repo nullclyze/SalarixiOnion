@@ -107,6 +107,11 @@ export function updatePluginState(name: string | null, state: boolean) {
 async function startBots(): Promise<void> {
   log('Запуск ботов на сервер...', 'info');
 
+  if (process === 'active') {
+    log('Запуск невозможен, существуют активные боты', 'warning');
+    return;
+  }
+
   process = 'active';
 
   const address = (document.getElementById('address') as HTMLInputElement).value;
@@ -669,6 +674,10 @@ class ElementManager {
       this.setInterfacePanelFontSize((document.getElementById('interface-panel-font-size') as HTMLSelectElement).value);
     });
 
+    document.getElementById('interface-panel-internal-gap')?.addEventListener('change', () => {
+      this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
+    });
+
     document.getElementById('interface-client-language')?.addEventListener('change', async () => {
       await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
     });
@@ -678,6 +687,7 @@ class ElementManager {
     this.setInterfaceShowPanelIcons((document.getElementById('interface-show-panel-icons') as HTMLSelectElement).value);
     this.setInterfacePanelFontFamily((document.getElementById('interface-panel-font-family') as HTMLSelectElement).value);
     this.setInterfacePanelFontSize((document.getElementById('interface-panel-font-size') as HTMLSelectElement).value);
+    this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
     await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
   } 
 
@@ -812,6 +822,15 @@ class ElementManager {
       root.style.setProperty('--panel-font-size', size);
     } catch (error) {
       log(`Ошибка изменения размера шрифта панели: ${error}`, 'error');
+    }
+  }
+
+  private setInterfacePanelInternalGap(size: string): void {
+    try {
+      const root = document.documentElement;
+      root.style.setProperty('--panel-btn-gap', size);
+    } catch (error) {
+      log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
     }
   }
 

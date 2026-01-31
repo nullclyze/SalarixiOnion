@@ -199,21 +199,25 @@ impl KillauraModule {
       Self::chase(bot.clone(), config.target.clone(), config.chase_distance, config.min_distance_to_target);
     }
 
+    let nickname = bot.username();
+
     loop {
       if !STATES.get_plugin_activity(&bot.username(), "auto-eat") && !STATES.get_plugin_activity(&bot.username(), "auto-potion") {
-        if options.settings.as_str() == "adaptive" {
-          Self::auto_weapon(bot, &options.weapon).await;
-        } else {
-          if let Some(slot) = config.slot {
-            if slot <= 8 {
-              bot.set_selected_hotbar_slot(slot);
-            }
-          } else {
-            Self::auto_weapon(bot, &options.weapon).await;
-          }
-        }
-
         if let Some(entity) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
+          STATES.set(&nickname, "attacks", "true".to_string());
+
+          if options.settings.as_str() == "adaptive" {
+            Self::auto_weapon(bot, &options.weapon).await;
+          } else {
+            if let Some(slot) = config.slot {
+              if slot <= 8 {
+                bot.set_selected_hotbar_slot(slot);
+              }
+            } else {
+              Self::auto_weapon(bot, &options.weapon).await;
+            }
+          }
+
           if options.use_critical {
             bot.jump();
             sleep(Duration::from_millis(randuint(50, 100))).await;
@@ -227,25 +231,21 @@ impl KillauraModule {
             entity_pos.z
           ));
 
-          sleep(Duration::from_millis(randuint(200, 300))).await;
+          sleep(Duration::from_millis(randuint(100, 200))).await;
 
-          for _ in 0..=6 {
-            if let Some(e) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
-              let entity_pos = get_entity_position(&bot, entity);
+          if let Some(e) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
+            let entity_pos = get_entity_position(&bot, entity);
 
-              bot.look_at(Vec3::new(
-                entity_pos.x,
-                entity_pos.y + randfloat(1.0, 1.5),
-                entity_pos.z
-              ));
+            bot.look_at(Vec3::new(
+              entity_pos.x,
+              entity_pos.y + randfloat(1.0, 1.5),
+              entity_pos.z
+            ));
 
-              sleep(Duration::from_millis(50)).await;
-
-              bot.attack(e);
-
-              break;
-            }
+            bot.attack(e);
           }
+
+          STATES.set(&nickname, "attacks", "false".to_string());
         }
       }
       
@@ -271,33 +271,36 @@ impl KillauraModule {
       Self::chase(bot.clone(), config.target.clone(), config.chase_distance, config.min_distance_to_target);
     }
 
+    let nickname = bot.username();
+
     loop {
       if !STATES.get_plugin_activity(&bot.username(), "auto-eat") && !STATES.get_plugin_activity(&bot.username(), "auto-potion") {
-        if options.settings.as_str() == "adaptive" {
-          Self::auto_weapon(bot, &options.weapon).await;
-        } else {
-          if let Some(slot) = config.slot {
-            if slot <= 8 {
-              bot.set_selected_hotbar_slot(slot);
-            }
-          } else {
+        if let Some(_) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
+          STATES.set(&nickname, "attacks", "true".to_string());
+          
+          if options.settings.as_str() == "adaptive" {
             Self::auto_weapon(bot, &options.weapon).await;
+          } else {
+            if let Some(slot) = config.slot {
+              if slot <= 8 {
+                bot.set_selected_hotbar_slot(slot);
+              }
+            } else {
+              Self::auto_weapon(bot, &options.weapon).await;
+            }
+          }
+
+          if options.use_critical {
+            bot.jump();
+            sleep(Duration::from_millis(randuint(50, 150))).await;
+          }
+          
+          if let Some(e) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
+            bot.attack(e);
           }
         }
 
-        if let Some(_) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
-          if options.use_critical {
-            bot.jump();
-           sleep(Duration::from_millis(randuint(50, 150))).await;
-          }
-          
-          for _ in 0..=6 {
-            if let Some(e) = Self::find_nearest_entity(bot, config.target.clone(), config.distance) {
-              bot.attack(e);
-              break;
-            }
-          }
-        }
+        STATES.set(&nickname, "attacks", "false".to_string());
       }
 
       sleep(Duration::from_millis(config.delay)).await;

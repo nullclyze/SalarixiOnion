@@ -8,8 +8,8 @@
   --s-font-family: 'JetBrains Mono', 'Fira Code', monospace;
   --o-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
-  --bg-color: #161515;
-  --bd-color: #464646;
+  --bg-color: #111;
+  --bd-color: #333;
   --tbd-color: #3b3a3acc;
 
   --global-font-family: 'Inter', sans-serif;
@@ -25,6 +25,7 @@
   --panel-font-family: 'Inter', sans-serif;
   --panel-text-margin-top: 1px;
   --panel-font-size: 15px;
+  --panel-btn-gap: 6px;
 
   background-color: var(--bg-color);
   font-family: var(--global-font-family);
@@ -147,7 +148,7 @@
   z-index: 1000;
   border-radius: 6px;
   padding: 20px;
-  background: rgba(22, 22, 22, 0.8);
+  background: rgba(19, 19, 19, 0.8);
   border: 1px solid #302e2ebb;
   backdrop-filter: blur(26px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%); 
@@ -189,7 +190,7 @@
   text-align: center;
   padding-left: 13px;
   padding-right: 10px;
-  gap: 6px;
+  gap: var(--panel-btn-gap);
   height: 28px;
   width: 180px;
   background-color: transparent;
@@ -488,8 +489,8 @@ input {
   font-size: 14px;
   border-radius: 6px;
   outline: none;
-  background-color: #1f1e1e70;
-  border: 1px solid #363636c0;
+  background-color: #1d1c1c70;
+  border: 1px solid #292929;
   box-shadow: none;
   padding-top: 2px;
   padding-left: 10px;
@@ -528,7 +529,7 @@ p {
   padding-top: 8px;
   padding-bottom: 8px;
   background-color: #2422225b;
-  border: 1px solid #2b2b2b;
+  border: 1px solid #252525;
   box-shadow: 0 0 12px #111111;
   border-radius: 6px;
   color: #ebebeb;
@@ -878,7 +879,7 @@ p {
 }
 
 .proxy-list .frame {
-  background: rgba(255,255,255,0.02);
+  background: rgb(20, 20, 20);
   border: 1px solid rgba(255, 255, 255, 0.173);
   border-radius: 10px;
   padding-top: -4px;
@@ -917,7 +918,7 @@ p {
   height: 490px;
   background: transparent;
   font-size: 15px;
-  color: #e0e0e0;
+  color: #d6d6d6;
   border: none;
   outline: none;
   padding: 8px;
@@ -961,9 +962,8 @@ p {
   overflow-y: auto;
   padding: 0;
   border-radius: 6px;
-  background-color: #151515;
-  border: 1px solid #363636c0;
-  box-shadow: 0 0 12px #111111;
+  background-color: #121212;
+  border: 1px solid #2b2b2b;
   scrollbar-width: none;
   -ms-overflow-style: none;
   contain: strict; 
@@ -979,6 +979,7 @@ p {
 .log-line {
   display: flex;
   min-height: 20px;
+  transition: background 0.12s ease;
   animation: show-log-line 0.15s;
 }
 
@@ -989,10 +990,13 @@ p {
 }
 
 .log-line:hover {
-  background: #252525b8;
+  background: #1f1d1db8;
 }
 
 .log-line-date {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 74px;
   min-width: 74px;
   padding: 4px;
@@ -1007,12 +1011,15 @@ p {
 }
 
 .log-line-content {
+  display: flex;
+  justify-content: start;
+  align-items: center;
   flex: 1;
   padding: 2px;
   text-align: start;
   white-space: pre-wrap;
   word-break: break-all;
-  font-family: var(--o-font-family);
+  font-family: var(--d-font-family);
   font-size: 15px;
   margin-left: 4px;
   text-rendering: optimizeSpeed;
@@ -1028,9 +1035,8 @@ p {
   display: flex; 
   margin-top: 30px; 
   width: 100%;
-  background-color: #151515;
-  border: 1px solid #363636c0;
-  box-shadow: 0 0 12px #111111;
+  background-color: #121212;
+  border: 1px solid #2b2b2b;
   border-radius: 6px;
   padding-top: 15px;
   padding-bottom: 15px;
@@ -1682,7 +1688,7 @@ textarea::-webkit-resizer {
   width: 500px;
   height: 530px;
   margin-top: 30px;
-  background: #161515ef;
+  background: #131313d0;
   border: 1px solid rgba(63, 63, 63, 0.781);
   border-radius: 12px;
   padding: 18px 18px 16px 18px;
@@ -1985,7 +1991,7 @@ textarea::-webkit-resizer {
   height: 85px;
   max-height: 85px;
   width: 98%;
-  border: 1px solid #303030;
+  border: 1px solid #272727;
   border-radius: 6px;
 }
 
@@ -2116,7 +2122,7 @@ textarea::-webkit-resizer {
   z-index: 1000;
   border-radius: 8px;
   padding: 20px;
-  background: rgba(22, 22, 22, 0.9);
+  background: rgba(19, 19, 19, 0.8);
   border: 1px solid #302e2ebb;
   backdrop-filter: blur(35px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%); 

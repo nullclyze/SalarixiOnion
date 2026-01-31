@@ -1,26 +1,20 @@
-use std::time::Duration;
-
 use azalea::entity::LocalEntity;
+use azalea::entity::Position;
 use azalea::prelude::*;
 use azalea::Vec3;
 use azalea::entity::Dead;
 use azalea::entity::metadata::{Player, AbstractAnimal, AbstractMonster};
-use azalea::core::position::BlockPos;
 use azalea::player::GameProfileComponent;  
-use azalea::protocol::packets::game::ServerboundPlayerAction;
-use azalea::protocol::packets::game::s_player_action::Action;
-use azalea::packet::game::SendGamePacketEvent;
-use azalea::core::direction::Direction;
 use azalea::registry::builtin::ItemKind;
 use azalea::world::MinecraftEntityId;
 use azalea::ecs::query::{With, Without};
 use azalea::ecs::prelude::Entity;
 use serde::{Serialize, Deserialize};
+use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::TASKS;
-use crate::common::get_entity_position;
-use crate::common::move_item_to_hotbar;
+use crate::common::{get_entity_position, move_item_to_hotbar, release_use_item};
 use crate::state::STATES;
 use crate::tools::*;
 
@@ -33,6 +27,7 @@ pub struct BowAimOptions {
   pub target: String,
   pub nickname: Option<String>,
   pub delay: Option<u64>,
+  pub max_distance: Option<f64>,
   pub state: bool
 }
 
@@ -40,29 +35,15 @@ impl BowAimModule {
   fn find_bow_in_inventory(bot: &Client) -> Option<usize> {
     let menu = bot.menu();
 
-    for slot in menu.player_slots_range() {
-      if let Some(item) = menu.slot(slot) {
-        if !item.is_empty() {
-          if item.kind() == ItemKind::Bow {
-            return Some(slot);
-          }
+    for (slot, item) in menu.slots().iter().enumerate() {
+      if !item.is_empty() {
+        if item.kind() == ItemKind::Bow {
+          return Some(slot);
         }
       }
     }
 
     None
-  }
-
-  fn release_use_item(bot: &Client) {
-    bot.ecs.lock().trigger(SendGamePacketEvent::new(  
-      bot.entity,  
-      ServerboundPlayerAction {  
-        action: Action::ReleaseUseItem,  
-        pos: BlockPos::new(0, 0, 0),  
-        direction: Direction::Down,  
-        seq: 0
-      }
-    ));
   }
 
   async fn shoot(bot: &Client, entity: Entity) {
@@ -71,15 +52,15 @@ impl BowAimModule {
 
       bot.start_use_item();
 
-      sleep(Duration::from_millis(randuint(3000, 3500))).await;
+      sleep(Duration::from_millis(randuint(800, 1100))).await;
 
       let target_pos = get_entity_position(bot, entity);
       let distance = bot.eye_position().distance_to(target_pos);
 
       bot.look_at(Vec3::new(
-        target_pos.x + randfloat(-0.002, 0.002),
+        target_pos.x + randfloat(-0.001158, 0.001158),
         target_pos.y + distance * 0.15,
-        target_pos.z + randfloat(-0.002, 0.002)
+        target_pos.z + randfloat(-0.001158, 0.001158)
       ));
 
       if distance > 50.0 {
@@ -91,53 +72,52 @@ impl BowAimModule {
         let distance = bot.eye_position().distance_to(target_pos);
 
         bot.look_at(Vec3::new(
-          target_pos.x + randfloat(-0.002, 0.002),
+          target_pos.x + randfloat(-0.001158, 0.001158),
           target_pos.y + distance * 0.1,
-          target_pos.z + randfloat(-0.002, 0.002)
+          target_pos.z + randfloat(-0.001158, 0.001158)
         ));
       }
 
       sleep(Duration::from_millis(50)).await;
 
-      Self::release_use_item(bot);
+      release_use_item(bot);
     }
   }
 
   async fn aiming(bot: &Client, options: BowAimOptions) {
-    let mut counter = 0;
-
     let bot_id = if let Some(bot_id) = bot.get_entity_component::<MinecraftEntityId>(bot.entity) {
       bot_id
     } else {
       return;
     };
 
+    let eye_pos = bot.eye_position();
     let nickname = bot.username();
 
     loop {
-      if !STATES.get_plugin_activity(&nickname, "auto-eat") && !STATES.get_plugin_activity(&nickname, "auto-potion") {
+      if !STATES.get_plugin_activity(&nickname, "auto-eat") && !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.attacks(&nickname) {
         let mut nearest_entity = None;
 
         match options.target.as_str() {
           "nearest-player" => {
-            nearest_entity = bot.nearest_entity_by::<&MinecraftEntityId, (With<Player>, Without<LocalEntity>, Without<Dead>)>(|id: &MinecraftEntityId| {
-              *id != bot_id
+            nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+              eye_pos.distance_to(**data.0) <= options.max_distance.unwrap_or(70.0) && *data.1 != bot_id
             });
           },
           "nearest-monster" => {
-            nearest_entity = bot.nearest_entity_by::<&MinecraftEntityId, (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|id: &MinecraftEntityId| {
-              *id != bot_id
+            nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+              eye_pos.distance_to(**data.0) <= options.max_distance.unwrap_or(70.0) && *data.1 != bot_id
             });
           },
           "nearest-animal" => {
-            nearest_entity = bot.nearest_entity_by::<&MinecraftEntityId, (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|id: &MinecraftEntityId| {
-              *id != bot_id
+            nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+              eye_pos.distance_to(**data.0) <= options.max_distance.unwrap_or(70.0) && *data.1 != bot_id
             });
           },
           "custom-goal" => {
             if let Some(nickname) = options.nickname.clone() {
-              nearest_entity = bot.nearest_entity_by::<(&GameProfileComponent, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &MinecraftEntityId)| {
-                data.0.name == nickname && *data.1 != bot_id
+              nearest_entity = bot.nearest_entity_by::<(&Position, &GameProfileComponent, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &GameProfileComponent, &MinecraftEntityId)| {
+                eye_pos.distance_to(**data.0) <= options.max_distance.unwrap_or(70.0) && data.1.name == nickname && *data.2 != bot_id
               });
             }
           },
@@ -145,20 +125,15 @@ impl BowAimModule {
         }
 
         if let Some(entity) = nearest_entity {
-          counter += 1;
-
           let pos = get_entity_position(bot, entity);
           
-          bot.look_at(Vec3::new(pos.x + randfloat(-0.5, 0.5), pos.y + randfloat(-0.5, 0.5), pos.z + randfloat(-0.5, 0.5)));
-
-          if counter >= 2 {
-            Self::shoot(bot, entity).await;
-            counter = 0;
-          }
+          bot.look_at(Vec3::new(pos.x + randfloat(-0.3405, 0.3405), pos.y + randfloat(-0.3405, 0.3405), pos.z + randfloat(-0.3405, 0.3405)));
+          
+          Self::shoot(bot, entity).await;
         }
+      }
 
-        sleep(Duration::from_millis(options.delay.unwrap_or(50))).await;
-      } 
+      sleep(Duration::from_millis(options.delay.unwrap_or(50))).await; 
     }
   }
 
@@ -168,6 +143,6 @@ impl BowAimModule {
 
   pub fn stop(bot: &Client) {
     TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("bow-aim");
-    Self::release_use_item(bot);
+    release_use_item(bot);
   }
 }

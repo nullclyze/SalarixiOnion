@@ -1,8 +1,7 @@
 use azalea::world::MinecraftEntityId;
-use azalea::{BlockPos, WalkDirection, prelude::*};
+use azalea::{WalkDirection, prelude::*};
 use azalea::prelude::ContainerClientExt;
-use azalea::protocol::packets::game::s_player_action::Action;
-use azalea::protocol::packets::game::{ServerboundPlayerAction, ServerboundUseItem};
+use azalea::protocol::packets::game::ServerboundUseItem;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
 use azalea::entity::{Dead, Position, metadata::{Player, AbstractMonster}};
@@ -14,7 +13,7 @@ use crate::base::get_flow_manager;
 use crate::state::STATES;
 use crate::tasks::TASKS;
 use crate::tools::randticks;
-use crate::common::get_entity_position;
+use crate::common::{get_entity_position, release_use_item};
 
 
 pub struct AutoShieldPlugin;
@@ -107,11 +106,6 @@ impl AutoShieldPlugin {
       }
     }
 
-    bot.write_packet(ServerboundPlayerAction {
-      action: Action::ReleaseUseItem,
-      pos: BlockPos::new(0, 0, 0),
-      direction: azalea::core::direction::Direction::Down,
-      seq: 0
-    });
+    release_use_item(bot);
   }
 }

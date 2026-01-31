@@ -2,15 +2,14 @@ use azalea::entity::metadata::Health;
 use azalea::inventory::ItemStack;
 use azalea::local_player::Hunger;
 use azalea::prelude::*;
-use azalea::BlockPos;
-use azalea::protocol::packets::game::{ServerboundPlayerAction, ServerboundUseItem};
+use azalea::protocol::packets::game::ServerboundUseItem;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
-use azalea::protocol::packets::game::s_player_action::Action;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::get_flow_manager;
+use crate::common::release_use_item;
 use crate::state::STATES;
 use crate::common::move_item_to_hotbar;
 use crate::tasks::TASKS;
@@ -89,14 +88,9 @@ impl AutoEatPlugin {
       x_rot: direction.1
     });
 
-    sleep(Duration::from_millis(3000)).await;
+    sleep(Duration::from_millis(3100)).await;
 
-    bot.write_packet(ServerboundPlayerAction {
-      action: Action::ReleaseUseItem,
-      pos: BlockPos::new(0, 0, 0),
-      direction: azalea::core::direction::Direction::Down,
-      seq: 0
-    });
+    release_use_item(bot);
   }
 
   fn get_best_food(bot: &Client, food_list: Vec<Food>) -> Option<Food> {
