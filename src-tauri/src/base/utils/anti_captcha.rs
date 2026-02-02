@@ -243,7 +243,7 @@ impl AntiMapCaptcha {
     }
   }
 
-  pub fn create_and_save_png_image(map: &Vec<u8>) -> String {
+  pub fn create_png_image(map: &Vec<u8>) -> String {
     let width = 128;
     let height = 128;
 

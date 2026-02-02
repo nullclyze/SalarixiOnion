@@ -6,9 +6,8 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
-use crate::tools::{randfloat, randuint};
+use crate::base::*;
+use crate::tools::*;
 use crate::common::{move_item_to_offhand, start_use_item, take_item};
 
 
@@ -38,23 +37,21 @@ impl AutoRepairPlugin {
   } 
 
   async fn repair_items(bot: &Client) {
-    let nickname = bot.username();
-
     let broken_items = Self::find_broken_items(bot);
 
+    let nickname = bot.username();
+
     for broken_item in broken_items {
-      STATES.set_plugin_activity(&nickname, "auto-repair", true);
+      if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+        if broken_item.slot != 45 && broken_item.slot > 8 {
+          take_item(bot, broken_item.slot).await;
+          sleep(Duration::from_millis(50)).await;
+          move_item_to_offhand(bot, broken_item.kind).await;
+          sleep(Duration::from_millis(randuint(50, 150))).await;
+        } 
 
-      if broken_item.slot != 45 && broken_item.slot > 8 {
-        take_item(bot, broken_item.slot).await;
-        sleep(Duration::from_millis(50)).await;
-        move_item_to_offhand(bot, broken_item.kind);
-        sleep(Duration::from_millis(randuint(50, 150))).await;
-      } 
-
-      Self::repair_item(bot, broken_item).await;
-
-      STATES.set_plugin_activity(&nickname, "auto-repair", false);
+        Self::repair_item(bot, broken_item).await;
+      }
     }
   }
 
@@ -71,8 +68,10 @@ impl AutoRepairPlugin {
 
   async fn repair_item(bot: &Client, broken_item: BrokenItem) {
     if let Some(count) = Self::take_experience_bottles(bot).await {
+      let nickname = bot.username();
+
       for _ in 0..=count {
-        if !STATES.attacks(&bot.username()) {
+        if !STATES.get_state(&nickname, "is_attacking") {
           let mut slot = 45;
 
           if broken_item.slot >= 5 && broken_item.slot <= 8 {
@@ -87,8 +86,18 @@ impl AutoRepairPlugin {
               let direction = bot.direction();
 
               if direction.1 < 84.0 {
-                bot.set_direction(direction.0, randfloat(84.0, 90.0) as f32);
-                sleep(Duration::from_millis(randuint(150, 300))).await;
+                if STATES.get_state(&nickname, "can_looking") {
+                  STATES.set_state(&nickname, "can_looking", false);
+                  STATES.set_state(&nickname, "is_looking", true);
+
+                  bot.set_direction(direction.0, randfloat(84.0, 90.0) as f32);
+                  sleep(Duration::from_millis(randuint(200, 250))).await;
+                  
+                  STATES.set_state(&nickname, "can_looking", true);
+                  STATES.set_state(&nickname, "is_looking", false);
+                } else {
+                  continue;
+                }
               } 
 
               start_use_item(bot, InteractionHand::MainHand);

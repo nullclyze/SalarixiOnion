@@ -4,14 +4,14 @@ use once_cell::sync::Lazy;
 use tokio::task::JoinHandle;
 
 
-pub static TASKS: Lazy<Arc<BotTaskManager>> = Lazy::new(|| Arc::new(BotTaskManager::new()));
+pub static TASKS: Lazy<Arc<TaskManager>> = Lazy::new(|| Arc::new(TaskManager::new()));
 
-pub struct BotTasks {
+pub struct Tasks {
   pub tasks: HashMap<String, Option<JoinHandle<()>>>,
   pub activity: HashMap<String, bool>
 }
 
-impl BotTasks {
+impl Tasks {
   pub fn new() -> Self {
     let names = vec![
       "spamming", "movement", "jumping", 
@@ -48,7 +48,7 @@ impl BotTasks {
     self.activity.insert(name.to_string(), true);
   }
 
-  pub fn stop_task(&mut self, name: &str) {
+  pub fn kill_task(&mut self, name: &str) {
     if let Some(handle) = self.tasks.get(name) {
       if let Some(task) = handle {
         task.abort();
@@ -57,7 +57,7 @@ impl BotTasks {
     }
   }
 
-  pub fn stop_all_tasks(&mut self) {
+  pub fn kill_all_tasks(&mut self) {
     for (name, handle) in self.tasks.iter() {
       if let Some(task) = handle {
         task.abort();
@@ -67,30 +67,38 @@ impl BotTasks {
   }
 }
 
-pub struct BotTaskManager {
-  pub map: RwLock<HashMap<String, Arc<RwLock<BotTasks>>>>
+pub struct TaskManager {
+  pub map: RwLock<HashMap<String, Arc<RwLock<Tasks>>>>
 }
 
-impl BotTaskManager {
+impl TaskManager {
   pub fn new() -> Self {
     Self {
       map: RwLock::new(HashMap::new())
     }
   }
 
-  pub fn add(&self, nickname: &String) {
+  pub fn push(&self, nickname: &String) {
     if let Some(arc) = self.map.write().unwrap().get(nickname) {
-      arc.write().unwrap().stop_all_tasks();
+      arc.write().unwrap().kill_all_tasks();
     }
 
-    self.map.write().unwrap().insert(nickname.clone(), Arc::new(RwLock::new(BotTasks::new())));
+    self.map.write().unwrap().insert(nickname.clone(), Arc::new(RwLock::new(Tasks::new())));
   }
 
   pub fn remove(&self, nickname: &String) {
     self.map.write().unwrap().remove(nickname);
   }
 
-  pub fn get(&self, nickname: &String) -> Option<Arc<RwLock<BotTasks>>> {
+  pub fn clear(&self) {
+    for (_, tasks) in self.map.write().unwrap().iter() {
+      tasks.write().unwrap().kill_all_tasks();
+    }
+
+    self.map.write().unwrap().clear();
+  }
+
+  pub fn get(&self, nickname: &String) -> Option<Arc<RwLock<Tasks>>> {
     let map = self.map.read().unwrap();
     map.get(nickname).cloned()
   }
@@ -98,20 +106,12 @@ impl BotTaskManager {
   pub fn get_task_activity(&self, nickname: &String, task: &str) -> bool {
     let map = self.map.read().unwrap();
 
-    for el in map.iter() {
-      if el.0 == nickname {
-        return el.1.read().unwrap().get_task_activity(task);
+    for (name, tasks) in map.iter() {
+      if name == nickname {
+        return tasks.read().unwrap().get_task_activity(task);
       } 
     }
 
     false
-  }
- 
-  pub fn clear(&self) {
-    for element in self.map.write().unwrap().iter().clone() {
-      element.1.write().unwrap().stop_all_tasks();
-    }
-
-    self.map.write().unwrap().clear();
   }
 }

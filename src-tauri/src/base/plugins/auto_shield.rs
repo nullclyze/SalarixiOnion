@@ -7,10 +7,8 @@ use azalea::ecs::prelude::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
-use crate::tasks::TASKS;
-use crate::tools::randticks;
+use crate::base::*;
+use crate::tools::*;
 use crate::common::{get_entity_position, move_item, release_use_item, start_use_item};
 
 
@@ -40,22 +38,18 @@ impl AutoShieldPlugin {
 
     if let Some(item) = menu.slot(45) {
       if item.is_empty() || item.kind() == ItemKind::Shield {
-        if !STATES.get_plugin_activity(&nickname, "auto-eat") && !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.get_plugin_activity(&nickname, "auto-totem") && TASKS.get_task_activity(&nickname, "bow-aim") {
+        if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "drinking") && TASKS.get_task_activity(&nickname, "bow-aim") {
           if item.kind() == ItemKind::Shield {
             Self::start_defending(bot).await;
           } else {
             for (slot, item) in menu.slots().iter().enumerate() {  
               if slot != 45 {
                 if item.kind() == ItemKind::Shield {
-                  STATES.set_plugin_activity(&nickname, "auto-shield", true);
-
                   move_item(bot, ItemKind::Shield, slot, 45).await;
 
                   sleep(Duration::from_millis(50)).await;
 
                   Self::start_defending(bot).await;
-
-                  STATES.set_plugin_activity(&nickname, "auto-shield", false);
                 }
               }
             }
@@ -78,16 +72,26 @@ impl AutoShieldPlugin {
       eye_pos.distance_to(**data.0) <= 8.0 && *data.1 != bot_id
     });
 
+    let nickname = bot.username();
+
     start_use_item(bot, InteractionHand::OffHand);
 
     if let Some(entity) = nearest_entity {
-      bot.look_at(get_entity_position(bot, entity));
+      if STATES.get_state(&nickname, "can_looking") {
+        STATES.set_state(&nickname, "can_looking", false);
+        STATES.set_state(&nickname, "is_looking", true);
 
-      bot.wait_ticks(randticks(1, 2)).await;
-
-      for _ in 0..6 {
         bot.look_at(get_entity_position(bot, entity));
-        bot.wait_ticks(2).await;
+
+        sleep(Duration::from_millis(randuint(50, 100))).await;
+
+        for _ in 0..6 {
+          bot.look_at(get_entity_position(bot, entity));
+          sleep(Duration::from_millis(50)).await;
+        }
+
+        STATES.set_state(&nickname, "can_looking", true);
+        STATES.set_state(&nickname, "is_looking", false);
       }
     }
 

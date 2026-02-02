@@ -13,10 +13,9 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::TASKS;
 use crate::common::{get_entity_position, take_item, release_use_item};
-use crate::state::STATES;
 use crate::tools::*;
+use crate::base::*;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,7 +94,7 @@ impl BowAimModule {
     let nickname = bot.username();
 
     loop {
-      if !STATES.get_plugin_activity(&nickname, "auto-eat") && !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.attacks(&nickname) && !STATES.get_plugin_activity(&nickname, "auto-repair") {
+      if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_attackng") {
         let mut nearest_entity = None;
 
         match options.target.as_str() {
@@ -142,7 +141,7 @@ impl BowAimModule {
   }
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("bow-aim");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("bow-aim");
     release_use_item(bot);
   }
 }

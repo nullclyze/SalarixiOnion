@@ -3,9 +3,9 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::TASKS;
 use crate::common::swing_arm;
 use crate::tools::*;
+use crate::base::*;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -87,7 +87,7 @@ impl ActionModule {
   }
 
   pub fn stop(bot: &Client, action: &str) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task(action);
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task(action);
 
     match action {
       "jumping" => { bot.set_jumping(false); },

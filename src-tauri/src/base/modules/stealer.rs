@@ -4,7 +4,7 @@ use azalea::core::position::BlockPos;
 use azalea::container::ContainerHandle;
 use serde::{Serialize, Deserialize};
 
-use crate::TASKS;
+use crate::base::*;
 use crate::common::get_block_state;
 use crate::tools::*;
 
@@ -104,7 +104,7 @@ impl StealerModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("stealer");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("stealer");
     bot.get_inventory().close();
   }
 }

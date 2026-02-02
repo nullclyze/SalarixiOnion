@@ -7,14 +7,9 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::common::release_use_item;
-use crate::common::start_use_item;
-use crate::state::STATES;
-use crate::common::take_item;
-use crate::tasks::TASKS;
-use crate::tools::randchance;
-use crate::tools::randuint;
+use crate::base::*;
+use crate::tools::*;
+use crate::common::{take_item, start_use_item, release_use_item};
 
 
 #[derive(Clone)]
@@ -48,7 +43,7 @@ impl AutoEatPlugin {
     } else {
       20
     };
-
+    
     let nickname = bot.username();
 
     if satiety < 20 {
@@ -56,7 +51,7 @@ impl AutoEatPlugin {
 
       if let Some(best_food) = Self::get_best_food(bot, food_list.clone()) {
         if let Some(food_slot) = best_food.slot {
-          if !STATES.get_plugin_activity(&nickname, "auto-potion") {
+          if STATES.get_state(&nickname, "can_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_sprinting") {
             let mut should_eat = true;
 
             if TASKS.get_task_activity(&nickname, "killaura") {
@@ -64,13 +59,17 @@ impl AutoEatPlugin {
             }
 
             if should_eat {
-              STATES.set_plugin_activity(&nickname, "auto-eat", true);
+              STATES.set_state(&nickname, "can_drinking", false);
+              STATES.set_state(&nickname, "can_sprinting", false);
+              STATES.set_state(&nickname, "is_eating", true);
 
               take_item(bot, food_slot).await;
-              sleep(Duration::from_millis(randuint(50, 100))).await;
+              sleep(Duration::from_millis(50)).await;
               Self::start_eating(bot).await;
 
-              STATES.set_plugin_activity(&nickname, "auto-eat", false);
+              STATES.set_state(&nickname, "can_drinking", true);
+              STATES.set_state(&nickname, "can_sprinting", true);
+              STATES.set_state(&nickname, "is_eating", false);
             }
           }
         }

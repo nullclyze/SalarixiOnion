@@ -9,10 +9,8 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
-use crate::tasks::TASKS;
-use crate::tools::{randchance, randfloat, randuint};
+use crate::base::*;
+use crate::tools::*;
 use crate::common::{get_bot_physics, take_item, release_use_item};
 
 
@@ -57,7 +55,13 @@ impl AutoPotionPlugin {
       if potions.len() > 0 {
         if let Some(potion) = Self::get_best_potion(bot, potions) {
           if let Some(slot) = potion.slot {
-            if !STATES.get_plugin_activity(&nickname, "auto-eat") {
+            if health.0 < 10.0 && !STATES.get_state(&nickname, "is_eating") {
+              STATES.set_state(&nickname, "can_eating", false);
+            } else {
+              STATES.set_state(&nickname, "can_eating", true);
+            }
+
+            if STATES.get_state(&nickname, "can_drinking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_sprinting") {
               let mut should_drink = true;
 
               if TASKS.get_task_activity(&nickname, "killaura") {
@@ -65,13 +69,17 @@ impl AutoPotionPlugin {
               }
 
               if should_drink {
-                STATES.set_plugin_activity(&nickname, "auto-potion", true);
+                STATES.set_state(&nickname, "can_eating", false);
+                STATES.set_state(&nickname, "can_sprinting", false);
+                STATES.set_state(&nickname, "is_drinking", true);
 
                 take_item(bot, slot).await;
-                sleep(Duration::from_millis(randuint(50, 100))).await;
+                sleep(Duration::from_millis(50)).await;
                 Self::use_potion(bot, potion.kind).await;
 
-                STATES.set_plugin_activity(&nickname, "auto-potion", false);
+                STATES.set_state(&nickname, "can_eating", true);
+                STATES.set_state(&nickname, "can_sprinting", true);
+                STATES.set_state(&nickname, "is_drinking", false);
               }
             }
           }
@@ -97,6 +105,10 @@ impl AutoPotionPlugin {
         release_use_item(bot);
       },
       "splash" => {
+        let nickname = bot.username();
+
+        STATES.set_state(&nickname, "is_looking", true);
+
         let direction = bot.direction();
 
         bot.set_direction(direction.0 + randfloat(-5.5, 5.5) as f32, randfloat(87.0, 90.0) as f32);
@@ -113,6 +125,8 @@ impl AutoPotionPlugin {
         sleep(Duration::from_millis(randuint(30, 500))).await;
 
         bot.set_direction(direction.0 + randfloat(-2.5, 2.5) as f32, direction.1 + randfloat(-2.5, 2.5) as f32);
+      
+        STATES.set_state(&nickname, "is_looking", false);
       },
       _ => {}
     }

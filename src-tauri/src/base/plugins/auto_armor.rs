@@ -5,9 +5,8 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
-use crate::common::find_empty_slot_in_invenotry;
+use crate::base::*;
+use crate::common::{find_empty_slot_in_invenotry, get_inventory, stop_bot_walking};
 
 
 #[derive(Debug, Clone)]
@@ -91,16 +90,21 @@ impl AutoArmorPlugin {
   }
 
   async fn equip(bot: &Client, armor_slot: usize, target_slot: usize) {
-    STATES.set_plugin_activity(&bot.username(), "auto-armor", true);
-
-    if let Some(inventory) = bot.open_inventory() {
+    if let Some(inventory) = get_inventory(bot) {
       if let Some(menu) = inventory.menu() {
         if let Some(item) = menu.slot(armor_slot) {
           if !item.is_empty() {
             if let Some(empty_slot) = find_empty_slot_in_invenotry(bot) {
+              let nickname = bot.username();
+
+              stop_bot_walking(bot).await;
+
               inventory.left_click(armor_slot);
               sleep(Duration::from_millis(50)).await;
               inventory.left_click(empty_slot);
+
+              STATES.set_state(&nickname, "can_walking", true);
+              STATES.set_state(&nickname, "can_sprinting", true);
             } else {
               return;
             }
@@ -110,8 +114,6 @@ impl AutoArmorPlugin {
       
       inventory.shift_click(target_slot);
     }
-
-    STATES.set_plugin_activity(&bot.username(), "auto-armor", false);
   }
 
   fn is_armor(item: &ItemStack, slot: Option<usize>) -> Option<Armor> {

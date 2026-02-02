@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::TASKS;
+use crate::base::*;
 use crate::common::{get_block_state, take_item};
 use crate::tools::*;
 
@@ -216,6 +216,6 @@ impl FarmerModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("farmer");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("farmer");
   }
 }

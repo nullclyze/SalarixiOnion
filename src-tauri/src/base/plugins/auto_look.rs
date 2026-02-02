@@ -6,10 +6,8 @@ use azalea::entity::{Dead, Position};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
-use crate::tasks::TASKS;
-use crate::tools::randfloat;
+use crate::base::*;
+use crate::tools::*;
 
 
 pub struct AutoLookPlugin;
@@ -49,8 +47,8 @@ impl AutoLookPlugin {
         let nickname = bot.username();
 
         if bot.is_goto_target_reached() {
-          if !STATES.get_plugin_activity(&nickname, "auto-potion") && !STATES.get_plugin_activity(&nickname, "auto-shield") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") {
-            STATES.set_plugin_activity(&nickname, "auto-look", true);
+          if STATES.get_state(&nickname, "can_looking") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") && !TASKS.get_task_activity(&nickname, "farmer") {
+            STATES.set_state(&nickname, "is_looking", true);
 
             let pos = Vec3::new(
               entity_pos.x + randfloat(-0.1, 0.1), 
@@ -60,9 +58,9 @@ impl AutoLookPlugin {
 
             bot.look_at(pos);
 
-            bot.wait_ticks(1).await;
+            sleep(Duration::from_millis(randuint(50, 100))).await;
 
-            STATES.set_plugin_activity(&nickname, "auto-look", false);
+            STATES.set_state(&nickname, "is_looking", false);
           }
         }
       }

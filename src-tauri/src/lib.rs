@@ -3,16 +3,12 @@ mod tools;
 mod base;
 mod common;
 mod radar;
-mod state;
-mod tasks;
 mod quick;
 mod webhook;
 
 use crate::base::*;
 use crate::quick::QuickTaskManager;
 use crate::radar::*;
-use crate::state::{STATES, BotState};
-use crate::tasks::*;
 use crate::emit::*;
 use crate::webhook::*;
 
@@ -49,8 +45,8 @@ async fn stop_bots() -> (String, String) {
 
 // Функция получения профилей ботов
 #[tauri::command]
-fn get_bot_profiles() -> Option<std::collections::HashMap<String, BotState>> {
-  Some(STATES.get_all_profiles())
+fn get_bot_profiles() -> Option<std::collections::HashMap<String, Profile>> {
+  Some(PROFILES.get_all())
 }
 
 // Функция отправки сообщения от бота
@@ -87,7 +83,8 @@ fn set_group(nickname: String, group: String) {
       if let Some(swarm) = fm.swarm.clone() {
         for bot in swarm {
           if bot.username() == nickname {
-            STATES.set(&nickname, "group", group.clone());
+            PROFILES.set_str(&nickname, "group", &group);
+            break;
           }
         }
       }
@@ -116,8 +113,8 @@ fn get_active_bots_count() -> i32 {
     let mut count = 0;
 
     for (nickname, _) in &fm.bots {
-      if let Some(state) = STATES.get(&nickname) {
-        if state.read().unwrap().status.to_lowercase().as_str() == "онлайн" {
+      if let Some(profile) = PROFILES.get(&nickname) {
+        if profile.status.to_lowercase().as_str() == "онлайн" {
           count += 1;
         }
       }

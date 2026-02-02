@@ -12,8 +12,6 @@ use tokio::time::sleep;
 use std::time::Duration;
 
 use crate::tools::{randuint, randelem, randchance};
-use crate::state::{STATES, BotState};
-use crate::tasks::TASKS;
 use crate::base::*;
 use crate::emit::*;
 use crate::webhook::send_webhook;
@@ -78,28 +76,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         name: "system".to_string(),
         message: format!("Бот {} подключается...", nickname)
       }));
-                
-      if let Some(state) = STATES.get(&nickname) {
-        STATES.set(&nickname, "status", "Соединение...".to_string());
 
-        if let Some(arc) = get_flow_manager() {
-          let fm = arc.write();
-
-          if let Some(options) = &fm.options {
-            if state.read().unwrap().password.is_empty() {
-              STATES.set(&nickname, "password", generate_nickname_or_password("password", options.password_type.clone(), options.password_template.clone()));
-            }
-          }
-        }  
-      } else {
-        if let Some(arc) = get_flow_manager() {
-          let fm = arc.write();
-          
-          if let Some(options) = &fm.options {
-            STATES.add(&nickname, BotState::new(nickname.clone(), generate_nickname_or_password("password", options.password_type.clone(), options.password_template.clone()), options.version.clone()));
-          }
-        }
-      }
+      PROFILES.set_str(&nickname, "status", "Соединение...");
     },
     Event::Spawn => {
       let nickname = bot.username();
@@ -136,9 +114,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         }
       }
 
-      TASKS.add(&nickname);
-
-      STATES.set(&nickname, "status", "Онлайн".to_string());
+      PROFILES.set_str(&nickname, "status", "Онлайн");
 
       if let Some(options) = get_current_options() {
         let pos = if let Some(p) = bot.get_component::<Position>() {
@@ -174,14 +150,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
         let action;
 
-        if let Some(state) = STATES.get(&nickname) {
-          if !state.read().unwrap().registered {
+        if let Some(profile) = PROFILES.get(&nickname) {
+          if !profile.registered {
             c = options.register_command.as_str().trim();
             template = options.register_template.trim().to_string();
             min_delay = options.register_min_delay;
             max_delay = options.register_max_delay;
 
-            STATES.set(&nickname, "registered", "true".to_string());
+            PROFILES.set_bool(&nickname, "registered", true);
 
             action = "зарегистрировался".to_string();
           } else {
@@ -197,7 +173,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             
           let cmd = template.clone()
             .replace("@cmd",c)
-            .replace("@pass", &state.read().unwrap().password);
+            .replace("@pass", &profile.password);
 
           bot.chat(&cmd);
 
@@ -208,8 +184,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         }
       }
 
-      if let Some(state) = STATES.get(&nickname) {
-        if !state.read().unwrap().skin_is_set {
+      if let Some(profile) = PROFILES.get(&nickname) {
+        if !profile.skin_is_set {
           if let Some(opts) = get_current_options() {
             match opts.skin_settings.skin_type.as_str() {
               "random" => {
@@ -230,7 +206,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   bot_clone.disconnect();
                 });
 
-                STATES.set(&nickname, "skin_is_set", "true".to_string());
+                PROFILES.set_bool(&nickname, "skin_is_set", true);
               },
               "custom" => {
                 if let Some(n) = opts.skin_settings.custom_skin_by_nickname {
@@ -251,7 +227,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                     bot_clone.disconnect();
                   });
 
-                  STATES.set(&nickname, "skin_is_set", "true".to_string());
+                  PROFILES.set_bool(&nickname, "skin_is_set", true);
                 }
               },
               _ => {}
@@ -269,18 +245,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       }  
 
       if let Some(tasks) = TASKS.get(&nickname) {
-        tasks.write().unwrap().stop_all_tasks();
+        tasks.write().unwrap().kill_all_tasks();
       }
 
-      if let Some(arc) = STATES.get(&nickname) {
-        let mut state = arc.write().unwrap();
-
-        state.set_captcha_caught(false);
-      }
-
+      PROFILES.set_bool(&nickname, "captcha_caught", false);
       TASKS.remove(&nickname);
 
-      STATES.set(&nickname, "status", "Оффлайн".to_string());
+      PROFILES.set_str(&nickname, "status", "Оффлайн");
 
       if let Some(text) = packet {
         if let Some(options) = get_current_options() {
@@ -324,11 +295,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
           if options.anti_captcha_settings.captcha_type.as_str() == "web" {
             if let Some(url) = AntiWebCaptcha::catch_url_from_message(packet.message().to_string(), opts.regex.unwrap_or(r"https?://[^\s]+".to_string()).as_str(), opts.required_url_part) {
-              if let Some(arc) = STATES.get(&nickname) {
-                let mut state = arc.write().unwrap();
-
-                if !state.captcha_caught {
-                  state.set_captcha_caught(true);
+              if let Some(profile) = PROFILES.get(&nickname) {
+                if !profile.captcha_caught {
+                  PROFILES.set_bool(&nickname, "captcha_caught", true);
 
                   if options.use_webhook && options.webhook_settings.information {
                     send_webhook(options.webhook_settings.url, format!("Бот {} получил ссылку на капчу: {}", nickname, url));
@@ -353,8 +322,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Tick => {
       let nickname = bot.username();
 
-      if let Some(state) = STATES.get(&nickname) {
-        if state.read().unwrap().status.as_str().to_lowercase() == "онлайн" {
+      if let Some(profile) = PROFILES.get(&nickname) {
+        if profile.status.as_str() == "Онлайн" {
           let health = if let Some(health) = bot.get_component::<Health>() {
             health.0.round() as u32
           } else {
@@ -367,8 +336,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             0
           };
           
-          STATES.set(&nickname, "health", health.to_string());
-          STATES.set(&nickname, "satiety", satiety.to_string());
+          PROFILES.set_num(&nickname, "health", health);
+          PROFILES.set_num(&nickname, "satiety", satiety);
         }
       }
     },
@@ -379,13 +348,11 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         if let Some(options) = get_current_options() {
           if options.use_anti_captcha {
             if let Some(map_patch) = data.color_patch.0.clone() {
-              if let Some(arc) = STATES.get(&nickname) {
-                let mut state = arc.write().unwrap();
+              if let Some(profile) = PROFILES.get(&nickname) {
+                if !profile.captcha_caught {
+                  PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                if !state.captcha_caught {
-                  state.set_captcha_caught(true);
-
-                  let base64_code = AntiMapCaptcha::create_and_save_png_image(&map_patch.map_colors);
+                  let base64_code = AntiMapCaptcha::create_png_image(&map_patch.map_colors);
 
                   if options.use_webhook && options.webhook_settings.information {
                     send_webhook(options.webhook_settings.url, format!("Бот {} получил капчу с карты: {}", nickname, base64_code));

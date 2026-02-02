@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::TASKS;
+use crate::base::*;
 use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, take_item, swing_arm};
 use crate::tools::*;
 
@@ -318,7 +318,7 @@ impl ScaffoldModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("scaffold");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("scaffold");
     bot.set_crouching(false);
   }
 }

@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::TASKS;
+use crate::base::*;
 use crate::tools::*;
 use crate::common::get_block_state;
 
@@ -271,7 +271,7 @@ impl MinerModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("miner");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("miner");
     bot.left_click_mine(false);
     bot.walk(WalkDirection::None);
     bot.set_crouching(false);

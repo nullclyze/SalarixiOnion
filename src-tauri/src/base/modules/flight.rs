@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::TASKS;
+use crate::base::*;
 use crate::tools::*;
 use crate::common::{get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
 
@@ -324,6 +324,6 @@ impl FlightModule {
   } 
 
   pub fn stop(nickname: &String) {
-    TASKS.get(nickname).unwrap().write().unwrap().stop_task("flight");
+    TASKS.get(nickname).unwrap().write().unwrap().kill_task("flight");
   }
 }

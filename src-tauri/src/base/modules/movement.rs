@@ -7,7 +7,7 @@ use azalea::pathfinder::moves;
 use serde::{Serialize, Deserialize};
 use core::time;
 
-use crate::TASKS;
+use crate::base::*;
 use crate::tools::*;
 
 
@@ -91,7 +91,7 @@ impl MovementModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("movement");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("movement");
     bot.walk(WalkDirection::None);
     bot.stop_pathfinding();
   }

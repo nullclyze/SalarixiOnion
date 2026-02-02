@@ -5,10 +5,10 @@ use serde::{Serialize, Deserialize};
 use tokio::time::sleep;
 use std::time::Duration;
 
-use crate::TASKS;
 use crate::common::swing_arm;
 use crate::common::{go, run};
 use crate::tools::*;
+use crate::base::*;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,7 +111,7 @@ impl AntiAfkModule {
   } 
 
   pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().stop_task("anti-afk");
+    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("anti-afk");
     bot.walk(WalkDirection::None);
   }
 }

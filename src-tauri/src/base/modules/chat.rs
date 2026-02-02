@@ -4,10 +4,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 use regex::Regex;
 
-
-use crate::TASKS;
 use crate::common::get_player_uuid;
 use crate::tools::*;
+use crate::base::*;
 use crate::radar::RadarManager;
 
 
@@ -229,6 +228,6 @@ impl ChatModule {
   }
 
   pub fn stop(nickname: &String) {
-    TASKS.get(nickname).unwrap().write().unwrap().stop_task("spamming");
+    TASKS.get(nickname).unwrap().write().unwrap().kill_task("spamming");
   }
 }

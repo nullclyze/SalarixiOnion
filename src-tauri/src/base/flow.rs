@@ -15,12 +15,10 @@ use parking_lot::RwLock;
 use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 
-use crate::state::BotState;
 use crate::tools::*;
-use crate::state::{STATES};
-use crate::tasks::TASKS;
 use crate::emit::*;
 use crate::webhook::send_webhook;
+use super::bot::*;
 use super::handlers::*;
 
 
@@ -121,7 +119,6 @@ pub fn generate_nickname_or_password(item: &str, t: String, template: String) ->
   }
 }
 
-
 // Функция получения текущих опций
 pub fn get_current_options() -> Option<LaunchOptions> {
   if let Some(arc) = get_flow_manager() {
@@ -130,7 +127,6 @@ pub fn get_current_options() -> Option<LaunchOptions> {
 
   None
 }
-
 
 // Структура опций запуска
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -236,6 +232,7 @@ impl FlowManager {
     self.swarm.take();
     self.bots.clear();
 
+    PROFILES.clear();
     STATES.clear();
     TASKS.clear();
 
@@ -290,7 +287,9 @@ impl FlowManager {
             
             accounts.push(Account::offline(&nickname));
 
-            STATES.add(&nickname, BotState::new(nickname.clone(), password.clone(), options.version.clone()));
+            PROFILES.push(&nickname, password, options.version.clone());
+            TASKS.push(&nickname);
+            STATES.push(&nickname);
           }
 
           if options.use_proxy {
@@ -321,9 +320,9 @@ impl FlowManager {
                       let proxy = Proxy::new(addr, None);  
                       join_opts = join_opts.proxy(proxy);  
 
-                      if let Some(state) = STATES.get(&account.username) {
+                      if let Some(mut profile) = PROFILES.get(&account.username) {
                         let split_address: Vec<&str> = address.split(":").collect();
-                        state.write().unwrap().proxy = split_address.get(0).unwrap().to_string();
+                        profile.set_proxy(split_address.get(0).unwrap());
                       }
                     }  
                   }  
@@ -374,7 +373,7 @@ impl FlowManager {
     self.swarm.take();
     self.bots.clear();
 
-    STATES.clear();
+    PROFILES.clear();
     TASKS.clear();
 
     if let Some(options) = self.options.clone() {

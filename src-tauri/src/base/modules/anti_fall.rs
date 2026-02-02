@@ -10,9 +10,9 @@ use serde::{Serialize, Deserialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::TASKS;
 use crate::common::take_item;
 use crate::tools::*;
+use crate::base::*;
 use crate::common::{get_block_state, get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
 
 
@@ -186,6 +186,6 @@ impl AntiFallModule {
   }
 
   pub fn stop(nickname: &String) {
-    TASKS.get(nickname).unwrap().write().unwrap().stop_task("anti-fall");
+    TASKS.get(nickname).unwrap().write().unwrap().kill_task("anti-fall");
   }
 }

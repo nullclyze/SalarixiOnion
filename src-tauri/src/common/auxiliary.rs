@@ -1,7 +1,9 @@
 use azalea::SprintDirection;
 use azalea::WalkDirection;
+use azalea::container::ContainerHandleRef;
 use azalea::core::direction::Direction;
 use azalea::entity::Position;
+use azalea::entity::inventory::Inventory;
 use azalea::prelude::*;
 use azalea::Vec3;
 use azalea::core::position::BlockPos; 
@@ -17,8 +19,7 @@ use bevy_ecs::entity::Entity;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::get_flow_manager;
-use crate::state::STATES;
+use crate::base::*;
 use crate::tools::randuint;
 
 
@@ -169,15 +170,37 @@ pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
   Vec3::new(0.0, 0.0, 0.0)
 }
 
-// Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
-pub async fn take_item(bot: &Client, source_slot: usize) {
+// Функция остановки движения бота
+pub async fn stop_bot_walking(bot: &Client) {
   let nickname = bot.username();
 
-  STATES.set(&nickname, "can_walk", "false".to_string());
-  
+  STATES.set_state(&nickname, "can_walking", false);
+  STATES.set_state(&nickname, "can_sprinting", false);
+
   bot.walk(WalkDirection::None);
 
-  if let Some(inventory) = bot.open_inventory() {
+  STATES.set_state(&nickname, "is_walking", false);
+  STATES.set_state(&nickname, "is_sprinting", false);
+
+  sleep(Duration::from_millis(50)).await;
+}
+
+// Функция безопасного получения инвентаря
+pub fn get_inventory(bot: &Client) -> Option<ContainerHandleRef> {
+  if let Some(inventory) = bot.get_component::<Inventory>() {
+    return Some(ContainerHandleRef::new(inventory.id, bot.clone()));
+  }
+
+  None
+}
+
+// Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
+pub async fn take_item(bot: &Client, source_slot: usize) {
+  if let Some(inventory) = get_inventory(bot) {
+    let nickname = bot.username();
+
+    stop_bot_walking(bot).await;
+
     if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
       if bot.selected_hotbar_slot() != hotbar_slot {
         bot.set_selected_hotbar_slot(hotbar_slot);
@@ -190,6 +213,7 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
 
         if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
           if bot.selected_hotbar_slot() != slot {
+            sleep(Duration::from_millis(50)).await;
             bot.set_selected_hotbar_slot(slot);
             sleep(Duration::from_millis(50)).await;
           }
@@ -203,26 +227,29 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
         sleep(Duration::from_millis(50)).await;
         inventory.left_click(random_slot);
 
+        sleep(Duration::from_millis(50)).await;
+
         let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
 
         if bot.selected_hotbar_slot() != hotbar_slot {
           bot.set_selected_hotbar_slot(hotbar_slot);
         }
       }
-    }
-  }
 
-  STATES.set(&nickname, "can_walk", "true".to_string());
+      inventory.close();
+    }
+
+    STATES.set_state(&nickname, "can_walking", true);
+    STATES.set_state(&nickname, "can_sprinting", true);
+  }
 }
 
 // Функция безопасного перемещения предмета
 pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_slot: usize) {
-  if let Some(inventory) = bot.open_inventory() {
+  if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-    STATES.set(&nickname, "can_walk", "false".to_string());
-
-    bot.walk(WalkDirection::None);
+    stop_bot_walking(bot).await;
 
     if let Some(item) = bot.menu().slot(target_slot) {
       if item.kind() == kind {
@@ -239,17 +266,20 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
     sleep(Duration::from_millis(50)).await;
     inventory.left_click(target_slot);
 
-    STATES.set(&nickname, "can_walk", "true".to_string());
+    sleep(Duration::from_millis(50)).await;
+
+    inventory.close();
+
+    STATES.set_state(&nickname, "can_walking", true);
+    STATES.set_state(&nickname, "can_sprinting", true);
   }
 }
 
 // Функция безопасного перемещения предмета в offhand
-pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
+pub async fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
   let nickname = bot.username();
 
-  STATES.set(&nickname, "can_walk", "false".to_string());
-  
-  bot.walk(WalkDirection::None);
+  stop_bot_walking(bot).await;
 
   if let Some(item) = bot.menu().slot(45) {
     if item.kind() == kind {
@@ -264,19 +294,26 @@ pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
     seq: 0
   });
 
-  STATES.set(&nickname, "can_walk", "true".to_string());
+  STATES.set_state(&nickname, "can_walking", true);
+  STATES.set_state(&nickname, "can_sprinting", true);
 }
 
 // Функция безопасного задания направления хотьбы для бота
 pub fn go(bot: &Client, direction: WalkDirection) {
-  if STATES.can_walk(&bot.username()) {
+  let nickname = bot.username();
+
+  if STATES.get_state(&nickname, "can_walking") {
+    STATES.set_state(&nickname, "is_walking", true);
     bot.walk(direction);
   }
 }
 
 // Функция безопасного задания направления бега для бота
 pub fn run(bot: &Client, direction: SprintDirection) {
-  if STATES.can_walk(&bot.username()) {
+  let nickname = bot.username();
+  
+  if STATES.get_state(&nickname, "can_sprinting") {
+    STATES.set_state(&nickname, "is_sprinting", true);
     bot.sprint(direction);
   }
 }
