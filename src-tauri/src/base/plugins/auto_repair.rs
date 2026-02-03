@@ -46,7 +46,7 @@ impl AutoRepairPlugin {
         if broken_item.slot != 45 && broken_item.slot > 8 {
           take_item(bot, broken_item.slot).await;
           sleep(Duration::from_millis(50)).await;
-          move_item_to_offhand(bot, broken_item.kind).await;
+          move_item_to_offhand(bot, broken_item.kind);
           sleep(Duration::from_millis(randuint(50, 150))).await;
         } 
 

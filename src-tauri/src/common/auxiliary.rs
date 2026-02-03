@@ -170,17 +170,30 @@ pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
   Vec3::new(0.0, 0.0, 0.0)
 }
 
-// Функция остановки движения бота
+// Функция остановки беги бота
+pub async fn stop_bot_sprinting(bot: &Client) {
+  let nickname = bot.username();
+
+  STATES.set_state(&nickname, "can_sprinting", false);
+
+  bot.stop_pathfinding();
+  bot.walk(WalkDirection::None);
+
+  STATES.set_state(&nickname, "is_sprinting", false);
+
+  sleep(Duration::from_millis(50)).await;
+}
+
+// Функция остановки хотьбы бота
 pub async fn stop_bot_walking(bot: &Client) {
   let nickname = bot.username();
 
   STATES.set_state(&nickname, "can_walking", false);
-  STATES.set_state(&nickname, "can_sprinting", false);
 
+  bot.stop_pathfinding();
   bot.walk(WalkDirection::None);
 
   STATES.set_state(&nickname, "is_walking", false);
-  STATES.set_state(&nickname, "is_sprinting", false);
 
   sleep(Duration::from_millis(50)).await;
 }
@@ -199,6 +212,7 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
+    stop_bot_sprinting(bot).await;
     stop_bot_walking(bot).await;
 
     if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
@@ -249,6 +263,7 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
+    stop_bot_sprinting(bot).await;
     stop_bot_walking(bot).await;
 
     if let Some(item) = bot.menu().slot(target_slot) {
@@ -276,11 +291,7 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
 }
 
 // Функция безопасного перемещения предмета в offhand
-pub async fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
-  let nickname = bot.username();
-
-  stop_bot_walking(bot).await;
-
+pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
   if let Some(item) = bot.menu().slot(45) {
     if item.kind() == kind {
       return;
@@ -293,9 +304,6 @@ pub async fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
     direction: Direction::Down,
     seq: 0
   });
-
-  STATES.set_state(&nickname, "can_walking", true);
-  STATES.set_state(&nickname, "can_sprinting", true);
 }
 
 // Функция безопасного задания направления хотьбы для бота
@@ -339,10 +347,19 @@ pub fn start_use_item(bot: &Client, hand: InteractionHand) {
 
 // Функция отправки пакета ReleaseUseItem
 pub fn release_use_item(bot: &Client) {
+  let x_rot = bot.direction().1;
+  let mut direction = Direction::Down;
+
+  if x_rot < 18.0 {
+    direction = Direction::Down;
+  } else if x_rot < -18.0 {
+    direction = Direction::Up;
+  }
+
   bot.write_packet(ServerboundPlayerAction {  
     action: Action::ReleaseUseItem,  
     pos: BlockPos::new(0, 0, 0),  
-    direction: Direction::Down,  
+    direction: direction,  
     seq: 0
   });
 }

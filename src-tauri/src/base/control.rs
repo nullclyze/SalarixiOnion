@@ -239,7 +239,7 @@ impl ModuleManager {
 
               let options_task = options.clone();  
 
-              FarmerModule::stop(&bot);
+              FarmerModule::stop(&nickname);
 
               if options.state {
                 let task = tokio::spawn(async move {
@@ -248,7 +248,7 @@ impl ModuleManager {
 
                 TASKS.get(&nickname).unwrap().write().unwrap().run_task("farmer", task);
               } else {
-                FarmerModule::stop(&bot);
+                FarmerModule::stop(&nickname);
               }
             },
             _ => {}

@@ -1422,7 +1422,7 @@
                   </select>
                 </div>
 
-                <div class="custom-select between">
+                <div class="custom-select between" id="select-killaura-weapon-container">
                   <label>Оружие: </label>
                   <select control="killaura" name="weapon">
                     <option value="sword">Меч</option>
@@ -1432,12 +1432,14 @@
               </div>
 
               <div class="input-wrap">
-                <div class="hidden-wrapper input" id="killaura-manual-settings-container">
+                <div class="hidden-wrapper input" id="killaura-weapon-slot-container">
                   <div class="form-input">
                     <label for="killaura-slot" class="text">Слот с оружием</label>
                     <input type="number" control="killaura" id="killaura-slot" placeholder="0" name="slot">
                   </div>
+                </div>
 
+                <div class="hidden-wrapper input" id="killaura-manual-settings-container">
                   <div class="form-input">
                     <label for="killaura-distance" class="text">Дистанция атаки</label>
                     <input type="number" control="killaura" id="killaura-distance" placeholder="3.1" value="3.1" name="distance">
@@ -1470,6 +1472,14 @@
 
             <div class="wrap right">
               <div class="checkbox-group">
+                <label class="checkbox-container">
+                  <input type="checkbox" control="killaura" id="use-killaura-auto-weapon" name="use_auto_weapon" checked>
+                  <span class="checkmark"></span>
+                  Авто оружие
+                </label>
+
+                <div class="simple-sep"></div>
+
                 <label class="checkbox-container">
                   <input type="checkbox" control="killaura" id="use-killaura-dodging" name="use_dodging">
                   <span class="checkmark"></span>
@@ -1718,7 +1728,15 @@
                 <select control="farmer" name="mode">
                   <option value="normal">Нормальный</option>
                   <option value="quick">Быстрый</option>
+                  <option value="ultra">Ультра</option>
                 </select>
+              </div>
+
+              <div class="input-wrap">
+                <div class="form-input">
+                  <label for="farmer-delay" class="text">Задержка</label>
+                  <input type="number" control="farmer" id="farmer-delay" placeholder="100" name="delay">
+                </div>
               </div>
 
               <div class="btn-group-flex" style="margin-top: 25px;">
@@ -1905,6 +1923,7 @@
                   <option value="gold">Gold</option>
                   <option value="dark">Dark</option>
                   <option value="magenta">Magenta</option>
+                  <option value="snow">Snow</option>
                 </select>
               </div>
 

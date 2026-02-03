@@ -22,6 +22,7 @@ pub struct FarmerModule;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FarmerOptions {
   pub mode: String,
+  pub delay: Option<u64>,
   pub state: bool
 }
 
@@ -76,7 +77,7 @@ impl FarmerModule {
   }
 
   fn this_is_garden_bed_without_plant(bot: &Client, id: u16, block_pos: BlockPos) -> bool {
-    if id == 5125 {
+    if id == 5125 || id == 5118 {
       let block_above = BlockPos::new(
         block_pos.x,
         block_pos.y + 1,
@@ -93,7 +94,7 @@ impl FarmerModule {
     false
   }
   
-  async fn fertilize_plant(bot: &Client, mode: String) {
+  async fn fertilize_plant(bot: &Client, mode: &String) {
     let mut ferilizer_slot = None;
 
     for (slot, item) in bot.menu().slots().iter().enumerate() {
@@ -109,10 +110,28 @@ impl FarmerModule {
       take_item(bot, slot).await;
       
       for _ in 0..=4 {
-        sleep(Duration::from_millis(if mode.as_str() == "normal" { randuint(50, 100) } else { 50 })).await;
+        sleep(Duration::from_millis(Self::generate_delay(mode))).await;
         bot.start_use_item();
       }
     }
+  }
+
+  async fn look_at_block(bot: &Client, block_pos: BlockPos) {
+    let center = block_pos.center();
+
+    if randchance(0.3) {
+      let sloppy_pos = Vec3::new(
+        center.x as f64 + randfloat(-1.3289, 1.3289),
+        center.y as f64 + randfloat(-1.3289, 1.3289),
+        center.z as f64 + randfloat(-1.3289, 1.3289)
+      );
+
+      bot.look_at(sloppy_pos);
+
+      sleep(Duration::from_millis(50)).await;
+    }
+
+    bot.look_at(center);
   }
 
   async fn take_plant(bot: &Client) -> bool {
@@ -138,76 +157,137 @@ impl FarmerModule {
     false
   }
 
-  async fn look_at_block(bot: &Client, block_pos: BlockPos) {
-    let center = block_pos.center();
-
-    if randchance(0.3) {
-      let sloppy_pos = Vec3::new(
-        center.x as f64 + randfloat(-1.3289, 1.3289),
-        center.y as f64 + randfloat(-1.3289, 1.3289),
-        center.z as f64 + randfloat(-1.3289, 1.3289)
-      );
-
-      bot.look_at(sloppy_pos);
-
-      sleep(Duration::from_millis(50)).await;
-    }
-
-    bot.look_at(center);
-  }
-
   fn generate_delay(mode: &String) -> u64 {
     if mode.as_str() == "normal" {
       return randuint(100, 150);
-    } else {
+    } else if mode.as_str() == "quick" {
       return 50;
+    } else {
+      return randuint(20, 30);
+    }
+  }
+
+  async fn plow_block(bot: &Client, block_pos: BlockPos, mode: &String) {
+    if let Some(state) = get_block_state(bot, block_pos) {
+      Self::auto_tool(bot).await;
+      sleep(Duration::from_millis(50)).await;
+
+      if state.id() == 14613 || state.id() == 10 {
+        bot.start_use_item();
+      } else {
+        bot.start_use_item();
+        sleep(Duration::from_millis(Self::generate_delay(mode))).await;
+        bot.start_use_item();
+      }
+    }
+  }
+
+  fn block_can_plowed(bot: &Client, id: u16, block_pos: BlockPos) -> bool {
+    if let Some(state) = get_block_state(bot, BlockPos::new(block_pos.x, block_pos.y + 1, block_pos.z)) {
+      return vec![14613, 27719, 10, 11].contains(&id) && state.is_air();
+    }
+
+    false
+  }
+
+  async fn interact_with_block(bot: &Client, block_pos: BlockPos, options: &FarmerOptions) {
+    let nickname = bot.username();
+
+    if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_interacting") && STATES.get_state(&nickname, "can_interacting") {
+      if let Some(state) = get_block_state(bot, block_pos) {
+        STATES.set_state(&nickname, "can_eating", false);
+        STATES.set_state(&nickname, "can_drinking", false);
+        STATES.set_state(&nickname, "can_interacting", false);
+        STATES.set_state(&nickname, "is_interacting", true);
+
+        if Self::this_is_garden_bed_without_plant(bot, state.id(), block_pos) {
+          Self::look_at_block(bot, block_pos).await;
+
+          if options.mode.as_str() != "ultra" {
+            sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+          }
+
+          if Self::take_plant(bot).await {
+            sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+            bot.start_use_item();
+            sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+          }
+        } else {
+          if Self::this_is_plant(state.id()) {
+            Self::look_at_block(bot, block_pos).await;
+
+            sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+
+            if Self::this_is_grown_plant(state.id()) {
+              Self::auto_tool(bot).await;
+              sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+              bot.mine(block_pos).await;
+            } else {
+              Self::fertilize_plant(bot, &options.mode).await;
+
+              if let Some(new_state) = get_block_state(bot, block_pos) {
+                sleep(Duration::from_millis(50)).await;
+
+                if Self::this_is_grown_plant(new_state.id()) {
+                  Self::auto_tool(bot).await;
+                  sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+                  bot.mine(block_pos).await;
+                }
+              }
+            }
+
+            if options.mode.as_str() != "ultra" {
+              sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+            }
+          } else {
+            if Self::block_can_plowed(bot, state.id(), block_pos) {
+              Self::look_at_block(bot, block_pos).await;
+              Self::plow_block(bot, block_pos, &options.mode).await;
+            }
+          }
+        }
+
+        STATES.set_state(&nickname, "can_eating", true);
+        STATES.set_state(&nickname, "can_drinking", true);
+        STATES.set_state(&nickname, "can_interacting", true);
+        STATES.set_state(&nickname, "is_interacting", false);
+      }
     }
   }
 
   async fn farmer(bot: &Client, options: FarmerOptions) {
+    let nickname = bot.username();
+
     loop {
-      let pos = bot.position();
+      STATES.set_state(&nickname, "can_looking", false);
+      STATES.set_state(&nickname, "is_looking", true);
+
+      for y in -1..=1 {
+        let pos = bot.position();
+
+        let block_pos = BlockPos::from(Vec3::new(pos.x, pos.y + y as f64, pos.z));
+
+        Self::interact_with_block(bot, block_pos, &options).await;
+      }
 
       for x in -1..=1 {
         for y in -1..=1 {
           for z in -1..=1 {
-            let block_pos = BlockPos::new(
-              pos.x.floor() as i32 + x,
-              pos.y.floor() as i32 + y,
-              pos.z.floor() as i32 + z
-            );
+            let pos = bot.position();
 
-            if let Some(state) = get_block_state(bot, block_pos) {
-              if Self::this_is_garden_bed_without_plant(bot, state.id(), block_pos) {
-                Self::look_at_block(bot, block_pos).await;
-                sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
+            let block_pos = BlockPos::from(Vec3::new(pos.x + x as f64, pos.y + y as f64, pos.z + z as f64));
 
-                if Self::take_plant(bot).await {
-                  sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
-                  bot.start_use_item();
-                  sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
-                }
-              } else {
-                if Self::this_is_plant(state.id()) {
-                  Self::look_at_block(bot, block_pos).await;
-
-                  sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
-
-                  if Self::this_is_grown_plant(state.id()) {
-                    Self::auto_tool(bot).await;
-                    sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
-                    bot.mine(block_pos).await;
-                  } else {
-                    Self::fertilize_plant(bot, options.mode.clone()).await;
-                  }
-
-                  sleep(Duration::from_millis(Self::generate_delay(&options.mode))).await;
-                }
-              }
+            if block_pos != BlockPos::from(Vec3::new(pos.x, pos.y + y as f64, pos.z)) {
+              Self::interact_with_block(bot, block_pos, &options).await;
             }
           }
         }
       }
+
+      STATES.set_state(&nickname, "can_looking", true);
+      STATES.set_state(&nickname, "is_looking", false);
+
+      sleep(Duration::from_millis(options.delay.unwrap_or(100))).await;
     }
   }
 
@@ -215,7 +295,14 @@ impl FarmerModule {
     Self::farmer(bot, options).await;
   } 
 
-  pub fn stop(bot: &Client) {
-    TASKS.get(&bot.username()).unwrap().write().unwrap().kill_task("farmer");
+  pub fn stop(nickname: &String) {
+    TASKS.get(nickname).unwrap().write().unwrap().kill_task("farmer");
+
+    STATES.set_state(&nickname, "can_looking", true);
+    STATES.set_state(&nickname, "is_looking", false);
+    STATES.set_state(&nickname, "can_eating", true);
+    STATES.set_state(&nickname, "can_drinking", true);
+    STATES.set_state(&nickname, "can_interacting", true);
+    STATES.set_state(&nickname, "is_interacting", false);
   }
 }

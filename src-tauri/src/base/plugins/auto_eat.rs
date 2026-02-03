@@ -8,6 +8,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::stop_bot_sprinting;
 use crate::tools::*;
 use crate::common::{take_item, start_use_item, release_use_item};
 
@@ -43,6 +44,12 @@ impl AutoEatPlugin {
     } else {
       20
     };
+
+    let health = if let Some(health) = bot.get_component::<Health>() {
+      health.0
+    } else {
+      20.0
+    };
     
     let nickname = bot.username();
 
@@ -51,25 +58,32 @@ impl AutoEatPlugin {
 
       if let Some(best_food) = Self::get_best_food(bot, food_list.clone()) {
         if let Some(food_slot) = best_food.slot {
-          if STATES.get_state(&nickname, "can_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_sprinting") {
+          if STATES.get_state(&nickname, "can_eating") && !STATES.get_state(&nickname, "is_drinking") {
             let mut should_eat = true;
 
-            if TASKS.get_task_activity(&nickname, "killaura") {
-              should_eat = randchance(0.5);
+            if TASKS.get_task_activity(&nickname, "killaura") || TASKS.get_task_activity(&nickname, "bow-aim") || TASKS.get_task_activity(&nickname, "farmer") {
+              should_eat = !(randchance(satiety as f64 / 20.0) && randchance(health as f64 / 20.0));
             }
 
             if should_eat {
+              if STATES.get_state(&nickname, "is_sprinting") || STATES.get_state(&nickname, "can_sprinting") {
+                stop_bot_sprinting(bot).await;
+                sleep(Duration::from_millis(randuint(50, 100))).await;
+              }
+
               STATES.set_state(&nickname, "can_drinking", false);
-              STATES.set_state(&nickname, "can_sprinting", false);
               STATES.set_state(&nickname, "is_eating", true);
 
               take_item(bot, food_slot).await;
               sleep(Duration::from_millis(50)).await;
               Self::start_eating(bot).await;
+              sleep(Duration::from_millis(50)).await;
 
               STATES.set_state(&nickname, "can_drinking", true);
               STATES.set_state(&nickname, "can_sprinting", true);
               STATES.set_state(&nickname, "is_eating", false);
+            } else {
+              sleep(Duration::from_millis(1800)).await;
             }
           }
         }
@@ -79,9 +93,7 @@ impl AutoEatPlugin {
 
   async fn start_eating(bot: &Client) {
     start_use_item(bot, InteractionHand::MainHand);
-
-    sleep(Duration::from_millis(3100)).await;
-
+    sleep(Duration::from_millis(1800)).await;
     release_use_item(bot);
   }
 

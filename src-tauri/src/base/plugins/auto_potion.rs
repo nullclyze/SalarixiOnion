@@ -3,13 +3,13 @@ use azalea::inventory::ItemStack;
 use azalea::inventory::components::PotionContents;
 use azalea::registry::builtin::Potion as PotionKind;
 use azalea::prelude::*;
-use azalea::protocol::packets::game::ServerboundUseItem;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::{start_use_item, stop_bot_sprinting};
 use crate::tools::*;
 use crate::common::{get_bot_physics, take_item, release_use_item};
 
@@ -65,17 +65,22 @@ impl AutoPotionPlugin {
               let mut should_drink = true;
 
               if TASKS.get_task_activity(&nickname, "killaura") {
-                should_drink = randchance(0.7);
+                should_drink = !randchance(health.0 as f64 / 20.0);
               }
 
               if should_drink {
+                if STATES.get_state(&nickname, "is_sprinting") || STATES.get_state(&nickname, "can_sprinting") {
+                  stop_bot_sprinting(bot).await;
+                  sleep(Duration::from_millis(randuint(50, 100))).await;
+                }
+
                 STATES.set_state(&nickname, "can_eating", false);
-                STATES.set_state(&nickname, "can_sprinting", false);
                 STATES.set_state(&nickname, "is_drinking", true);
 
                 take_item(bot, slot).await;
                 sleep(Duration::from_millis(50)).await;
                 Self::use_potion(bot, potion.kind).await;
+                sleep(Duration::from_millis(50)).await;
 
                 STATES.set_state(&nickname, "can_eating", true);
                 STATES.set_state(&nickname, "can_sprinting", true);
@@ -91,22 +96,14 @@ impl AutoPotionPlugin {
   async fn use_potion(bot: &Client, kind: String) {
     match kind.as_str() {
       "default" => {
-        let direction = bot.direction();
-
-        bot.write_packet(ServerboundUseItem {
-          hand: InteractionHand::MainHand,
-          seq: 0,
-          y_rot: direction.0,
-          x_rot: direction.1
-        });
-
-        sleep(Duration::from_millis(3000)).await;
-
+        start_use_item(bot, InteractionHand::MainHand);
+        sleep(Duration::from_millis(2700)).await;
         release_use_item(bot);
       },
       "splash" => {
         let nickname = bot.username();
 
+        STATES.set_state(&nickname, "can_looking", false);
         STATES.set_state(&nickname, "is_looking", true);
 
         let direction = bot.direction();
@@ -115,18 +112,14 @@ impl AutoPotionPlugin {
 
         sleep(Duration::from_millis(randuint(400, 600))).await;
 
-        bot.write_packet(ServerboundUseItem {
-          hand: InteractionHand::MainHand,
-          seq: 0,
-          y_rot: direction.0,
-          x_rot: direction.1
-        });
+        start_use_item(bot, InteractionHand::MainHand);
 
         sleep(Duration::from_millis(randuint(30, 500))).await;
 
         bot.set_direction(direction.0 + randfloat(-2.5, 2.5) as f32, direction.1 + randfloat(-2.5, 2.5) as f32);
       
         STATES.set_state(&nickname, "is_looking", false);
+        STATES.set_state(&nickname, "can_looking", true);
       },
       _ => {}
     }

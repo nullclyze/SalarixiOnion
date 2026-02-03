@@ -588,6 +588,20 @@ class ElementManager {
       }
     });
 
+    document.getElementById('use-killaura-auto-weapon')?.addEventListener('change', function (this: HTMLInputElement) {
+      const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
+      const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
+
+      if (this.checked) {
+        selectWeaponContainer.style.display = 'grid';
+        weaponSlotContainer.style.display = 'none';
+      } else {
+        selectWeaponContainer.style.display = 'none';
+        weaponSlotContainer.style.display = 'flex';
+      }
+    });
+
+
     document.getElementById('use-killaura-chase')?.addEventListener('input', function (this: HTMLInputElement) {
       const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
 
@@ -758,6 +772,13 @@ class ElementManager {
           root.style.setProperty('--dull-spec-color', '#8e13be');
           root.style.setProperty('--chbx-spec-color', '#9e0b97');
           root.style.setProperty('--chbx-dull-spec-color', '#960676');
+          break;
+        case 'snow': 
+          root.style.setProperty('--title-color', '#e2e2e2');
+          root.style.setProperty('--spec-color', '#cfcecf');
+          root.style.setProperty('--dull-spec-color', '#979797');
+          root.style.setProperty('--chbx-spec-color', '#a5a5a5');
+          root.style.setProperty('--chbx-dull-spec-color', '#999999');
           break;
       }
     } catch (error) {

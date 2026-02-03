@@ -47,7 +47,7 @@ impl AutoLookPlugin {
         let nickname = bot.username();
 
         if bot.is_goto_target_reached() {
-          if STATES.get_state(&nickname, "can_looking") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") && !TASKS.get_task_activity(&nickname, "farmer") {
+          if STATES.get_state(&nickname, "can_looking") && !TASKS.get_task_activity(&nickname, "killaura") && !TASKS.get_task_activity(&nickname, "bow-aim") && !TASKS.get_task_activity(&nickname, "scaffold") && !TASKS.get_task_activity(&nickname, "miner") && !TASKS.get_task_activity(&nickname, "farmer") {
             STATES.set_state(&nickname, "is_looking", true);
 
             let pos = Vec3::new(
