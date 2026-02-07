@@ -66,12 +66,12 @@ impl AutoRepairPlugin {
   }
 
   async fn take_experience_bottles(&self, bot: &Client) -> Option<i32> {
-    for (slot, item) in bot.menu().slots().iter().enumerate() {  
-      if item.kind() == ItemKind::ExperienceBottle {
-        take_item(bot, slot).await;
-        return Some(item.count());
+      for (slot, item) in bot.menu().slots().iter().enumerate() {  
+        if item.kind() == ItemKind::ExperienceBottle {
+          take_item(bot, slot).await;
+          return Some(item.count());
+        }
       }
-    }
 
     None
   }
@@ -91,25 +91,25 @@ impl AutoRepairPlugin {
             slot = broken_item.slot;
           } 
 
-          if let Some(item) = bot.menu().slot(slot) {
-            let current_damage = self.get_current_item_damage(item);
-            let max_durability = self.get_max_item_durability(item);
+            if let Some(item) = bot.menu().slot(slot) {
+              let current_damage = self.get_current_item_damage(item);
+              let max_durability = self.get_max_item_durability(item);
 
-            if current_damage != 0 && max_durability - current_damage < max_durability / 2 {
-              let direction = bot.direction();
+              if current_damage != 0 && max_durability - current_damage < max_durability / 2 {
+                let direction = bot.direction();
 
-              if direction.1 < 84.0 {
-                bot.set_direction(direction.0, randfloat(84.0, 90.0) as f32);
-                sleep(Duration::from_millis(randuint(150, 200))).await;
-              } 
+                if direction.1 < 84.0 {
+                  bot.set_direction(direction.0, randfloat(84.0, 90.0) as f32);
+                  sleep(Duration::from_millis(randuint(150, 200))).await;
+                } 
 
-              start_use_item(bot, InteractionHand::MainHand);
+                start_use_item(bot, InteractionHand::MainHand);
 
-              sleep(Duration::from_millis(randuint(200, 250))).await;
-            } else {
-              return;
+                sleep(Duration::from_millis(randuint(200, 250))).await;
+              } else {
+                return;
+              }
             }
-          }
 
           STATES.set_mutual_states(&nickname, "interacting", false);
           STATES.set_mutual_states(&nickname, "looking", false);
@@ -153,21 +153,21 @@ impl AutoRepairPlugin {
   fn find_broken_items(&self, bot: &Client) -> Vec<BrokenItem> {
     let mut broken_items = vec![];
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {  
-      if !item.is_empty() {
-        let current_damage = self.get_current_item_damage(item);
-        let max_durability = self.get_max_item_durability(item);
+      for (slot, item) in bot.menu().slots().iter().enumerate() {  
+        if !item.is_empty() {
+          let current_damage = self.get_current_item_damage(item);
+          let max_durability = self.get_max_item_durability(item);
 
-        if current_damage != 0 && max_durability - current_damage < max_durability / 2 {
-          if self.item_has_mending(bot, item) {
-            broken_items.push(BrokenItem { 
-              slot: slot, 
-              kind: item.kind()
-            });
+          if current_damage != 0 && max_durability - current_damage < max_durability / 2 {
+            if self.item_has_mending(bot, item) {
+              broken_items.push(BrokenItem { 
+                slot: slot, 
+                kind: item.kind()
+              });
+            }
           }
         }
       }
-    }
 
     broken_items
   }

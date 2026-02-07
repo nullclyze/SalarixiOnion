@@ -11,7 +11,7 @@ use tokio::time::sleep;
 
 use crate::base::{STATES, get_flow_manager};
 use crate::tools::{randfloat, randint, randuint};
-use crate::common::{get_average_coordinates_of_bots, get_inventory, go, go_to, set_bot_velocity_y, stop_bot_sprinting, stop_bot_walking, swing_arm, take_item, this_is_solid_block};
+use crate::common::{get_average_coordinates_of_bots, go, go_to, get_inventory, set_bot_velocity_y, swing_arm, take_item, this_is_solid_block};
 
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> = Lazy::new(|| { Arc::new(QuickTaskManager::new()) });
@@ -34,9 +34,6 @@ impl QuickTaskManager {
             "clear-inventory" => {
               tokio::spawn(async move {
                 if let Some(inventory) = get_inventory(&bot) {
-                  stop_bot_sprinting(&bot).await;
-                  stop_bot_walking(&bot).await;
-
                   for slot in 0..=48 {  
                     if let Some(menu) = inventory.menu() {  
                       if let Some(s) = menu.slot(slot) {
@@ -120,9 +117,6 @@ impl QuickTaskManager {
                   }
 
                   if let Some(slot) = block_slot {
-                    stop_bot_sprinting(&bot).await;
-                    stop_bot_walking(&bot).await;
-
                     STATES.set_state(&nickname, "can_walking", false);
                     STATES.set_state(&nickname, "can_sprinting", false);
                     STATES.set_mutual_states(&nickname, "looking", true);
@@ -190,9 +184,6 @@ impl QuickTaskManager {
 
                   if let Some(slot) = block_slot {
                     if STATES.get_state(&nickname, "can_looking") && STATES.get_state(&nickname, "can_interacting") {
-                      stop_bot_sprinting(&bot).await;
-                      stop_bot_walking(&bot).await;
-
                       STATES.set_state(&nickname, "can_walking", false);
                       STATES.set_state(&nickname, "can_sprinting", false);
                       STATES.set_mutual_states(&nickname, "looking", true);

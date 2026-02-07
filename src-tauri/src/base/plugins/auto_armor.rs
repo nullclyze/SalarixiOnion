@@ -5,7 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{find_empty_slot_in_invenotry, get_inventory, stop_bot_sprinting, stop_bot_walking};
+use crate::common::{close_inventory, find_empty_slot_in_invenotry, get_inventory};
 
 
 #[derive(Debug, Clone)]
@@ -49,15 +49,15 @@ impl AutoArmorPlugin {
   async fn equip_armor(&self, bot: &Client) {
     let mut armors = vec![];
 
-    for slot in 0..=48 {  
-      if let Some(item) = bot.menu().slot(slot) {
-        if slot > 8 {
-          if let Some(armor) = self.is_armor(item, slot) {
-            armors.push(armor);
+      for slot in 0..=48 {  
+        if let Some(item) = bot.menu().slot(slot) {
+          if slot > 8 {
+            if let Some(armor) = self.is_armor(item, slot) {
+              armors.push(armor);
+            }
           }
         }
       }
-    }
 
     let armor_set = self.get_best_armor(bot, armors);
 
@@ -88,18 +88,17 @@ impl AutoArmorPlugin {
 
   async fn equip(&self, bot: &Client, armor_slot: usize, target_slot: usize) {
     if let Some(inventory) = get_inventory(bot) {
-      stop_bot_walking(bot).await;
-      stop_bot_sprinting(bot).await;
-
       let nickname = bot.username();
 
-      if let Some(item) = bot.menu().slot(target_slot) {
-        if !item.is_empty() {
-          if let Some(_) = find_empty_slot_in_invenotry(bot) {
-            inventory.shift_click(target_slot);
-            sleep(Duration::from_millis(50)).await;
-          } else {
-            return;
+      if let Some(menu) = inventory.menu() {
+        if let Some(item) = menu.slot(target_slot) {
+          if !item.is_empty() {
+            if let Some(_) = find_empty_slot_in_invenotry(bot) {
+              inventory.shift_click(target_slot);
+              sleep(Duration::from_millis(50)).await;
+            } else {
+              return;
+            }
           }
         }
       }
@@ -108,7 +107,7 @@ impl AutoArmorPlugin {
 
       sleep(Duration::from_millis(50)).await;
 
-      inventory.close();
+      close_inventory(bot);
 
       STATES.set_state(&nickname, "can_walking", true);
       STATES.set_state(&nickname, "can_sprinting", true);

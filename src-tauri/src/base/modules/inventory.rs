@@ -4,9 +4,9 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::STATES;
-use crate::common::{get_inventory, stop_bot_sprinting, stop_bot_walking};
+use crate::base::*;
 use crate::emit::*;
+use crate::common::get_inventory;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,9 +28,6 @@ impl InventoryModule {
     if let Some(s) = options.slot {
       if let Some(inventory) = get_inventory(bot) {
         let nickname = bot.username();
-
-        stop_bot_sprinting(bot).await;
-        stop_bot_walking(bot).await;
 
         match options.state.as_str() {
           "select" => { 

@@ -13,6 +13,7 @@ pub struct Profile {
   pub version: String,
   pub password: String,
   pub proxy: String,
+  pub ping: u32,
   pub health: u32,
   pub satiety: u32,
   pub registered: bool,
@@ -29,6 +30,7 @@ impl Profile {
       version: version.to_string(),
       password: password.to_string(),
       proxy: "-".to_string(),
+      ping: 0,
       health: 0,
       satiety: 0,
       registered: false,
@@ -48,6 +50,10 @@ impl Profile {
 
   pub fn set_proxy(&mut self, proxy: &str) {
     self.proxy = proxy.to_string();
+  }
+
+  pub fn set_ping(&mut self, ping: u32) {
+    self.ping = ping;
   }
 
   pub fn set_health(&mut self, health: u32) {
@@ -116,6 +122,7 @@ impl ProfileManager {
       let mut profile = arc.write().unwrap();
 
       match field {
+        "ping" => profile.set_ping(value),
         "health" => profile.set_health(value),
         "satiety" => profile.set_satiety(value),
         _ => {}

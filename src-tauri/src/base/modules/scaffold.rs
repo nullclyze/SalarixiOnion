@@ -1,11 +1,11 @@
-use azalea::prelude::*;
+use azalea::{Vec3, WalkDirection, prelude::*};
 use azalea::core::position::BlockPos;
 use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, swing_arm, take_item, this_is_solid_block};
+use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, go, swing_arm, take_item, this_is_solid_block};
 use crate::tools::*;
 
 
@@ -65,6 +65,15 @@ impl ScaffoldModule {
     let max_x = if let Some(rot) = max_x_rot { rot } else { 83.0 } as f64;
 
     bot.set_direction(direction.0, randfloat(min_x, max_x) as f32); 
+  }
+
+  fn go_back(&self, bot: Client) {
+    tokio::spawn(async move {
+      loop {
+        go(&bot, WalkDirection::Backward);
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
   }
 
   async fn noob_bridge_scaffold(&self, bot: &Client, options: ScaffoldOptions) {
@@ -172,7 +181,11 @@ impl ScaffoldModule {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let position = bot.position();
-        let velocity = get_bot_physics(bot).velocity;
+        let velocity = if let Some(physics) = get_bot_physics(bot) {
+          physics.velocity
+        } else {
+          Vec3::ZERO
+        };
 
         let block_under = BlockPos::new(
           position.x.floor() as i32, 
@@ -202,6 +215,8 @@ impl ScaffoldModule {
   }
 
   pub async fn enable(&self, bot: &Client, options: ScaffoldOptions) {
+    self.go_back(bot.clone());
+
     match options.mode.as_str() {
       "noob-bridge" => { self.noob_bridge_scaffold(bot, options).await; },
       "ninja-bridge" => { self.ninja_bridge_scaffold(bot, options).await; },

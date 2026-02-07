@@ -1,12 +1,21 @@
 use regex::Regex;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use base64::encode;
+use once_cell::sync::Lazy;
+use std::sync::Arc;
 
+
+pub static ANTI_WEB_CAPTCHA: Lazy<Arc<AntiWebCaptcha>> = Lazy::new(|| { Arc::new(AntiWebCaptcha::new()) });
+pub static ANTI_MAP_CAPTCHA: Lazy<Arc<AntiMapCaptcha>> = Lazy::new(|| { Arc::new(AntiMapCaptcha::new()) });
 
 pub struct AntiWebCaptcha;
 
 impl AntiWebCaptcha {
-  pub fn catch_url_from_message(message: String, regex: &str, required_url_part: Option<String>) -> Option<String> {
+  pub fn new() -> Self {
+    Self
+  }
+
+  pub fn catch_url_from_message(&self, message: String, regex: &str, required_url_part: Option<String>) -> Option<String> {
     let re = Regex::new(regex).unwrap();
 
     for link_to_captcha in re.find_iter(&message) {
@@ -29,7 +38,11 @@ impl AntiWebCaptcha {
 pub struct AntiMapCaptcha;
 
 impl AntiMapCaptcha {
-  fn convert_minecraft_color_to_png(id: u8) -> (u8, u8, u8) {
+  pub fn new() -> Self {
+    Self
+  }
+
+  fn get_rgb_code(&self, id: u8) -> (u8, u8, u8) {
     match id {
       0 => (255, 255, 255),
       1 => (255, 255, 255),
@@ -243,14 +256,14 @@ impl AntiMapCaptcha {
     }
   }
 
-  pub fn create_png_image(map: &Vec<u8>) -> String {
+  pub fn create_png_image(&self, map: &Vec<u8>) -> String {
     let width = 128;
     let height = 128;
 
     let mut img = ImageBuffer::new(width, height);
 
     for (i, &id) in map.iter().enumerate() {
-      let rgb = Self::convert_minecraft_color_to_png(id);
+      let rgb = self.get_rgb_code(id);
       let x = (i % 128) as u32;
       let y = (i / 128) as u32;
 

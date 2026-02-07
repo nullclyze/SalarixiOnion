@@ -58,7 +58,7 @@ impl MinerModule {
 
       if let Some(dir) = walk_direction {
         bot.walk(*dir);
-        bot.wait_ticks(randticks(3, 5)).await;
+        sleep(Duration::from_millis(randuint(150, 250))).await;
         bot.walk(WalkDirection::None);
       }
     }
@@ -76,7 +76,7 @@ impl MinerModule {
 
       bot.look_at(pre);
 
-      bot.wait_ticks(randticks(1, 3)).await;
+      sleep(Duration::from_millis(randuint(50, 150))).await;
     }
 
     if randchance(0.7) {
@@ -104,7 +104,7 @@ impl MinerModule {
     }
 
     bot.walk(WalkDirection::Forward);
-    bot.wait_ticks(randticks(1, 3)).await;
+    sleep(Duration::from_millis(randuint(50, 150))).await;
     bot.walk(WalkDirection::None);
   }
 
@@ -197,7 +197,7 @@ impl MinerModule {
               
               self.look_at_block(bot, block_pos, options.look.clone()).await;
 
-              bot.wait_ticks(randticks(2, 4)).await;
+              sleep(Duration::from_millis(randuint(100, 200))).await;
 
               if let Some(slot) = options.slot {
                 bot.set_selected_hotbar_slot(slot);
@@ -230,14 +230,12 @@ impl MinerModule {
 
               self.micro_offset(bot).await;
 
-              bot.wait_ticks(randticks(1, 2)).await;
-
               sleep(Duration::from_millis(randuint(50, 100))).await;
 
               if let Some(s) = get_block_state(bot, block_pos) {
                 if !s.is_air() || self.is_breakable_block(s.id()) {
                   bot.walk(WalkDirection::Backward);
-                  bot.wait_ticks(randticks(1, 2)).await;
+                  sleep(Duration::from_millis(randuint(50, 100))).await;
                   bot.walk(WalkDirection::None);
                 }
               }

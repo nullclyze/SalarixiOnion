@@ -365,8 +365,13 @@
           </div>
 
           <div class="form-input">
+            <label for="monitoring-update-frequency" class="text" translator-tag="input:monitoring-update-frequency">Частота обновлений</label>
+            <input type="number" name="monitoringUpdateFrequency" id="monitoring-update-frequency" placeholder="1800" value="1800" keep="true">
+          </div>
+
+          <div class="form-input" id="chat-history-length-container">
             <label for="chat-history-length" class="text" translator-tag="input:chat-history-length">Длина истории чата</label>
-            <input type="number" name="chatHistoryLength" id="chat-history-length" placeholder="80" value="80" keep="true">
+            <input type="number" name="chatHistoryLength" id="chat-history-length" placeholder="50" value="50" keep="true">
           </div>
 
           <div class="separator">
@@ -419,7 +424,7 @@
 
         <div class="settings-column right">
           <div class="checkbox-group">
-            <div class="simple-sep"></div>
+            <div class="simple-sep" style="margin-top: 0;"></div>
 
             <label class="checkbox-container">
               <input type="checkbox" name="useAutoRegister" id="use-auto-register" keep="true" checked>
@@ -480,13 +485,33 @@
             <label class="checkbox-container">
               <input type="checkbox" name="useAutoRejoin" id="use-auto-rejoin" keep="true">
               <span class="checkmark"></span>
-              <span translator-tag="checkbox:auto-rejoin">Использовать auto-rejoin</span>
+              <span translator-tag="checkbox:auto-rejoin">Использовать Auto-Rejoin</span>
             </label>
 
             <label class="checkbox-container">
               <input type="checkbox" name="useChatSigning" id="use-chat-signing" keep="true">
               <span class="checkmark"></span>
-              <span translator-tag="checkbox:chat-signing">Использовать chat-signing</span>
+              <span translator-tag="checkbox:chat-signing">Использовать Chat-Signing</span>
+            </label>
+
+            <div class="simple-sep"></div>
+
+            <label class="checkbox-container">
+              <input type="checkbox" name="useExtendedMonitoring" id="use-extended-monitoring" keep="true" checked>
+              <span class="checkmark"></span>
+              <span translator-tag="checkbox:extended-monitoring">Расширенный мониторинг</span>
+            </label>
+
+            <label class="checkbox-container">
+              <input type="checkbox" name="useChatMonitoring" id="use-chat-monitoring" keep="true" checked>
+              <span class="checkmark"></span>
+              <span translator-tag="checkbox:chat-monitoring">Мониторинг чата</span>
+            </label>
+
+            <label class="checkbox-container">
+              <input type="checkbox" name="useMapMonitoring" id="use-map-monitoring" keep="true">
+              <span class="checkmark"></span>
+              <span translator-tag="checkbox:map-monitoring">Мониторинг карты</span>
             </label>
 
             <div class="simple-sep"></div>
@@ -1357,13 +1382,13 @@
               <div class="input-wrap">
                 <div class="hidden-wrapper input" id="flight-manual-settings-container">
                   <div class="form-input">
-                    <label for="flight-min-delay" class="text">Задержка в тиках (минимум)</label>
-                    <input type="number" control="flight" id="flight-min-delay" placeholder="8" value="8" name="min_delay">
+                    <label for="flight-min-delay" class="text">Задержка (минимум)</label>
+                    <input type="number" control="flight" id="flight-min-delay" placeholder="100" value="100" name="min_delay">
                   </div>
 
                   <div class="form-input">
-                    <label for="flight-max-delay" class="text">Задержка в тиках (максимум)</label>
-                    <input type="number" control="flight" id="flight-max-delay" placeholder="12" value="12" name="max_delay">
+                    <label for="flight-max-delay" class="text">Задержка (максимум)</label>
+                    <input type="number" control="flight" id="flight-max-delay" placeholder="200" value="200" name="max_delay">
                   </div>
 
                   <div class="form-input">

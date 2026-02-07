@@ -84,7 +84,11 @@ impl AntiFallModule {
 
   async fn hovering_anti_fall(&self, bot: &Client, options: AntiFallOptions) {
     loop {
-      let velocity_y = get_bot_physics(bot).velocity.y;
+      let velocity_y = if let Some(physics) = get_bot_physics(bot) {
+        physics.velocity.y
+      } else {
+        0.0
+      };
 
       if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
         if self.exist_blocks_below(bot, options.distance_to_ground.unwrap_or(4)) {
@@ -111,22 +115,22 @@ impl AntiFallModule {
 
   async fn teleport_anti_fall(&self, bot: &Client, options: AntiFallOptions) {
     loop {
-      let velocity_y = get_bot_physics(bot).velocity.y;
+      if let Some(physics) = get_bot_physics(bot) {
+        let velocity_y = physics.velocity.y;
 
-      if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
-        if self.exist_blocks_below(bot, options.distance_to_ground.unwrap_or(4)) {
-          let pos = bot.position();
-          let fake_pos = Vec3::new(pos.x, pos.y + randfloat(0.015, 0.022), pos.z);
+        if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
+          if self.exist_blocks_below(bot, options.distance_to_ground.unwrap_or(4)) {
+            let pos = bot.position();
+            let fake_pos = Vec3::new(pos.x, pos.y + randfloat(0.015, 0.022), pos.z);
 
-          let physics = get_bot_physics(bot);
-
-          bot.write_packet(ServerboundMovePlayerPos {
-            pos: fake_pos,
-            flags: MoveFlags {
-              on_ground: physics.on_ground(),
-              horizontal_collision: physics.horizontal_collision
-            }
-          });
+            bot.write_packet(ServerboundMovePlayerPos {
+              pos: fake_pos,
+              flags: MoveFlags {
+                on_ground: physics.on_ground(),
+                horizontal_collision: physics.horizontal_collision
+              }
+            });
+          }
         }
       }
 
@@ -138,7 +142,11 @@ impl AntiFallModule {
     let distance_to_ground = options.distance_to_ground.unwrap_or(4);
 
     loop {
-      let velocity_y = get_bot_physics(bot).velocity.y;
+      let velocity_y = if let Some(physics) = get_bot_physics(bot) {
+        physics.velocity.y
+      } else {
+        0.0
+      };
 
       if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
         if self.exist_blocks_below(bot, distance_to_ground) {

@@ -161,6 +161,7 @@ pub struct LaunchOptions {
   pub use_anti_captcha: bool,
   pub use_webhook: bool,
   pub use_chat_signing: bool,
+  pub use_chat_monitoring: bool,
   pub skin_settings: SkinSettings,
   pub anti_captcha_settings: AntiCaptchaSettings,
   pub webhook_settings: WebhookSettings,
@@ -466,10 +467,8 @@ impl ModuleManager {
       let bots = fm.bots.clone();
 
       if fm.bots.len() > 0 {
-        for bot in bots.into_values() {
+        for (nickname, bot) in bots.into_iter() {
           let current_options = options.clone();
-
-          let nickname = bot.username();
 
           if let Some(profile) = PROFILES.get(&nickname) {
             if profile.group != group {

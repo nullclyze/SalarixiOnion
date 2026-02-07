@@ -11,7 +11,7 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::tools::*;
-use crate::common::{get_entity_position, run, stop_bot_sprinting, stop_bot_walking, take_item};
+use crate::common::{get_entity_position, run, stop_bot_move, take_item};
 
 
 #[derive(Debug)]
@@ -103,37 +103,37 @@ impl KillauraModule {
   async fn auto_weapon(&self, bot: &Client, weapon: &String) {
     let mut weapons = vec![];
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {
-      if !item.is_empty() {
-        match weapon.as_str() {
-          "sword" => {
-            match item.kind() {
-              ItemKind::WoodenSword => { weapons.push(Weapon { slot: Some(slot), priority: 0 }); },
-              ItemKind::GoldenSword => { weapons.push(Weapon { slot: Some(slot), priority: 1 }); },
-              ItemKind::StoneSword => { weapons.push(Weapon { slot: Some(slot), priority: 2 }); },
-              ItemKind::CopperSword => { weapons.push(Weapon { slot: Some(slot), priority: 3 }); },
-              ItemKind::IronSword => { weapons.push(Weapon { slot: Some(slot), priority: 4 }); },
-              ItemKind::DiamondSword => { weapons.push(Weapon { slot: Some(slot), priority: 5 }); },
-              ItemKind::NetheriteSword => { weapons.push(Weapon { slot: Some(slot), priority: 6 }); },
-              _ => {}
-            }
-          },
-          "axe" => {
-            match item.kind() {
-              ItemKind::WoodenAxe => { weapons.push(Weapon { slot: Some(slot), priority: 0 }); },
-              ItemKind::GoldenAxe => { weapons.push(Weapon { slot: Some(slot), priority: 1 }); },
-              ItemKind::StoneAxe => { weapons.push(Weapon { slot: Some(slot), priority: 2 }); },
-              ItemKind::CopperAxe => { weapons.push(Weapon { slot: Some(slot), priority: 3 }); },
-              ItemKind::IronAxe => { weapons.push(Weapon { slot: Some(slot), priority: 4 }); },
-              ItemKind::DiamondAxe => { weapons.push(Weapon { slot: Some(slot), priority: 5 }); },
-              ItemKind::NetheriteAxe => { weapons.push(Weapon { slot: Some(slot), priority: 6 }); },
-              _ => {}
-            }
-          },
-          _ => {}
+      for (slot, item) in bot.menu().slots().iter().enumerate() {
+        if !item.is_empty() {
+          match weapon.as_str() {
+            "sword" => {
+              match item.kind() {
+                ItemKind::WoodenSword => { weapons.push(Weapon { slot: Some(slot), priority: 0 }); },
+                ItemKind::GoldenSword => { weapons.push(Weapon { slot: Some(slot), priority: 1 }); },
+                ItemKind::StoneSword => { weapons.push(Weapon { slot: Some(slot), priority: 2 }); },
+                ItemKind::CopperSword => { weapons.push(Weapon { slot: Some(slot), priority: 3 }); },
+                ItemKind::IronSword => { weapons.push(Weapon { slot: Some(slot), priority: 4 }); },
+                ItemKind::DiamondSword => { weapons.push(Weapon { slot: Some(slot), priority: 5 }); },
+                ItemKind::NetheriteSword => { weapons.push(Weapon { slot: Some(slot), priority: 6 }); },
+                _ => {}
+              }
+            },
+            "axe" => {
+              match item.kind() {
+                ItemKind::WoodenAxe => { weapons.push(Weapon { slot: Some(slot), priority: 0 }); },
+                ItemKind::GoldenAxe => { weapons.push(Weapon { slot: Some(slot), priority: 1 }); },
+                ItemKind::StoneAxe => { weapons.push(Weapon { slot: Some(slot), priority: 2 }); },
+                ItemKind::CopperAxe => { weapons.push(Weapon { slot: Some(slot), priority: 3 }); },
+                ItemKind::IronAxe => { weapons.push(Weapon { slot: Some(slot), priority: 4 }); },
+                ItemKind::DiamondAxe => { weapons.push(Weapon { slot: Some(slot), priority: 5 }); },
+                ItemKind::NetheriteAxe => { weapons.push(Weapon { slot: Some(slot), priority: 6 }); },
+                _ => {}
+              }
+            },
+            _ => {}
+          }
         }
       }
-    }
 
     let mut best_weapon = Weapon { slot: None, priority: 0 };
 
@@ -173,7 +173,7 @@ impl KillauraModule {
 
       loop {
         if !TASKS.get_task_activity(&nickname, "killaura") {
-          stop_bot_sprinting(&bot).await;
+          stop_bot_move(&bot);
           break;
         }
 
@@ -202,14 +202,14 @@ impl KillauraModule {
             bot.set_jumping(false);
 
             if !STATES.get_state(&nickname, "is_walking") {
-              stop_bot_walking(&bot).await;
+              stop_bot_move(&bot);
             }
           }
         } else {
           bot.set_jumping(false);
           
           if !STATES.get_state(&nickname, "is_walking") {
-            stop_bot_walking(&bot).await;
+            stop_bot_move(&bot);
           }
         }
 
@@ -273,7 +273,7 @@ impl KillauraModule {
     let nickname = bot.username();
 
     loop {
-      if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+      if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
         if let Some(entity) = self.find_nearest_entity(bot, &config.target, config.distance) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -331,7 +331,7 @@ impl KillauraModule {
     let nickname = bot.username();
 
     loop {
-      if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+      if STATES.get_state(&nickname, "can_attacking") &&  !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
         if let Some(_) = self.find_nearest_entity(bot, &config.target, config.distance) {
           STATES.set_mutual_states(&nickname, "attacking", true);
           

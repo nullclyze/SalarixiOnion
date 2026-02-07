@@ -186,6 +186,20 @@ async fn quick_task(name: String) {
   QUICK_TASK_MANAGER.execute(name);
 }
 
+// Функция рендеринга карты
+#[tauri::command]
+async fn render_map(nickname: String) -> Option<String> {
+  if let Some(arc) = get_flow_manager() {
+    for (name, bot) in arc.read().bots.iter() {
+      if *name == nickname {
+        return Some(MAP_RENDERER.render(bot));
+      }
+    } 
+  }
+
+  None
+}
+
 // Функция открытия URL в браузере
 #[tauri::command]
 fn open_url(url: String) {
@@ -211,7 +225,7 @@ pub fn run() {
       send_message, reset_bot, disconnect_bot,
       get_radar_data, save_radar_data, set_group,
       get_active_bots_count, get_memory_usage,
-      control, quick_task, open_url
+      control, quick_task, render_map, open_url
     ])
     .run(tauri::generate_context!())
     .expect("Не удалось запустить клиент");

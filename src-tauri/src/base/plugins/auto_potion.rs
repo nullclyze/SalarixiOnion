@@ -9,7 +9,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{start_use_item, stop_bot_sprinting, stop_bot_walking};
+use crate::common::{start_use_item};
 use crate::tools::*;
 use crate::common::{get_bot_physics, take_item};
 
@@ -73,9 +73,6 @@ impl AutoPotionPlugin {
               }
 
               if should_drink {
-                stop_bot_walking(bot).await;
-                stop_bot_sprinting(bot).await;
-
                 STATES.set_state(&nickname, "can_eating", false);
                 STATES.set_mutual_states(&nickname, "drinking", true);
 
@@ -132,101 +129,103 @@ impl AutoPotionPlugin {
       return None;
     };
 
-    let physics = get_bot_physics(bot);
+    if let Some(physics) = get_bot_physics(bot) {
+      let is_in_lava = physics.is_in_lava();
+      let is_in_water = physics.is_in_water();
+      let on_ground = physics.on_ground();
+      let velocity_y = physics.velocity.y;
 
-    let is_in_lava = physics.is_in_lava();
-    let is_in_water = physics.is_in_water();
-    let on_ground = physics.on_ground();
-    let velocity_y = physics.velocity.y;
+      let mut best_potion = None;
 
-    let mut best_potion = None;
-
-    for p in potions {
-      if best_potion.clone().unwrap_or(Potion { kind: "deafult".to_string(), slot: Some(0), name: PotionKind::Awkward }).kind.as_str() != "splash" {
-        if is_in_lava {
-          match p.name {
-            PotionKind::FireResistance => {
-              best_potion = Some(p.clone());
-            },
-            PotionKind::LongFireResistance => {
-              best_potion = Some(p.clone());
-            },
-            _ => {}
+      for p in potions {
+        if best_potion.clone().unwrap_or(Potion { kind: "deafult".to_string(), slot: Some(0), name: PotionKind::Awkward }).kind.as_str() != "splash" {
+          if is_in_lava {
+            match p.name {
+              PotionKind::FireResistance => {
+                best_potion = Some(p.clone());
+              },
+              PotionKind::LongFireResistance => {
+                best_potion = Some(p.clone());
+              },
+              _ => {}
+            }
           }
-        }
 
-        if best_potion.is_none() && is_in_water {
-          match p.name {
-            PotionKind::WaterBreathing => {
-              best_potion = Some(p.clone());
-            },
-            PotionKind::LongWaterBreathing => {
-              best_potion = Some(p.clone());
-            },
-            _ => {}
+          if best_potion.is_none() && is_in_water {
+            match p.name {
+              PotionKind::WaterBreathing => {
+                best_potion = Some(p.clone());
+              },
+              PotionKind::LongWaterBreathing => {
+                best_potion = Some(p.clone());
+              },
+              _ => {}
+            }
           }
-        }
 
-        if best_potion.is_none() && !on_ground && velocity_y < -0.5 {
-          match p.name {
-            PotionKind::SlowFalling => {
-              best_potion = Some(p.clone());
-            },
-            PotionKind::LongSlowFalling => {
-              best_potion = Some(p.clone());
-            },
-            _ => {}
+          if best_potion.is_none() && !on_ground && velocity_y < -0.5 {
+            match p.name {
+              PotionKind::SlowFalling => {
+                best_potion = Some(p.clone());
+              },
+              PotionKind::LongSlowFalling => {
+                best_potion = Some(p.clone());
+              },
+              _ => {}
+            }
           }
-        }
 
-        if best_potion.is_none() && health.0 <= 8.0 {
-          match p.name {
-            PotionKind::TurtleMaster => {
-              best_potion = Some(p.clone());
-            },
-            PotionKind::LongTurtleMaster => {
-              best_potion = Some(p.clone());
-            },
-            PotionKind::StrongTurtleMaster => {
-              best_potion = Some(p.clone());
-            },
-            _ => {}
+          if best_potion.is_none() && health.0 <= 8.0 {
+            match p.name {
+              PotionKind::TurtleMaster => {
+                best_potion = Some(p.clone());
+              },
+              PotionKind::LongTurtleMaster => {
+                best_potion = Some(p.clone());
+              },
+              PotionKind::StrongTurtleMaster => {
+                best_potion = Some(p.clone());
+              },
+              _ => {}
+            }
           }
-        }
 
-        if best_potion.is_none() && health.0 <= 15.0 {
-          match p.name {
-            PotionKind::Regeneration => {
-              best_potion = Some(p);
-              break;
-            },
-            PotionKind::LongRegeneration => {
-              best_potion = Some(p);
-              break;
-            },
-            PotionKind::StrongRegeneration => {
-              best_potion = Some(p);
-              break;
-            },
-            PotionKind::Healing => {
-              best_potion = Some(p);
-              break;
-            },
-            PotionKind::StrongHealing => {
-              best_potion = Some(p);
-              break;
-            },
-            _ => {}
+          if best_potion.is_none() && health.0 <= 15.0 {
+            match p.name {
+              PotionKind::Regeneration => {
+                best_potion = Some(p);
+                break;
+              },
+              PotionKind::LongRegeneration => {
+                best_potion = Some(p);
+                break;
+              },
+              PotionKind::StrongRegeneration => {
+                best_potion = Some(p);
+                break;
+              },
+              PotionKind::Healing => {
+                best_potion = Some(p);
+                break;
+              },
+              PotionKind::StrongHealing => {
+                best_potion = Some(p);
+                break;
+              },
+              _ => {}
+            }
           }
-        }
 
-        if p.kind.as_str() == "splash" {
-          break;
+          if p.kind.as_str() == "splash" {
+            break;
+          }
         }
       }
+
+      return best_potion;
     }
 
-    best_potion
+    None
   }
 
   fn find_potion_in_inventory(&self, bot: &Client) -> Vec<Potion> {

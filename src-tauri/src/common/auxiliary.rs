@@ -3,10 +3,13 @@ use azalea::WalkDirection;
 use azalea::container::ContainerHandleRef;
 use azalea::core::direction::Direction;
 use azalea::entity::LocalEntity;
+use azalea::entity::dimensions::EntityDimensions;
 use azalea::entity::metadata::AbstractAnimal;
+use azalea::entity::metadata::Health;
 use azalea::entity::{Physics, Dead, Position};
 use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::{Player, AbstractMonster};
+use azalea::local_player::Hunger;
 use azalea::pathfinder::PathfinderOpts;
 use azalea::pathfinder::astar::PathfinderTimeout;
 use azalea::pathfinder::goals::XZGoal;
@@ -27,7 +30,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::tools::randuint;
+use crate::tools::*;
 
 
 // Функция нахождения пустого слота в инвентаре
@@ -59,14 +62,17 @@ pub fn find_empty_slot_in_hotbar(bot: &Client) -> Option<u8> {
 }
 
 // Функция получения физики бота
-pub fn get_bot_physics(bot: &Client) -> Physics {
-  let mut ecs = bot.ecs.lock(); 
-  ecs.get_mut::<Physics>(bot.entity).unwrap().clone()
+pub fn get_bot_physics(bot: &Client) -> Option<Physics> {
+  if let Some(physics) = bot.get_component::<Physics>() {
+    return Some(physics);
+  }
+
+  None
 }
 
 // Функция получения состояния блока
 pub fn get_block_state(bot: &Client, block_pos: BlockPos) -> Option<BlockState> {
-  let world_clone = bot.world().clone();
+  let world_clone = bot.world();
   let world = world_clone.write();
 
   if let Some(state) = world.get_block_state(block_pos) {
@@ -177,32 +183,36 @@ pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
   Vec3::new(0.0, 0.0, 0.0)
 }
 
-// Функция остановки беги бота
-pub async fn stop_bot_sprinting(bot: &Client) {
-  let nickname = bot.username();
-
-  bot.stop_pathfinding();
-  bot.walk(WalkDirection::None);
-
-  STATES.set_mutual_states(&nickname, "sprinting", false);
-
-  sleep(Duration::from_millis(50)).await;
-}
-
-// Функция остановки хотьбы бота
-pub async fn stop_bot_walking(bot: &Client) {
+// Функция остановки движения бота
+pub fn stop_bot_move(bot: &Client) {
   let nickname = bot.username();
 
   bot.stop_pathfinding();
   bot.walk(WalkDirection::None);
 
   STATES.set_mutual_states(&nickname, "walking", false);
-
-  sleep(Duration::from_millis(50)).await;
+  STATES.set_mutual_states(&nickname, "sprinting", false);
 }
 
-// Функция безопасного получения инвентаря
+// Функция безопасного получения позиции глаз
+pub fn get_eye_position(bot: &Client) -> Vec3 {
+  if let Some(dimensions) = bot.get_component::<EntityDimensions>() {
+    return bot.position().up(dimensions.eye_height as f64);
+  }
+
+  Vec3::ZERO
+}
+
+// Функция безопасного открытия инвентаря
 pub fn get_inventory(bot: &Client) -> Option<ContainerHandleRef> {
+  let nickname = bot.username();
+
+  stop_bot_move(bot);
+
+  STATES.set_state(&nickname, "can_walking", false);
+  STATES.set_state(&nickname, "can_sprinting", false);
+  STATES.set_state(&nickname, "can_attacking", false);
+
   if let Some(inventory) = bot.get_component::<Inventory>() {
     return Some(ContainerHandleRef::new(inventory.id, bot.clone()));
   }
@@ -210,16 +220,35 @@ pub fn get_inventory(bot: &Client) -> Option<ContainerHandleRef> {
   None
 }
 
+// Функция безопасного закрытия инвентаря
+pub fn close_inventory(bot: &Client) {
+  if let Some(inventory) = get_inventory(bot) {
+    inventory.close();
+
+    let nickname = bot.username();
+
+    STATES.set_state(&nickname, "can_walking", true);
+    STATES.set_state(&nickname, "can_sprinting", true);
+    STATES.set_state(&nickname, "can_attacking", true);
+  }
+}
+
+// Функция безопасного получения выбранного слота в hotbar
+pub fn get_selected_hotbar_slot(bot: &Client) -> u8 {
+  if let Some(inventory) = bot.get_component::<Inventory>() {
+    return inventory.selected_hotbar_slot;
+  }
+
+  0
+}
+
 // Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
 pub async fn take_item(bot: &Client, source_slot: usize) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-    stop_bot_sprinting(bot).await;
-    stop_bot_walking(bot).await;
-
     if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
-      if bot.selected_hotbar_slot() != hotbar_slot {
+      if get_selected_hotbar_slot(bot) != hotbar_slot {
         bot.set_selected_hotbar_slot(hotbar_slot);
       }
     } else {
@@ -229,7 +258,7 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
         inventory.left_click(empty_slot);
 
         if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
-          if bot.selected_hotbar_slot() != slot {
+          if get_selected_hotbar_slot(bot) != slot {
             sleep(Duration::from_millis(50)).await;
             bot.set_selected_hotbar_slot(slot);
             sleep(Duration::from_millis(50)).await;
@@ -248,12 +277,12 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
 
         let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
 
-        if bot.selected_hotbar_slot() != hotbar_slot {
+        if get_selected_hotbar_slot(bot) != hotbar_slot {
           bot.set_selected_hotbar_slot(hotbar_slot);
         }
       }
 
-      inventory.close();
+      close_inventory(bot);
     }
 
     STATES.set_mutual_states(&nickname, "walking", false);
@@ -266,19 +295,16 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-    stop_bot_sprinting(bot).await;
-    stop_bot_walking(bot).await;
+      if let Some(item) = bot.menu().slot(target_slot) {
+        if item.kind() == kind {
+          return;
+        }
 
-    if let Some(item) = bot.menu().slot(target_slot) {
-      if item.kind() == kind {
-        return;
+        if !item.is_empty() {
+          inventory.shift_click(target_slot);
+          sleep(Duration::from_millis(50)).await;
+        }
       }
-
-      if !item.is_empty() {
-        inventory.shift_click(target_slot);
-        sleep(Duration::from_millis(50)).await;
-      }
-    }
 
     inventory.left_click(source_slot);
     sleep(Duration::from_millis(50)).await;
@@ -286,7 +312,7 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
 
     sleep(Duration::from_millis(50)).await;
 
-    inventory.close();
+    close_inventory(bot);
 
     STATES.set_mutual_states(&nickname, "walking", false);
     STATES.set_mutual_states(&nickname, "sprinting", false);
@@ -525,7 +551,7 @@ impl EntityFilter {
 
 // Функция получения ближайшей сущности
 pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> {
-  let eye_pos = bot.eye_position();
+  let eye_pos = get_eye_position(bot);
 
   match filter.target.as_str() {
     "player" => {
@@ -558,5 +584,23 @@ pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> 
         data.0.0.name == filter.target && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id
       });
     }
+  }
+}
+
+// Функция безопасного получения здоровья
+pub fn get_health(bot: &Client) -> u32 {
+  if let Some(health) = bot.get_component::<Health>() {
+    health.0 as u32
+  } else {
+    20
+  }
+}
+
+// Функция безопасного получения сытости
+pub fn get_satiety(bot: &Client) -> u32 {
+  if let Some(hunger) = bot.get_component::<Hunger>() {
+    hunger.food
+  } else {
+    20
   }
 }

@@ -8,9 +8,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::stop_bot_walking;
 use crate::tools::*;
-use crate::common::{stop_bot_sprinting, take_item, start_use_item};
+use crate::common::{take_item, start_use_item};
 
 
 #[derive(Clone)]
@@ -70,9 +69,6 @@ impl AutoEatPlugin {
             }
 
             if should_eat {
-              stop_bot_walking(bot).await;
-              stop_bot_sprinting(bot).await;
-
               STATES.set_state(&nickname, "can_drinking", false);
               STATES.set_mutual_states(&nickname, "eating", true);
 
@@ -180,11 +176,11 @@ impl AutoEatPlugin {
   fn find_food_in_inventory(&self, bot: &Client) -> Vec<Food> {
     let mut food_list = vec![];
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {
-      if let Some(food) = self.is_food(Some(slot), item) {
-        food_list.push(food);
+      for (slot, item) in bot.menu().slots().iter().enumerate() {
+        if let Some(food) = self.is_food(Some(slot), item) {
+          food_list.push(food);
+        }
       }
-    }
 
     food_list
   }

@@ -26,6 +26,7 @@ interface BotProfile {
   version: string;
   password: string;
   proxy: string;
+  ping: number;
   health: number;
   satiety: number;
   registered: boolean;
@@ -46,6 +47,9 @@ export class MonitoringManager {
 
   private listeners: Map<string, any> = new Map();
 
+  public extendedMonitoring: boolean = true;
+  public chatMonitoring: boolean = true;
+  public mapMonitoring: boolean = false;
   public maxChatHistoryLength: number | null = null;
   public antiCaptchaType: string | null = null;
 
@@ -58,50 +62,52 @@ export class MonitoringManager {
     this.statusText!.style.display = 'flex';
 
     await listen('chat', (event) => {
-      try {
-        const payload = event.payload as ChatEventPayload;
-        const receiver = payload.receiver;
-        const message = payload.message;
+      if (this.chatMonitoring) {
+        try {
+          const payload = event.payload as ChatEventPayload;
+          const receiver = payload.receiver;
+          const message = payload.message;
 
-        if (!this.chatHistoryFilters[receiver]) {
-          this.chatHistoryFilters[receiver] = 'all';
-        }
-
-        if (!this.filterMessage(this.chatHistoryFilters[receiver], String(message))) return;
-
-        const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
-
-        if (!chat) return;
-
-        const container = document.createElement('div');
-
-        container.className = 'monitoring-line';
-        container.id = `monitoring-message-${receiver}`;
-
-        container.innerHTML = `
-          <div class="monitoring-line-time">${date()}</div>
-          <div class="monitoring-line-content">${String(message).replace('%hb', '<span class="bot-tag">').replace('%sc', '</span>')}</div>
-        `;
-
-        chat.appendChild(container);
-
-        chat.scrollTo({
-          top: chat.scrollHeight,
-          behavior: 'smooth'
-        });
-
-        if (!this.chatMessageCounter[receiver]) {
-          this.chatMessageCounter[receiver] = 1;
-        } else {
-          this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] + 1;
-
-          if (this.chatMessageCounter[receiver] > this.maxChatHistoryLength!) {
-            this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] - 1;
-            chat.firstChild?.remove();
+          if (!this.chatHistoryFilters[receiver]) {
+            this.chatHistoryFilters[receiver] = 'all';
           }
+
+          if (!this.filterMessage(this.chatHistoryFilters[receiver], String(message))) return;
+
+          const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
+
+          if (!chat) return;
+
+          const container = document.createElement('div');
+
+          container.className = 'monitoring-line';
+          container.id = `monitoring-message-${receiver}`;
+
+          container.innerHTML = `
+            <div class="monitoring-line-time">${date()}</div>
+            <div class="monitoring-line-content">${String(message).replace('%hb', '<span class="bot-tag">').replace('%sc', '</span>')}</div>
+          `;
+
+          chat.appendChild(container);
+
+          chat.scrollTo({
+            top: chat.scrollHeight,
+            behavior: 'smooth'
+          });
+
+          if (!this.chatMessageCounter[receiver]) {
+            this.chatMessageCounter[receiver] = 1;
+          } else {
+            this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] + 1;
+
+            if (this.chatMessageCounter[receiver] > this.maxChatHistoryLength!) {
+              this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] - 1;
+              chat.firstChild?.remove();
+            }
+          }
+        } catch (error) {
+          log(`Ошибка мониторинга (receive-chat-payload): ${error}`, 'error');
         }
-      } catch (error) {
-        log(`Ошибка мониторинга (receive-chat-payload): ${error}`, 'error');
       }
     });
 
@@ -143,7 +149,7 @@ export class MonitoringManager {
     this.botCardsContainer!.style.display = 'grid';
   }
 
-  public enable(): void {
+  public enable(delay: number): void {
     try {
       this.active = true;
 
@@ -184,6 +190,7 @@ export class MonitoringManager {
             if (this.usernameList.includes(nickname)) {
               const status = document.getElementById(`bot-status-${nickname}`) as HTMLElement;
               const proxy = document.getElementById(`bot-proxy-${nickname}`) as HTMLElement;
+              const ping = document.getElementById(`bot-ping-${nickname}`) as HTMLElement;
               const health = document.getElementById(`bot-health-${nickname}`) as HTMLElement;
               const satiety = document.getElementById(`bot-satiety-${nickname}`) as HTMLElement;
 
@@ -199,6 +206,7 @@ export class MonitoringManager {
 
               status.innerHTML = `<span style="color: ${statusColor};">• ${profile.status}</span>`;
               proxy.innerText = profile.proxy;
+              ping.innerText = `${profile.ping} мс`
               health.innerText = `${profile.health} / 20`;
               satiety.innerText = `${profile.satiety} / 20`;
             } else {
@@ -221,8 +229,9 @@ export class MonitoringManager {
                   <p>Версия:<span class="value" id="bot-version-${nickname}">${profile.version}</span></p>
                   <p>Пароль:<span class="value" id="bot-password-${nickname}">${profile.password}</span></p>
                   <p>Прокси:<span class="value" id="bot-proxy-${nickname}">${profile.proxy}</span></p>
-                  <p>Здоровье:<span class="value" id="bot-health-${nickname}">${profile.health} / 20</span></p>
-                  <p>Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>
+                  <p id="extended-monitoring-ping-${nickname}" style="display: none;">Пинг:<span class="value" id="bot-ping-${nickname}">${profile.ping} мс</span></p>
+                  <p id="extended-monitoring-health-${nickname}" style="display: none;">Здоровье:<span class="value" id="bot-health-${nickname}">${profile.health} / 20</span></p>
+                  <p id="extended-monitoring-satiety-${nickname}" style="display: none;">Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>
                 </div>
 
                 <div class="sep"></div>
@@ -231,7 +240,8 @@ export class MonitoringManager {
 
                 <div class="sep"></div>
 
-                <button class="btn spec" id="open-chat-${nickname}">Открыть чат</button>
+                <button class="btn spec" id="open-chat-${nickname}" style="display: none;">Открыть чат</button>
+                <button class="btn spec" id="open-map-${nickname}" style="display: none;">Открыть карту</button>
                 <button class="btn spec" id="solve-captcha-${nickname}" style="display: none;">Решить капчу</button>
                 <button class="btn spec" id="reset-${nickname}">Сбросить</button>
                 <button class="btn spec" id="disconnect-${nickname}" style="margin-bottom: 12px;">Отключить</button>
@@ -281,6 +291,22 @@ export class MonitoringManager {
                     <input type="text" control="this" id="this-chat-message-${nickname}" placeholder="Сообщение" style="height: 28px; width: 250px;">
                   </div>
                 </div>
+
+                <div class="cover" id="map-${nickname}">
+                  <div class="panel">
+                    <div class="right">
+                      <button class="btn min pretty" id="close-map-${nickname}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                          <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="bot-map-wrap" id="map-wrap-${nickname}">
+                    <div class="bot-map-render-status" id="map-render-status-${nickname}">Пожайлуста, подождите...</div>
+                  </div>
+                </div>
               `;
 
               this.botCardsContainer!.appendChild(card);
@@ -294,7 +320,7 @@ export class MonitoringManager {
         } catch (error) {
           log(`Ошибка мониторинга профилей: ${error}`, 'error');
         }
-      }, 1800);
+      }, delay);
     } catch (error) {
       log(`Ошибка инициализации мониторинга: ${error}`, 'error');
     }
@@ -329,6 +355,33 @@ export class MonitoringManager {
 
   private initializeBotCard(nickname: string): void {
     const chat = document.getElementById(`chat-${nickname}`);
+    const map = document.getElementById(`map-${nickname}`);
+
+    const ping = document.getElementById(`extended-monitoring-ping-${nickname}`);
+    const health = document.getElementById(`extended-monitoring-health-${nickname}`);
+    const satiety = document.getElementById(`extended-monitoring-satiety-${nickname}`);
+
+    if (this.extendedMonitoring) {
+      (ping as HTMLElement).style.display = 'flex';
+      (health as HTMLElement).style.display = 'flex';
+      (satiety as HTMLElement).style.display = 'flex';
+    } else {
+      ping?.remove();
+      health?.remove();
+      satiety?.remove();
+    }
+
+    if (this.chatMonitoring) {
+      (document.getElementById(`open-chat-${nickname}`) as HTMLButtonElement).style.display = 'flex';
+    } else {
+      chat?.remove();
+    }
+
+    if (this.mapMonitoring) {
+      (document.getElementById(`open-map-${nickname}`) as HTMLButtonElement).style.display = 'flex';
+    } else {
+      map?.remove();
+    }
 
     if (this.antiCaptchaType) {
       (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).style.display = 'flex';
@@ -349,6 +402,36 @@ export class MonitoringManager {
 
     this.addListener(`open-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'flex');
     this.addListener(`close-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'none');
+
+    this.addListener(`open-map-${nickname}`, 'click', async () => {
+      (map as HTMLElement).style.display = 'flex';
+
+      try {
+        const old_map = document.getElementById(`map-image-${nickname}`);
+
+        if (old_map) {
+          old_map.remove();
+        }
+
+        (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'flex';
+        
+        const base64_code = await invoke('render_map', { nickname: nickname }) as string;
+
+        (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'none';
+
+        const img = document.createElement('img');
+        img.className = 'bot-map-image';
+        img.id = `map-image-${nickname}`;
+        img.src = `data:image/png;base64,${base64_code}`;
+        img.draggable = false;
+
+        document.getElementById(`map-wrap-${nickname}`)?.appendChild(img);
+      } catch (error) {
+        log(`Ошибка мониторинга (render-map): ${error}`, 'error');
+      }
+    });
+
+    this.addListener(`close-map-${nickname}`, 'click', () => (map as HTMLElement).style.display = 'none');
 
     this.addListener(`disconnect-${nickname}`, 'click', async () => {
       try {

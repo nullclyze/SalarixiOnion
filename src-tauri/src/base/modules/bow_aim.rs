@@ -6,11 +6,9 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::EntityFilter;
-use crate::common::get_nearest_entity;
-use crate::common::{get_entity_position, take_item, release_use_item};
 use crate::tools::*;
 use crate::base::*;
+use crate::common::{EntityFilter, get_nearest_entity, get_entity_position, take_item, release_use_item};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,15 +29,13 @@ impl BowAimModule {
   }
 
   fn find_bow_in_inventory(&self, bot: &Client) -> Option<usize> {
-    let menu = bot.menu();
-
-    for (slot, item) in menu.slots().iter().enumerate() {
-      if !item.is_empty() {
-        if item.kind() == ItemKind::Bow {
-          return Some(slot);
+      for (slot, item) in bot.menu().slots().iter().enumerate() {
+        if !item.is_empty() {
+          if item.kind() == ItemKind::Bow {
+            return Some(slot);
+          }
         }
       }
-    }
 
     None
   }

@@ -337,10 +337,17 @@
       }
     },
     { 
-      "tags": ["input:chat-history-length", "label:chat-history-length"], 
+      "tags": ["input:chat-history-length"], 
       "lang": {
         "ru": "Длина истории чата",
         "en": "Chat History Length"
+      }
+    },
+    { 
+      "tags": ["input:monitoring-update-frequency"], 
+      "lang": {
+        "ru": "Частота обновлений",
+        "en": "Update Frequency"
       }
     },
     { 
@@ -495,6 +502,27 @@
       "lang": {
         "ru": "Использовать Chat-Signing",
         "en": "Use Chat-Signing"
+      }
+    },
+    { 
+      "tags": ["checkbox:extended-monitoring"], 
+      "lang": {
+        "ru": "Расширенный мониторинг",
+        "en": "Extended Monitoring"
+      }
+    },
+    { 
+      "tags": ["checkbox:chat-monitoring"], 
+      "lang": {
+        "ru": "Мониторинг чата",
+        "en": "Chat Monitoring"
+      }
+    },
+    { 
+      "tags": ["checkbox:map-monitoring"], 
+      "lang": {
+        "ru": "Мониторинг карты",
+        "en": "Map Monitoring"
       }
     },
     { 

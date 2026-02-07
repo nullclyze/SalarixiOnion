@@ -139,6 +139,7 @@ async function startBots(): Promise<void> {
   const loginMinDelay = parseFloat((document.getElementById('login-min-delay') as HTMLInputElement).value);
   const loginMaxDelay = parseFloat((document.getElementById('login-max-delay') as HTMLInputElement).value);
   const rejoinDelay = parseInt((document.getElementById('rejoin-delay') as HTMLInputElement).value);
+  const updateFrequency = parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value);
   const chatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value);
   const viewDistance = parseInt((document.getElementById('view-distance') as HTMLInputElement).value);
   const language = (document.getElementById('language') as HTMLInputElement).value;
@@ -152,6 +153,9 @@ async function startBots(): Promise<void> {
   const useWebhook = (document.getElementById('use-webhook') as HTMLInputElement).checked;
   const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
   const useChatSigning = (document.getElementById('use-chat-signing') as HTMLInputElement).checked;
+  const useExtendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
+  const useChatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
+  const useMapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
 
   const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
 
@@ -212,6 +216,7 @@ async function startBots(): Promise<void> {
     use_webhook: useWebhook,
     use_auto_rejoin: useAutoRejoin,
     use_chat_signing: useChatSigning,
+    use_chat_monitoring: useChatMonitoring,
     proxy_list: proxyList,
     skin_settings: {
       skin_type: skinType,
@@ -240,10 +245,13 @@ async function startBots(): Promise<void> {
 
   chartManager.enable();
 
+  monitoringManager.extendedMonitoring = useExtendedMonitoring;
+  monitoringManager.chatMonitoring = useChatMonitoring;
+  monitoringManager.mapMonitoring = useMapMonitoring;
   monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
   monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
 
-  monitoringManager.enable();
+  monitoringManager.enable(updateFrequency);
   monitoringManager.wait();
 
   radarManager.enable();
@@ -365,6 +373,22 @@ class ElementManager {
     }));
 
     (document.getElementById('clear-journal') as HTMLButtonElement).addEventListener('click', () => eraseLogs());
+
+    const checkChatMonitoringState = (state: boolean) => {
+      const input = document.getElementById('chat-history-length-container') as HTMLElement;
+
+      if (state) {
+        input.style.display = 'flex';
+      } else {
+        input.style.display = 'none';
+      }
+    }
+
+    checkChatMonitoringState((document.getElementById('use-chat-monitoring') as HTMLInputElement).checked);
+
+    document.getElementById('use-chat-monitoring')?.addEventListener('input', function (this: HTMLInputElement) {
+      checkChatMonitoringState(this.checked);
+    });
 
     document.addEventListener('keydown', async (e) => {
       if (process === 'active') {

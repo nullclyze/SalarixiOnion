@@ -50,10 +50,6 @@ pub fn randelem<T>(vec: &[T]) -> Option<&T> {
   vec.choose(&mut thread_rng())
 }
 
-pub fn randticks(min: usize, max: usize) -> usize {
-  thread_rng().gen_range(min..=max)
-}
-
 pub fn randchance(percent: f64) -> bool {
   thread_rng().gen_bool(percent)
 }
