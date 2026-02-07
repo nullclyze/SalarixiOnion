@@ -5,7 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, go, swing_arm, take_item, this_is_solid_block};
+use crate::common::{convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, swing_arm, take_item, this_is_solid_block};
 use crate::tools::*;
 
 
@@ -29,17 +29,31 @@ impl ScaffoldModule {
   async fn take_block(&self, bot: &Client) -> bool {
     let mut block_slot = None;
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {
-      if !item.is_empty() {
-        if this_is_solid_block(item.kind()) {
-          if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
-            if bot.selected_hotbar_slot() == hotbar_slot {
-              return true;
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {
+        if !item.is_empty() {
+          if this_is_solid_block(item.kind()) {
+            for s in 36..=44 {
+              if let Some(i) = menu.slot(s) {
+                if this_is_solid_block(i.kind()) {
+                  if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(s) {
+                    if get_selected_hotbar_slot(bot) == hotbar_slot {
+                      return true;
+                    }
+                  }
+                }
+              }
             }
-          }
+            
+            if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
+              if get_selected_hotbar_slot(bot) == hotbar_slot {
+                return true;
+              }
+            }
 
-          block_slot = Some(slot);
-          break;
+            block_slot = Some(slot);
+            break;
+          }
         }
       }
     }

@@ -1650,6 +1650,7 @@ textarea::-webkit-resizer {
 
 .bot-map-wrap {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -1662,9 +1663,26 @@ textarea::-webkit-resizer {
   font-size: 18px;
   font-weight: bold;
   text-align: center;
-  justify-content: center;
-  align-items: center;
   margin-top: -50px;
+}
+
+.bot-map-render-progress {
+  color: #6e6e6e;
+  font-family: var(--global-font-family);
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.bot-map-render-progress-count {
+  color: var(--spec-color);
+  font-family: var(--global-font-family);
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  margin-right: 4px;
+  padding-left: 4px;
 }
 
 .bot-map-image {

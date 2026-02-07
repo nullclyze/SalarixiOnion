@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::move_item;
+use crate::common::{get_inventory_menu, move_item};
 
 
 pub struct AutoTotemPlugin;
@@ -31,16 +31,18 @@ impl AutoTotemPlugin {
   }
 
   pub async fn take_totem(&self, bot: &Client) {
-    if let Some(item) = bot.menu().slot(45) {
-      if !item.is_empty() && item.kind() != ItemKind::Shield {
-        return;
-      }
-    } 
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(item) = menu.slot(45) {
+        if !item.is_empty() && item.kind() != ItemKind::Shield {
+          return;
+        }
+      } 
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {  
-      if slot != 45 {
-        if item.kind() == ItemKind::TotemOfUndying {
-          move_item(bot, ItemKind::TotemOfUndying, slot, 45).await;
+      for (slot, item) in menu.slots().iter().enumerate() {  
+        if slot != 45 {
+          if item.kind() == ItemKind::TotemOfUndying {
+            move_item(bot, ItemKind::TotemOfUndying, slot, 45).await;
+          }
         }
       }
     }

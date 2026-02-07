@@ -10,6 +10,11 @@ interface ChatEventPayload {
   message: string;
 }
 
+interface MapRenderProgressEventPayload {
+  nickname: string;
+  progress: number;
+}
+
 interface AntiWebCaptchaEventPayload {
   captcha_url: string;
   nickname: string;
@@ -107,6 +112,24 @@ export class MonitoringManager {
           }
         } catch (error) {
           log(`Ошибка мониторинга (receive-chat-payload): ${error}`, 'error');
+        }
+      }
+    });
+
+    await listen('map-render-progress', (event) => {
+      if (this.mapMonitoring) {
+        try {
+          const payload = event.payload as MapRenderProgressEventPayload;
+          const nickname = payload.nickname;
+          const progress = payload.progress;
+
+          const doc = document.getElementById(`map-render-progress-count-${nickname}`);
+
+          if (doc) {
+            doc.innerText = progress.toString();
+          }
+        } catch (error) {
+          log(`Ошибка мониторинга (receive-map-render-progress-payload): ${error}`, 'error');
         }
       }
     });
@@ -304,7 +327,8 @@ export class MonitoringManager {
                   </div>
 
                   <div class="bot-map-wrap" id="map-wrap-${nickname}">
-                    <div class="bot-map-render-status" id="map-render-status-${nickname}">Пожайлуста, подождите...</div>
+                    <div class="bot-map-render-status" id="map-render-status-${nickname}">Генерация карты, пожайлуста, подождите...</div>
+                    <div class="bot-map-render-progress" id="map-render-progress-${nickname}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${nickname}">0</span> / 65536</div>
                   </div>
                 </div>
               `;
@@ -414,10 +438,12 @@ export class MonitoringManager {
         }
 
         (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'flex';
+        (document.getElementById(`map-render-progress-${nickname}`) as HTMLElement).style.display = 'flex';
         
         const base64_code = await invoke('render_map', { nickname: nickname }) as string;
 
         (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'none';
+        (document.getElementById(`map-render-progress-${nickname}`) as HTMLElement).style.display = 'none';
 
         const img = document.createElement('img');
         img.className = 'bot-map-image';

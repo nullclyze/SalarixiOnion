@@ -5,7 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{close_inventory, find_empty_slot_in_invenotry, get_inventory};
+use crate::common::{close_inventory, find_empty_slot_in_invenotry, get_inventory, get_inventory_menu};
 
 
 #[derive(Debug, Clone)]
@@ -90,7 +90,7 @@ impl AutoArmorPlugin {
     if let Some(inventory) = get_inventory(bot) {
       let nickname = bot.username();
 
-      if let Some(menu) = inventory.menu() {
+      if let Some(menu) = get_inventory_menu(bot) {
         if let Some(item) = menu.slot(target_slot) {
           if !item.is_empty() {
             if let Some(_) = find_empty_slot_in_invenotry(bot) {

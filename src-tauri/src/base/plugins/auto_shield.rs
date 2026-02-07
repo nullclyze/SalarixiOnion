@@ -5,6 +5,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::get_inventory_menu;
 use crate::tools::*;
 use crate::common::{EntityFilter, get_entity_position, get_nearest_entity, move_item, release_use_item, start_use_item};
 
@@ -35,41 +36,41 @@ impl AutoShieldPlugin {
   pub async fn defend(&self, bot: &Client) {
     let nickname = bot.username();
 
-    let menu = bot.menu();
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(item) = menu.slot(45) {
+        if item.is_empty() || item.kind() == ItemKind::Shield {
+          if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+            STATES.set_state(&nickname, "can_eating", false);
+            STATES.set_state(&nickname, "can_drinking", false);
 
-    if let Some(item) = menu.slot(45) {
-      if item.is_empty() || item.kind() == ItemKind::Shield {
-        if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
-          STATES.set_state(&nickname, "can_eating", false);
-          STATES.set_state(&nickname, "can_drinking", false);
+            let mut shield_equipped = false;
 
-          let mut shield_equipped = false;
+            if item.kind() != ItemKind::Shield {
+              for (slot, item) in menu.slots().iter().enumerate() {  
+                if slot != 45 {
+                  if item.kind() == ItemKind::Shield {
+                    move_item(bot, ItemKind::Shield, slot, 45).await;
+                    shield_equipped = true;
+                    sleep(Duration::from_millis(50)).await;
 
-          if item.kind() != ItemKind::Shield {
-            for (slot, item) in menu.slots().iter().enumerate() {  
-              if slot != 45 {
-                if item.kind() == ItemKind::Shield {
-                  move_item(bot, ItemKind::Shield, slot, 45).await;
-                  shield_equipped = true;
-                  sleep(Duration::from_millis(50)).await;
+                    STATES.set_state(&nickname, "can_walking", true);
+                    STATES.set_state(&nickname, "can_sprinting", true);
 
-                  STATES.set_state(&nickname, "can_walking", true);
-                  STATES.set_state(&nickname, "can_sprinting", true);
-
-                  break;
+                    break;
+                  }
                 }
               }
+            } else {
+              shield_equipped = true;
             }
-          } else {
-            shield_equipped = true;
-          }
 
-          if shield_equipped {
-            self.start_defending(bot).await;
-          }
+            if shield_equipped {
+              self.start_defending(bot).await;
+            }
 
-          STATES.set_state(&nickname, "can_eating", true);
-          STATES.set_state(&nickname, "can_drinking", true);
+            STATES.set_state(&nickname, "can_eating", true);
+            STATES.set_state(&nickname, "can_drinking", true);
+          }
         }
       }
     } 

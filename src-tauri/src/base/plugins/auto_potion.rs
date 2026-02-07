@@ -9,7 +9,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{start_use_item};
+use crate::common::{get_inventory_menu, start_use_item};
 use crate::tools::*;
 use crate::common::{get_bot_physics, take_item};
 
@@ -231,9 +231,11 @@ impl AutoPotionPlugin {
   fn find_potion_in_inventory(&self, bot: &Client) -> Vec<Potion> {
     let mut potion_list = vec![];
 
-    for (slot, item) in bot.menu().slots().iter().enumerate() {
-      if let Some(potion) = self.is_potion(Some(slot), item) {
-        potion_list.push(potion);
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {
+        if let Some(potion) = self.is_potion(Some(slot), item) {
+          potion_list.push(potion);
+        }
       }
     }
 

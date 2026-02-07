@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
+use crate::common::get_inventory_menu;
 use crate::tools::*;
 use crate::base::*;
 use crate::common::{EntityFilter, get_nearest_entity, get_entity_position, take_item, release_use_item};
@@ -29,13 +30,15 @@ impl BowAimModule {
   }
 
   fn find_bow_in_inventory(&self, bot: &Client) -> Option<usize> {
-      for (slot, item) in bot.menu().slots().iter().enumerate() {
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           if item.kind() == ItemKind::Bow {
             return Some(slot);
           }
         }
       }
+    }
 
     None
   }

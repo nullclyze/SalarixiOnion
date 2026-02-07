@@ -8,7 +8,7 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::tools::*;
-use crate::common::{move_item_to_offhand, start_use_item, take_item};
+use crate::common::{get_inventory_menu, move_item_to_offhand, start_use_item, take_item};
 
 
 #[derive(Clone, Debug)]
@@ -66,12 +66,14 @@ impl AutoRepairPlugin {
   }
 
   async fn take_experience_bottles(&self, bot: &Client) -> Option<i32> {
-      for (slot, item) in bot.menu().slots().iter().enumerate() {  
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {  
         if item.kind() == ItemKind::ExperienceBottle {
           take_item(bot, slot).await;
           return Some(item.count());
         }
       }
+    }
 
     None
   }
@@ -91,7 +93,8 @@ impl AutoRepairPlugin {
             slot = broken_item.slot;
           } 
 
-            if let Some(item) = bot.menu().slot(slot) {
+          if let Some(menu) = get_inventory_menu(bot) {
+            if let Some(item) = menu.slot(slot) {
               let current_damage = self.get_current_item_damage(item);
               let max_durability = self.get_max_item_durability(item);
 
@@ -110,6 +113,7 @@ impl AutoRepairPlugin {
                 return;
               }
             }
+          }
 
           STATES.set_mutual_states(&nickname, "interacting", false);
           STATES.set_mutual_states(&nickname, "looking", false);
@@ -153,7 +157,8 @@ impl AutoRepairPlugin {
   fn find_broken_items(&self, bot: &Client) -> Vec<BrokenItem> {
     let mut broken_items = vec![];
 
-      for (slot, item) in bot.menu().slots().iter().enumerate() {  
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {  
         if !item.is_empty() {
           let current_damage = self.get_current_item_damage(item);
           let max_durability = self.get_max_item_durability(item);
@@ -168,6 +173,7 @@ impl AutoRepairPlugin {
           }
         }
       }
+    }
 
     broken_items
   }

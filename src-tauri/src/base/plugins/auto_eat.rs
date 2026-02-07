@@ -8,6 +8,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::get_inventory_menu;
 use crate::tools::*;
 use crate::common::{take_item, start_use_item};
 
@@ -176,11 +177,13 @@ impl AutoEatPlugin {
   fn find_food_in_inventory(&self, bot: &Client) -> Vec<Food> {
     let mut food_list = vec![];
 
-      for (slot, item) in bot.menu().slots().iter().enumerate() {
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {
         if let Some(food) = self.is_food(Some(slot), item) {
           food_list.push(food);
         }
       }
+    }
 
     food_list
   }

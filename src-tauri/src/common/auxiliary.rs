@@ -9,6 +9,7 @@ use azalea::entity::metadata::Health;
 use azalea::entity::{Physics, Dead, Position};
 use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::{Player, AbstractMonster};
+use azalea::inventory::Menu;
 use azalea::local_player::Hunger;
 use azalea::pathfinder::PathfinderOpts;
 use azalea::pathfinder::astar::PathfinderTimeout;
@@ -242,6 +243,15 @@ pub fn get_selected_hotbar_slot(bot: &Client) -> u8 {
   0
 }
 
+// Функция безопасного получения текущего меню инвентаря
+pub fn get_inventory_menu(bot: &Client) -> Option<Menu> {
+  if let Some(inventory) = bot.get_component::<Inventory>() {
+    return Some(inventory.menu().clone());
+  }
+
+  None
+}
+
 // Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
 pub async fn take_item(bot: &Client, source_slot: usize) {
   if let Some(inventory) = get_inventory(bot) {
@@ -295,7 +305,8 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-      if let Some(item) = bot.menu().slot(target_slot) {
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(item) = menu.slot(target_slot) {
         if item.kind() == kind {
           return;
         }
@@ -305,6 +316,7 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
           sleep(Duration::from_millis(50)).await;
         }
       }
+    }
 
     inventory.left_click(source_slot);
     sleep(Duration::from_millis(50)).await;
@@ -321,9 +333,11 @@ pub async fn move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_
 
 // Функция безопасного перемещения предмета в offhand
 pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
-  if let Some(item) = bot.menu().slot(45) {
-    if item.kind() == kind {
-      return;
+  if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(item) = menu.slot(45) {
+      if item.kind() == kind {
+        return;
+      }
     }
   }
 

@@ -1,17 +1,13 @@
-use azalea::entity::LocalEntity;
 use azalea::{SprintDirection, WalkDirection, prelude::*};
-use azalea::ecs::prelude::*;
 use azalea::Vec3;
-use azalea::entity::{Dead, Position, metadata::{Player, AbstractAnimal, AbstractMonster}};
 use azalea::registry::builtin::ItemKind;
-use azalea::world::MinecraftEntityId;
 use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
 use crate::tools::*;
-use crate::common::{get_entity_position, run, stop_bot_move, take_item};
+use crate::common::{EntityFilter, get_entity_position, get_eye_position, get_inventory_menu, get_nearest_entity, run, stop_bot_move, take_item};
 
 
 #[derive(Debug)]
@@ -67,43 +63,11 @@ impl KillauraModule {
     }
   }
 
-  fn find_nearest_entity(&self, bot: &Client, target: &String, distance: f64) -> Option<Entity> {
-    let mut nearest_entity = None;
-
-    let eye_pos = bot.eye_position();
-
-    let bot_id = if let Some(bot_id) = bot.get_entity_component::<MinecraftEntityId>(bot.entity) {
-      bot_id
-    } else {
-      return None;
-    };
-
-    match target.as_str() {
-      "player" => { 
-        nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-          eye_pos.distance_to(**data.0) <= distance && *data.1 != bot_id
-        });
-      },
-      "monster" => {
-        nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-          eye_pos.distance_to(**data.0) <= distance && *data.1 != bot_id
-        });
-      },
-      "animal" => {
-        nearest_entity = bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-          eye_pos.distance_to(**data.0) <= distance && *data.1 != bot_id
-        });
-      },
-      _ => {}
-    }
-
-    nearest_entity
-  }
-
   async fn auto_weapon(&self, bot: &Client, weapon: &String) {
     let mut weapons = vec![];
 
-      for (slot, item) in bot.menu().slots().iter().enumerate() {
+    if let Some(menu) = get_inventory_menu(bot) {
+      for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           match weapon.as_str() {
             "sword" => {
@@ -134,6 +98,7 @@ impl KillauraModule {
           }
         }
       }
+    }
 
     let mut best_weapon = Weapon { slot: None, priority: 0 };
 
@@ -148,7 +113,7 @@ impl KillauraModule {
     }
   }
 
-  fn dodging(bot: Client) {
+  fn dodging(&self, bot: Client) {
     tokio::spawn(async move {
       loop {
         if !TASKS.get_task_activity(&bot.username(), "killaura") {
@@ -177,12 +142,8 @@ impl KillauraModule {
           break;
         }
 
-        let nearest_entity = self.find_nearest_entity(&bot, &target, distance);
-
-        if let Some(entity) = nearest_entity {
-          let eye_pos = bot.eye_position();
-
-          if eye_pos.distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
+        if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
+          if get_eye_position(&bot).distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
             if !bot.jumping() {
               bot.set_jumping(true);
             }
@@ -230,7 +191,7 @@ impl KillauraModule {
             break;
           }
 
-          if let Some(entity) = self.find_nearest_entity(&bot, &target, distance) {
+          if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
             let entity_pos = get_entity_position(&bot, entity);
 
             bot.look_at(Vec3::new(
@@ -260,21 +221,21 @@ impl KillauraModule {
       }
     };
 
-    Self::aiming(self, bot.clone(), config.target.clone(), config.distance);
+    self.aiming(bot.clone(), config.target.clone(), config.distance);
 
     if options.use_chase {
       self.chase(bot.clone(), config.target.clone(), config.chase_distance, config.min_distance_to_target);
     }
 
     if options.use_dodging {
-      Self::dodging(bot.clone());
+      self.dodging(bot.clone());
     }
 
     let nickname = bot.username();
 
     loop {
       if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
-        if let Some(entity) = self.find_nearest_entity(bot, &config.target, config.distance) {
+        if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &config.target, config.distance)) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
           if options.use_auto_weapon {
@@ -325,14 +286,14 @@ impl KillauraModule {
     }
 
     if options.use_dodging {
-      Self::dodging(bot.clone());
+      self.dodging(bot.clone());
     }
 
     let nickname = bot.username();
 
     loop {
       if STATES.get_state(&nickname, "can_attacking") &&  !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
-        if let Some(_) = self.find_nearest_entity(bot, &config.target, config.distance) {
+        if let Some(_) = get_nearest_entity(&bot, EntityFilter::new(&bot, &config.target, config.distance)) {
           STATES.set_mutual_states(&nickname, "attacking", true);
           
           if options.use_auto_weapon {
@@ -354,7 +315,7 @@ impl KillauraModule {
             sleep(Duration::from_millis(randuint(50, 150))).await;
           }
           
-          if let Some(e) = self.find_nearest_entity(bot, &config.target, config.distance) {
+          if let Some(e) = get_nearest_entity(&bot, EntityFilter::new(&bot, &config.target, config.distance)) {
             bot.attack(e);
           }
         }
