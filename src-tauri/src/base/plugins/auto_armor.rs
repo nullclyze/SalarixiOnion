@@ -92,7 +92,7 @@ impl AutoArmorPlugin {
     if let Some(menu) = get_inventory_menu(bot) {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
-          if let Some(_) = find_empty_slot_in_invenotry(bot) {
+          if let Some(_) = find_empty_slot_in_invenotry(menu) {
             inventory_shift_click(bot, target_slot);
             sleep(Duration::from_millis(50)).await;
           } else {

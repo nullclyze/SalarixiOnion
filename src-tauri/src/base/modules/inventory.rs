@@ -1,10 +1,8 @@
 use azalea::prelude::*;
-use azalea::inventory::operations::{SwapClick, ThrowClick};
 use serde::{Serialize, Deserialize};
 
-use crate::base::*;
 use crate::emit::*;
-use crate::common::get_inventory;
+use crate::common::{inventory_drop_item, inventory_left_click, inventory_right_click, inventory_swap_click};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -12,8 +10,8 @@ pub struct InventoryModule;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InventoryOptions {
-  pub slot: Option<u16>,
-  pub target_slot: Option<u16>,
+  pub slot: Option<usize>,
+  pub target_slot: Option<usize>,
   pub state: String
 }
 
@@ -32,31 +30,24 @@ impl InventoryModule {
         } else {
           emit_event(EventType::Log(LogEventPayload {
             name: "error".to_string(),
-            message: format!("Бот {} не смог взять слот {} (индекс слота не должен превышать 8)", nickname, s)
+            message: format!("Бот {} не смог взять слот {} (неверный индекс слота)", nickname, s)
           }));
         }
       } else {
-        if let Some(inventory) = get_inventory(bot) {
-          match options.state.as_str() {
-            "drop" => {
-              inventory.click(ThrowClick::All { slot: s });
-            },
-            "left-click" => {
-              inventory.left_click(s);
-            },
-            "right-click" => {
-              inventory.right_click(s);
-            },
-            "swap" => {
-              inventory.click(SwapClick { source_slot: s, target_slot: if let Some(t) = options.target_slot { t as u8 } else { 0 }});
-            },
-            _ => {}
-          }
-
-          STATES.set_state(&nickname, "can_walking", true);
-          STATES.set_state(&nickname, "can_sprinting", true);
-          STATES.set_state(&nickname, "can_interacting", true);
-          STATES.set_state(&nickname, "can_attacking", true);
+        match options.state.as_str() {
+          "drop" => {
+            inventory_drop_item(bot, s);
+          },
+          "left-click" => {
+            inventory_left_click(bot, s);
+          },
+          "right-click" => {
+            inventory_right_click(bot, s);
+          },
+          "swap" => {
+            inventory_swap_click(bot, s, if let Some(t) = options.target_slot { t } else { 0 }).await;
+          },
+          _ => {}
         }
       }
     } 

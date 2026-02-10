@@ -47,20 +47,7 @@ impl AutoRepairPlugin {
 
     for broken_item in broken_items {
       if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
-        STATES.set_state(&nickname, "can_eating", false);
-        STATES.set_state(&nickname, "can_drinking", false);
-
-        if broken_item.slot != 45 && broken_item.slot > 8 {
-          take_item(bot, broken_item.slot).await;
-          sleep(Duration::from_millis(50)).await;
-          move_item_to_offhand(bot, broken_item.kind);
-          sleep(Duration::from_millis(randuint(50, 150))).await;
-        } 
-
         self.repair_item(bot, broken_item).await;
-
-        STATES.set_state(&nickname, "can_eating", true);
-        STATES.set_state(&nickname, "can_drinking", true);
       }
     }
   }
@@ -86,6 +73,13 @@ impl AutoRepairPlugin {
         if STATES.get_state(&nickname, "can_interacting") && STATES.get_state(&nickname, "can_looking") {
           STATES.set_mutual_states(&nickname, "interacting", true);
           STATES.set_mutual_states(&nickname, "looking", true);
+
+          if broken_item.slot != 45 && broken_item.slot > 8 {
+            take_item(bot, broken_item.slot).await;
+            sleep(Duration::from_millis(50)).await;
+            move_item_to_offhand(bot, broken_item.kind);
+            sleep(Duration::from_millis(randuint(50, 150))).await;
+          } 
 
           let mut slot = 45;
 

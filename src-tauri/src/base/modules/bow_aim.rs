@@ -6,12 +6,9 @@ use serde::{Serialize, Deserialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::get_eye_position;
-use crate::common::get_inventory_menu;
-use crate::common::start_use_item;
 use crate::tools::*;
 use crate::base::*;
-use crate::common::{EntityFilter, get_nearest_entity, get_entity_position, take_item, release_use_item};
+use crate::common::{EntityFilter, get_eye_position, get_inventory_menu, start_use_item, get_nearest_entity, get_entity_position, take_item, release_use_item};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,10 +40,38 @@ impl BowAimModule {
     None
   }
 
+  fn aiming(&self, bot: Client, filter: EntityFilter) {
+    tokio::spawn(async move {
+      let nickname = bot.username();
+
+      if STATES.get_state(&nickname, "can_looking") {
+        STATES.set_mutual_states(&nickname, "looking", true);
+
+        loop {
+          if !TASKS.get_task_activity(&nickname, "bow-aim") {
+            break;
+          }
+
+          if let Some(entity) = get_nearest_entity(&bot, filter.clone()) {
+            let target_pos = get_entity_position(&bot, entity);
+
+            bot.look_at(Vec3::new(
+              target_pos.x + randfloat(-0.11, 0.11),
+              target_pos.y,
+              target_pos.z + randfloat(-0.11, 0.11)
+            ));
+          }          
+
+          sleep(Duration::from_millis(50)).await;
+        }
+      }
+    });
+  }
+
   async fn shoot(&self, bot: &Client, filter: EntityFilter) {
     let nickname = bot.username();
 
-    if STATES.get_state(&nickname, "can_interacting") && !STATES.get_state(&nickname, "is_eating") && STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_attacking") {
+    if STATES.get_state(&nickname, "can_interacting") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_attacking") {
       if let Some(slot) = self.find_bow_in_inventory(bot) {
         take_item(bot, slot).await;
 
@@ -64,7 +89,7 @@ impl BowAimModule {
 
           bot.look_at(Vec3::new(
             target_pos.x + randfloat(-0.001158, 0.001158),
-            target_pos.y + distance * 0.15,
+            target_pos.y + distance * 0.16,
             target_pos.z + randfloat(-0.001158, 0.001158)
           ));
 
@@ -78,7 +103,7 @@ impl BowAimModule {
 
             bot.look_at(Vec3::new(
               target_pos.x + randfloat(-0.001158, 0.001158),
-              target_pos.y + distance * 0.1,
+              target_pos.y + distance * 0.12,
               target_pos.z + randfloat(-0.001158, 0.001158)
             ));
           }
@@ -94,26 +119,23 @@ impl BowAimModule {
   }
 
   async fn shooting(&self, bot: &Client, options: &BowAimOptions) {
-    let nickname = bot.username();
+    let mut entity_filter = None;
 
-    STATES.set_mutual_states(&nickname, "looking", true);
-
-    loop {
-      let mut entity_filter = None;
-
-      if options.target.as_str() == "custom" {
-        if let Some(target_nickname) = &options.nickname {
-          entity_filter = Some(EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(70.0)));
-        }
-      } else {
-        entity_filter = Some(EntityFilter::new(bot, &options.target, options.max_distance.unwrap_or(70.0)));
+    if options.target.as_str() == "custom" {
+      if let Some(target_nickname) = &options.nickname {
+        entity_filter = Some(EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(70.0)));
       }
+    } else {
+      entity_filter = Some(EntityFilter::new(bot, &options.target, options.max_distance.unwrap_or(70.0)));
+    }
 
-      if let Some(filter) = entity_filter {
-        self.shoot(bot, filter).await;
+    if let Some(filter) = entity_filter {
+      self.aiming(bot.clone(), filter.clone());
+
+      loop {
+        self.shoot(bot, filter.clone()).await;
+        sleep(Duration::from_millis(options.delay.unwrap_or(50))).await;
       }
-
-      sleep(Duration::from_millis(options.delay.unwrap_or(50))).await;
     }
   }
 

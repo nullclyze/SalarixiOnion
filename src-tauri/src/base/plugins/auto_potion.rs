@@ -70,6 +70,7 @@ impl AutoPotionPlugin {
 
               if should_drink {
                 STATES.set_state(&nickname, "can_eating", false);
+                STATES.set_state(&nickname, "can_attacking", false);
                 STATES.set_state(&nickname, "can_interacting", false);
                 STATES.set_mutual_states(&nickname, "drinking", true);
 
@@ -82,6 +83,7 @@ impl AutoPotionPlugin {
                 STATES.set_state(&nickname, "can_interacting", true);
                 STATES.set_state(&nickname, "can_walking", true);
                 STATES.set_state(&nickname, "can_sprinting", true);
+                STATES.set_state(&nickname, "can_attacking", true);
                 STATES.set_mutual_states(&nickname, "drinking", false);
               }
             }

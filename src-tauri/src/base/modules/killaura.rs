@@ -235,7 +235,7 @@ impl KillauraModule {
     let nickname = bot.username();
 
     loop {
-      if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+      if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_interacting") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
         if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &config.target, config.distance)) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -298,7 +298,7 @@ impl KillauraModule {
     let nickname = bot.username();
 
     loop {
-      if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+      if STATES.get_state(&nickname, "can_attacking") && !STATES.get_state(&nickname, "is_interacting") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
         if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &config.target, config.distance)) {
           STATES.set_mutual_states(&nickname, "attacking", true);
           

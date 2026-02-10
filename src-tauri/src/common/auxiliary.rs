@@ -10,6 +10,7 @@ use azalea::entity::{Physics, Dead, Position};
 use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::{Player, AbstractMonster};
 use azalea::inventory::Menu;
+use azalea::inventory::operations::ThrowClick;
 use azalea::local_player::Hunger;
 use azalea::pathfinder::PathfinderOpts;
 use azalea::pathfinder::astar::PathfinderTimeout;
@@ -35,8 +36,8 @@ use crate::tools::*;
 
 
 // Функция нахождения пустого слота в инвентаре
-pub fn find_empty_slot_in_invenotry(bot: &Client) -> Option<usize> {
-  for (slot, item) in bot.menu().slots().iter().enumerate() { 
+pub fn find_empty_slot_in_invenotry(menu: Menu) -> Option<usize> {
+  for (slot, item) in menu.slots().iter().enumerate() { 
     if slot > 9 {
       if item.is_empty() {
         return Some(slot);
@@ -48,9 +49,7 @@ pub fn find_empty_slot_in_invenotry(bot: &Client) -> Option<usize> {
 }
 
 // Функция нахождения пустого слота в хотбаре
-pub fn find_empty_slot_in_hotbar(bot: &Client) -> Option<u8> {
-  let menu = bot.menu();
-
+pub fn find_empty_slot_in_hotbar(menu: Menu) -> Option<u8> {
   for slot in menu.hotbar_slots_range() { 
     if let Some(item) = menu.slot(slot) {
       if item.is_empty() {
@@ -222,15 +221,6 @@ pub fn get_eye_position(bot: &Client) -> Vec3 {
 
 // Функция безопасного открытия инвентаря
 pub fn get_inventory(bot: &Client) -> Option<ContainerHandleRef> {
-  let nickname = bot.username();
-
-  stop_bot_move(bot);
-
-  STATES.set_state(&nickname, "can_walking", false);
-  STATES.set_state(&nickname, "can_sprinting", false);
-  STATES.set_state(&nickname, "can_attacking", false);
-  STATES.set_state(&nickname, "can_interacting", false);
-
   if let Some(inventory) = bot.get_component::<Inventory>() {
     return Some(ContainerHandleRef::new(inventory.id, bot.clone()));
   }
@@ -238,18 +228,22 @@ pub fn get_inventory(bot: &Client) -> Option<ContainerHandleRef> {
   None
 }
 
-// Функция безопасного закрытия инвентаря
-pub fn close_inventory(bot: &Client) {
-  if let Some(inventory) = get_inventory(bot) {
-    inventory.close();
+// Вспомогательная функция переключения состояний
+pub fn start_interacting_with_inventory(bot: &Client, nickname: &String) {
+  stop_bot_move(bot);
 
-    let nickname = bot.username();
+  STATES.set_state(&nickname, "can_walking", false);
+  STATES.set_state(&nickname, "can_sprinting", false);
+  STATES.set_state(&nickname, "can_attacking", false);
+  STATES.set_state(&nickname, "can_interacting", false);
+}
 
-    STATES.set_state(&nickname, "can_walking", true);
-    STATES.set_state(&nickname, "can_sprinting", true);
-    STATES.set_state(&nickname, "can_attacking", true);
-    STATES.set_state(&nickname, "can_interacting", true);
-  }
+// Вспомогательная функция переключения состояний
+pub fn stop_interacting_with_inventory(nickname: &String) {
+  STATES.set_state(&nickname, "can_walking", true);
+  STATES.set_state(&nickname, "can_sprinting", true);
+  STATES.set_state(&nickname, "can_attacking", true);
+  STATES.set_state(&nickname, "can_interacting", true);
 }
 
 // Функция безопасного получения выбранного слота в hotbar
@@ -277,28 +271,30 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
       bot.set_selected_hotbar_slot(hotbar_slot);
     }
   } else {
-    if let Some(empty_slot) = find_empty_slot_in_hotbar(bot) {
-      inventory_swap_click(bot, source_slot, empty_slot as usize).await;
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(empty_slot) = find_empty_slot_in_hotbar(menu) {
+        inventory_swap_click(bot, source_slot, empty_slot as usize).await;
 
-      if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
-        if get_selected_hotbar_slot(bot) != slot {
-          sleep(Duration::from_millis(50)).await;
-          bot.set_selected_hotbar_slot(slot);
+        if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
+          if get_selected_hotbar_slot(bot) != slot {
+            sleep(Duration::from_millis(50)).await;
+            bot.set_selected_hotbar_slot(slot);
+          }
         }
-      }
-    } else {
-      let random_slot = randuint(36, 44) as usize;
+      } else {
+        let random_slot = randuint(36, 44) as usize;
 
-      inventory_shift_click(bot, random_slot);
-      sleep(Duration::from_millis(50)).await;
-      inventory_swap_click(bot, source_slot, random_slot).await;
+        inventory_shift_click(bot, random_slot);
+        sleep(Duration::from_millis(50)).await;
+        inventory_swap_click(bot, source_slot, random_slot).await;
 
-      sleep(Duration::from_millis(50)).await;
+        sleep(Duration::from_millis(50)).await;
 
-      let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
+        let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
 
-      if get_selected_hotbar_slot(bot) != hotbar_slot {
-        bot.set_selected_hotbar_slot(hotbar_slot);
+        if get_selected_hotbar_slot(bot) != hotbar_slot {
+          bot.set_selected_hotbar_slot(hotbar_slot);
+        }
       }
     }
   }
@@ -325,30 +321,80 @@ pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
 // Функция безопасного shift-клика в инвентаре
 pub fn inventory_shift_click(bot: &Client, slot: usize) {
   if let Some(inventory) = get_inventory(bot) {
-    inventory.shift_click(slot);
-
     let nickname = bot.username();
-    
-    STATES.set_state(&nickname, "can_walking", true);
-    STATES.set_state(&nickname, "can_sprinting", true);
-    STATES.set_state(&nickname, "can_attacking", true);
-    STATES.set_state(&nickname, "can_interacting", true);
+    start_interacting_with_inventory(bot, &nickname);
+    inventory.shift_click(slot);
+    stop_interacting_with_inventory(&nickname);
+  }
+}
+
+// Функция безопасного left-клика в инвентаре
+pub fn inventory_left_click(bot: &Client, slot: usize) {
+  if let Some(inventory) = get_inventory(bot) {
+    let nickname = bot.username();
+    start_interacting_with_inventory(bot, &nickname);
+    inventory.left_click(slot);
+    stop_interacting_with_inventory(&nickname);
+  }
+}
+
+// Функция безопасного right-клика в инвентаре
+pub fn inventory_right_click(bot: &Client, slot: usize) {
+  if let Some(inventory) = get_inventory(bot) {
+    let nickname = bot.username();
+    start_interacting_with_inventory(bot, &nickname);
+    inventory.shift_click(slot);
+    stop_interacting_with_inventory(&nickname);
   }
 }
 
 // Функция безопасного swap-клика в инвентаре
 pub async fn inventory_swap_click(bot: &Client, source_slot: usize, target_slot: usize) {
   if let Some(inventory) = get_inventory(bot) {
+    let nickname = bot.username();
+
+    start_interacting_with_inventory(bot, &nickname);
+
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(item) = menu.slot(target_slot) {
+        if !item.is_empty() {
+          if let Some(empty_slot) = find_empty_slot_in_invenotry(menu) {
+            inventory.left_click(target_slot);
+            sleep(Duration::from_millis(50)).await;
+            inventory.left_click(empty_slot);
+          } else {
+            inventory_drop_item(bot, target_slot);
+          }
+
+          sleep(Duration::from_millis(50)).await;
+        }
+      }
+    }
+
     inventory.left_click(source_slot);
     sleep(Duration::from_millis(50)).await;
     inventory.left_click(target_slot);
 
+    stop_interacting_with_inventory(&nickname);
+  }
+}
+
+// Функция безопасного выбрасывания предмета
+pub fn inventory_drop_item(bot: &Client, slot: usize) {
+  if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
-    
-    STATES.set_state(&nickname, "can_walking", true);
-    STATES.set_state(&nickname, "can_sprinting", true);
-    STATES.set_state(&nickname, "can_attacking", true);
-    STATES.set_state(&nickname, "can_interacting", true);
+
+    start_interacting_with_inventory(bot, &nickname);
+
+    if let Some(menu) = get_inventory_menu(bot) {
+      if let Some(item) = menu.slot(slot) {
+        if !item.is_empty() {
+          inventory.click(ThrowClick::All { slot: slot as u16 });
+        }
+      }
+    }
+
+    stop_interacting_with_inventory(&nickname);
   }
 }
 
@@ -359,19 +405,10 @@ pub async fn inventory_move_item(bot: &Client, kind: ItemKind, source_slot: usiz
       if item.kind() == kind {
         return;
       }
-
-      if !item.is_empty() {
-        inventory_shift_click(bot, target_slot);
-        sleep(Duration::from_millis(50)).await;
-      }
     }
   }
 
   inventory_swap_click(bot, source_slot, target_slot).await;
-
-  sleep(Duration::from_millis(50)).await;
-
-  close_inventory(bot);
 }
 
 // Функция безопасного задания направления хотьбы для бота
@@ -595,11 +632,6 @@ pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> 
     },
     "animal" => {
       return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-      });
-    },
-    "danger" => {
-      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<Player>, With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
         eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
       });
     },
