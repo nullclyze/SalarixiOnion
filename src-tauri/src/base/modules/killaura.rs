@@ -132,7 +132,7 @@ impl KillauraModule {
     });
   }
 
-  fn chase(&'static self, bot: Client, target: String, distance: f64, min_distance_to_target: f64) {
+  fn chase(&self, bot: Client, target: String, distance: f64, min_distance_to_target: f64) {
     tokio::spawn(async move {
       let nickname = bot.username();
 
@@ -150,7 +150,7 @@ impl KillauraModule {
 
             run(&bot, SprintDirection::Forward);
 
-            if !STATES.get_state(&nickname, "is_looking") {
+            if STATES.get_state(&nickname, "can_looking") {
               let entity_pos = get_entity_position(&bot, entity);
 
               bot.look_at(Vec3::new(
@@ -179,7 +179,7 @@ impl KillauraModule {
     });
   }
 
-  fn aiming(&'static self, bot: Client, target: String, distance: f64) {
+  fn aiming(&self, bot: Client, target: String, distance: f64) {
     tokio::spawn(async move {
       let nickname = bot.username();
 
@@ -349,6 +349,14 @@ impl KillauraModule {
     kill_task(&nickname, "killaura");
 
     bot.walk(WalkDirection::None);
+    
+    if bot.jumping() {
+      bot.set_jumping(false);
+    }
+
+    if bot.crouching() {
+      bot.set_crouching(false);
+    }
 
     STATES.set_mutual_states(&nickname, "looking", false);
     STATES.set_mutual_states(&nickname, "attacking", false);

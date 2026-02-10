@@ -499,7 +499,7 @@ export class MonitoringManager {
             base64code: base64code 
           });
         } else {
-          log(`Ошибка мониторинга (save-map): Base64 code not found`, 'error');
+          log('Ошибка мониторинга (save-map): Image not found', 'error');
         }
       } catch (error) {
         log(`Ошибка мониторинга (save-map): ${error}`, 'error');
