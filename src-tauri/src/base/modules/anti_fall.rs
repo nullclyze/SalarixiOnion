@@ -1,20 +1,19 @@
+use azalea::core::position::BlockPos;
 use azalea::prelude::*;
-use azalea::Vec3;
-use azalea::core::position::BlockPos; 
 use azalea::protocol::common::movements::MoveFlags;
+use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::protocol::packets::game::ServerboundMovePlayerPos;
 use azalea::protocol::packets::game::ServerboundUseItem;
-use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
-use serde::{Serialize, Deserialize};
+use azalea::Vec3;
+use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::common::take_item;
-use crate::tools::*;
 use crate::base::*;
-use crate::common::{get_block_state, get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
-
+use crate::common::take_item;
+use crate::common::{get_block_state, get_bot_physics, set_bot_on_ground, set_bot_velocity_y};
+use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiFallModule;
@@ -25,7 +24,7 @@ pub struct AntiFallOptions {
   pub distance_to_ground: Option<i32>,
   pub fall_velocity: Option<f64>,
   pub delay: Option<u64>,
-  pub state: bool
+  pub state: bool,
 }
 
 impl AntiFallModule {
@@ -37,7 +36,11 @@ impl AntiFallModule {
     let pos = bot.position();
 
     for y in 0..=distance_to_ground {
-      let block_pos = BlockPos::new(pos.x.floor() as i32, (pos.y.floor() as i32) - y, pos.z.floor() as i32);
+      let block_pos = BlockPos::new(
+        pos.x.floor() as i32,
+        (pos.y.floor() as i32) - y,
+        pos.z.floor() as i32,
+      );
 
       if let Some(state) = get_block_state(bot, block_pos) {
         if !state.is_air() {
@@ -53,7 +56,11 @@ impl AntiFallModule {
     let pos = bot.position();
 
     for y in 0..=distance_to_ground {
-      let block_pos = BlockPos::new(pos.x.floor() as i32, (pos.y.floor() as i32) - y, pos.z.floor() as i32);
+      let block_pos = BlockPos::new(
+        pos.x.floor() as i32,
+        (pos.y.floor() as i32) - y,
+        pos.z.floor() as i32,
+      );
 
       if let Some(state) = get_block_state(bot, block_pos) {
         if !state.is_air() {
@@ -127,8 +134,8 @@ impl AntiFallModule {
               pos: fake_pos,
               flags: MoveFlags {
                 on_ground: physics.on_ground(),
-                horizontal_collision: physics.horizontal_collision
-              }
+                horizontal_collision: physics.horizontal_collision,
+              },
             });
           }
         }
@@ -159,12 +166,12 @@ impl AntiFallModule {
               sleep(Duration::from_millis(50)).await;
 
               let direction = bot.direction();
-            
+
               bot.write_packet(ServerboundUseItem {
                 hand: InteractionHand::MainHand,
                 seq: 0,
                 y_rot: direction.0,
-                x_rot: direction.1
+                x_rot: direction.1,
               });
             }
           }
@@ -173,12 +180,12 @@ impl AntiFallModule {
 
           if self.exist_water_below(bot, distance_to_ground) {
             let direction = bot.direction();
-            
+
             bot.write_packet(ServerboundUseItem {
               hand: InteractionHand::MainHand,
               seq: 0,
               y_rot: direction.0,
-              x_rot: direction.1
+              x_rot: direction.1,
             });
           }
         }
@@ -190,9 +197,15 @@ impl AntiFallModule {
 
   pub async fn enable(&self, bot: &Client, options: &AntiFallOptions) {
     match options.mode.as_str() {
-      "hovering" => { self.hovering_anti_fall(bot, options).await; },
-      "teleport" => { self.teleport_anti_fall(bot, options).await; },
-      "water-drop" => { self.water_drop_anti_fall(bot, options).await; },
+      "hovering" => {
+        self.hovering_anti_fall(bot, options).await;
+      }
+      "teleport" => {
+        self.teleport_anti_fall(bot, options).await;
+      }
+      "water-drop" => {
+        self.water_drop_anti_fall(bot, options).await;
+      }
       _ => {}
     }
   }

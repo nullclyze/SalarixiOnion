@@ -1,5 +1,5 @@
-mod random;
 mod mutator;
+mod random;
 
-pub use random::*;
 pub use mutator::*;
+pub use random::*;

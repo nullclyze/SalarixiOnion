@@ -1,5 +1,5 @@
-use azalea::prelude::*;
 use azalea::inventory::ItemStack;
+use azalea::prelude::*;
 use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -7,12 +7,11 @@ use tokio::time::sleep;
 use crate::base::*;
 use crate::common::{find_empty_slot_in_invenotry, get_inventory_menu, inventory_shift_click};
 
-
 #[derive(Debug, Clone)]
 struct Armor {
   part: String,
   slot: usize,
-  priority: u8
+  priority: u8,
 }
 
 #[derive(Debug, Clone)]
@@ -20,7 +19,7 @@ struct ArmorSet {
   helmet: Option<Armor>,
   chestplate: Option<Armor>,
   leggings: Option<Armor>,
-  boots: Option<Armor>
+  boots: Option<Armor>,
 }
 
 pub struct AutoArmorPlugin;
@@ -44,13 +43,13 @@ impl AutoArmorPlugin {
         sleep(Duration::from_millis(50)).await;
       }
     });
-  } 
+  }
 
   async fn equip_armor(&self, bot: &Client) {
     let mut armors = vec![];
 
     if let Some(menu) = get_inventory_menu(bot) {
-      for slot in 0..=48 {  
+      for slot in 0..=48 {
         if let Some(item) = menu.slot(slot) {
           if slot > 8 {
             if let Some(armor) = self.is_armor(item, slot) {
@@ -101,7 +100,7 @@ impl AutoArmorPlugin {
         }
       }
     }
-    
+
     inventory_shift_click(bot, armor_slot);
   }
 
@@ -116,41 +115,215 @@ impl AutoArmorPlugin {
     if !item.is_empty() {
       match item.kind() {
         // Шлема
-        ItemKind::TurtleHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 0 }) },
-        ItemKind::LeatherHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 1 }) },
-        ItemKind::GoldenHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 2 }) },
-        ItemKind::ChainmailHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 3 }) },
-        ItemKind::CopperHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 4 }) },
-        ItemKind::IronHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 5 }) },
-        ItemKind::DiamondHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 6 }) },
-        ItemKind::NetheriteHelmet => { armor = Some(Armor { part: helmet, slot: slot, priority: 7 }) },
+        ItemKind::TurtleHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 0,
+          })
+        }
+        ItemKind::LeatherHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 1,
+          })
+        }
+        ItemKind::GoldenHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 2,
+          })
+        }
+        ItemKind::ChainmailHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 3,
+          })
+        }
+        ItemKind::CopperHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 4,
+          })
+        }
+        ItemKind::IronHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 5,
+          })
+        }
+        ItemKind::DiamondHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 6,
+          })
+        }
+        ItemKind::NetheriteHelmet => {
+          armor = Some(Armor {
+            part: helmet,
+            slot: slot,
+            priority: 7,
+          })
+        }
 
         // Нагрудники
-        ItemKind::LeatherChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 0 }) },
-        ItemKind::GoldenChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 1 }) },
-        ItemKind::ChainmailChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 2 }) },
-        ItemKind::CopperChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 3 }) },
-        ItemKind::IronChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 4 }) },
-        ItemKind::DiamondChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 5 }) },
-        ItemKind::NetheriteChestplate => { armor = Some(Armor { part: chestplate, slot: slot, priority: 6 }) },
+        ItemKind::LeatherChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 0,
+          })
+        }
+        ItemKind::GoldenChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 1,
+          })
+        }
+        ItemKind::ChainmailChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 2,
+          })
+        }
+        ItemKind::CopperChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 3,
+          })
+        }
+        ItemKind::IronChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 4,
+          })
+        }
+        ItemKind::DiamondChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 5,
+          })
+        }
+        ItemKind::NetheriteChestplate => {
+          armor = Some(Armor {
+            part: chestplate,
+            slot: slot,
+            priority: 6,
+          })
+        }
 
         // Поножи
-        ItemKind::LeatherLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 0 }) },
-        ItemKind::GoldenLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 1 }) },
-        ItemKind::ChainmailLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 2 }) },
-        ItemKind::CopperLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 3 }) },
-        ItemKind::IronLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 4 }) },
-        ItemKind::DiamondLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 5 }) },
-        ItemKind::NetheriteLeggings => { armor = Some(Armor { part: leggings, slot: slot, priority: 6 }) },
+        ItemKind::LeatherLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 0,
+          })
+        }
+        ItemKind::GoldenLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 1,
+          })
+        }
+        ItemKind::ChainmailLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 2,
+          })
+        }
+        ItemKind::CopperLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 3,
+          })
+        }
+        ItemKind::IronLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 4,
+          })
+        }
+        ItemKind::DiamondLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 5,
+          })
+        }
+        ItemKind::NetheriteLeggings => {
+          armor = Some(Armor {
+            part: leggings,
+            slot: slot,
+            priority: 6,
+          })
+        }
 
         // Ботинки
-        ItemKind::LeatherBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 0 }) },
-        ItemKind::GoldenBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 1 }) },
-        ItemKind::ChainmailBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 2 }) },
-        ItemKind::CopperBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 3 }) },
-        ItemKind::IronBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 4 }) },
-        ItemKind::DiamondBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 5 }) },
-        ItemKind::NetheriteBoots => { armor = Some(Armor { part: boots, slot: slot, priority: 6 }) },
+        ItemKind::LeatherBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 0,
+          })
+        }
+        ItemKind::GoldenBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 1,
+          })
+        }
+        ItemKind::ChainmailBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 2,
+          })
+        }
+        ItemKind::CopperBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 3,
+          })
+        }
+        ItemKind::IronBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 4,
+          })
+        }
+        ItemKind::DiamondBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 5,
+          })
+        }
+        ItemKind::NetheriteBoots => {
+          armor = Some(Armor {
+            part: boots,
+            slot: slot,
+            priority: 6,
+          })
+        }
 
         _ => {}
       }
@@ -160,11 +333,11 @@ impl AutoArmorPlugin {
   }
 
   fn get_best_armor(&self, bot: &Client, armors: Vec<Armor>) -> ArmorSet {
-    let mut armor_set = ArmorSet { 
-      helmet: None, 
+    let mut armor_set = ArmorSet {
+      helmet: None,
       chestplate: None,
       leggings: None,
-      boots: None
+      boots: None,
     };
 
     for armor in armors {
@@ -175,44 +348,44 @@ impl AutoArmorPlugin {
               continue;
             }
           }
-          
+
           if self.is_this_armor_better(bot, &armor) {
             armor_set.helmet = Some(armor);
           }
-        },
+        }
         "chestplate" => {
           if let Some(chestplate) = &armor_set.chestplate {
             if armor.priority <= chestplate.priority {
               continue;
             }
           }
-          
+
           if self.is_this_armor_better(bot, &armor) {
             armor_set.chestplate = Some(armor);
           }
-        },
+        }
         "leggings" => {
           if let Some(leggings) = &armor_set.leggings {
             if armor.priority <= leggings.priority {
               continue;
             }
           }
-          
+
           if self.is_this_armor_better(bot, &armor) {
             armor_set.leggings = Some(armor);
           }
-        },
+        }
         "boots" => {
           if let Some(boots) = &armor_set.boots {
             if armor.priority <= boots.priority {
               continue;
             }
           }
-          
+
           if self.is_this_armor_better(bot, &armor) {
             armor_set.boots = Some(armor);
           }
-        },
+        }
         _ => {}
       }
     }
@@ -226,7 +399,7 @@ impl AutoArmorPlugin {
       "chestplate" => 6,
       "leggings" => 7,
       "boots" => 8,
-      _ => return false
+      _ => return false,
     };
 
     if let Some(item) = bot.menu().slot(target_slot) {

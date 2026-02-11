@@ -1,17 +1,16 @@
 use azalea::entity::Position;
 use azalea::local_player::TabList;
 use azalea::player::GameProfileComponent;
-use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
 use once_cell::sync::Lazy;
-use std::sync::Arc;
+use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::sync::Arc;
 
 use crate::base::get_flow_manager;
 
-
-pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| { Arc::new(RadarManager::new()) });
+pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
 
 // Структура информации радара
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,14 +20,14 @@ pub struct RadarInfo {
   pub x: f64,
   pub y: f64,
   pub z: f64,
-  pub observer: RadarObserver
+  pub observer: RadarObserver,
 }
 
 // Структура информации о наблюдателе
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RadarObserver {
   pub x: f64,
-  pub z: f64
+  pub z: f64,
 }
 
 // Структура RadarManager
@@ -61,8 +60,8 @@ impl RadarManager {
                         z: player_pos.z,
                         observer: RadarObserver {
                           x: client_pos.x,
-                          z: client_pos.z
-                        }
+                          z: client_pos.z,
+                        },
                       });
                     }
                   }
@@ -77,7 +76,15 @@ impl RadarManager {
     None
   }
 
-  pub fn save_data(&self, target: String, mut path: String, filename: String, x: f64, y: f64, z: f64) {
+  pub fn save_data(
+    &self,
+    target: String,
+    mut path: String,
+    filename: String,
+    x: f64,
+    y: f64,
+    z: f64,
+  ) {
     let date = Local::now().format("%H:%M:%S").to_string();
     let content = format!("[ {} ] {} ~ X: {}, Y: {}, Z: {}", date, target, x, y, z);
 
@@ -85,8 +92,8 @@ impl RadarManager {
     path.push_str(".txt");
 
     let mut file = OpenOptions::new()
-      .create(true)  
-      .append(true)    
+      .create(true)
+      .append(true)
       .open(&path)
       .unwrap();
 

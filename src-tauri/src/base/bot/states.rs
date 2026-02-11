@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 pub static STATES: Lazy<Arc<StateManager>> = Lazy::new(|| Arc::new(StateManager::new()));
 
@@ -21,7 +20,7 @@ pub struct States {
   pub is_drinking: bool,
   pub is_attacking: bool,
   pub is_looking: bool,
-  pub is_interacting: bool
+  pub is_interacting: bool,
 }
 
 impl States {
@@ -40,26 +39,54 @@ impl States {
       is_drinking: false,
       is_attacking: false,
       is_looking: false,
-      is_interacting: false
+      is_interacting: false,
     }
   }
 
   pub fn get(&self, field: &str) -> bool {
     match field {
-      "can_walking" => { return self.can_walking; },
-      "can_sprinting" => { return self.can_sprinting; },
-      "can_eating" => { return self.can_eating; },
-      "can_drinking" => { return self.can_drinking; },
-      "can_attacking" => { return self.can_attacking; },
-      "can_looking" => { return self.can_looking; },
-      "can_interacting" => { return self.can_interacting; },
-      "is_walking" => { return self.is_walking; },
-      "is_sprinting" => { return self.is_sprinting; },
-      "is_eating" => { return self.is_eating; },
-      "is_drinking" => { return self.is_drinking; },
-      "is_attacking" => { return self.is_attacking; },
-      "is_looking" => { return self.is_looking; },
-      "is_interacting" => { return self.is_interacting; },
+      "can_walking" => {
+        return self.can_walking;
+      }
+      "can_sprinting" => {
+        return self.can_sprinting;
+      }
+      "can_eating" => {
+        return self.can_eating;
+      }
+      "can_drinking" => {
+        return self.can_drinking;
+      }
+      "can_attacking" => {
+        return self.can_attacking;
+      }
+      "can_looking" => {
+        return self.can_looking;
+      }
+      "can_interacting" => {
+        return self.can_interacting;
+      }
+      "is_walking" => {
+        return self.is_walking;
+      }
+      "is_sprinting" => {
+        return self.is_sprinting;
+      }
+      "is_eating" => {
+        return self.is_eating;
+      }
+      "is_drinking" => {
+        return self.is_drinking;
+      }
+      "is_attacking" => {
+        return self.is_attacking;
+      }
+      "is_looking" => {
+        return self.is_looking;
+      }
+      "is_interacting" => {
+        return self.is_interacting;
+      }
       _ => {}
     }
 
@@ -68,33 +95,61 @@ impl States {
 
   pub fn set(&mut self, field: &str, value: bool) {
     match field {
-      "can_walking" => { self.can_walking = value; },
-      "can_sprinting" => { self.can_sprinting = value; },
-      "can_eating" => { self.can_eating = value; },
-      "can_drinking" => { self.can_drinking = value; },
-      "can_attacking" => { self.can_attacking = value; },
-      "can_looking" => { self.can_looking = value; },
-      "can_interacting" => { self.can_interacting = value; },
-      "is_walking" => { self.is_walking = value; },
-      "is_sprinting" => { self.is_sprinting = value; },
-      "is_eating" => { self.is_eating = value; },
-      "is_drinking" => { self.is_drinking = value; },
-      "is_attacking" => { self.is_attacking = value; },
-      "is_looking" => { self.is_looking = value; },
-      "is_interacting" => { self.is_interacting = value; },
+      "can_walking" => {
+        self.can_walking = value;
+      }
+      "can_sprinting" => {
+        self.can_sprinting = value;
+      }
+      "can_eating" => {
+        self.can_eating = value;
+      }
+      "can_drinking" => {
+        self.can_drinking = value;
+      }
+      "can_attacking" => {
+        self.can_attacking = value;
+      }
+      "can_looking" => {
+        self.can_looking = value;
+      }
+      "can_interacting" => {
+        self.can_interacting = value;
+      }
+      "is_walking" => {
+        self.is_walking = value;
+      }
+      "is_sprinting" => {
+        self.is_sprinting = value;
+      }
+      "is_eating" => {
+        self.is_eating = value;
+      }
+      "is_drinking" => {
+        self.is_drinking = value;
+      }
+      "is_attacking" => {
+        self.is_attacking = value;
+      }
+      "is_looking" => {
+        self.is_looking = value;
+      }
+      "is_interacting" => {
+        self.is_interacting = value;
+      }
       _ => {}
     }
   }
 }
 
 pub struct StateManager {
-  pub map: RwLock<HashMap<String, Arc<RwLock<States>>>>
+  pub map: RwLock<HashMap<String, Arc<RwLock<States>>>>,
 }
 
 impl StateManager {
   pub fn new() -> Self {
     Self {
-      map: RwLock::new(HashMap::new())
+      map: RwLock::new(HashMap::new()),
     }
   }
 

@@ -1,9 +1,10 @@
 use azalea::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
+use crate::common::{
+  inventory_drop_item, inventory_left_click, inventory_right_click, inventory_swap_click,
+};
 use crate::emit::*;
-use crate::common::{inventory_drop_item, inventory_left_click, inventory_right_click, inventory_swap_click};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InventoryModule;
@@ -12,10 +13,10 @@ pub struct InventoryModule;
 pub struct InventoryOptions {
   pub slot: Option<usize>,
   pub target_slot: Option<usize>,
-  pub state: String
+  pub state: String,
 }
 
-impl InventoryModule { 
+impl InventoryModule {
   pub fn new() -> Self {
     Self
   }
@@ -30,26 +31,38 @@ impl InventoryModule {
         } else {
           emit_event(EventType::Log(LogEventPayload {
             name: "error".to_string(),
-            message: format!("Бот {} не смог взять слот {} (неверный индекс слота)", nickname, s)
+            message: format!(
+              "Бот {} не смог взять слот {} (неверный индекс слота)",
+              nickname, s
+            ),
           }));
         }
       } else {
         match options.state.as_str() {
           "drop" => {
             inventory_drop_item(bot, s);
-          },
+          }
           "left-click" => {
             inventory_left_click(bot, s);
-          },
+          }
           "right-click" => {
             inventory_right_click(bot, s);
-          },
+          }
           "swap" => {
-            inventory_swap_click(bot, s, if let Some(t) = options.target_slot { t } else { 0 }).await;
-          },
+            inventory_swap_click(
+              bot,
+              s,
+              if let Some(t) = options.target_slot {
+                t
+              } else {
+                0
+              },
+            )
+            .await;
+          }
           _ => {}
         }
       }
-    } 
+    }
   }
 }

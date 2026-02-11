@@ -1,26 +1,34 @@
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use once_cell::sync::Lazy;
 use tokio::task::JoinHandle;
-
 
 pub static TASKS: Lazy<Arc<TaskManager>> = Lazy::new(|| Arc::new(TaskManager::new()));
 
 pub struct Tasks {
   pub tasks: HashMap<String, Option<JoinHandle<()>>>,
-  pub activity: HashMap<String, bool>
+  pub activity: HashMap<String, bool>,
 }
 
 impl Tasks {
   pub fn new() -> Self {
     let names = vec![
-      "spamming", "movement", "jumping", 
-      "shifting", "waving", "anti-afk",
-      "flight", "killaura", "scaffold",
-      "anti-fall", "bow-aim", "stealer", 
-      "miner", "farmer"
+      "spamming",
+      "movement",
+      "jumping",
+      "shifting",
+      "waving",
+      "anti-afk",
+      "flight",
+      "killaura",
+      "scaffold",
+      "anti-fall",
+      "bow-aim",
+      "stealer",
+      "miner",
+      "farmer",
     ];
-    
+
     let mut tasks = HashMap::new();
     let mut activity = HashMap::new();
 
@@ -31,7 +39,7 @@ impl Tasks {
 
     Self {
       tasks: tasks,
-      activity: activity
+      activity: activity,
     }
   }
 
@@ -68,13 +76,13 @@ impl Tasks {
 }
 
 pub struct TaskManager {
-  pub map: RwLock<HashMap<String, Arc<RwLock<Tasks>>>>
+  pub map: RwLock<HashMap<String, Arc<RwLock<Tasks>>>>,
 }
 
 impl TaskManager {
   pub fn new() -> Self {
     Self {
-      map: RwLock::new(HashMap::new())
+      map: RwLock::new(HashMap::new()),
     }
   }
 
@@ -83,7 +91,11 @@ impl TaskManager {
       arc.write().unwrap().kill_all_tasks();
     }
 
-    self.map.write().unwrap().insert(nickname.clone(), Arc::new(RwLock::new(Tasks::new())));
+    self
+      .map
+      .write()
+      .unwrap()
+      .insert(nickname.clone(), Arc::new(RwLock::new(Tasks::new())));
   }
 
   pub fn remove(&self, nickname: &String) {
@@ -117,7 +129,7 @@ impl TaskManager {
     for (name, tasks) in map.iter() {
       if name == nickname {
         return tasks.read().unwrap().get_task_activity(task);
-      } 
+      }
     }
 
     false

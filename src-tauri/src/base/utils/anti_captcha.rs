@@ -1,12 +1,13 @@
-use regex::Regex;
-use image::{ImageBuffer, ImageFormat, Rgb};
 use base64::encode;
+use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
+use regex::Regex;
 use std::sync::Arc;
 
-
-pub static ANTI_WEB_CAPTCHA: Lazy<Arc<AntiWebCaptcha>> = Lazy::new(|| { Arc::new(AntiWebCaptcha::new()) });
-pub static ANTI_MAP_CAPTCHA: Lazy<Arc<AntiMapCaptcha>> = Lazy::new(|| { Arc::new(AntiMapCaptcha::new()) });
+pub static ANTI_WEB_CAPTCHA: Lazy<Arc<AntiWebCaptcha>> =
+  Lazy::new(|| Arc::new(AntiWebCaptcha::new()));
+pub static ANTI_MAP_CAPTCHA: Lazy<Arc<AntiMapCaptcha>> =
+  Lazy::new(|| Arc::new(AntiMapCaptcha::new()));
 
 pub struct AntiWebCaptcha;
 
@@ -15,7 +16,12 @@ impl AntiWebCaptcha {
     Self
   }
 
-  pub fn catch_url_from_message(&self, message: String, regex: &str, required_url_part: Option<String>) -> Option<String> {
+  pub fn catch_url_from_message(
+    &self,
+    message: String,
+    regex: &str,
+    required_url_part: Option<String>,
+  ) -> Option<String> {
     let re = Regex::new(regex).unwrap();
 
     for link_to_captcha in re.find_iter(&message) {
@@ -30,10 +36,9 @@ impl AntiWebCaptcha {
       }
     }
 
-    None  
+    None
   }
 }
-
 
 pub struct AntiMapCaptcha;
 
@@ -252,7 +257,7 @@ impl AntiMapCaptcha {
       205 => (31, 18, 13),
       206 => (37, 22, 16),
       207 => (19, 11, 8),
-      _ => (255, 255, 255) 
+      _ => (255, 255, 255),
     }
   }
 

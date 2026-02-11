@@ -1,18 +1,19 @@
-use rand::Rng;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
-
+use rand::Rng;
 
 pub enum Classes {
   Numeric,
   Letter,
   Multi,
-  Special
+  Special,
 }
 
 pub fn randchar(s: &str) -> Option<char> {
   let v: Vec<char> = s.chars().collect();
-  if v.is_empty() { return None; }
+  if v.is_empty() {
+    return None;
+  }
   let idx = thread_rng().gen_range(0..v.len());
   Some(v[idx])
 }
@@ -22,7 +23,9 @@ pub fn randstr(class: Classes, length: i32) -> String {
     Classes::Numeric => "0123456789",
     Classes::Letter => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
     Classes::Multi => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-    Classes::Special => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+="
+    Classes::Special => {
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+="
+    }
   };
 
   let mut result = String::new();

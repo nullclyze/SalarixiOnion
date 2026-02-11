@@ -6,9 +6,11 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::{
+  get_entity_position, get_inventory_menu, get_nearest_entity, inventory_move_item,
+  release_use_item, start_use_item, EntityFilter,
+};
 use crate::tools::*;
-use crate::common::{EntityFilter, get_inventory_menu, get_entity_position, get_nearest_entity, inventory_move_item, release_use_item, start_use_item};
-
 
 pub struct AutoShieldPlugin;
 
@@ -39,11 +41,13 @@ impl AutoShieldPlugin {
     if let Some(menu) = get_inventory_menu(bot) {
       if let Some(item) = menu.slot(45) {
         if item.is_empty() || item.kind() == ItemKind::Shield {
-          if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+          if !STATES.get_state(&nickname, "is_eating")
+            && !STATES.get_state(&nickname, "is_drinking")
+          {
             let mut shield_equipped = false;
 
             if item.kind() != ItemKind::Shield {
-              for (slot, item) in menu.slots().iter().enumerate() {  
+              for (slot, item) in menu.slots().iter().enumerate() {
                 if slot != 45 {
                   if item.kind() == ItemKind::Shield {
                     inventory_move_item(bot, ItemKind::Shield, slot, 45).await;
@@ -67,7 +71,7 @@ impl AutoShieldPlugin {
           }
         }
       }
-    } 
+    }
   }
 
   fn get_nearest_dangerous_entity(&self, bot: &Client) -> Option<Entity> {
@@ -76,7 +80,8 @@ impl AutoShieldPlugin {
     if let Some(nearest_player) = get_nearest_entity(bot, EntityFilter::new(bot, "player", 8.0)) {
       nearest_entity = Some(nearest_player);
     } else {
-      if let Some(nearest_monster) = get_nearest_entity(bot, EntityFilter::new(bot, "monster", 8.0)) {
+      if let Some(nearest_monster) = get_nearest_entity(bot, EntityFilter::new(bot, "monster", 8.0))
+      {
         nearest_entity = Some(nearest_monster);
       }
     }
@@ -88,7 +93,9 @@ impl AutoShieldPlugin {
     if let Some(entity) = self.get_nearest_dangerous_entity(bot) {
       let nickname = bot.username();
 
-      if STATES.get_state(&nickname, "can_looking") && STATES.get_state(&nickname, "can_interacting") {
+      if STATES.get_state(&nickname, "can_looking")
+        && STATES.get_state(&nickname, "can_interacting")
+      {
         STATES.set_mutual_states(&nickname, "looking", true);
         STATES.set_mutual_states(&nickname, "interacting", true);
 

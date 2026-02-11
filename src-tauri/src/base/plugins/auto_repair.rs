@@ -1,20 +1,19 @@
 use azalea::inventory::components::{Damage, Enchantments, MaxDamage};
-use azalea::protocol::packets::game::s_interact::InteractionHand;
-use azalea::prelude::*;
 use azalea::inventory::ItemStack;
+use azalea::prelude::*;
+use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::tools::*;
 use crate::common::{get_inventory_menu, move_item_to_offhand, start_use_item, take_item};
-
+use crate::tools::*;
 
 #[derive(Clone, Debug)]
 struct BrokenItem {
   slot: usize,
-  kind: ItemKind
+  kind: ItemKind,
 }
 
 pub struct AutoRepairPlugin;
@@ -38,7 +37,7 @@ impl AutoRepairPlugin {
         sleep(Duration::from_millis(50)).await;
       }
     });
-  } 
+  }
 
   async fn repair_items(&self, bot: &Client) {
     let broken_items = self.find_broken_items(bot);
@@ -54,7 +53,7 @@ impl AutoRepairPlugin {
 
   async fn take_experience_bottles(&self, bot: &Client) -> Option<i32> {
     if let Some(menu) = get_inventory_menu(bot) {
-      for (slot, item) in menu.slots().iter().enumerate() {  
+      for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::ExperienceBottle {
           take_item(bot, slot).await;
           return Some(item.count());
@@ -70,7 +69,9 @@ impl AutoRepairPlugin {
       let nickname = bot.username();
 
       for _ in 0..=count {
-        if STATES.get_state(&nickname, "can_interacting") && STATES.get_state(&nickname, "can_looking") {
+        if STATES.get_state(&nickname, "can_interacting")
+          && STATES.get_state(&nickname, "can_looking")
+        {
           STATES.set_mutual_states(&nickname, "interacting", true);
           STATES.set_mutual_states(&nickname, "looking", true);
 
@@ -79,13 +80,13 @@ impl AutoRepairPlugin {
             sleep(Duration::from_millis(50)).await;
             move_item_to_offhand(bot, broken_item.kind);
             sleep(Duration::from_millis(randuint(50, 150))).await;
-          } 
+          }
 
           let mut slot = 45;
 
           if broken_item.slot >= 5 && broken_item.slot <= 8 {
             slot = broken_item.slot;
-          } 
+          }
 
           if let Some(menu) = get_inventory_menu(bot) {
             if let Some(item) = menu.slot(slot) {
@@ -98,7 +99,7 @@ impl AutoRepairPlugin {
                 if direction.1 < 84.0 {
                   bot.set_direction(direction.0, randfloat(84.0, 90.0) as f32);
                   sleep(Duration::from_millis(randuint(150, 200))).await;
-                } 
+                }
 
                 start_use_item(bot, InteractionHand::MainHand);
 
@@ -152,16 +153,16 @@ impl AutoRepairPlugin {
     let mut broken_items = vec![];
 
     if let Some(menu) = get_inventory_menu(bot) {
-      for (slot, item) in menu.slots().iter().enumerate() {  
+      for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           let current_damage = self.get_current_item_damage(item);
           let max_durability = self.get_max_item_durability(item);
 
           if current_damage != 0 && max_durability - current_damage < max_durability / 2 {
             if self.item_has_mending(bot, item) {
-              broken_items.push(BrokenItem { 
-                slot: slot, 
-                kind: item.kind()
+              broken_items.push(BrokenItem {
+                slot: slot,
+                kind: item.kind(),
               });
             }
           }

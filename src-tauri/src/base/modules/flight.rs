@@ -1,16 +1,15 @@
+use azalea::core::position::BlockPos;
 use azalea::prelude::*;
-use azalea::Vec3;
-use azalea::core::position::BlockPos; 
 use azalea::protocol::common::movements::MoveFlags;
 use azalea::protocol::packets::game::ServerboundMovePlayerPos;
-use serde::{Serialize, Deserialize};
+use azalea::Vec3;
+use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::{get_bot_physics, set_bot_on_ground, set_bot_velocity_y};
 use crate::tools::*;
-use crate::common::{get_bot_physics, set_bot_velocity_y, set_bot_on_ground};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlightModule;
@@ -25,7 +24,7 @@ pub struct FlightOptions {
   pub min_change_y: Option<f64>,
   pub max_change_y: Option<f64>,
   pub use_ground_spoof: Option<String>,
-  pub state: bool
+  pub state: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +34,7 @@ struct FlightConfig {
   min_change_y: f64,
   max_change_y: f64,
   use_ground_spoof: bool,
-  use_jitter: bool
+  use_jitter: bool,
 }
 
 impl FlightModule {
@@ -54,9 +53,9 @@ impl FlightModule {
           min_change_y: 0.004,
           max_change_y: 0.007,
           use_ground_spoof: true,
-          use_jitter: true
+          use_jitter: true,
         };
-      },
+      }
       "intave" => {
         config = FlightConfig {
           min_delay: 4,
@@ -64,9 +63,9 @@ impl FlightModule {
           min_change_y: 0.0025,
           max_change_y: 0.0048,
           use_ground_spoof: true,
-          use_jitter: true
+          use_jitter: true,
         };
-      },
+      }
       "grim" => {
         config = FlightConfig {
           min_delay: 2,
@@ -74,9 +73,9 @@ impl FlightModule {
           min_change_y: 0.0011,
           max_change_y: 0.0018,
           use_ground_spoof: false,
-          use_jitter: false
+          use_jitter: false,
         };
-      },
+      }
       _ => {
         config = FlightConfig {
           min_delay: 6,
@@ -84,7 +83,7 @@ impl FlightModule {
           min_change_y: 0.065,
           max_change_y: 0.087,
           use_ground_spoof: true,
-          use_jitter: true
+          use_jitter: true,
         };
       }
     }
@@ -113,8 +112,12 @@ impl FlightModule {
         max_delay: options.max_delay.unwrap_or(8),
         min_change_y: options.min_change_y.unwrap_or(0.05),
         max_change_y: options.max_change_y.unwrap_or(0.08),
-        use_ground_spoof: if let Some(v) = &options.use_ground_spoof { v.as_str() == "true" } else { true },
-        use_jitter: false
+        use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
+          v.as_str() == "true"
+        } else {
+          true
+        },
+        use_jitter: false,
       }
     };
 
@@ -138,9 +141,18 @@ impl FlightModule {
         set_bot_on_ground(bot, false);
       }
 
-      sleep(Duration::from_millis(randuint(config.min_delay, config.max_delay))).await;
+      sleep(Duration::from_millis(randuint(
+        config.min_delay,
+        config.max_delay,
+      )))
+      .await;
 
-      self.hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
+      self
+        .hover(
+          bot,
+          Instant::now() + Duration::from_millis(randuint(100, 150)),
+        )
+        .await;
 
       if config.use_ground_spoof {
         set_bot_on_ground(bot, false);
@@ -157,8 +169,12 @@ impl FlightModule {
         max_delay: options.max_delay.unwrap_or(7),
         min_change_y: options.min_change_y.unwrap_or(0.006),
         max_change_y: options.max_change_y.unwrap_or(0.008),
-        use_ground_spoof: if let Some(v) = &options.use_ground_spoof { v.as_str() == "true" } else { true },
-        use_jitter: true
+        use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
+          v.as_str() == "true"
+        } else {
+          true
+        },
+        use_jitter: true,
       }
     };
 
@@ -182,11 +198,15 @@ impl FlightModule {
         let pos = bot.position();
 
         let packet = ServerboundMovePlayerPos {
-          pos: Vec3::new(pos.x, pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8), pos.z),
+          pos: Vec3::new(
+            pos.x,
+            pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8),
+            pos.z,
+          ),
           flags: MoveFlags {
             on_ground: physics.on_ground(),
-            horizontal_collision: physics.horizontal_collision
-          }
+            horizontal_collision: physics.horizontal_collision,
+          },
         };
 
         if config.use_jitter {
@@ -198,9 +218,18 @@ impl FlightModule {
           bot.write_packet(packet);
         }
 
-        sleep(Duration::from_millis(randuint(config.min_delay, config.max_delay))).await;
+        sleep(Duration::from_millis(randuint(
+          config.min_delay,
+          config.max_delay,
+        )))
+        .await;
 
-        self.hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
+        self
+          .hover(
+            bot,
+            Instant::now() + Duration::from_millis(randuint(100, 150)),
+          )
+          .await;
 
         if config.use_ground_spoof {
           set_bot_on_ground(bot, false);
@@ -218,8 +247,12 @@ impl FlightModule {
         max_delay: options.max_delay.unwrap_or(8),
         min_change_y: options.min_change_y.unwrap_or(0.08),
         max_change_y: options.max_change_y.unwrap_or(0.09),
-        use_ground_spoof: if let Some(v) = &options.use_ground_spoof { v.as_str() == "true" } else { true },
-        use_jitter: false
+        use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
+          v.as_str() == "true"
+        } else {
+          true
+        },
+        use_jitter: false,
       }
     };
 
@@ -234,11 +267,15 @@ impl FlightModule {
         let pos = bot.position();
 
         let packet = ServerboundMovePlayerPos {
-          pos: Vec3::new(pos.x, pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8), pos.z),
+          pos: Vec3::new(
+            pos.x,
+            pos.y + randfloat(config.min_change_y + 0.8, config.max_change_y + 0.8),
+            pos.z,
+          ),
           flags: MoveFlags {
             on_ground: physics.on_ground(),
-            horizontal_collision: physics.horizontal_collision
-          }
+            horizontal_collision: physics.horizontal_collision,
+          },
         };
 
         if config.use_jitter {
@@ -250,9 +287,18 @@ impl FlightModule {
           bot.write_packet(packet);
         }
 
-        sleep(Duration::from_millis(randuint(config.min_delay, config.max_delay))).await;
+        sleep(Duration::from_millis(randuint(
+          config.min_delay,
+          config.max_delay,
+        )))
+        .await;
 
-        self.hover(bot, Instant::now() + Duration::from_millis(randuint(100, 150))).await;
+        self
+          .hover(
+            bot,
+            Instant::now() + Duration::from_millis(randuint(100, 150)),
+          )
+          .await;
 
         if config.use_ground_spoof {
           set_bot_on_ground(bot, false);
@@ -270,8 +316,12 @@ impl FlightModule {
         max_delay: options.max_delay.unwrap_or(8),
         min_change_y: options.min_change_y.unwrap_or(0.02),
         max_change_y: options.max_change_y.unwrap_or(0.05),
-        use_ground_spoof: if let Some(v) = &options.use_ground_spoof { v.as_str() == "true" } else { true },
-        use_jitter: true
+        use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
+          v.as_str() == "true"
+        } else {
+          true
+        },
+        use_jitter: true,
       }
     };
 
@@ -287,14 +337,14 @@ impl FlightModule {
       let distance_vec = Vec3::new(
         pos.x - (block_under.x as f64 + 0.5),
         pos.y - (block_under.y as f64 + 0.5),
-        pos.z - (block_under.z as f64 + 0.5)
+        pos.z - (block_under.z as f64 + 0.5),
       );
-        
+
       let distance = distance_vec.length().max(0.1);
       let direction = distance_vec.normalize();
-        
+
       let strength = (4.0 / distance).min(2.0);
-        
+
       let variation = randfloat(-0.2, 0.2);
       let final_strength = strength + variation;
 
@@ -307,9 +357,18 @@ impl FlightModule {
         set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
       }
 
-      sleep(Duration::from_millis(randuint(config.min_delay, config.max_delay))).await;
+      sleep(Duration::from_millis(randuint(
+        config.min_delay,
+        config.max_delay,
+      )))
+      .await;
 
-      self.hover(bot, Instant::now() + Duration::from_millis(randuint(600, 800))).await;
+      self
+        .hover(
+          bot,
+          Instant::now() + Duration::from_millis(randuint(600, 800)),
+        )
+        .await;
 
       if config.use_ground_spoof {
         set_bot_on_ground(bot, false);
@@ -319,13 +378,21 @@ impl FlightModule {
 
   pub async fn enable(&self, bot: &Client, options: &FlightOptions) {
     match options.mode.as_str() {
-      "vanilla" => { self.vanilla_flight(bot, options).await; },
-      "jump-fly" => { self.jump_flight(bot, options).await; },
-      "teleport-fly" => { self.teleport_flight(bot, options).await; },
-      "bug-fly" => { self.bug_flight(bot, options).await; },
+      "vanilla" => {
+        self.vanilla_flight(bot, options).await;
+      }
+      "jump-fly" => {
+        self.jump_flight(bot, options).await;
+      }
+      "teleport-fly" => {
+        self.teleport_flight(bot, options).await;
+      }
+      "bug-fly" => {
+        self.bug_flight(bot, options).await;
+      }
       _ => {}
-    } 
-  } 
+    }
+  }
 
   pub fn stop(&self, nickname: &String) {
     kill_task(nickname, "flight");

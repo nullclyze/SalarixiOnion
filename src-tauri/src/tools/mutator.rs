@@ -27,7 +27,7 @@ impl Mutator {
           continue;
         }
       }
-      
+
       result.push(c);
     }
 

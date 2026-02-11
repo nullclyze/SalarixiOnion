@@ -1,12 +1,11 @@
 use azalea::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
+use crate::base::*;
 use crate::common::swing_arm;
 use crate::tools::*;
-use crate::base::*;
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActionModule;
@@ -16,7 +15,7 @@ pub struct ActionOptions {
   pub action: String,
   pub use_sync: bool,
   pub use_impulsiveness: bool,
-  pub state: bool
+  pub state: bool,
 }
 
 impl ActionModule {
@@ -42,7 +41,7 @@ impl ActionModule {
 
       bot.set_jumping(true);
     }
-  } 
+  }
 
   pub async fn shifting(&self, bot: &Client, options: &ActionOptions) {
     if options.use_impulsiveness {
@@ -64,7 +63,7 @@ impl ActionModule {
 
       bot.set_crouching(true);
     }
-  } 
+  }
 
   pub async fn waving(&self, bot: &Client, options: &ActionOptions) {
     if options.use_impulsiveness {
@@ -93,8 +92,12 @@ impl ActionModule {
     kill_task(&bot.username(), action);
 
     match action {
-      "jumping" => { bot.set_jumping(false); },
-      "shifting" => { bot.set_crouching(false); },
+      "jumping" => {
+        bot.set_jumping(false);
+      }
+      "shifting" => {
+        bot.set_crouching(false);
+      }
       _ => {}
     }
   }

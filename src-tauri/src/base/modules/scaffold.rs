@@ -1,13 +1,16 @@
-use azalea::{Vec3, WalkDirection, prelude::*};
 use azalea::core::position::BlockPos;
-use serde::{Serialize, Deserialize};
+use azalea::{prelude::*, Vec3, WalkDirection};
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::{
+  convert_hotbar_slot_to_inventory_slot, convert_inventory_slot_to_hotbar_slot, get_block_state,
+  get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, swing_arm, take_item,
+  this_is_solid_block,
+};
 use crate::tools::*;
-use crate::common::{convert_hotbar_slot_to_inventory_slot, convert_inventory_slot_to_hotbar_slot, get_block_state, get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, swing_arm, take_item, this_is_solid_block};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScaffoldModule;
@@ -18,7 +21,7 @@ pub struct ScaffoldOptions {
   pub delay: Option<u64>,
   pub min_gaze_degree_x: Option<f32>,
   pub max_gaze_degree_x: Option<f32>,
-  pub state: bool
+  pub state: bool,
 }
 
 impl ScaffoldModule {
@@ -28,7 +31,9 @@ impl ScaffoldModule {
 
   async fn take_block(&self, bot: &Client) -> bool {
     if let Some(menu) = get_inventory_menu(bot) {
-      if let Some(item) = menu.slot(convert_hotbar_slot_to_inventory_slot(get_selected_hotbar_slot(bot))) {
+      if let Some(item) = menu.slot(convert_hotbar_slot_to_inventory_slot(
+        get_selected_hotbar_slot(bot),
+      )) {
         if this_is_solid_block(item.kind()) {
           return true;
         }
@@ -49,7 +54,7 @@ impl ScaffoldModule {
               }
             }
           }
-          
+
           if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
             if get_selected_hotbar_slot(bot) == hotbar_slot {
               return true;
@@ -71,7 +76,10 @@ impl ScaffoldModule {
   }
 
   fn simulate_inaccuracy(&self, bot: &Client, direction: (f32, f32)) {
-    let inaccurate_direction = (direction.0 + randfloat(-0.08, 0.08) as f32, direction.1 + randfloat(-0.08, 0.08) as f32);
+    let inaccurate_direction = (
+      direction.0 + randfloat(-0.08, 0.08) as f32,
+      direction.1 + randfloat(-0.08, 0.08) as f32,
+    );
 
     bot.set_direction(inaccurate_direction.0, inaccurate_direction.1);
   }
@@ -82,7 +90,7 @@ impl ScaffoldModule {
     let min_x = if let Some(rot) = min_x_rot { rot } else { 80.0 } as f64;
     let max_x = if let Some(rot) = max_x_rot { rot } else { 83.0 } as f64;
 
-    bot.set_direction(direction.0, randfloat(min_x, max_x) as f32); 
+    bot.set_direction(direction.0, randfloat(min_x, max_x) as f32);
   }
 
   fn go_back(&self, bot: Client) {
@@ -99,7 +107,7 @@ impl ScaffoldModule {
   }
 
   async fn noob_bridge_scaffold(&self, bot: &Client, options: &ScaffoldOptions) {
-    loop { 
+    loop {
       if !bot.crouching() {
         bot.set_crouching(true);
       }
@@ -108,7 +116,11 @@ impl ScaffoldModule {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let position = bot.position();
-        let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
+        let block_under = BlockPos::new(
+          position.x.floor() as i32,
+          (position.y - 0.5).floor() as i32,
+          position.z.floor() as i32,
+        );
 
         let is_air = if let Some(state) = get_block_state(bot, block_under) {
           state.is_air()
@@ -116,7 +128,7 @@ impl ScaffoldModule {
           false
         };
 
-        if is_air {    
+        if is_air {
           swing_arm(bot);
 
           bot.start_use_item();
@@ -130,16 +142,20 @@ impl ScaffoldModule {
       }
 
       sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
-    }    
+    }
   }
 
   async fn ninja_bridge_scaffold(&self, bot: &Client, options: &ScaffoldOptions) {
-    loop { 
-      if self.take_block(bot).await { 
+    loop {
+      if self.take_block(bot).await {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let pos = bot.position();
-        let block_under = BlockPos::new(pos.x.floor() as i32, (pos.y - 0.5).floor() as i32 , pos.z.floor() as i32);
+        let block_under = BlockPos::new(
+          pos.x.floor() as i32,
+          (pos.y - 0.5).floor() as i32,
+          pos.z.floor() as i32,
+        );
 
         let is_air = if let Some(state) = get_block_state(bot, block_under) {
           state.is_air()
@@ -151,7 +167,7 @@ impl ScaffoldModule {
           bot.set_crouching(true);
 
           sleep(Duration::from_millis(50)).await;
-                        
+
           swing_arm(bot);
 
           bot.start_use_item();
@@ -165,18 +181,22 @@ impl ScaffoldModule {
           bot.set_crouching(false);
         }
       }
-              
+
       sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
-    }    
+    }
   }
 
   async fn god_bridge_scaffold(&self, bot: &Client, options: &ScaffoldOptions) {
-    loop { 
-      if self.take_block(bot).await { 
+    loop {
+      if self.take_block(bot).await {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let position = bot.position();
-        let block_under = BlockPos::new(position.x.floor() as i32, (position.y - 0.5).floor() as i32 , position.z.floor() as i32);
+        let block_under = BlockPos::new(
+          position.x.floor() as i32,
+          (position.y - 0.5).floor() as i32,
+          position.z.floor() as i32,
+        );
 
         let is_air = if let Some(state) = get_block_state(bot, block_under) {
           state.is_air()
@@ -184,22 +204,22 @@ impl ScaffoldModule {
           false
         };
 
-        if is_air {              
+        if is_air {
           swing_arm(bot);
 
-          bot.start_use_item(); 
+          bot.start_use_item();
 
           self.simulate_inaccuracy(bot, bot.direction());
         }
       }
-              
+
       sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
-    }    
+    }
   }
 
   async fn jump_bridge_scaffold(&self, bot: &Client, options: &ScaffoldOptions) {
-    loop { 
-      if self.take_block(bot).await { 
+    loop {
+      if self.take_block(bot).await {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let position = bot.position();
@@ -210,9 +230,14 @@ impl ScaffoldModule {
         };
 
         let block_under = BlockPos::new(
-          position.x.floor() as i32, 
-          (if velocity.y != 0.0 { position.y - 1.0 } else { position.y - 0.5 }).floor() as i32,
-          position.z.floor() as i32
+          position.x.floor() as i32,
+          (if velocity.y != 0.0 {
+            position.y - 1.0
+          } else {
+            position.y - 0.5
+          })
+          .floor() as i32,
+          position.z.floor() as i32,
         );
 
         let is_air = if let Some(state) = get_block_state(bot, block_under) {
@@ -220,33 +245,41 @@ impl ScaffoldModule {
         } else {
           false
         };
-                
-        if is_air {  
+
+        if is_air {
           bot.jump();
-                        
+
           swing_arm(bot);
-          
+
           bot.start_use_item();
 
           self.simulate_inaccuracy(bot, bot.direction());
-        }  
+        }
       }
-              
+
       sleep(Duration::from_millis(options.delay.unwrap_or(25))).await;
-    }    
+    }
   }
 
   pub async fn enable(&self, bot: &Client, options: &ScaffoldOptions) {
     self.go_back(bot.clone());
 
     match options.mode.as_str() {
-      "noob-bridge" => { self.noob_bridge_scaffold(bot, options).await; },
-      "ninja-bridge" => { self.ninja_bridge_scaffold(bot, options).await; },
-      "god-bridge" => { self.god_bridge_scaffold(bot, options).await; },
-      "jump-bridge" => { self.jump_bridge_scaffold(bot, options).await; }
+      "noob-bridge" => {
+        self.noob_bridge_scaffold(bot, options).await;
+      }
+      "ninja-bridge" => {
+        self.ninja_bridge_scaffold(bot, options).await;
+      }
+      "god-bridge" => {
+        self.god_bridge_scaffold(bot, options).await;
+      }
+      "jump-bridge" => {
+        self.jump_bridge_scaffold(bot, options).await;
+      }
       _ => {}
     }
-  } 
+  }
 
   pub fn stop(&self, bot: &Client) {
     let nickname = bot.username();

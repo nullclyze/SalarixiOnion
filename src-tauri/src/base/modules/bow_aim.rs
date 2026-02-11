@@ -1,15 +1,17 @@
 use azalea::prelude::*;
-use azalea::Vec3;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
-use serde::{Serialize, Deserialize};
+use azalea::Vec3;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::tools::*;
 use crate::base::*;
-use crate::common::{EntityFilter, get_eye_position, get_inventory_menu, start_use_item, get_nearest_entity, get_entity_position, take_item, release_use_item};
-
+use crate::common::{
+  get_entity_position, get_eye_position, get_inventory_menu, get_nearest_entity, release_use_item,
+  start_use_item, take_item, EntityFilter,
+};
+use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BowAimModule;
@@ -20,7 +22,7 @@ pub struct BowAimOptions {
   pub nickname: Option<String>,
   pub delay: Option<u64>,
   pub max_distance: Option<f64>,
-  pub state: bool
+  pub state: bool,
 }
 
 impl BowAimModule {
@@ -58,9 +60,9 @@ impl BowAimModule {
             bot.look_at(Vec3::new(
               target_pos.x + randfloat(-0.11, 0.11),
               target_pos.y,
-              target_pos.z + randfloat(-0.11, 0.11)
+              target_pos.z + randfloat(-0.11, 0.11),
             ));
-          }          
+          }
 
           sleep(Duration::from_millis(50)).await;
         }
@@ -71,7 +73,11 @@ impl BowAimModule {
   async fn shoot(&self, bot: &Client, filter: EntityFilter) {
     let nickname = bot.username();
 
-    if STATES.get_state(&nickname, "can_interacting") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_attacking") {
+    if STATES.get_state(&nickname, "can_interacting")
+      && !STATES.get_state(&nickname, "is_eating")
+      && !STATES.get_state(&nickname, "is_drinking")
+      && !STATES.get_state(&nickname, "is_attacking")
+    {
       if let Some(slot) = self.find_bow_in_inventory(bot) {
         STATES.set_mutual_states(&nickname, "interacting", true);
 
@@ -90,7 +96,7 @@ impl BowAimModule {
           bot.look_at(Vec3::new(
             target_pos.x + randfloat(-0.001158, 0.001158),
             target_pos.y + distance * 0.15,
-            target_pos.z + randfloat(-0.001158, 0.001158)
+            target_pos.z + randfloat(-0.001158, 0.001158),
           ));
 
           if distance > 50.0 {
@@ -104,7 +110,7 @@ impl BowAimModule {
             bot.look_at(Vec3::new(
               target_pos.x + randfloat(-0.001158, 0.001158),
               target_pos.y + distance * 0.12,
-              target_pos.z + randfloat(-0.001158, 0.001158)
+              target_pos.z + randfloat(-0.001158, 0.001158),
             ));
           }
 
@@ -123,10 +129,18 @@ impl BowAimModule {
 
     if options.target.as_str() == "custom" {
       if let Some(target_nickname) = &options.nickname {
-        entity_filter = Some(EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(70.0)));
+        entity_filter = Some(EntityFilter::new(
+          bot,
+          target_nickname,
+          options.max_distance.unwrap_or(70.0),
+        ));
       }
     } else {
-      entity_filter = Some(EntityFilter::new(bot, &options.target, options.max_distance.unwrap_or(70.0)));
+      entity_filter = Some(EntityFilter::new(
+        bot,
+        &options.target,
+        options.max_distance.unwrap_or(70.0),
+      ));
     }
 
     if let Some(filter) = entity_filter {

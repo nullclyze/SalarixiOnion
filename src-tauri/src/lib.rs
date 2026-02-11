@@ -1,17 +1,16 @@
-mod emit;
-mod tools;
 mod base;
 mod common;
-mod radar;
+mod emit;
 mod quick;
+mod radar;
+mod tools;
 mod webhook;
 
 use crate::base::*;
+use crate::emit::*;
 use crate::quick::*;
 use crate::radar::*;
-use crate::emit::*;
 use crate::webhook::*;
-
 
 // Функция запуска ботов
 #[tauri::command(async)]
@@ -20,7 +19,10 @@ async fn launch_bots(options: LaunchOptions) -> (String, String) {
     let mut fm = arc.write();
 
     if fm.active {
-      return ("warning".to_string(), format!("Запуск невозможен, существуют активные боты"));
+      return (
+        "warning".to_string(),
+        format!("Запуск невозможен, существуют активные боты"),
+      );
     }
 
     let _ = fm.launch(options);
@@ -35,11 +37,17 @@ async fn launch_bots(options: LaunchOptions) -> (String, String) {
 #[tauri::command(async)]
 async fn stop_bots() -> (String, String) {
   if let Some(arc) = get_flow_manager() {
-    emit_message("Система", format!("Остановка {} ботов...", get_active_bots_count()));
+    emit_message(
+      "Система",
+      format!("Остановка {} ботов...", get_active_bots_count()),
+    );
 
     return arc.write().stop();
   } else {
-    return ("error".to_string(), format!("FlowManager не инициализирован"));
+    return (
+      "error".to_string(),
+      format!("FlowManager не инициализирован"),
+    );
   }
 }
 
@@ -66,7 +74,10 @@ fn reset_bot(nickname: String) -> (String, String) {
     }
   }
 
-  ("error".to_string(), format!("Не удалось сбросить задачи и состояния бота {}", nickname))
+  (
+    "error".to_string(),
+    format!("Не удалось сбросить задачи и состояния бота {}", nickname),
+  )
 }
 
 // Функция отключения бота
@@ -78,7 +89,10 @@ fn disconnect_bot(nickname: String) -> (String, String) {
     }
   }
 
-  ("error".to_string(), format!("Не удалось отключить бота {}", nickname))
+  (
+    "error".to_string(),
+    format!("Не удалось отключить бота {}", nickname),
+  )
 }
 
 // Функция изменения группы бота
@@ -108,7 +122,7 @@ fn save_radar_data(target: String, path: String, filename: String, x: f64, y: f6
 fn get_active_bots_count() -> i32 {
   if let Some(arc) = get_flow_manager() {
     let fm = arc.read();
-    
+
     let mut count = 0;
 
     for (nickname, _) in &fm.bots {
@@ -140,16 +154,31 @@ fn get_memory_usage() -> f64 {
 async fn control(name: String, options: serde_json::Value, group: String) {
   if let Some(opts) = get_current_options() {
     if opts.use_webhook && opts.webhook_settings.actions {
-      send_webhook(opts.webhook_settings.url, format!("Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}", group, name, options));
+      send_webhook(
+        opts.webhook_settings.url,
+        format!(
+          "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
+          group, name, options
+        ),
+      );
     }
   }
 
-  emit_event(EventType::Log(LogEventPayload { 
-    name: "extended".to_string(), 
-    message: format!("Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}", group, name, options)
+  emit_event(EventType::Log(LogEventPayload {
+    name: "extended".to_string(),
+    message: format!(
+      "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
+      group, name, options
+    ),
   }));
 
-  emit_message("Управление", format!("Группа ботов с названием '{}' приняла команду '{}'", group, name));
+  emit_message(
+    "Управление",
+    format!(
+      "Группа ботов с названием '{}' приняла команду '{}'",
+      group, name
+    ),
+  );
 
   MODULE_MANAGER.control(name, options, group).await;
 }
@@ -159,16 +188,26 @@ async fn control(name: String, options: serde_json::Value, group: String) {
 async fn quick_task(name: String) {
   if let Some(opts) = get_current_options() {
     if opts.use_webhook && opts.webhook_settings.actions {
-      send_webhook(opts.webhook_settings.url, format!("Быстрая задача '{}'", name));
+      send_webhook(
+        opts.webhook_settings.url,
+        format!("Быстрая задача '{}'", name),
+      );
     }
   }
 
-  emit_event(EventType::Log(LogEventPayload { 
-    name: "extended".to_string(), 
-    message: format!("Быстрая задача '{}'", name)
+  emit_event(EventType::Log(LogEventPayload {
+    name: "extended".to_string(),
+    message: format!("Быстрая задача '{}'", name),
   }));
 
-  emit_message("Быстрая задача", format!("{} ботов получили быструю задачу '{}'", get_active_bots_count(), name));
+  emit_message(
+    "Быстрая задача",
+    format!(
+      "{} ботов получили быструю задачу '{}'",
+      get_active_bots_count(),
+      name
+    ),
+  );
 
   QUICK_TASK_MANAGER.execute(name);
 }
@@ -210,15 +249,27 @@ fn exit() {
 pub fn run() {
   tauri::Builder::default()
     .setup(|app| {
-      init_flow_manager(FlowManager::new(app.handle().clone()));  
+      init_flow_manager(FlowManager::new(app.handle().clone()));
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
-      exit, launch_bots, stop_bots, get_bot_profiles, 
-      send_message, reset_bot, disconnect_bot,
-      get_radar_data, save_radar_data, set_group,
-      get_active_bots_count, get_memory_usage,
-      control, quick_task, render_map, save_map, open_url
+      exit,
+      launch_bots,
+      stop_bots,
+      get_bot_profiles,
+      send_message,
+      reset_bot,
+      disconnect_bot,
+      get_radar_data,
+      save_radar_data,
+      set_group,
+      get_active_bots_count,
+      get_memory_usage,
+      control,
+      quick_task,
+      render_map,
+      save_map,
+      open_url
     ])
     .run(tauri::generate_context!())
     .expect("Не удалось запустить клиент");

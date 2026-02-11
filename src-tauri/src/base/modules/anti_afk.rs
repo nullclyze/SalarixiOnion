@@ -1,15 +1,14 @@
-use azalea::SprintDirection;
 use azalea::prelude::*;
+use azalea::SprintDirection;
 use azalea::WalkDirection;
-use serde::{Serialize, Deserialize};
-use tokio::time::sleep;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tokio::time::sleep;
 
+use crate::base::*;
 use crate::common::swing_arm;
 use crate::common::{go, run};
 use crate::tools::*;
-use crate::base::*;
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiAfkModule;
@@ -19,7 +18,7 @@ pub struct AntiAfkOptions {
   pub mode: String,
   pub min_delay: Option<u64>,
   pub max_delay: Option<u64>,
-  pub state: bool
+  pub state: bool,
 }
 
 impl AntiAfkModule {
@@ -28,13 +27,24 @@ impl AntiAfkModule {
   }
 
   async fn minimal(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay { delay } else { 2000 };
-    let max_delay = if let Some(delay) = options.max_delay { delay } else { 4000 };
+    let min_delay = if let Some(delay) = options.min_delay {
+      delay
+    } else {
+      2000
+    };
+    let max_delay = if let Some(delay) = options.max_delay {
+      delay
+    } else {
+      4000
+    };
 
     loop {
       let original_direction = bot.direction();
 
-      bot.set_direction(original_direction.0 + randfloat(-50.0, 50.0) as f32, original_direction.1 + randfloat(-12.0, 12.0) as f32);
+      bot.set_direction(
+        original_direction.0 + randfloat(-50.0, 50.0) as f32,
+        original_direction.1 + randfloat(-12.0, 12.0) as f32,
+      );
 
       if randchance(0.4) {
         swing_arm(bot);
@@ -42,20 +52,37 @@ impl AntiAfkModule {
 
       sleep(Duration::from_millis(randuint(400, 800))).await;
 
-      bot.set_direction(original_direction.0 + randfloat(-8.0, 8.0) as f32, original_direction.1 + randfloat(-4.5, 4.5) as f32);
-    
+      bot.set_direction(
+        original_direction.0 + randfloat(-8.0, 8.0) as f32,
+        original_direction.1 + randfloat(-4.5, 4.5) as f32,
+      );
+
       sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
     }
   }
 
   async fn normal(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay { delay } else { 2000 };
-    let max_delay = if let Some(delay) = options.max_delay { delay } else { 4000 };
+    let min_delay = if let Some(delay) = options.min_delay {
+      delay
+    } else {
+      2000
+    };
+    let max_delay = if let Some(delay) = options.max_delay {
+      delay
+    } else {
+      4000
+    };
 
     loop {
       let walk_directions = vec![
-        WalkDirection::Forward, WalkDirection::Backward, WalkDirection::Left, WalkDirection::Right,
-        WalkDirection::ForwardLeft, WalkDirection::ForwardRight, WalkDirection::BackwardLeft, WalkDirection::BackwardRight
+        WalkDirection::Forward,
+        WalkDirection::Backward,
+        WalkDirection::Left,
+        WalkDirection::Right,
+        WalkDirection::ForwardLeft,
+        WalkDirection::ForwardRight,
+        WalkDirection::BackwardLeft,
+        WalkDirection::BackwardRight,
       ];
 
       let walk_direction = randelem(&walk_directions).unwrap();
@@ -64,7 +91,10 @@ impl AntiAfkModule {
 
       let direction = bot.direction();
 
-      bot.set_direction(direction.0 + randfloat(-40.0, 40.0) as f32, direction.1 + randfloat(-40.0, 40.0) as f32);
+      bot.set_direction(
+        direction.0 + randfloat(-40.0, 40.0) as f32,
+        direction.1 + randfloat(-40.0, 40.0) as f32,
+      );
 
       sleep(Duration::from_millis(randuint(150, 400))).await;
 
@@ -75,8 +105,16 @@ impl AntiAfkModule {
   }
 
   async fn advanced(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay { delay } else { 1000 };
-    let max_delay = if let Some(delay) = options.max_delay { delay } else { 1800 };
+    let min_delay = if let Some(delay) = options.min_delay {
+      delay
+    } else {
+      1000
+    };
+    let max_delay = if let Some(delay) = options.max_delay {
+      delay
+    } else {
+      1800
+    };
 
     let bot_clone = bot.clone();
 
@@ -90,7 +128,10 @@ impl AntiAfkModule {
 
         let direction = bot_clone.direction();
 
-        bot_clone.set_direction(direction.0 + randfloat(-15.0, 15.0) as f32, direction.1 + randfloat(-15.0, 15.0) as f32);
+        bot_clone.set_direction(
+          direction.0 + randfloat(-15.0, 15.0) as f32,
+          direction.1 + randfloat(-15.0, 15.0) as f32,
+        );
       }
     });
 
@@ -107,12 +148,18 @@ impl AntiAfkModule {
 
   pub async fn enable(&self, bot: &Client, options: &AntiAfkOptions) {
     match options.mode.as_str() {
-      "minimal" => { self.minimal(bot, options).await; },
-      "normal" => { self.normal(bot, options).await; },
-      "advanced" => { self.advanced(bot, options).await; },
+      "minimal" => {
+        self.minimal(bot, options).await;
+      }
+      "normal" => {
+        self.normal(bot, options).await;
+      }
+      "advanced" => {
+        self.advanced(bot, options).await;
+      }
       _ => {}
     }
-  } 
+  }
 
   pub fn stop(&self, bot: &Client) {
     kill_task(&bot.username(), "anti-afk");

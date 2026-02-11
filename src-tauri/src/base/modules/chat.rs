@@ -1,14 +1,13 @@
 use azalea::prelude::*;
-use serde::{Serialize, Deserialize};
+use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
-use regex::Regex;
 
-use crate::common::get_player_uuid;
-use crate::tools::*;
 use crate::base::*;
+use crate::common::get_player_uuid;
 use crate::radar::RADAR_MANAGER;
-
+use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatModule;
@@ -25,7 +24,7 @@ pub struct ChatOptions {
   pub use_anti_repetition: bool,
   pub min_delay: Option<u64>,
   pub max_delay: Option<u64>,
-  pub state: bool
+  pub state: bool,
 }
 
 impl ChatModule {
@@ -60,7 +59,7 @@ impl ChatModule {
 
           if char_chance >= 0.70 {
             let mut transformed = char.to_lowercase().to_string();
-                        
+
             transformed = transformed
               .replace("o", if randchance(0.5) { "0" } else { "@" })
               .replace("о", if randchance(0.5) { "0" } else { "@" })
@@ -82,7 +81,7 @@ impl ChatModule {
               .replace("b", "6")
               .replace("с", "$")
               .replace("s", "$");
-                        
+
             result.push_str(&transformed);
           } else if char_chance < 0.70 && char_chance >= 0.5 {
             result.push_str(&char.to_uppercase().to_string());
@@ -94,7 +93,7 @@ impl ChatModule {
     }
 
     result
-  } 
+  }
 
   fn create_bypass_text(&self, text: &str) -> String {
     let stray = ["numeric", "letter", "multi", "special"];
@@ -108,7 +107,7 @@ impl ChatModule {
       &"letter" => randstr(Classes::Letter, randint(3, 7)),
       &"multi" => randstr(Classes::Multi, randint(3, 7)),
       &"special" => randstr(Classes::Special, randint(3, 7)),
-      _ => String::new()
+      _ => String::new(),
     };
 
     if randchance(0.3) {
@@ -131,8 +130,14 @@ impl ChatModule {
           let target_nickname = target.replace("]", "").replace(" ", "");
 
           if let Some(radar_info) = RADAR_MANAGER.find_target(target_nickname.clone()) {
-            let msg = format!("{} > X: {}, Y: {}, Z: {}", target_nickname, radar_info.x.round(), radar_info.y.round(), radar_info.z.round());
-            
+            let msg = format!(
+              "{} > X: {}, Y: {}, Z: {}",
+              target_nickname,
+              radar_info.x.round(),
+              radar_info.y.round(),
+              radar_info.z.round()
+            );
+
             result = text.replace(teg.as_str(), msg.as_str());
           } else {
             result = text.replace(teg.as_str(), "");
@@ -152,7 +157,7 @@ impl ChatModule {
 
           if let Some(uuid) = get_player_uuid(target_nickname.clone()) {
             let msg = format!("{} > UUID: {}", target_nickname, uuid);
-            
+
             result = text.replace(teg.as_str(), msg.as_str());
           } else {
             result = text.replace(teg.as_str(), "");
@@ -162,7 +167,7 @@ impl ChatModule {
     }
 
     result
-  } 
+  }
 
   pub async fn message(&self, bot: &Client, options: &ChatOptions) -> anyhow::Result<()> {
     let mut text = options.message.clone();
@@ -201,17 +206,24 @@ impl ChatModule {
       }
 
       if options.use_sync {
-        sleep(Duration::from_millis(options.min_delay.unwrap_or(2000) + options.min_delay.unwrap_or(4000) / 2)).await;
+        sleep(Duration::from_millis(
+          options.min_delay.unwrap_or(2000) + options.min_delay.unwrap_or(4000) / 2,
+        ))
+        .await;
       } else {
-        sleep(Duration::from_millis(randuint(options.min_delay.unwrap_or(2000), options.max_delay.unwrap_or(4000)))).await;
+        sleep(Duration::from_millis(randuint(
+          options.min_delay.unwrap_or(2000),
+          options.max_delay.unwrap_or(4000),
+        )))
+        .await;
       }
 
       let mut final_text = text.clone();
-                  
+
       if options.use_magic_text {
         final_text = self.create_magic_text(&final_text);
       }
-                  
+
       if options.use_bypass {
         final_text = self.create_bypass_text(&final_text);
       }

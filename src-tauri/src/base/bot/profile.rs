@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 pub static PROFILES: Lazy<Arc<ProfileManager>> = Lazy::new(|| Arc::new(ProfileManager::new()));
 
@@ -19,7 +18,7 @@ pub struct Profile {
   pub registered: bool,
   pub skin_is_set: bool,
   pub captcha_caught: bool,
-  pub group: String
+  pub group: String,
 }
 
 impl Profile {
@@ -36,7 +35,7 @@ impl Profile {
       registered: false,
       skin_is_set: false,
       captcha_caught: false,
-      group: "global".to_string()
+      group: "global".to_string(),
     }
   }
 
@@ -82,13 +81,13 @@ impl Profile {
 }
 
 pub struct ProfileManager {
-  pub map: RwLock<HashMap<String, Arc<RwLock<Profile>>>>
+  pub map: RwLock<HashMap<String, Arc<RwLock<Profile>>>>,
 }
 
 impl ProfileManager {
   pub fn new() -> Self {
     Self {
-      map: RwLock::new(HashMap::new())
+      map: RwLock::new(HashMap::new()),
     }
   }
 

@@ -2,7 +2,6 @@ use azalea::swarm::*;
 
 use crate::base::*;
 
-
 pub async fn swarm_handler(swarm: Swarm, event: SwarmEvent, _state: NoSwarmState) {
   match event {
     SwarmEvent::Init => {
@@ -11,7 +10,7 @@ pub async fn swarm_handler(swarm: Swarm, event: SwarmEvent, _state: NoSwarmState
 
         fm.swarm = Some(swarm.clone());
       }
-    },
+    }
     _ => {}
   }
 }

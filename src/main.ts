@@ -16,7 +16,7 @@ import { changeMessagesVisibility, spawnMessage } from './message';
 Chart.register(...registerables);
 
 const client = {
-  version: '1.0.7'
+  version: '1.0.8'
 };
 
 let process: 'active' | 'sleep' = 'sleep';
@@ -1128,7 +1128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     log('Инициализация прошла успешно', 'extended');
 
-    await checkUpdate();
+    //await checkUpdate();
   } catch (error) {
     log(`Ошибка инициализации: ${error}`, 'error');
   }

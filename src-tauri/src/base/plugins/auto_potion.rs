@@ -1,24 +1,23 @@
 use azalea::entity::metadata::Health;
-use azalea::inventory::ItemStack;
 use azalea::inventory::components::PotionContents;
-use azalea::registry::builtin::Potion as PotionKind;
+use azalea::inventory::ItemStack;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
+use azalea::registry::builtin::Potion as PotionKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::{get_bot_physics, take_item};
 use crate::common::{get_health, get_inventory_menu, start_use_item};
 use crate::tools::*;
-use crate::common::{get_bot_physics, take_item};
-
 
 #[derive(Clone)]
 struct Potion {
   kind: String,
   slot: Option<usize>,
-  name: PotionKind
+  name: PotionKind,
 }
 
 pub struct AutoPotionPlugin;
@@ -42,7 +41,7 @@ impl AutoPotionPlugin {
         sleep(Duration::from_millis(50)).await;
       }
     });
-  } 
+  }
 
   async fn drink(&self, bot: &Client) {
     let health = get_health(bot);
@@ -61,7 +60,10 @@ impl AutoPotionPlugin {
               STATES.set_state(&nickname, "can_eating", true);
             }
 
-            if STATES.get_state(&nickname, "can_drinking") && !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_interacting") {
+            if STATES.get_state(&nickname, "can_drinking")
+              && !STATES.get_state(&nickname, "is_eating")
+              && !STATES.get_state(&nickname, "is_interacting")
+            {
               let mut should_drink = true;
 
               if STATES.get_state(&nickname, "is_attacking") {
@@ -98,18 +100,24 @@ impl AutoPotionPlugin {
       "default" => {
         start_use_item(bot, InteractionHand::MainHand);
         sleep(Duration::from_millis(2600)).await;
-      },
+      }
       "splash" => {
         let direction = bot.direction();
 
-        bot.set_direction(direction.0 + randfloat(-5.5, 5.5) as f32, randfloat(87.0, 90.0) as f32);
-        
+        bot.set_direction(
+          direction.0 + randfloat(-5.5, 5.5) as f32,
+          randfloat(87.0, 90.0) as f32,
+        );
+
         sleep(Duration::from_millis(randuint(400, 600))).await;
         start_use_item(bot, InteractionHand::MainHand);
         sleep(Duration::from_millis(randuint(300, 500))).await;
 
-        bot.set_direction(direction.0 + randfloat(-2.5, 2.5) as f32, direction.1 + randfloat(-2.5, 2.5) as f32);
-      },
+        bot.set_direction(
+          direction.0 + randfloat(-2.5, 2.5) as f32,
+          direction.1 + randfloat(-2.5, 2.5) as f32,
+        );
+      }
       _ => {}
     }
   }
@@ -130,15 +138,25 @@ impl AutoPotionPlugin {
       let mut best_potion = None;
 
       for p in potions {
-        if best_potion.clone().unwrap_or(Potion { kind: "deafult".to_string(), slot: Some(0), name: PotionKind::Awkward }).kind.as_str() != "splash" {
+        if best_potion
+          .clone()
+          .unwrap_or(Potion {
+            kind: "deafult".to_string(),
+            slot: Some(0),
+            name: PotionKind::Awkward,
+          })
+          .kind
+          .as_str()
+          != "splash"
+        {
           if is_in_lava {
             match p.name {
               PotionKind::FireResistance => {
                 best_potion = Some(p.clone());
-              },
+              }
               PotionKind::LongFireResistance => {
                 best_potion = Some(p.clone());
-              },
+              }
               _ => {}
             }
           }
@@ -147,10 +165,10 @@ impl AutoPotionPlugin {
             match p.name {
               PotionKind::WaterBreathing => {
                 best_potion = Some(p.clone());
-              },
+              }
               PotionKind::LongWaterBreathing => {
                 best_potion = Some(p.clone());
-              },
+              }
               _ => {}
             }
           }
@@ -159,10 +177,10 @@ impl AutoPotionPlugin {
             match p.name {
               PotionKind::SlowFalling => {
                 best_potion = Some(p.clone());
-              },
+              }
               PotionKind::LongSlowFalling => {
                 best_potion = Some(p.clone());
-              },
+              }
               _ => {}
             }
           }
@@ -171,13 +189,13 @@ impl AutoPotionPlugin {
             match p.name {
               PotionKind::TurtleMaster => {
                 best_potion = Some(p.clone());
-              },
+              }
               PotionKind::LongTurtleMaster => {
                 best_potion = Some(p.clone());
-              },
+              }
               PotionKind::StrongTurtleMaster => {
                 best_potion = Some(p.clone());
-              },
+              }
               _ => {}
             }
           }
@@ -187,23 +205,23 @@ impl AutoPotionPlugin {
               PotionKind::Regeneration => {
                 best_potion = Some(p);
                 break;
-              },
+              }
               PotionKind::LongRegeneration => {
                 best_potion = Some(p);
                 break;
-              },
+              }
               PotionKind::StrongRegeneration => {
                 best_potion = Some(p);
                 break;
-              },
+              }
               PotionKind::Healing => {
                 best_potion = Some(p);
                 break;
-              },
+              }
               PotionKind::StrongHealing => {
                 best_potion = Some(p);
                 break;
-              },
+              }
               _ => {}
             }
           }
@@ -239,25 +257,25 @@ impl AutoPotionPlugin {
       ItemKind::Potion => {
         if let Some(contents) = item.get_component::<PotionContents>() {
           if let Some(potion) = contents.potion {
-            return Some(Potion { 
+            return Some(Potion {
               kind: "default".to_string(),
-              slot: slot, 
-              name: potion
+              slot: slot,
+              name: potion,
             });
           }
         }
-      },
+      }
       ItemKind::SplashPotion => {
         if let Some(contents) = item.get_component::<PotionContents>() {
           if let Some(potion) = contents.potion {
-            return Some(Potion { 
+            return Some(Potion {
               kind: "splash".to_string(),
-              slot: slot, 
-              name: potion
+              slot: slot,
+              name: potion,
             });
           }
         }
-      },
+      }
       _ => {}
     }
 

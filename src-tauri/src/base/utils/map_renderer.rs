@@ -1,23 +1,22 @@
+use azalea::block::BlockState;
+use azalea::prelude::*;
 use azalea::registry::builtin::BlockKind;
 use azalea::{BlockPos, Vec3};
-use azalea::prelude::*;
-use azalea::block::BlockState;
-use image::{ImageBuffer, ImageFormat, Rgb};
 use base64::encode;
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
+use chrono::prelude::*;
+use image::{ImageBuffer, ImageFormat, Rgb};
+use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io::Write;
-use chrono::prelude::*;
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD;
-use once_cell::sync::Lazy;
 use std::sync::Arc;
 
 use crate::common::*;
-use crate::emit::{EventType, LogEventPayload, MapRenderProgressEventPayload, emit_event};
-use crate::tools::{Classes, randint, randstr};
+use crate::emit::{emit_event, EventType, LogEventPayload, MapRenderProgressEventPayload};
+use crate::tools::{randint, randstr, Classes};
 
-
-pub static MAP_RENDERER: Lazy<Arc<MapRenderer>> = Lazy::new(|| { Arc::new(MapRenderer::new()) });
+pub static MAP_RENDERER: Lazy<Arc<MapRenderer>> = Lazy::new(|| Arc::new(MapRenderer::new()));
 
 pub struct MapRenderer;
 
@@ -38,20 +37,18 @@ impl MapRenderer {
         progress += 1;
 
         if progress % 3 == 0 {
-          emit_event(EventType::MapRenderProgress(MapRenderProgressEventPayload {
-            nickname: bot.username(),
-            progress: progress
-          }));
+          emit_event(EventType::MapRenderProgress(
+            MapRenderProgressEventPayload {
+              nickname: bot.username(),
+              progress: progress,
+            },
+          ));
         }
 
         let mut exist_block_above = false;
 
         for y in 0..=20 {
-          let vector = Vec3::new(
-            pos.x + x as f64,
-            pos.y + y as f64,
-            pos.z + z as f64
-          );
+          let vector = Vec3::new(pos.x + x as f64, pos.y + y as f64, pos.z + z as f64);
 
           let block_pos = BlockPos::from(vector);
 
@@ -62,7 +59,10 @@ impl MapRenderer {
               loop {
                 current_y += 1.0;
 
-                if let Some(s) = get_block_state(bot, BlockPos::from(Vec3::new(vector.x, current_y, vector.z))) {
+                if let Some(s) = get_block_state(
+                  bot,
+                  BlockPos::from(Vec3::new(vector.x, current_y, vector.z)),
+                ) {
                   if s.is_air() {
                     current_y -= 1.0;
                     break;
@@ -81,16 +81,12 @@ impl MapRenderer {
               blocks.push((state, (block_pos.x, block_pos.z)));
             }
           }
-        } 
+        }
 
         if !exist_block_above {
           for y in 0..=40 {
             if y % 3 == 0 {
-              let vector = Vec3::new(
-                pos.x + x as f64,
-                pos.y - y as f64,
-                pos.z + z as f64
-              );
+              let vector = Vec3::new(pos.x + x as f64, pos.y - y as f64, pos.z + z as f64);
 
               let block_pos = BlockPos::from(vector);
 
@@ -102,7 +98,7 @@ impl MapRenderer {
                 }
               }
             }
-          } 
+          }
         }
       }
     }
@@ -119,25 +115,25 @@ impl MapRenderer {
           let prefix = randstr(Classes::Numeric, 4);
           let date = Local::now().format("%H%M%S").to_string();
           let filename = format!("map_{}_{}_{}.png", nickname, prefix, date);
-              
+
           let create = File::create(format!("{}{}", path, filename));
 
           match create {
             Ok(mut file) => {
               let _ = file.write_all(&bytes);
-            },
+            }
             Err(err) => {
               emit_event(EventType::Log(LogEventPayload {
                 name: "error".to_string(),
-                message: format!("Не удалось сохранить карту {}: {}", nickname, err)
+                message: format!("Не удалось сохранить карту {}: {}", nickname, err),
               }));
             }
           }
-        },
+        }
         Err(err) => {
           emit_event(EventType::Log(LogEventPayload {
             name: "error".to_string(),
-            message: format!("Не удалось декодировать карту {}: {}", nickname, err)
+            message: format!("Не удалось декодировать карту {}: {}", nickname, err),
           }));
         }
       }
@@ -405,7 +401,7 @@ impl MapRenderer {
       BlockKind::MagentaStainedGlassPane => (255, 0, 255),
       BlockKind::PinkStainedGlassPane => (255, 192, 203),
 
-      _ => (0, 0, 0)
+      _ => (0, 0, 0),
     }
   }
 
@@ -413,11 +409,16 @@ impl MapRenderer {
     match kind {
       BlockKind::Air => return true,
       BlockKind::CaveAir => return true,
-      _ => return false
+      _ => return false,
     }
   }
 
-  fn generate_img(&self, blocks: &Vec<(BlockState, (i32, i32))>, center_x: i32, center_z: i32) -> String {
+  fn generate_img(
+    &self,
+    blocks: &Vec<(BlockState, (i32, i32))>,
+    center_x: i32,
+    center_z: i32,
+  ) -> String {
     let width = 200;
     let height = 200;
 
@@ -445,17 +446,33 @@ impl MapRenderer {
             (img_x + 2, img_z),
             (img_x - 2, img_z),
             (img_x, img_z + 2),
-            (img_x, img_z - 2)
+            (img_x, img_z - 2),
           ];
 
           for adjacent_pixel in adjacent_pixels {
-            if adjacent_pixel.0 >= 0 && adjacent_pixel.0 < 200 && adjacent_pixel.1 >= 0 && adjacent_pixel.1 < 200 {
-              if let Some(pixel) = img.get_pixel_checked(adjacent_pixel.0 as u32, adjacent_pixel.1 as u32) {
+            if adjacent_pixel.0 >= 0
+              && adjacent_pixel.0 < 200
+              && adjacent_pixel.1 >= 0
+              && adjacent_pixel.1 < 200
+            {
+              if let Some(pixel) =
+                img.get_pixel_checked(adjacent_pixel.0 as u32, adjacent_pixel.1 as u32)
+              {
                 let new_rgb: Rgb<u8> = *pixel;
 
                 if new_rgb.0 != [0, 0, 0] {
-                  if new_rgb.0[0] >= 2 && new_rgb.0[0] <= 253 && new_rgb.0[1] >= 2 && new_rgb.0[1] <= 253 && new_rgb.0[2] >= 2 && new_rgb.0[2] <= 253 {
-                    let new_color = [(new_rgb.0[0] as i32 + randint(-2, 2)) as u8, (new_rgb.0[1] as i32 + randint(-2, 2)) as u8, (new_rgb.0[2] as i32 + randint(-2, 2)) as u8];
+                  if new_rgb.0[0] >= 2
+                    && new_rgb.0[0] <= 253
+                    && new_rgb.0[1] >= 2
+                    && new_rgb.0[1] <= 253
+                    && new_rgb.0[2] >= 2
+                    && new_rgb.0[2] <= 253
+                  {
+                    let new_color = [
+                      (new_rgb.0[0] as i32 + randint(-2, 2)) as u8,
+                      (new_rgb.0[1] as i32 + randint(-2, 2)) as u8,
+                      (new_rgb.0[2] as i32 + randint(-2, 2)) as u8,
+                    ];
                     img.put_pixel(img_x as u32, img_z as u32, Rgb(new_color));
                   } else {
                     img.put_pixel(img_x as u32, img_z as u32, new_rgb);

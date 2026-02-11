@@ -1,32 +1,34 @@
-use azalea::SprintDirection;
-use azalea::WalkDirection;
+use azalea::block::BlockState;
 use azalea::container::ContainerHandleRef;
 use azalea::core::direction::Direction;
-use azalea::entity::LocalEntity;
+use azalea::core::position::BlockPos;
+use azalea::ecs::prelude::*;
 use azalea::entity::dimensions::EntityDimensions;
+use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::AbstractAnimal;
 use azalea::entity::metadata::Health;
-use azalea::entity::{Physics, Dead, Position};
-use azalea::entity::inventory::Inventory;
-use azalea::entity::metadata::{Player, AbstractMonster};
-use azalea::inventory::Menu;
+use azalea::entity::metadata::{AbstractMonster, Player};
+use azalea::entity::LocalEntity;
+use azalea::entity::{Dead, Physics, Position};
 use azalea::inventory::operations::ThrowClick;
+use azalea::inventory::Menu;
 use azalea::local_player::Hunger;
-use azalea::pathfinder::PathfinderOpts;
 use azalea::pathfinder::astar::PathfinderTimeout;
 use azalea::pathfinder::goals::XZGoal;
 use azalea::pathfinder::moves::basic::basic_move;
+use azalea::pathfinder::PathfinderOpts;
 use azalea::player::GameProfileComponent;
 use azalea::prelude::*;
-use azalea::ecs::prelude::*;
-use azalea::Vec3;
-use azalea::core::position::BlockPos; 
-use azalea::block::BlockState;
-use azalea::protocol::packets::game::{ServerboundSwing, ServerboundUseItem, ServerboundPlayerAction};
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::protocol::packets::game::s_player_action::Action;
+use azalea::protocol::packets::game::{
+  ServerboundPlayerAction, ServerboundSwing, ServerboundUseItem,
+};
 use azalea::registry::builtin::ItemKind;
 use azalea::world::MinecraftEntityId;
+use azalea::SprintDirection;
+use azalea::Vec3;
+use azalea::WalkDirection;
 use bevy_ecs::entity::Entity;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -34,10 +36,9 @@ use tokio::time::sleep;
 use crate::base::*;
 use crate::tools::*;
 
-
 // Функция нахождения пустого слота в инвентаре
 pub fn find_empty_slot_in_invenotry(menu: Menu) -> Option<usize> {
-  for (slot, item) in menu.slots().iter().enumerate() { 
+  for (slot, item) in menu.slots().iter().enumerate() {
     if slot > 9 {
       if item.is_empty() {
         return Some(slot);
@@ -50,7 +51,7 @@ pub fn find_empty_slot_in_invenotry(menu: Menu) -> Option<usize> {
 
 // Функция нахождения пустого слота в хотбаре
 pub fn find_empty_slot_in_hotbar(menu: Menu) -> Option<u8> {
-  for slot in menu.hotbar_slots_range() { 
+  for slot in menu.hotbar_slots_range() {
     if let Some(item) = menu.slot(slot) {
       if item.is_empty() {
         return Some(slot as u8);
@@ -119,17 +120,17 @@ pub fn get_average_coordinates_of_bots(positions: &Vec<Vec3>) -> (f64, f64, f64)
 
 // Функция установки velocity по Y
 pub fn set_bot_velocity_y(bot: &Client, velocity_y: f64) {
-  let mut ecs = bot.ecs.lock(); 
+  let mut ecs = bot.ecs.lock();
 
   if let Some(mut physics) = ecs.get_mut::<Physics>(bot.entity) {
     physics.velocity.y = velocity_y;
   }
-} 
+}
 
 // Функция установки параметра on_ground
 pub fn set_bot_on_ground(bot: &Client, on_ground: bool) {
-  let mut ecs = bot.ecs.lock(); 
-  
+  let mut ecs = bot.ecs.lock();
+
   if let Some(mut physics) = ecs.get_mut::<Physics>(bot.entity) {
     physics.set_on_ground(on_ground);
   }
@@ -147,7 +148,7 @@ pub fn convert_inventory_slot_to_hotbar_slot(slot: usize) -> Option<u8> {
     42 => Some(6),
     43 => Some(7),
     44 => Some(8),
-    _ => None
+    _ => None,
   }
 }
 
@@ -163,7 +164,7 @@ pub fn convert_hotbar_slot_to_inventory_slot(slot: u8) -> usize {
     6 => 42,
     7 => 43,
     8 => 44,
-    _ => 36
+    _ => 36,
   }
 }
 
@@ -314,7 +315,7 @@ pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
     action: Action::SwapItemWithOffhand,
     pos: BlockPos::new(0, 0, 0),
     direction: Direction::Down,
-    seq: 0
+    seq: 0,
   });
 }
 
@@ -399,7 +400,12 @@ pub fn inventory_drop_item(bot: &Client, slot: usize) {
 }
 
 // Функция безопасного перемещения предмета
-pub async fn inventory_move_item(bot: &Client, kind: ItemKind, source_slot: usize, target_slot: usize) {
+pub async fn inventory_move_item(
+  bot: &Client,
+  kind: ItemKind,
+  source_slot: usize,
+  target_slot: usize,
+) {
   if let Some(menu) = get_inventory_menu(bot) {
     if let Some(item) = menu.slot(target_slot) {
       if item.kind() == kind {
@@ -424,7 +430,7 @@ pub fn go(bot: &Client, direction: WalkDirection) {
 // Функция безопасного задания направления бега для бота
 pub fn run(bot: &Client, direction: SprintDirection) {
   let nickname = bot.username();
-  
+
   if STATES.get_state(&nickname, "can_sprinting") {
     STATES.set_mutual_states(&nickname, "sprinting", true);
     bot.sprint(direction);
@@ -434,19 +440,19 @@ pub fn run(bot: &Client, direction: SprintDirection) {
 // Функция безопасного задания координат по X и Z для бота
 pub fn go_to(bot: Client, x: i32, z: i32) {
   let nickname = bot.username();
-  
+
   if STATES.get_state(&nickname, "can_walking") && STATES.get_state(&nickname, "can_sprinting") {
     tokio::spawn(async move {
       STATES.set_mutual_states(&nickname, "sprinting", true);
       STATES.set_mutual_states(&nickname, "walking", true);
 
       let goal = XZGoal { x: x, z: z };
-      let opts = PathfinderOpts::new()  
-        .min_timeout(PathfinderTimeout::Time(Duration::from_millis(500)))  
-        .max_timeout(PathfinderTimeout::Time(Duration::from_millis(1000)))  
-        .allow_mining(false)  
+      let opts = PathfinderOpts::new()
+        .min_timeout(PathfinderTimeout::Time(Duration::from_millis(500)))
+        .max_timeout(PathfinderTimeout::Time(Duration::from_millis(1000)))
+        .allow_mining(false)
         .successors_fn(basic_move);
-      
+
       bot.goto_with_opts(goal, opts).await;
 
       STATES.set_mutual_states(&nickname, "sprinting", false);
@@ -458,7 +464,7 @@ pub fn go_to(bot: Client, x: i32, z: i32) {
 // Функция отправки пакета SwingArm
 pub fn swing_arm(bot: &Client) {
   bot.write_packet(ServerboundSwing {
-    hand: InteractionHand::MainHand
+    hand: InteractionHand::MainHand,
   });
 }
 
@@ -466,21 +472,21 @@ pub fn swing_arm(bot: &Client) {
 pub fn start_use_item(bot: &Client, hand: InteractionHand) {
   let direction = bot.direction();
 
-  bot.write_packet(ServerboundUseItem {  
+  bot.write_packet(ServerboundUseItem {
     hand: hand,
     y_rot: direction.0,
     x_rot: direction.1,
-    seq: 0
+    seq: 0,
   });
 }
 
 // Функция отправки пакета ReleaseUseItem
 pub fn release_use_item(bot: &Client) {
-  bot.write_packet(ServerboundPlayerAction {  
-    action: Action::ReleaseUseItem,  
-    pos: BlockPos::new(0, 0, 0),  
-    direction: Direction::Down,  
-    seq: 0
+  bot.write_packet(ServerboundPlayerAction {
+    action: Action::ReleaseUseItem,
+    pos: BlockPos::new(0, 0, 0),
+    direction: Direction::Down,
+    seq: 0,
   });
 }
 
@@ -585,7 +591,7 @@ pub fn this_is_solid_block(kind: ItemKind) -> bool {
     ItemKind::PurpleConcrete => return true,
     ItemKind::MagentaConcrete => return true,
     ItemKind::PinkConcrete => return true,
-    _ => return false
+    _ => return false,
   }
 }
 
@@ -595,7 +601,7 @@ pub struct EntityFilter {
   target: String,
   distance: f64,
   excluded_name: String,
-  excluded_id: MinecraftEntityId
+  excluded_id: MinecraftEntityId,
 }
 
 impl EntityFilter {
@@ -610,7 +616,7 @@ impl EntityFilter {
       target: target.to_string(),
       distance: distance,
       excluded_name: bot.username(),
-      excluded_id: entity_id
+      excluded_id: entity_id,
     }
   }
 }
@@ -624,22 +630,25 @@ pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> 
       return bot.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
         *data.0.0.name != filter.excluded_name && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id
       });
-    },
+    }
     "monster" => {
       return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
         eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
       });
-    },
+    }
     "animal" => {
       return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
         eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
       });
-    },
+    }
     "any" => {
-      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-      });
-    },
+      return bot
+				.nearest_entity_by::<(&Position, &MinecraftEntityId), (Without<LocalEntity>, Without<Dead>)>(
+					|data: (&Position, &MinecraftEntityId)| {
+						eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
+					},
+				);
+    }
     _ => {
       return bot.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
         data.0.0.name == filter.target && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id

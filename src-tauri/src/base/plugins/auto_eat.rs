@@ -1,7 +1,7 @@
-use azalea::prelude::*;
 use azalea::entity::metadata::Health;
 use azalea::inventory::ItemStack;
 use azalea::local_player::Hunger;
+use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
@@ -9,14 +9,13 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::{get_health, get_inventory_menu, get_satiety};
+use crate::common::{start_use_item, take_item};
 use crate::tools::*;
-use crate::common::{take_item, start_use_item};
-
 
 #[derive(Clone)]
 struct Food {
   slot: Option<usize>,
-  priority: u8
+  priority: u8,
 }
 
 pub struct AutoEatPlugin;
@@ -40,7 +39,7 @@ impl AutoEatPlugin {
         sleep(Duration::from_millis(50)).await;
       }
     });
-  } 
+  }
 
   async fn eat(&self, bot: &Client) {
     let satiety = if let Some(hunger) = bot.get_component::<Hunger>() {
@@ -54,7 +53,7 @@ impl AutoEatPlugin {
     } else {
       20.0
     };
-    
+
     let nickname = bot.username();
 
     if satiety < 20 || health < 15.0 {
@@ -62,7 +61,10 @@ impl AutoEatPlugin {
 
       if let Some(best_food) = self.get_best_food(bot, food_list.clone()) {
         if let Some(food_slot) = best_food.slot {
-          if STATES.get_state(&nickname, "can_eating") && !STATES.get_state(&nickname, "is_drinking") && !STATES.get_state(&nickname, "is_interacting") {
+          if STATES.get_state(&nickname, "can_eating")
+            && !STATES.get_state(&nickname, "is_drinking")
+            && !STATES.get_state(&nickname, "is_interacting")
+          {
             let mut should_eat = true;
 
             if STATES.get_state(&nickname, "is_attacking") {
@@ -186,43 +188,213 @@ impl AutoEatPlugin {
 
   fn is_food(&self, slot: Option<usize>, item: &ItemStack) -> Option<Food> {
     match item.kind() {
-      ItemKind::GoldenApple => return Some(Food { slot: slot, priority: 3 }),
-      ItemKind::EnchantedGoldenApple => return Some(Food { slot: slot, priority: 3 }),
+      ItemKind::GoldenApple => {
+        return Some(Food {
+          slot: slot,
+          priority: 3,
+        })
+      }
+      ItemKind::EnchantedGoldenApple => {
+        return Some(Food {
+          slot: slot,
+          priority: 3,
+        })
+      }
 
-      ItemKind::GoldenCarrot => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedChicken => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedBeef => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedCod => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedMutton => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedPorkchop => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedRabbit => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::CookedSalmon => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::BakedPotato => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::MushroomStew => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::RabbitStew => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::BeetrootSoup => return Some(Food { slot: slot, priority: 2 }),
-      ItemKind::PumpkinPie => return Some(Food { slot: slot, priority: 2 }),
+      ItemKind::GoldenCarrot => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedChicken => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedBeef => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedCod => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedMutton => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedPorkchop => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedRabbit => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::CookedSalmon => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::BakedPotato => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::MushroomStew => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::RabbitStew => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::BeetrootSoup => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
+      ItemKind::PumpkinPie => {
+        return Some(Food {
+          slot: slot,
+          priority: 2,
+        })
+      }
 
-      ItemKind::Bread => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Chicken => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Beef => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Cod => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Mutton => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Porkchop => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Rabbit => return Some(Food { slot: slot, priority: 1 }),
-      ItemKind::Apple => return Some(Food { slot: slot, priority: 1 }),
+      ItemKind::Bread => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Chicken => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Beef => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Cod => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Mutton => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Porkchop => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Rabbit => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
+      ItemKind::Apple => {
+        return Some(Food {
+          slot: slot,
+          priority: 1,
+        })
+      }
 
-      ItemKind::Salmon => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::TropicalFish => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::Potato => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::ChorusFruit => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::MelonSlice => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::SweetBerries => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::GlowBerries => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::Carrot => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::Beetroot => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::DriedKelp => return Some(Food { slot: slot, priority: 0 }),
-      ItemKind::Cookie => return Some(Food { slot: slot, priority: 0 }),
+      ItemKind::Salmon => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::TropicalFish => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::Potato => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::ChorusFruit => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::MelonSlice => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::SweetBerries => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::GlowBerries => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::Carrot => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::Beetroot => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::DriedKelp => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
+      ItemKind::Cookie => {
+        return Some(Food {
+          slot: slot,
+          priority: 0,
+        })
+      }
 
       _ => {}
     }
