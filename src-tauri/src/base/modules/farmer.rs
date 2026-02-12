@@ -255,8 +255,6 @@ impl FarmerModule {
       && STATES.get_state(&nickname, "can_looking")
     {
       if let Some(state) = get_block_state(bot, block_pos) {
-        STATES.set_state(&nickname, "can_eating", false);
-        STATES.set_state(&nickname, "can_drinking", false);
         STATES.set_mutual_states(&nickname, "looking", true);
         STATES.set_mutual_states(&nickname, "interacting", true);
 
@@ -309,8 +307,6 @@ impl FarmerModule {
           }
         }
 
-        STATES.set_state(&nickname, "can_eating", true);
-        STATES.set_state(&nickname, "can_drinking", true);
         STATES.set_mutual_states(&nickname, "looking", false);
         STATES.set_mutual_states(&nickname, "interacting", false);
       }
@@ -356,8 +352,6 @@ impl FarmerModule {
   pub fn stop(&self, nickname: &String) {
     kill_task(&nickname, "farmer");
 
-    STATES.set_state(&nickname, "can_eating", true);
-    STATES.set_state(&nickname, "can_drinking", true);
     STATES.set_mutual_states(&nickname, "looking", false);
     STATES.set_mutual_states(&nickname, "interacting", false);
   }

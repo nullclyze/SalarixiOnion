@@ -1,6 +1,4 @@
-use azalea::entity::metadata::Health;
 use azalea::inventory::ItemStack;
-use azalea::local_player::Hunger;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
@@ -8,13 +6,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_health, get_inventory_menu, get_satiety};
-use crate::common::{start_use_item, take_item};
+use crate::common::{get_health, get_inventory_menu, get_satiety, start_use_item, take_item};
 use crate::tools::*;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Food {
-  slot: Option<usize>,
+  slot: usize,
   priority: u8,
 }
 
@@ -42,53 +39,42 @@ impl AutoEatPlugin {
   }
 
   async fn eat(&self, bot: &Client) {
-    let satiety = if let Some(hunger) = bot.get_component::<Hunger>() {
-      hunger.food
-    } else {
-      20
-    };
-
-    let health = if let Some(health) = bot.get_component::<Health>() {
-      health.0
-    } else {
-      20.0
-    };
+    let satiety = get_satiety(bot);
+    let health = get_health(bot);
 
     let nickname = bot.username();
 
-    if satiety < 20 || health < 15.0 {
+    if satiety < 20 || health < 15 {
       let food_list = self.find_food_in_inventory(bot);
 
-      if let Some(best_food) = self.get_best_food(bot, food_list.clone()) {
-        if let Some(food_slot) = best_food.slot {
-          if STATES.get_state(&nickname, "can_eating")
-            && !STATES.get_state(&nickname, "is_drinking")
-            && !STATES.get_state(&nickname, "is_interacting")
-          {
-            let mut should_eat = true;
+      if let Some(best_food) = self.get_best_food(bot, &food_list) {
+        if STATES.get_state(&nickname, "can_eating")
+          && !STATES.get_state(&nickname, "is_drinking")
+          && !STATES.get_state(&nickname, "is_interacting")
+        {
+          let mut should_eat = true;
 
-            if STATES.get_state(&nickname, "is_attacking") {
-              should_eat = !(randchance(satiety as f64 / 20.0) && randchance(health as f64 / 20.0));
-            }
+          if STATES.get_state(&nickname, "is_attacking") {
+            should_eat = !(randchance(satiety as f64 / 20.0) && randchance(health as f64 / 20.0));
+          }
 
-            if should_eat {
-              STATES.set_state(&nickname, "can_drinking", false);
-              STATES.set_state(&nickname, "can_interacting", false);
-              STATES.set_mutual_states(&nickname, "eating", true);
+          if should_eat {
+            STATES.set_state(&nickname, "can_drinking", false);
+            STATES.set_state(&nickname, "can_interacting", false);
+            STATES.set_mutual_states(&nickname, "eating", true);
 
-              take_item(bot, food_slot).await;
-              sleep(Duration::from_millis(50)).await;
-              self.start_eating(bot).await;
-              sleep(Duration::from_millis(50)).await;
+            take_item(bot, best_food.slot).await;
+            sleep(Duration::from_millis(50)).await;
+            self.start_eating(bot).await;
+            sleep(Duration::from_millis(50)).await;
 
-              STATES.set_state(&nickname, "can_drinking", true);
-              STATES.set_state(&nickname, "can_interacting", true);
-              STATES.set_state(&nickname, "can_walking", true);
-              STATES.set_state(&nickname, "can_sprinting", true);
-              STATES.set_mutual_states(&nickname, "eating", false);
-            } else {
-              sleep(Duration::from_millis(1800)).await;
-            }
+            STATES.set_state(&nickname, "can_drinking", true);
+            STATES.set_state(&nickname, "can_interacting", true);
+            STATES.set_state(&nickname, "can_walking", true);
+            STATES.set_state(&nickname, "can_sprinting", true);
+            STATES.set_mutual_states(&nickname, "eating", false);
+          } else {
+            sleep(Duration::from_millis(1800)).await;
           }
         }
       }
@@ -100,7 +86,7 @@ impl AutoEatPlugin {
     sleep(Duration::from_millis(1800)).await;
   }
 
-  fn get_best_food(&self, bot: &Client, food_list: Vec<Food>) -> Option<Food> {
+  fn get_best_food(&self, bot: &Client, food_list: &Vec<Food>) -> Option<Food> {
     let health = get_health(bot);
     let satiety = get_satiety(bot);
 
@@ -108,9 +94,9 @@ impl AutoEatPlugin {
 
     if food_list.len() > 1 {
       if satiety == 20 && health < 12 {
-        for food in &food_list {
+        for food in food_list {
           if food.priority == 3 {
-            best_food = Some(food.clone());
+            best_food = Some(*food);
             break;
           }
         }
@@ -149,9 +135,9 @@ impl AutoEatPlugin {
         }
 
         for attempt in 0..3 {
-          for food in &food_list {
+          for food in food_list {
             if food.priority == current_priority {
-              best_food = Some(food.clone());
+              best_food = Some(*food);
               break;
             }
           }
@@ -166,7 +152,7 @@ impl AutoEatPlugin {
         }
       }
     } else {
-      best_food = food_list.get(0).cloned();
+      best_food = food_list.get(0).copied();
     }
 
     best_food
@@ -177,7 +163,7 @@ impl AutoEatPlugin {
 
     if let Some(menu) = get_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
-        if let Some(food) = self.is_food(Some(slot), item) {
+        if let Some(food) = self.is_food(slot, item) {
           food_list.push(food);
         }
       }
@@ -186,219 +172,149 @@ impl AutoEatPlugin {
     food_list
   }
 
-  fn is_food(&self, slot: Option<usize>, item: &ItemStack) -> Option<Food> {
-    match item.kind() {
-      ItemKind::GoldenApple => {
-        return Some(Food {
-          slot: slot,
-          priority: 3,
-        })
-      }
-      ItemKind::EnchantedGoldenApple => {
-        return Some(Food {
-          slot: slot,
-          priority: 3,
-        })
-      }
+  fn is_food(&self, slot: usize, item: &ItemStack) -> Option<Food> {
+    return Some(match item.kind() {
+      ItemKind::GoldenApple => Food {
+        slot: slot,
+        priority: 3,
+      },
+      ItemKind::EnchantedGoldenApple => Food {
+        slot: slot,
+        priority: 3,
+      },
 
-      ItemKind::GoldenCarrot => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedChicken => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedBeef => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedCod => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedMutton => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedPorkchop => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedRabbit => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::CookedSalmon => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::BakedPotato => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::MushroomStew => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::RabbitStew => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::BeetrootSoup => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
-      ItemKind::PumpkinPie => {
-        return Some(Food {
-          slot: slot,
-          priority: 2,
-        })
-      }
+      ItemKind::GoldenCarrot => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedChicken => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedBeef => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedCod => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedMutton => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedPorkchop => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedRabbit => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::CookedSalmon => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::BakedPotato => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::MushroomStew => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::RabbitStew => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::BeetrootSoup => Food {
+        slot: slot,
+        priority: 2,
+      },
+      ItemKind::PumpkinPie => Food {
+        slot: slot,
+        priority: 2,
+      },
 
-      ItemKind::Bread => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Chicken => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Beef => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Cod => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Mutton => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Porkchop => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Rabbit => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
-      ItemKind::Apple => {
-        return Some(Food {
-          slot: slot,
-          priority: 1,
-        })
-      }
+      ItemKind::Bread => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Chicken => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Beef => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Cod => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Mutton => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Porkchop => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Rabbit => Food {
+        slot: slot,
+        priority: 1,
+      },
+      ItemKind::Apple => Food {
+        slot: slot,
+        priority: 1,
+      },
 
-      ItemKind::Salmon => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::TropicalFish => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::Potato => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::ChorusFruit => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::MelonSlice => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::SweetBerries => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::GlowBerries => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::Carrot => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::Beetroot => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::DriedKelp => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
-      ItemKind::Cookie => {
-        return Some(Food {
-          slot: slot,
-          priority: 0,
-        })
-      }
+      ItemKind::Salmon => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::TropicalFish => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::Potato => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::ChorusFruit => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::MelonSlice => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::SweetBerries => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::GlowBerries => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::Carrot => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::Beetroot => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::DriedKelp => Food {
+        slot: slot,
+        priority: 0,
+      },
+      ItemKind::Cookie => Food {
+        slot: slot,
+        priority: 0,
+      },
 
-      _ => {}
-    }
-
-    None
+      _ => return None,
+    });
   }
 }

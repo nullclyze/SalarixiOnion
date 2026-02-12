@@ -219,9 +219,15 @@ impl KillauraModule {
         }
 
         if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
-          if get_eye_position(&bot).distance_to(get_entity_position(&bot, entity))
-            > min_distance_to_target
-          {
+          let feet_pos = bot.position();
+
+          let eye_pos = Vec3 {
+            x: feet_pos.x,
+            y: feet_pos.y + get_eye_position(&bot, bot.entity),
+            z: feet_pos.z,
+          };
+
+          if eye_pos.distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
             if !bot.jumping() {
               bot.set_jumping(true);
             }

@@ -41,29 +41,30 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       if let Some(arc) = get_flow_manager() {
         let mut fm = arc.write();
         fm.bots.insert(nickname.clone(), bot.clone());
+        BOT_REGISTRY.register_bot(nickname.clone(), bot.clone());
+      }
 
-        if let Some(opts) = fm.options.clone() {
-          bot.set_client_information(ClientInformation {
-            view_distance: opts.view_distance,
-            language: opts.language,
-            chat_colors: opts.chat_colors,
-            main_hand: if let Some(arm) = opts.humanoid_arm {
-              if arm.as_str() == "left" {
-                HumanoidArm::Left
-              } else {
-                HumanoidArm::Right
-              }
+      if let Some(opts) = get_current_options() {
+        bot.set_client_information(ClientInformation {
+          view_distance: opts.view_distance,
+          language: opts.language,
+          chat_colors: opts.chat_colors,
+          main_hand: if let Some(arm) = opts.humanoid_arm {
+            if arm.as_str() == "left" {
+              HumanoidArm::Left
             } else {
-              if randchance(0.5) {
-                HumanoidArm::Left
-              } else {
-                HumanoidArm::Right
-              }
-            },
-            particle_status: ParticleStatus::Minimal,
-            ..Default::default()
-          });
-        }
+              HumanoidArm::Right
+            }
+          } else {
+            if randchance(0.5) {
+              HumanoidArm::Left
+            } else {
+              HumanoidArm::Right
+            }
+          },
+          particle_status: ParticleStatus::Minimal,
+          ..Default::default()
+        });
       }
 
       emit_event(EventType::Log(LogEventPayload {
@@ -76,11 +77,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Spawn => {
       let nickname = bot.username();
 
-      if let Some(arc) = get_flow_manager() {
-        if let Some(options) = &arc.read().options {
-          PLUGIN_MANAGER.load(&bot, &options.plugins);
-        }
-      }
+      BOT_REGISTRY.send_event(BotEvent::LoadPlugins {
+        username: nickname.clone(),
+      });
 
       PROFILES.set_str(&nickname, "status", "Онлайн");
 
@@ -232,6 +231,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       if let Some(arc) = get_flow_manager() {
         let mut fm = arc.write();
         fm.bots.remove(&nickname);
+        BOT_REGISTRY.remove_bot(&nickname);
       }
 
       if let Some(tasks) = TASKS.get(&nickname) {

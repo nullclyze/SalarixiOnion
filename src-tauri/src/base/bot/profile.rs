@@ -103,7 +103,7 @@ impl ProfileManager {
   }
 
   pub fn set_str(&self, nickname: &String, field: &str, value: &str) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+    self.map.read().unwrap().get(nickname).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
@@ -113,11 +113,11 @@ impl ProfileManager {
         "group" => profile.set_group(value),
         _ => {}
       }
-    }
+    });
   }
 
   pub fn set_num(&self, nickname: &String, field: &str, value: u32) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+    self.map.read().unwrap().get(nickname).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
@@ -126,11 +126,11 @@ impl ProfileManager {
         "satiety" => profile.set_satiety(value),
         _ => {}
       }
-    }
+    });
   }
 
   pub fn set_bool(&self, nickname: &String, field: &str, value: bool) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+    self.map.read().unwrap().get(nickname).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
@@ -139,7 +139,7 @@ impl ProfileManager {
         "captcha_caught" => profile.set_captcha_caught(value),
         _ => {}
       }
-    }
+    });
   }
 
   pub fn get(&self, nickname: &String) -> Option<Profile> {

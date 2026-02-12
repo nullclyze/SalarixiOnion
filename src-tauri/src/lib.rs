@@ -8,7 +8,6 @@ mod webhook;
 
 use crate::base::*;
 use crate::emit::*;
-use crate::quick::*;
 use crate::radar::*;
 use crate::webhook::*;
 
@@ -180,7 +179,11 @@ async fn control(name: String, options: serde_json::Value, group: String) {
     ),
   );
 
-  MODULE_MANAGER.control(name, options, group).await;
+  BOT_REGISTRY.send_event(BotEvent::ControlModules {
+    name,
+    options,
+    group,
+  });
 }
 
 // Функция выполнения быстрых задач
@@ -209,7 +212,7 @@ async fn quick_task(name: String) {
     ),
   );
 
-  QUICK_TASK_MANAGER.execute(name);
+  BOT_REGISTRY.send_event(BotEvent::QuickTask { name });
 }
 
 // Функция рендеринга карты

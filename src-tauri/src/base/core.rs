@@ -362,6 +362,8 @@ impl FlowManager {
 
     self.active = true;
 
+    tokio::spawn(event_processor());
+
     if options.use_webhook {
       send_webhook(
         options.webhook_settings.url.clone(),
@@ -607,7 +609,7 @@ impl ModuleManager {
     }
   }
 
-  pub async fn control(&'static self, name: String, options: serde_json::Value, group: String) {
+  pub fn control(&'static self, name: String, options: serde_json::Value, group: String) {
     if let Some(arc) = get_flow_manager() {
       let fm = arc.write();
 

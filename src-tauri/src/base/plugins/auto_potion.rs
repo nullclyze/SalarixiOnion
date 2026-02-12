@@ -9,14 +9,13 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_bot_physics, take_item};
-use crate::common::{get_health, get_inventory_menu, start_use_item};
+use crate::common::{get_bot_physics, get_health, get_inventory_menu, start_use_item, take_item};
 use crate::tools::*;
 
 #[derive(Clone)]
 struct Potion {
   kind: String,
-  slot: Option<usize>,
+  slot: usize,
   name: PotionKind,
 }
 
@@ -53,41 +52,39 @@ impl AutoPotionPlugin {
 
       if potions.len() > 0 {
         if let Some(potion) = self.get_best_potion(bot, potions) {
-          if let Some(slot) = potion.slot {
-            if health < 10 && !STATES.get_state(&nickname, "is_eating") {
-              STATES.set_state(&nickname, "can_eating", false);
-            } else {
-              STATES.set_state(&nickname, "can_eating", true);
+          if health < 10 && !STATES.get_state(&nickname, "is_eating") {
+            STATES.set_state(&nickname, "can_eating", false);
+          } else {
+            STATES.set_state(&nickname, "can_eating", true);
+          }
+
+          if STATES.get_state(&nickname, "can_drinking")
+            && !STATES.get_state(&nickname, "is_eating")
+            && !STATES.get_state(&nickname, "is_interacting")
+          {
+            let mut should_drink = true;
+
+            if STATES.get_state(&nickname, "is_attacking") {
+              should_drink = !randchance(health as f64 / 20.0);
             }
 
-            if STATES.get_state(&nickname, "can_drinking")
-              && !STATES.get_state(&nickname, "is_eating")
-              && !STATES.get_state(&nickname, "is_interacting")
-            {
-              let mut should_drink = true;
+            if should_drink {
+              STATES.set_state(&nickname, "can_eating", false);
+              STATES.set_state(&nickname, "can_attacking", false);
+              STATES.set_state(&nickname, "can_interacting", false);
+              STATES.set_mutual_states(&nickname, "drinking", true);
 
-              if STATES.get_state(&nickname, "is_attacking") {
-                should_drink = !randchance(health as f64 / 20.0);
-              }
+              take_item(bot, potion.slot).await;
+              sleep(Duration::from_millis(50)).await;
+              self.use_potion(bot, potion.kind).await;
+              sleep(Duration::from_millis(50)).await;
 
-              if should_drink {
-                STATES.set_state(&nickname, "can_eating", false);
-                STATES.set_state(&nickname, "can_attacking", false);
-                STATES.set_state(&nickname, "can_interacting", false);
-                STATES.set_mutual_states(&nickname, "drinking", true);
-
-                take_item(bot, slot).await;
-                sleep(Duration::from_millis(50)).await;
-                self.use_potion(bot, potion.kind).await;
-                sleep(Duration::from_millis(50)).await;
-
-                STATES.set_state(&nickname, "can_eating", true);
-                STATES.set_state(&nickname, "can_interacting", true);
-                STATES.set_state(&nickname, "can_walking", true);
-                STATES.set_state(&nickname, "can_sprinting", true);
-                STATES.set_state(&nickname, "can_attacking", true);
-                STATES.set_mutual_states(&nickname, "drinking", false);
-              }
+              STATES.set_state(&nickname, "can_eating", true);
+              STATES.set_state(&nickname, "can_interacting", true);
+              STATES.set_state(&nickname, "can_walking", true);
+              STATES.set_state(&nickname, "can_sprinting", true);
+              STATES.set_state(&nickname, "can_attacking", true);
+              STATES.set_mutual_states(&nickname, "drinking", false);
             }
           }
         }
@@ -131,6 +128,7 @@ impl AutoPotionPlugin {
 
     if let Some(physics) = get_bot_physics(bot) {
       let is_in_lava = physics.is_in_lava();
+      let is_burning = physics.remaining_fire_ticks > 0;
       let is_in_water = physics.is_in_water();
       let on_ground = physics.on_ground();
       let velocity_y = physics.velocity.y;
@@ -139,17 +137,17 @@ impl AutoPotionPlugin {
 
       for p in potions {
         if best_potion
-          .clone()
-          .unwrap_or(Potion {
+          .as_ref()
+          .unwrap_or(&Potion {
             kind: "deafult".to_string(),
-            slot: Some(0),
+            slot: 0,
             name: PotionKind::Awkward,
           })
           .kind
           .as_str()
           != "splash"
         {
-          if is_in_lava {
+          if best_potion.is_none() && is_in_lava || is_burning {
             match p.name {
               PotionKind::FireResistance => {
                 best_potion = Some(p.clone());
@@ -243,7 +241,7 @@ impl AutoPotionPlugin {
 
     if let Some(menu) = get_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
-        if let Some(potion) = self.is_potion(Some(slot), item) {
+        if let Some(potion) = self.is_potion(slot, item) {
           potion_list.push(potion);
         }
       }
@@ -252,7 +250,7 @@ impl AutoPotionPlugin {
     potion_list
   }
 
-  fn is_potion(&self, slot: Option<usize>, item: &ItemStack) -> Option<Potion> {
+  fn is_potion(&self, slot: usize, item: &ItemStack) -> Option<Potion> {
     match item.kind() {
       ItemKind::Potion => {
         if let Some(contents) = item.get_component::<PotionContents>() {

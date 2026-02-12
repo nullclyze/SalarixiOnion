@@ -91,7 +91,16 @@ impl BowAimModule {
 
         if let Some(entity) = get_nearest_entity(bot, filter) {
           let target_pos = get_entity_position(bot, entity);
-          let distance = get_eye_position(bot).distance_to(target_pos);
+
+          let feet_pos = bot.position();
+
+          let eye_pos = Vec3 {
+            x: feet_pos.x,
+            y: feet_pos.y + get_eye_position(bot, bot.entity),
+            z: feet_pos.z,
+          };
+
+          let distance = eye_pos.distance_to(target_pos);
 
           bot.look_at(Vec3::new(
             target_pos.x + randfloat(-0.001158, 0.001158),
@@ -105,7 +114,16 @@ impl BowAimModule {
             sleep(Duration::from_millis(100)).await;
 
             let target_pos = get_entity_position(bot, entity);
-            let distance = get_eye_position(bot).distance_to(target_pos);
+
+            let feet_pos = bot.position();
+
+            let eye_pos = Vec3 {
+              x: feet_pos.x,
+              y: feet_pos.y + get_eye_position(bot, bot.entity),
+              z: feet_pos.z,
+            };
+
+            let distance = eye_pos.distance_to(target_pos);
 
             bot.look_at(Vec3::new(
               target_pos.x + randfloat(-0.001158, 0.001158),

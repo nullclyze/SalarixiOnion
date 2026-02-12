@@ -1,0 +1,63 @@
+use azalea::prelude::*;
+use dashmap::DashMap;
+use once_cell::sync::Lazy;
+use std::sync::Arc;
+use tokio::sync::{broadcast, RwLock};
+
+pub static BOT_REGISTRY: Lazy<Arc<BotRegistry>> = Lazy::new(|| Arc::new(BotRegistry::new()));
+
+pub struct BotRegistry {
+  pub bots: Arc<DashMap<String, Arc<RwLock<Option<Client>>>>>,
+  pub events: broadcast::Sender<BotEvent>,
+}
+
+#[derive(Clone)]
+pub enum BotEvent {
+  LoadPlugins {
+    username: String,
+  },
+  ControlModules {
+    name: String,
+    options: serde_json::Value,
+    group: String,
+  },
+  QuickTask {
+    name: String,
+  },
+}
+
+impl BotRegistry {
+  pub fn new() -> Self {
+    let (tx, _) = broadcast::channel(1000);
+
+    Self {
+      bots: Arc::new(DashMap::new()),
+      events: tx,
+    }
+  }
+
+  pub fn register_bot(&self, username: String, bot: Client) {
+    self.bots.insert(username, Arc::new(RwLock::new(Some(bot))));
+  }
+
+  pub fn remove_bot(&self, username: &str) {
+    self.bots.remove(username);
+  }
+
+  pub async fn get_bot<F, T>(&self, username: &str, f: F) -> Option<T>
+  where
+    F: FnOnce(&Client) -> T,
+  {
+    if let Some(reference) = self.bots.get(username) {
+      if let Some(bot) = reference.read().await.as_ref() {
+        return Some(f(bot));
+      }
+    }
+
+    None
+  }
+
+  pub fn send_event(&self, event: BotEvent) {
+    let _ = self.events.send(event);
+  }
+}

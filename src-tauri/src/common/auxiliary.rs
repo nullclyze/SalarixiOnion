@@ -13,6 +13,7 @@ use azalea::entity::{Dead, Physics, Position};
 use azalea::inventory::operations::ThrowClick;
 use azalea::inventory::Menu;
 use azalea::local_player::Hunger;
+use azalea::local_player::TabList;
 use azalea::pathfinder::astar::PathfinderTimeout;
 use azalea::pathfinder::goals::XZGoal;
 use azalea::pathfinder::moves::basic::basic_move;
@@ -173,14 +174,14 @@ pub fn get_player_uuid(nickname: String) -> Option<String> {
   if let Some(arc) = get_flow_manager() {
     let fm = arc.write();
 
-    if let Some(swarm) = fm.swarm.clone() {
-      for bot in swarm {
-        let tab_list = bot.tab_list();
+    for (_, bot) in fm.bots.clone().iter() {
+      let Some(tab_list) = bot.get_component::<TabList>() else {
+        continue;
+      };
 
-        for (uuid, info) in tab_list {
-          if info.profile.name == nickname {
-            return Some(uuid.to_string());
-          }
+      for (uuid, info) in tab_list.iter() {
+        if info.profile.name == nickname {
+          return Some(uuid.to_string());
         }
       }
     }
@@ -212,12 +213,12 @@ pub fn stop_bot_move(bot: &Client) {
 }
 
 // Функция безопасного получения позиции глаз
-pub fn get_eye_position(bot: &Client) -> Vec3 {
-  if let Some(dimensions) = bot.get_component::<EntityDimensions>() {
-    return bot.position().up(dimensions.eye_height as f64);
+pub fn get_eye_position(bot: &Client, entity: Entity) -> f64 {
+  if let Some(dimensions) = bot.get_entity_component::<EntityDimensions>(entity) {
+    return dimensions.eye_height as f64;
   }
 
-  Vec3::ZERO
+  0.0
 }
 
 // Функция безопасного открытия инвентаря
@@ -623,7 +624,13 @@ impl EntityFilter {
 
 // Функция получения ближайшей сущности
 pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> {
-  let eye_pos = get_eye_position(bot);
+  let feet_pos = bot.position();
+
+  let eye_pos = Vec3 {
+    x: feet_pos.x,
+    y: feet_pos.y + get_eye_position(bot, bot.entity),
+    z: feet_pos.z,
+  };
 
   match filter.target.as_str() {
     "player" => {

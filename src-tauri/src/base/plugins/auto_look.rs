@@ -1,12 +1,10 @@
-use azalea::entity::Position;
 use azalea::prelude::*;
-use azalea::Vec3;
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::get_nearest_entity;
-use crate::common::EntityFilter;
+use crate::common::{get_entity_position, get_eye_position};
+use crate::common::{get_nearest_entity, EntityFilter};
 use crate::tools::*;
 
 pub struct AutoLookPlugin;
@@ -36,17 +34,13 @@ impl AutoLookPlugin {
     if STATES.get_state(&bot.username(), "can_looking") {
       if bot.is_goto_target_reached() {
         if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, "any", 14.0)) {
-          if let Some(entity_pos) = bot.get_entity_component::<Position>(entity) {
-            let pos = Vec3::new(
-              entity_pos.x + randfloat(-0.1, 0.1),
-              entity_pos.y + randfloat(-0.1, 0.1),
-              entity_pos.z + randfloat(-0.1, 0.1),
-            );
+          let mut pos = get_entity_position(bot, entity);
 
-            bot.look_at(pos);
+          pos.y += get_eye_position(bot, entity);
 
-            sleep(Duration::from_millis(randuint(50, 100))).await;
-          }
+          bot.look_at(pos);
+
+          sleep(Duration::from_millis(randuint(50, 100))).await;
         }
       }
     }
