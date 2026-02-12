@@ -15,12 +15,12 @@
       {
         "title": "Salarixi Onion",
         "width": 990,
-        "height": 620,
+        "height": 610,
         "decorations": false,
         "resizable": false,
         "center": true,
         "fullscreen": false,
-        "devtools": true,
+        "devtools": false,
         "theme": "Dark"
       }
     ],

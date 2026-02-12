@@ -16,7 +16,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-azalea = { git = "https://github.com/azalea-rs/azalea" }
+azalea = { git = "https://github.com/azalea-rs/azalea", default-features = false, features = ["default"] }
 azalea-viaversion = { git = "https://github.com/azalea-rs/azalea-viaversion" }
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.13.1", features = ["json"] }
