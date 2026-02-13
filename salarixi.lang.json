@@ -953,7 +953,7 @@
       }
     },
     {
-      "tags": ["label:interface-show-messages"],
+      "tags": ["label:interface-messages"],
       "lang": {
         "ru": "Сообщения:",
         "en": "Messages:"
