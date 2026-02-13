@@ -974,14 +974,14 @@
       }
     },
     {
-      "tags": ["label:interface-show-icons", "label:interface-show-messages"],
+      "tags": ["label:interface-show-messages"],
       "lang": {
         "ru": "Показать",
         "en": "Show"
       }
     },
     {
-      "tags": ["label:interface-hide-icons", "label:interface-hide-messages"],
+      "tags": ["label:interface-hide-messages"],
       "lang": {
         "ru": "Скрыть",
         "en": "Hide"
