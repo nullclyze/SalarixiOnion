@@ -1,6 +1,5 @@
 use azalea::bot::BotClientExt;
 use azalea::core::position::BlockPos;
-use azalea::inventory::operations::ThrowClick;
 use azalea::prelude::PathfinderClientExt;
 use azalea::{Vec3, WalkDirection};
 use core::time::Duration;
@@ -11,7 +10,7 @@ use tokio::time::sleep;
 
 use crate::base::{get_flow_manager, STATES};
 use crate::common::{
-  get_average_coordinates_of_bots, get_inventory, get_inventory_menu, go, go_to,
+  get_average_coordinates_of_bots, get_inventory_menu, go, go_to, inventory_drop_item,
   set_bot_velocity_y, swing_arm, take_item, this_is_solid_block,
 };
 use crate::tools::{randfloat, randint, randuint};
@@ -36,28 +35,19 @@ impl QuickTaskManager {
           match name.as_str() {
             "clear-inventory" => {
               tokio::spawn(async move {
-                if let Some(inventory) = get_inventory(&bot) {
-                  for slot in 0..=48 {
-                    if let Some(menu) = inventory.menu() {
-                      if let Some(s) = menu.slot(slot) {
-                        if !s.is_empty() {
-                          inventory.click(ThrowClick::All { slot: slot as u16 });
-                        }
-                      }
+                if let Some(menu) = get_inventory_menu(&bot) {
+                  for (slot, item) in menu.slots().iter().enumerate() {
+                    if !item.is_empty() {
+                      inventory_drop_item(&bot, slot, true);
                     }
                   }
-
-                  STATES.set_state(&nickname, "can_walking", true);
-                  STATES.set_state(&nickname, "can_sprinting", true);
-                  STATES.set_state(&nickname, "can_", true);
-                  STATES.set_state(&nickname, "can_walking", true);
                 }
               });
             }
             "move-forward" => {
               tokio::spawn(async move {
                 go(&bot, WalkDirection::Forward);
-                sleep(Duration::from_millis(100)).await;
+                sleep(Duration::from_millis(200)).await;
                 bot.walk(WalkDirection::None);
                 STATES.set_mutual_states(&nickname, "walking", false);
               });
@@ -65,7 +55,7 @@ impl QuickTaskManager {
             "move-backward" => {
               tokio::spawn(async move {
                 go(&bot, WalkDirection::Backward);
-                sleep(Duration::from_millis(100)).await;
+                sleep(Duration::from_millis(200)).await;
                 bot.walk(WalkDirection::None);
                 STATES.set_mutual_states(&nickname, "walking", false);
               });
@@ -73,7 +63,7 @@ impl QuickTaskManager {
             "move-left" => {
               tokio::spawn(async move {
                 go(&bot, WalkDirection::Left);
-                sleep(Duration::from_millis(100)).await;
+                sleep(Duration::from_millis(200)).await;
                 bot.walk(WalkDirection::None);
                 STATES.set_mutual_states(&nickname, "walking", false);
               });
@@ -81,7 +71,7 @@ impl QuickTaskManager {
             "move-right" => {
               tokio::spawn(async move {
                 go(&bot, WalkDirection::Right);
-                sleep(Duration::from_millis(100)).await;
+                sleep(Duration::from_millis(200)).await;
                 bot.walk(WalkDirection::None);
                 STATES.set_mutual_states(&nickname, "walking", false);
               });
@@ -129,7 +119,7 @@ impl QuickTaskManager {
                     STATES.set_mutual_states(&nickname, "looking", true);
                     STATES.set_mutual_states(&nickname, "interacting", true);
 
-                    take_item(&bot, slot).await;
+                    take_item(&bot, slot, true).await;
 
                     let original_direction_1 = bot.direction();
 
@@ -242,7 +232,7 @@ impl QuickTaskManager {
                       STATES.set_mutual_states(&nickname, "looking", true);
                       STATES.set_mutual_states(&nickname, "interacting", true);
 
-                      take_item(&bot, slot).await;
+                      take_item(&bot, slot, true).await;
 
                       count = count + 1;
 
@@ -321,7 +311,7 @@ impl QuickTaskManager {
               let average_cords = get_average_coordinates_of_bots(&positions);
 
               let x = average_cords.0 + 1.0 * (number as f64 * 1.0);
-              let z = average_cords.2 + 0.0 * (number as f64 * 1.0);
+              let z = average_cords.2 * (number as f64 * 1.0);
 
               go_to(bot, x as i32, z as i32);
             }

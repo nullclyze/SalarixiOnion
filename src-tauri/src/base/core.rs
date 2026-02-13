@@ -431,8 +431,6 @@ impl FlowManager {
             accounts.push(Account::offline(&nickname));
 
             PROFILES.push(&nickname, password, options.version.clone());
-            TASKS.push(&nickname);
-            STATES.push(&nickname);
           }
 
           if options.use_proxy {

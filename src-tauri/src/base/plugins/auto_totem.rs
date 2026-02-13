@@ -40,7 +40,7 @@ impl AutoTotemPlugin {
       for (slot, item) in menu.slots().iter().enumerate() {
         if slot != 45 {
           if item.kind() == ItemKind::TotemOfUndying {
-            inventory_move_item(bot, ItemKind::TotemOfUndying, slot, 45).await;
+            inventory_move_item(bot, ItemKind::TotemOfUndying, slot, 45, true).await;
           }
         }
       }

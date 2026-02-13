@@ -63,7 +63,7 @@ impl AutoEatPlugin {
             STATES.set_state(&nickname, "can_interacting", false);
             STATES.set_mutual_states(&nickname, "eating", true);
 
-            take_item(bot, best_food.slot).await;
+            take_item(bot, best_food.slot, false).await;
             sleep(Duration::from_millis(50)).await;
             self.start_eating(bot).await;
             sleep(Duration::from_millis(50)).await;

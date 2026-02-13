@@ -55,7 +55,7 @@ impl AutoRepairPlugin {
     if let Some(menu) = get_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::ExperienceBottle {
-          take_item(bot, slot).await;
+          take_item(bot, slot, true).await;
           return Some(item.count());
         }
       }
@@ -76,7 +76,7 @@ impl AutoRepairPlugin {
           STATES.set_mutual_states(&nickname, "looking", true);
 
           if broken_item.slot != 45 && broken_item.slot > 8 {
-            take_item(bot, broken_item.slot).await;
+            take_item(bot, broken_item.slot, false).await;
             sleep(Duration::from_millis(50)).await;
             move_item_to_offhand(bot, broken_item.kind);
             sleep(Duration::from_millis(randuint(50, 150))).await;

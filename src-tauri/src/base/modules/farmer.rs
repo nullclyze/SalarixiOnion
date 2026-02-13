@@ -97,7 +97,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = best_tool.slot {
-      take_item(bot, slot).await;
+      take_item(bot, slot, true).await;
     }
   }
 
@@ -149,7 +149,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = ferilizer_slot {
-      take_item(bot, slot).await;
+      take_item(bot, slot, true).await;
 
       for _ in 0..=4 {
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
@@ -174,6 +174,8 @@ impl FarmerModule {
     }
 
     bot.look_at(center);
+
+    sleep(Duration::from_millis(80)).await;
   }
 
   async fn take_plant(&self, bot: &Client) -> bool {
@@ -194,7 +196,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = plant_slot {
-      take_item(bot, slot).await;
+      take_item(bot, slot, true).await;
       return true;
     }
 
@@ -282,6 +284,7 @@ impl FarmerModule {
               self.auto_tool(bot).await;
               sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
               bot.mine(block_pos).await;
+              sleep(Duration::from_millis(50)).await;
             } else {
               self.fertilize_plant(bot, &options.mode).await;
 
@@ -292,6 +295,7 @@ impl FarmerModule {
                   self.auto_tool(bot).await;
                   sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
                   bot.mine(block_pos).await;
+                  sleep(Duration::from_millis(50)).await;
                 }
               }
             }

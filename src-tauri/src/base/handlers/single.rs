@@ -41,7 +41,11 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       if let Some(arc) = get_flow_manager() {
         let mut fm = arc.write();
         fm.bots.insert(nickname.clone(), bot.clone());
-        BOT_REGISTRY.register_bot(nickname.clone(), bot.clone());
+
+        BOT_REGISTRY.register_bot(&nickname, bot.clone());
+
+        TASKS.push(&nickname);
+        STATES.push(&nickname);
       }
 
       if let Some(opts) = get_current_options() {

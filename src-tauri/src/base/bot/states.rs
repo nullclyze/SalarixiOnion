@@ -153,10 +153,11 @@ impl StateManager {
     }
   }
 
-  pub fn push(&self, nickname: &String) {
-    let arc = Arc::new(RwLock::new(States::new()));
+  pub fn push(&self, username: &str) {
     let mut states = self.map.write().unwrap();
-    states.insert(nickname.to_string(), arc.clone());
+    if !states.contains_key(username) {
+      states.insert(username.to_string(), Arc::new(RwLock::new(States::new())));
+    }
   }
 
   pub fn clear(&self) {

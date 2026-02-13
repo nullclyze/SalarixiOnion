@@ -67,7 +67,7 @@ impl ScaffoldModule {
       }
 
       if let Some(slot) = block_slot {
-        take_item(bot, slot).await;
+        take_item(bot, slot, true).await;
         return true;
       }
     }

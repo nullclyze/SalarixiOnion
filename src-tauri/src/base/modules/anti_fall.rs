@@ -80,7 +80,7 @@ impl AntiFallModule {
     for (slot, item) in menu.slots().iter().enumerate() {
       if !item.is_empty() {
         if item.kind() == ItemKind::WaterBucket {
-          take_item(bot, slot).await;
+          take_item(bot, slot, true).await;
           return true;
         }
       }

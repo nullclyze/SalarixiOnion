@@ -40,13 +40,13 @@ impl InventoryModule {
       } else {
         match options.state.as_str() {
           "drop" => {
-            inventory_drop_item(bot, s);
+            inventory_drop_item(bot, s, true);
           }
           "left-click" => {
-            inventory_left_click(bot, s);
+            inventory_left_click(bot, s, true);
           }
           "right-click" => {
-            inventory_right_click(bot, s);
+            inventory_right_click(bot, s, true);
           }
           "swap" => {
             inventory_swap_click(
@@ -57,6 +57,7 @@ impl InventoryModule {
               } else {
                 0
               },
+              true,
             )
             .await;
           }

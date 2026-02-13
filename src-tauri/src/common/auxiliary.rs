@@ -267,7 +267,7 @@ pub fn get_inventory_menu(bot: &Client) -> Option<Menu> {
 }
 
 // Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
-pub async fn take_item(bot: &Client, source_slot: usize) {
+pub async fn take_item(bot: &Client, source_slot: usize, lock: bool) {
   if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
     if get_selected_hotbar_slot(bot) != hotbar_slot {
       bot.set_selected_hotbar_slot(hotbar_slot);
@@ -275,7 +275,7 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
   } else {
     if let Some(menu) = get_inventory_menu(bot) {
       if let Some(empty_slot) = find_empty_slot_in_hotbar(menu) {
-        inventory_swap_click(bot, source_slot, empty_slot as usize).await;
+        inventory_swap_click(bot, source_slot, empty_slot as usize, lock).await;
 
         if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
           if get_selected_hotbar_slot(bot) != slot {
@@ -286,9 +286,9 @@ pub async fn take_item(bot: &Client, source_slot: usize) {
       } else {
         let random_slot = randuint(36, 44) as usize;
 
-        inventory_shift_click(bot, random_slot);
+        inventory_shift_click(bot, random_slot, lock);
         sleep(Duration::from_millis(50)).await;
-        inventory_swap_click(bot, source_slot, random_slot).await;
+        inventory_swap_click(bot, source_slot, random_slot, lock).await;
 
         sleep(Duration::from_millis(50)).await;
 
@@ -321,41 +321,69 @@ pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
 }
 
 // Функция безопасного shift-клика в инвентаре
-pub fn inventory_shift_click(bot: &Client, slot: usize) {
+pub fn inventory_shift_click(bot: &Client, slot: usize, lock: bool) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
-    start_interacting_with_inventory(bot, &nickname);
+
+    if lock {
+      start_interacting_with_inventory(bot, &nickname);
+    }
+
     inventory.shift_click(slot);
-    stop_interacting_with_inventory(&nickname);
+
+    if lock {
+      stop_interacting_with_inventory(&nickname);
+    }
   }
 }
 
 // Функция безопасного left-клика в инвентаре
-pub fn inventory_left_click(bot: &Client, slot: usize) {
+pub fn inventory_left_click(bot: &Client, slot: usize, lock: bool) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
-    start_interacting_with_inventory(bot, &nickname);
+
+    if lock {
+      start_interacting_with_inventory(bot, &nickname);
+    }
+
     inventory.left_click(slot);
-    stop_interacting_with_inventory(&nickname);
+
+    if lock {
+      stop_interacting_with_inventory(&nickname);
+    }
   }
 }
 
 // Функция безопасного right-клика в инвентаре
-pub fn inventory_right_click(bot: &Client, slot: usize) {
+pub fn inventory_right_click(bot: &Client, slot: usize, lock: bool) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
-    start_interacting_with_inventory(bot, &nickname);
+
+    if lock {
+      start_interacting_with_inventory(bot, &nickname);
+    }
+
     inventory.shift_click(slot);
-    stop_interacting_with_inventory(&nickname);
+
+    if lock {
+      stop_interacting_with_inventory(&nickname);
+    }
   }
 }
 
 // Функция безопасного swap-клика в инвентаре
-pub async fn inventory_swap_click(bot: &Client, source_slot: usize, target_slot: usize) {
+pub async fn inventory_swap_click(
+  bot: &Client,
+  source_slot: usize,
+  target_slot: usize,
+  lock: bool,
+) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-    start_interacting_with_inventory(bot, &nickname);
+    if lock {
+      start_interacting_with_inventory(bot, &nickname);
+    }
 
     if let Some(menu) = get_inventory_menu(bot) {
       if let Some(item) = menu.slot(target_slot) {
@@ -365,7 +393,7 @@ pub async fn inventory_swap_click(bot: &Client, source_slot: usize, target_slot:
             sleep(Duration::from_millis(50)).await;
             inventory.left_click(empty_slot);
           } else {
-            inventory_drop_item(bot, target_slot);
+            inventory_drop_item(bot, target_slot, false);
           }
 
           sleep(Duration::from_millis(50)).await;
@@ -377,16 +405,20 @@ pub async fn inventory_swap_click(bot: &Client, source_slot: usize, target_slot:
     sleep(Duration::from_millis(50)).await;
     inventory.left_click(target_slot);
 
-    stop_interacting_with_inventory(&nickname);
+    if lock {
+      stop_interacting_with_inventory(&nickname);
+    }
   }
 }
 
 // Функция безопасного выбрасывания предмета
-pub fn inventory_drop_item(bot: &Client, slot: usize) {
+pub fn inventory_drop_item(bot: &Client, slot: usize, lock: bool) {
   if let Some(inventory) = get_inventory(bot) {
     let nickname = bot.username();
 
-    start_interacting_with_inventory(bot, &nickname);
+    if lock {
+      start_interacting_with_inventory(bot, &nickname);
+    }
 
     if let Some(menu) = get_inventory_menu(bot) {
       if let Some(item) = menu.slot(slot) {
@@ -396,7 +428,9 @@ pub fn inventory_drop_item(bot: &Client, slot: usize) {
       }
     }
 
-    stop_interacting_with_inventory(&nickname);
+    if lock {
+      stop_interacting_with_inventory(&nickname);
+    }
   }
 }
 
@@ -406,6 +440,7 @@ pub async fn inventory_move_item(
   kind: ItemKind,
   source_slot: usize,
   target_slot: usize,
+  lock: bool,
 ) {
   if let Some(menu) = get_inventory_menu(bot) {
     if let Some(item) = menu.slot(target_slot) {
@@ -415,7 +450,7 @@ pub async fn inventory_move_item(
     }
   }
 
-  inventory_swap_click(bot, source_slot, target_slot).await;
+  inventory_swap_click(bot, source_slot, target_slot, lock).await;
 }
 
 // Функция безопасного задания направления хотьбы для бота

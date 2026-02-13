@@ -81,7 +81,7 @@ impl BowAimModule {
       if let Some(slot) = self.find_bow_in_inventory(bot) {
         STATES.set_mutual_states(&nickname, "interacting", true);
 
-        take_item(bot, slot).await;
+        take_item(bot, slot, true).await;
 
         sleep(Duration::from_millis(50)).await;
 

@@ -50,13 +50,8 @@ impl AutoShieldPlugin {
               for (slot, item) in menu.slots().iter().enumerate() {
                 if slot != 45 {
                   if item.kind() == ItemKind::Shield {
-                    inventory_move_item(bot, ItemKind::Shield, slot, 45).await;
+                    inventory_move_item(bot, ItemKind::Shield, slot, 45, true).await;
                     shield_equipped = true;
-                    sleep(Duration::from_millis(50)).await;
-
-                    STATES.set_state(&nickname, "can_walking", true);
-                    STATES.set_state(&nickname, "can_sprinting", true);
-
                     break;
                   }
                 }

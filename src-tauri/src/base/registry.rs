@@ -36,8 +36,10 @@ impl BotRegistry {
     }
   }
 
-  pub fn register_bot(&self, username: String, bot: Client) {
-    self.bots.insert(username, Arc::new(RwLock::new(Some(bot))));
+  pub fn register_bot(&self, username: &str, bot: Client) {
+    self
+      .bots
+      .insert(username.to_string(), Arc::new(RwLock::new(Some(bot))));
   }
 
   pub fn remove_bot(&self, username: &str) {

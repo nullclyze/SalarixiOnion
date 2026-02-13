@@ -74,7 +74,7 @@ impl AutoPotionPlugin {
               STATES.set_state(&nickname, "can_interacting", false);
               STATES.set_mutual_states(&nickname, "drinking", true);
 
-              take_item(bot, potion.slot).await;
+              take_item(bot, potion.slot, false).await;
               sleep(Duration::from_millis(50)).await;
               self.use_potion(bot, potion.kind).await;
               sleep(Duration::from_millis(50)).await;

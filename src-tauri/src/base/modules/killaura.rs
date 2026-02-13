@@ -23,12 +23,12 @@ pub struct KillauraModule;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KillauraOptions {
-  pub mode: String,
+  pub behavior: String,
   pub settings: String,
   pub target: String,
   pub weapon: String,
   pub weapon_slot: Option<u8>,
-  pub distance: Option<f64>,
+  pub attack_distance: Option<f64>,
   pub delay: Option<u64>,
   pub chase_distance: Option<f64>,
   pub min_distance_to_target: Option<f64>,
@@ -43,7 +43,7 @@ pub struct KillauraOptions {
 struct KillauraConfig {
   target: String,
   weapon_slot: Option<u8>,
-  distance: f64,
+  attack_distance: f64,
   delay: u64,
   chase_distance: f64,
   min_distance_to_target: f64,
@@ -54,19 +54,25 @@ impl KillauraModule {
     Self
   }
 
-  fn create_adaptive_config(
-    &self,
-    target: String,
-    chase_distance: Option<f64>,
-    min_distance_to_target: Option<f64>,
-  ) -> KillauraConfig {
-    KillauraConfig {
-      target: target,
-      weapon_slot: None,
-      distance: 3.1,
-      delay: 500,
-      chase_distance: chase_distance.unwrap_or(10.0),
-      min_distance_to_target: min_distance_to_target.unwrap_or(3.0),
+  fn create_config(&self, options: &KillauraOptions) -> KillauraConfig {
+    if options.settings.as_str() == "adaptive" {
+      KillauraConfig {
+        target: options.target.clone(),
+        weapon_slot: None,
+        attack_distance: 3.1,
+        delay: 500,
+        chase_distance: options.chase_distance.unwrap_or(10.0),
+        min_distance_to_target: options.min_distance_to_target.unwrap_or(3.0),
+      }
+    } else {
+      KillauraConfig {
+        target: options.target.clone(),
+        weapon_slot: options.weapon_slot,
+        attack_distance: options.attack_distance.unwrap_or(3.1),
+        delay: options.delay.unwrap_or(500),
+        chase_distance: options.chase_distance.unwrap_or(10.0),
+        min_distance_to_target: options.min_distance_to_target.unwrap_or(3.0),
+      }
     }
   }
 
@@ -185,7 +191,7 @@ impl KillauraModule {
     }
 
     if let Some(slot) = best_weapon.slot {
-      take_item(bot, slot).await;
+      take_item(bot, slot, true).await;
     }
   }
 
@@ -294,22 +300,7 @@ impl KillauraModule {
   }
 
   async fn moderate_killaura(&'static self, bot: &Client, options: &KillauraOptions) {
-    let config = if options.settings.as_str() == "adaptive" {
-      self.create_adaptive_config(
-        options.target.clone(),
-        options.chase_distance,
-        options.min_distance_to_target,
-      )
-    } else {
-      KillauraConfig {
-        target: options.target.clone(),
-        weapon_slot: options.weapon_slot,
-        distance: options.distance.unwrap_or(3.1),
-        delay: options.delay.unwrap_or(300),
-        chase_distance: options.chase_distance.unwrap_or(10.0),
-        min_distance_to_target: options.min_distance_to_target.unwrap_or(3.0),
-      }
-    };
+    let config = self.create_config(options);
 
     self.aiming(bot.clone(), config.target.clone(), config.chase_distance);
 
@@ -336,7 +327,7 @@ impl KillauraModule {
       {
         if let Some(entity) = get_nearest_entity(
           &bot,
-          EntityFilter::new(&bot, &config.target, config.distance),
+          EntityFilter::new(&bot, &config.target, config.attack_distance),
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -361,7 +352,7 @@ impl KillauraModule {
 
             if let Some(e) = get_nearest_entity(
               &bot,
-              EntityFilter::new(&bot, &config.target, config.distance),
+              EntityFilter::new(&bot, &config.target, config.attack_distance),
             ) {
               bot.attack(e);
             }
@@ -378,22 +369,7 @@ impl KillauraModule {
   }
 
   async fn aggressive_killaura(&'static self, bot: &Client, options: &KillauraOptions) {
-    let config = if options.settings.as_str() == "adaptive" {
-      self.create_adaptive_config(
-        options.target.clone(),
-        options.chase_distance,
-        options.min_distance_to_target,
-      )
-    } else {
-      KillauraConfig {
-        target: options.target.clone(),
-        weapon_slot: options.weapon_slot,
-        distance: options.distance.unwrap_or(3.1),
-        delay: options.delay.unwrap_or(150),
-        chase_distance: options.chase_distance.unwrap_or(10.0),
-        min_distance_to_target: options.min_distance_to_target.unwrap_or(3.0),
-      }
-    };
+    let config = self.create_config(options);
 
     if options.use_chase {
       self.chase(
@@ -418,7 +394,7 @@ impl KillauraModule {
       {
         if let Some(entity) = get_nearest_entity(
           &bot,
-          EntityFilter::new(&bot, &config.target, config.distance),
+          EntityFilter::new(&bot, &config.target, config.attack_distance),
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -442,7 +418,7 @@ impl KillauraModule {
 
             if let Some(e) = get_nearest_entity(
               &bot,
-              EntityFilter::new(&bot, &config.target, config.distance),
+              EntityFilter::new(&bot, &config.target, config.attack_distance),
             ) {
               bot.attack(e);
             }
@@ -459,7 +435,7 @@ impl KillauraModule {
   }
 
   pub async fn enable(&'static self, bot: &Client, options: &KillauraOptions) {
-    match options.mode.as_str() {
+    match options.behavior.as_str() {
       "moderate" => {
         self.moderate_killaura(bot, options).await;
       }
