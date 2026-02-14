@@ -326,6 +326,32 @@ class ElementManager {
       });
     });
 
+    document.querySelectorAll('[section-name="true"]').forEach(e => e.addEventListener('click', function (this: HTMLElement) {
+      const listName = this.getAttribute('list');
+      const section = document.getElementById(`${listName}-section`) as HTMLElement;
+
+      if (this.getAttribute('state') === 'show') {
+        this.setAttribute('state', 'hide');
+
+        section.classList.add('hide');
+
+        setTimeout(() => {
+          section.classList.remove('hide');
+          section.style.display = 'none';
+          this.style.paddingBottom = '2px';
+          this.style.marginBottom = '0';
+          this.style.borderBottom = 'none';
+        }, 200);
+      } else {
+        this.setAttribute('state', 'show');
+
+        section.style.display = 'flex';
+        this.style.paddingBottom = '8px';
+        this.style.marginBottom = '10px';
+        this.style.borderBottom = '1px solid #313131';
+      }
+    }));
+
     document.querySelectorAll('[plugin-toggler="true"]').forEach(t => t.addEventListener('click', () => {
       const name = t.getAttribute('plugin-name');
       const state = t.getAttribute('state') === 'true';
@@ -740,6 +766,7 @@ class ElementManager {
     this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
     await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
 
+    await this.initUserGuide();
     await this.initPluginDescriptions();
   } 
 
@@ -969,6 +996,67 @@ class ElementManager {
       }
     } catch (error) {
       log(`Ошибка initPluginDescriptions: ${error}`, 'error');
+    }
+  }
+
+  private async initUserGuide(): Promise<void> {
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
+
+      if (response.ok) {
+        const data = await response.json();
+
+        (document.getElementById('guide-latest-update') as HTMLElement).innerText = data['latest-update'];
+
+        const guide = document.getElementById('guide-wrap') as HTMLElement; 
+
+        const sections = data['sections'];
+
+        for (const section of sections) {
+          const sectionElement = document.createElement('div');
+          sectionElement.className = 'section';
+    
+          const header = section['header'];
+          const subsections = section['subsections'];
+
+          if (header) {
+            const el = document.createElement('div');
+            el.className = 'header';
+            el.innerText = header;
+
+            sectionElement.appendChild(el);
+          }
+
+          for (const subsection of subsections) {
+            const subsectionElement = document.createElement('div');
+            subsectionElement.className = 'subsection';
+
+            const subheader = subsection['subheader'];
+            const paragraphs = subsection['paragraphs'];
+
+            if (subheader) {
+              const el = document.createElement('div');
+              el.className = 'subheader';
+              el.innerText = subheader;
+
+              subsectionElement.appendChild(subheader);
+            }
+
+            for (const paragraph of paragraphs) {
+              const el = document.createElement('p');
+              el.innerText = paragraph;
+
+              subsectionElement.appendChild(paragraph);
+            }
+
+            sectionElement.appendChild(subsectionElement);
+          }
+
+          guide.appendChild(sectionElement);
+        }
+      }
+    } catch (error) {
+      log(`Ошибка initUserGuide: ${error}`, 'error');
     }
   }
 
