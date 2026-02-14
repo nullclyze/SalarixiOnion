@@ -1046,11 +1046,11 @@ class ElementManager {
               const el = document.createElement('p');
 
               const html = String(paragraph)
-                .replace('/*', '<span class="bold">')
-                .replace('/!', '<span class="highlight">')
-                .replace('/#', '<span class="link">')
-                .replace('/:', '<span class="code">')
-                .replace('/&', '</span>');
+                .replaceAll('/*', '<span class="bold">')
+                .replaceAll('/!', '<span class="highlight">')
+                .replaceAll('/#', '<span class="link">')
+                .replaceAll('/:', '<span class="code">')
+                .replaceAll('/&', '</span>');
 
               el.innerHTML = html;
 
