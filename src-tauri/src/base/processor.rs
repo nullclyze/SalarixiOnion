@@ -1,6 +1,7 @@
 use crate::base::{get_current_options, BotEvent, BOT_REGISTRY, MODULE_MANAGER, PLUGIN_MANAGER};
 use crate::quick::QUICK_TASK_MANAGER;
 
+// Функция процессинга всех событий
 pub async fn event_processor() {
   let mut rx = BOT_REGISTRY.events.subscribe();
 

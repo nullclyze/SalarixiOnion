@@ -6,6 +6,7 @@ use azalea::{
   Client, Vec3,
 };
 
+// Трейт безопасных функций для Client
 pub trait SafeClientImpls {
   fn id(&self) -> MinecraftEntityId;
   fn feet_pos(&self) -> Vec3;

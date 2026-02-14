@@ -6,6 +6,7 @@ use tokio::sync::{broadcast, RwLock};
 
 pub static BOT_REGISTRY: Lazy<Arc<BotRegistry>> = Lazy::new(|| Arc::new(BotRegistry::new()));
 
+// Реестр всех ботов и событий
 pub struct BotRegistry {
   pub bots: Arc<DashMap<String, Arc<RwLock<Option<Client>>>>>,
   pub events: broadcast::Sender<BotEvent>,
@@ -45,10 +46,7 @@ impl BotRegistry {
   pub fn remove_bot(&self, username: &str) {
     self.bots.remove(username);
   }
-
-  /// Атомарно забирает бота из регистра и возвращает клиента. После вызова
-  /// никто не сможет получить этого бота через get_bot, что предотвращает
-  /// обращение к отключающемуся клиенту (и панику на PhysicsState/position).
+  
   pub async fn take_bot(&self, username: &str) -> Option<Client> {
     let (_, cell) = self.bots.remove(username)?;
     let mut guard = cell.write().await;
