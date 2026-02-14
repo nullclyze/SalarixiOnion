@@ -8,6 +8,7 @@ use azalea::{
 
 // Трейт безопасных функций для Client
 pub trait SafeClientImpls {
+  fn workable(&self) -> bool;
   fn id(&self) -> MinecraftEntityId;
   fn feet_pos(&self) -> Vec3;
   fn eye_pos(&self) -> Vec3;
@@ -17,6 +18,13 @@ pub trait SafeClientImpls {
 }
 
 impl SafeClientImpls for Client {
+  fn workable(&self) -> bool {
+    let position_exists = self.get_component::<Position>().is_some();
+    let dimensions_exists = self.get_component::<EntityDimensions>().is_some();
+
+    position_exists && dimensions_exists
+  }
+
   fn id(&self) -> MinecraftEntityId {
     self
       .get_component::<MinecraftEntityId>()

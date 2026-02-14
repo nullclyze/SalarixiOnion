@@ -276,6 +276,8 @@ pub struct LaunchOptions {
   pub humanoid_arm: Option<String>,
   pub use_auto_rejoin: bool,
   pub proxy_list: Option<String>,
+  pub use_auto_register: bool,
+  pub use_auto_login: bool,
   pub use_proxy: bool,
   pub use_anti_captcha: bool,
   pub use_webhook: bool,
@@ -565,7 +567,7 @@ impl FlowManager {
 
   pub fn disconnect_bot(&self, username: String) {
     tokio::spawn(async move {
-      if let Some(bot) = BOT_REGISTRY.take_bot(&username).await {
+      if let Some(bot) = BOT_REGISTRY.remove_bot(&username).await {
         bot.disconnect();
       }
 

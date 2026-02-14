@@ -42,12 +42,8 @@ impl BotRegistry {
       .bots
       .insert(username.to_string(), Arc::new(RwLock::new(Some(bot))));
   }
-
-  pub fn remove_bot(&self, username: &str) {
-    self.bots.remove(username);
-  }
   
-  pub async fn take_bot(&self, username: &str) -> Option<Client> {
+  pub async fn remove_bot(&self, username: &str) -> Option<Client> {
     let (_, cell) = self.bots.remove(username)?;
     let mut guard = cell.write().await;
     guard.take()

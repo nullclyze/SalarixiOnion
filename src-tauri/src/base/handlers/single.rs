@@ -111,46 +111,56 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           ),
         );
 
-        let min_delay;
-        let max_delay;
+        let mut min_delay = 2000;
+        let mut max_delay = 4000;
 
-        let c;
-        let template;
+        let mut c = "!NONE".to_string();
+        let mut template = "@cmd @pass".to_string();
 
-        let action;
+        let mut action = "зарегистрировался".to_string();
 
         if let Some(profile) = PROFILES.get(&nickname) {
           if !profile.registered {
-            c = options.register_command.as_str().trim();
-            template = options.register_template.trim().to_string();
-            min_delay = options.register_min_delay;
-            max_delay = options.register_max_delay;
+            if let Some(opts) = get_current_options() {
+              if opts.use_auto_register {
+                c = opts.register_command.as_str().trim().to_string();
+                template = opts.register_template.trim().to_string();
+                min_delay = opts.register_min_delay;
+                max_delay = opts.register_max_delay;
 
-            PROFILES.set_bool(&nickname, "registered", true);
+                PROFILES.set_bool(&nickname, "registered", true);
 
-            action = "зарегистрировался".to_string();
+                action = "зарегистрировался".to_string();
+              }
+            }
           } else {
-            c = options.login_command.as_str().trim();
-            template = options.login_template.trim().to_string();
-            min_delay = options.login_min_delay;
-            max_delay = options.login_max_delay;
+            if let Some(opts) = get_current_options() {
+              if opts.use_auto_login {
+                c = opts.login_command.as_str().trim().to_string();
+                template = opts.login_template.trim().to_string();
+                min_delay = opts.login_min_delay;
+                max_delay = opts.login_max_delay;
 
-            action = "залогинился".to_string();
+                action = "залогинился".to_string();
+              }
+            }
           }
 
-          sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
+          if c.as_str() != "!NONE" {
+            sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
 
-          let cmd = template
-            .clone()
-            .replace("@cmd", c)
-            .replace("@pass", &profile.password);
+            let cmd = template
+              .clone()
+              .replace("@cmd", &c)
+              .replace("@pass", &profile.password);
 
-          bot.chat(&cmd);
+            bot.chat(&cmd);
 
-          emit_event(EventType::Log(LogEventPayload {
-            name: "info".to_string(),
-            message: format!("Бот {} {}: {}", &nickname, action, &cmd),
-          }));
+            emit_event(EventType::Log(LogEventPayload {
+              name: "info".to_string(),
+              message: format!("Бот {} {}: {}", &nickname, action, &cmd),
+            }));
+          }
         }
       }
 
@@ -178,7 +188,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 }));
 
                 bot.disconnect();
-                BOT_REGISTRY.remove_bot(&nickname);
+                let _ = BOT_REGISTRY.remove_bot(&nickname);
 
                 PROFILES.set_bool(&nickname, "skin_is_set", true);
               }
@@ -203,7 +213,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   }));
 
                   bot.disconnect();
-                  BOT_REGISTRY.remove_bot(&nickname);
+                  let _ = BOT_REGISTRY.remove_bot(&nickname);
 
                   PROFILES.set_bool(&nickname, "skin_is_set", true);
                 }
@@ -221,11 +231,11 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         tasks.write().unwrap().kill_all_tasks();
       }
 
+      let _ = BOT_REGISTRY.remove_bot(&nickname).await;
+
       PROFILES.set_bool(&nickname, "captcha_caught", false);
       STATES.reset(&nickname);
       TASKS.remove(&nickname);
-
-      BOT_REGISTRY.remove_bot(&nickname);
 
       PROFILES.set_str(&nickname, "status", "Оффлайн");
 
@@ -325,7 +335,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       if let Some(profile) = PROFILES.get(&nickname) {
         if profile.status.as_str() == "Онлайн" {
-          if bot.get_component::<azalea::entity::Position>().is_none() {
+          if !bot.workable() {
             return Ok(());
           }
 
