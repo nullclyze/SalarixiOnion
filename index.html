@@ -337,6 +337,14 @@
               <span class="separator-title" translator-tag="separator:registration">Регистрация</span>
             </div>
 
+            <div class="custom-select" style="margin-top: 10px; margin-bottom: 10px;">
+              <label translator-tag="label:mode">Режим: </label>
+              <select id="register-mode-select">
+                <option value="default" selected translator-tag="option:mode-default">Обычный</option>
+                <option value="trigger" translator-tag="option:mode-trigger">Триггер</option>
+              </select>
+            </div>
+
             <div class="form-input">
               <label for="register-command" class="text" translator-tag="input:register-command">Команда регистрации</label>
               <input type="text" name="registerCommand" id="register-command" placeholder="/register" value="/register" keep="true">
@@ -347,20 +355,33 @@
               <input type="text" name="registerTemplate" id="register-template" placeholder="@cmd @pass" value="@cmd @pass" keep="true">
             </div>
 
-            <div class="form-input">
+            <div class="form-input" id="register-min-delay-container">
               <label for="register-min-delay" class="text" translator-tag="input:register-min-delay">Задержка (минимум)</label>
               <input type="text" name="registerMinDelay" id="register-min-delay" placeholder="2000" value="2000" keep="true">
             </div>
 
-            <div class="form-input">
+            <div class="form-input" id="register-max-delay-container">
               <label for="register-max-delay" class="text" translator-tag="input:register-max-delay">Задержка (максимум)</label>
               <input type="text" name="registerMaxDelay" id="register-max-delay" placeholder="5000" value="5000" keep="true">
+            </div>
+
+            <div class="form-input" id="register-trigger-container" style="display: none;">
+              <label for="register-trigger" class="text" translator-tag="input:register-trigger">Триггер (сообщение)</label>
+              <input type="text" name="registerTrigger" id="register-trigger" placeholder="зарегистрируйтесь" value="зарегистрируйтесь" keep="true">
             </div>
           </div>
 
           <div class="hidden" id="auto-login-input-container">
             <div class="separator">
               <span class="separator-title" translator-tag="separator:login">Логин</span>
+            </div>
+
+            <div class="custom-select" style="margin-top: 10px; margin-bottom: 10px;">
+              <label translator-tag="label:mode">Режим: </label>
+              <select id="login-mode-select">
+                <option value="default" selected translator-tag="option:mode-default">Обычный</option>
+                <option value="trigger" translator-tag="option:mode-trigger">Триггер</option>
+              </select>
             </div>
 
             <div class="form-input">
@@ -373,14 +394,19 @@
               <input type="text" name="loginTemplate" id="login-template" placeholder="@cmd @pass" value="@cmd @pass" keep="true">
             </div>
 
-            <div class="form-input">
+            <div class="form-input" id="login-min-delay-container">
               <label for="login-min-delay" class="text" translator-tag="input:login-min-delay">Задержка (минимум)</label>
               <input type="text" name="loginMinDelay" id="login-min-delay" placeholder="2000" value="2000" keep="true">
             </div>
 
-            <div class="form-input">
+            <div class="form-input" id="login-max-delay-container">
               <label for="login-max-delay" class="text" translator-tag="input:login-max-delay">Задержка (максимум)</label>
               <input type="text" name="loginMaxDelay" id="login-max-delay" placeholder="3000" value="3000" keep="true">
+            </div>
+
+            <div class="form-input" id="login-trigger-container" style="display: none;">
+              <label for="login-trigger" class="text" translator-tag="input:login-trigger">Триггер (сообщение)</label>
+              <input type="text" name="loginTrigger" id="login-trigger" placeholder="авторизируйтесь" value="авторизируйтесь" keep="true">
             </div>
           </div>
 

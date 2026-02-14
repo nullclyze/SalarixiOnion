@@ -130,14 +130,18 @@ async function startBots(): Promise<void> {
   const nicknameTemplate = (document.getElementById('nickname-template') as HTMLInputElement).value;
   const passwordTemplate = (document.getElementById('password-template') as HTMLInputElement).value;
 
+  const registerMode = (document.getElementById('register-mode-select') as HTMLSelectElement).value;
   const registerCommand = (document.getElementById('register-command') as HTMLInputElement).value;
   const registerTemplate = (document.getElementById('register-template') as HTMLInputElement).value;
   const registerMinDelay = parseFloat((document.getElementById('register-min-delay') as HTMLInputElement).value);
   const registerMaxDelay = parseFloat((document.getElementById('register-max-delay') as HTMLInputElement).value);
+  const registerTrigger = (document.getElementById('register-trigger') as HTMLInputElement).value;
+  const loginMode = (document.getElementById('login-mode-select') as HTMLSelectElement).value;
   const loginCommand = (document.getElementById('login-command') as HTMLInputElement).value;
   const loginTemplate = (document.getElementById('login-template') as HTMLInputElement).value;
   const loginMinDelay = parseFloat((document.getElementById('login-min-delay') as HTMLInputElement).value);
   const loginMaxDelay = parseFloat((document.getElementById('login-max-delay') as HTMLInputElement).value);
+  const loginTrigger = (document.getElementById('login-trigger') as HTMLInputElement).value;
   const rejoinDelay = parseInt((document.getElementById('rejoin-delay') as HTMLInputElement).value);
   const updateFrequency = parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value);
   const chatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value);
@@ -196,14 +200,18 @@ async function startBots(): Promise<void> {
     password_type: passwordType,
     nickname_template: nicknameTemplate || 'player_#m#m',
     password_template: passwordTemplate || '#m#m#l#n',
+    register_mode: registerMode,
     register_command: registerCommand || '/reg',
     register_template: registerTemplate || '@cmd @pass',
     register_min_delay: registerMinDelay || 2000,
     register_max_delay: registerMaxDelay || 3500,
+    register_trigger: registerTrigger || 'зарегистрируйтесь',
+    login_mode: loginMode,
     login_command: loginCommand || '/login',
     login_template: loginTemplate || '@cmd @pass',
     login_min_delay: loginMinDelay || 2000,
     login_max_delay: loginMaxDelay || 3500,
+    login_trigger: loginTrigger || 'авторизируйтесь',
     rejoin_delay: rejoinDelay || 3000,
     view_distance: viewDistance || 8,
     language: language || 'en_us',
@@ -553,6 +561,30 @@ class ElementManager {
         (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'flex';
       } else {
         (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'none';
+      }
+    });
+
+    document.getElementById('register-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+      if (this.value === 'default') {
+        (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
+        (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
+        (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'none';
+      } else {
+        (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'none';
+        (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'none';
+        (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'flex';
+      }
+    });
+
+    document.getElementById('login-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+      if (this.value === 'default') {
+        (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
+        (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
+        (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'none';
+      } else {
+        (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'none';
+        (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'none';
+        (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'flex';
       }
     });
 

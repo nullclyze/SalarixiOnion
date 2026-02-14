@@ -111,57 +111,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           ),
         );
 
-        let mut min_delay = 2000;
-        let mut max_delay = 4000;
-
-        let mut c = "!NONE".to_string();
-        let mut template = "@cmd @pass".to_string();
-
-        let mut action = "зарегистрировался".to_string();
-
-        if let Some(profile) = PROFILES.get(&nickname) {
-          if !profile.registered {
-            if let Some(opts) = get_current_options() {
-              if opts.use_auto_register {
-                c = opts.register_command.as_str().trim().to_string();
-                template = opts.register_template.trim().to_string();
-                min_delay = opts.register_min_delay;
-                max_delay = opts.register_max_delay;
-
-                PROFILES.set_bool(&nickname, "registered", true);
-
-                action = "зарегистрировался".to_string();
-              }
-            }
-          } else {
-            if let Some(opts) = get_current_options() {
-              if opts.use_auto_login {
-                c = opts.login_command.as_str().trim().to_string();
-                template = opts.login_template.trim().to_string();
-                min_delay = opts.login_min_delay;
-                max_delay = opts.login_max_delay;
-
-                action = "залогинился".to_string();
-              }
-            }
-          }
-
-          if c.as_str() != "!NONE" {
-            sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
-
-            let cmd = template
-              .clone()
-              .replace("@cmd", &c)
-              .replace("@pass", &profile.password);
-
-            bot.chat(&cmd);
-
-            emit_event(EventType::Log(LogEventPayload {
-              name: "info".to_string(),
-              message: format!("Бот {} {}: {}", &nickname, action, &cmd),
-            }));
-          }
-        }
+        default_authorize(&bot).await;
       }
 
       if let Some(profile) = PROFILES.get(&nickname) {
@@ -233,6 +183,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       let _ = BOT_REGISTRY.remove_bot(&nickname).await;
 
+      PROFILES.set_bool(&nickname, "logined", false);
       PROFILES.set_bool(&nickname, "captcha_caught", false);
       STATES.reset(&nickname);
       TASKS.remove(&nickname);
@@ -320,6 +271,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           }
         }
       }
+
+      trigger_authorize(&bot, packet.message().to_string()).await;
     }
     Event::Tick => {
       let nickname = bot.username();

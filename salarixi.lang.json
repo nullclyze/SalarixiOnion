@@ -274,20 +274,6 @@
       }
     },
     { 
-      "tags": ["input:register-min-delay", "label:register-min-delay"], 
-      "lang": {
-        "ru": "Задержка (минимум)",
-        "en": "Delay (minimum)"
-      }
-    },
-    { 
-      "tags": ["input:register-max-delay", "label:register-max-delay"], 
-      "lang": {
-        "ru": "Задержка (максимум)",
-        "en": "Delay (maximum)"
-      }
-    },
-    { 
       "tags": ["separator:login"], 
       "lang": {
         "ru": "Логин",
@@ -309,17 +295,45 @@
       }
     },
     { 
-      "tags": ["input:login-min-delay", "label:login-min-delay"], 
+      "tags": ["label:mode"], 
+      "lang": {
+        "ru": "Режим:",
+        "en": "Mode:"
+      }
+    },
+    { 
+      "tags": ["option:mode-default"], 
+      "lang": {
+        "ru": "Обычный",
+        "en": "Default"
+      }
+    },
+    { 
+      "tags": ["option:mode-trigger"], 
+      "lang": {
+        "ru": "Триггер",
+        "en": "Trigger"
+      }
+    },
+    { 
+      "tags": ["input:register-min-delay", "label:register-min-delay", "input:login-min-delay", "label:login-min-delay"], 
       "lang": {
         "ru": "Задержка (минимум)",
         "en": "Delay (minimum)"
       }
     },
     { 
-      "tags": ["input:login-max-delay", "label:login-max-delay"], 
+      "tags": ["input:register-max-delay", "label:register-max-delay", "input:login-max-delay", "label:login-max-delay"], 
       "lang": {
         "ru": "Задержка (максимум)",
         "en": "Delay (maximum)"
+      }
+    },
+    { 
+      "tags": ["input:register-trigger", "input:login-trigger"], 
+      "lang": {
+        "ru": "Триггер (сообщение)",
+        "en": "Trigger (message)"
       }
     },
     { 
