@@ -2519,7 +2519,7 @@ textarea::-webkit-resizer {
 
 .guide-wrap .section .subsection .subheader {
   font-family: var(--global-font-family);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: bold;
   color: #adadad;
   margin-bottom: 5px;
@@ -2530,6 +2530,25 @@ textarea::-webkit-resizer {
   font-family: var(--global-font-family);
   font-size: 15px;
   color: #858585;
+}
+
+.guide-wrap .section .subsection p .bold {
+  font-weight: bold;
+}
+
+.guide-wrap .section .subsection p .highlight {
+  color: var(--spec-color);
+}
+
+.guide-wrap .section .subsection p .link {
+  color: #0e6bc2;
+}
+
+.guide-wrap .section .subsection p .code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background-color: #33333349;
+  border-radius: 4px;
+  color: #a3a3a3;
 }
 
 .guide-latest-update {

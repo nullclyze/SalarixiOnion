@@ -1039,14 +1039,22 @@ class ElementManager {
               el.className = 'subheader';
               el.innerText = subheader;
 
-              subsectionElement.appendChild(subheader);
+              subsectionElement.appendChild(el);
             }
 
             for (const paragraph of paragraphs) {
               const el = document.createElement('p');
-              el.innerText = paragraph;
 
-              subsectionElement.appendChild(paragraph);
+              const html = String(paragraph)
+                .replace('/*', '<span class="bold">')
+                .replace('/!', '<span class="highlight">')
+                .replace('/#', '<span class="link">')
+                .replace('/:', '<span class="code">')
+                .replace('/&', '</span>');
+
+              el.innerHTML = html;
+
+              subsectionElement.appendChild(el);
             }
 
             sectionElement.appendChild(subsectionElement);
