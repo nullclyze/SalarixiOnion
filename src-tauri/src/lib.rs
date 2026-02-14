@@ -38,7 +38,7 @@ async fn stop_bots() -> (String, String) {
   if let Some(arc) = get_flow_manager() {
     emit_message(
       "Система",
-      format!("Остановка {} ботов...", get_active_bots_count()),
+      format!("Остановка {} ботов...", get_active_bots_count().await),
     );
 
     return arc.write().stop();
@@ -52,95 +52,69 @@ async fn stop_bots() -> (String, String) {
 
 // Функция получения профилей ботов
 #[tauri::command]
-fn get_bot_profiles() -> Option<std::collections::HashMap<String, Profile>> {
+async fn get_bot_profiles() -> Option<std::collections::HashMap<String, Profile>> {
   Some(PROFILES.get_all())
 }
 
 // Функция отправки сообщения от бота
 #[tauri::command]
-fn send_message(nickname: String, message: String) {
+async fn send_message(nickname: String, message: String) {
   if let Some(arc) = get_flow_manager() {
-    arc.read().send_message(&nickname, &message);
+    arc.read().send_message(nickname, message);
   }
 }
 
 // Функция сброса всех задач и состояний бота
 #[tauri::command]
-fn reset_bot(nickname: String) -> (String, String) {
+async fn reset_bot(nickname: String) {
   if let Some(arc) = get_flow_manager() {
-    if let Some(msg) = arc.read().reset_bot(&nickname) {
-      return ("info".to_string(), msg);
-    }
+    arc.read().reset_bot(nickname);
   }
-
-  (
-    "error".to_string(),
-    format!("Не удалось сбросить задачи и состояния бота {}", nickname),
-  )
 }
 
 // Функция отключения бота
 #[tauri::command]
-fn disconnect_bot(nickname: String) -> (String, String) {
+async fn disconnect_bot(nickname: String) {
   if let Some(arc) = get_flow_manager() {
-    if let Some(msg) = arc.read().disconnect_bot(&nickname) {
-      return ("info".to_string(), msg);
-    }
+    arc.read().disconnect_bot(nickname);
   }
-
-  (
-    "error".to_string(),
-    format!("Не удалось отключить бота {}", nickname),
-  )
 }
 
 // Функция изменения группы бота
 #[tauri::command]
-fn set_group(nickname: String, group: String) {
-  if let Some(arc) = get_flow_manager() {
-    arc.read().bots.get(&nickname).map(|_| {
-      PROFILES.set_str(&nickname, "group", &group);
-    });
-  }
+async fn set_group(nickname: String, group: String) {
+  PROFILES.set_str(&nickname, "group", &group);
 }
 
 // Функция получения radar-данных
 #[tauri::command]
-fn get_radar_data(target: String) -> Option<RadarInfo> {
-  RADAR_MANAGER.find_target(target)
+async fn get_radar_data(target: String) -> Option<RadarInfo> {
+  RADAR_MANAGER.find_target(target).await
 }
 
 // Функция сохранения radar-данных
 #[tauri::command]
-fn save_radar_data(target: String, path: String, filename: String, x: f64, y: f64, z: f64) {
+async fn save_radar_data(target: String, path: String, filename: String, x: f64, y: f64, z: f64) {
   RADAR_MANAGER.save_data(target, path, filename, x, y, z);
 }
 
 // Функция получения количества активных ботов
 #[tauri::command]
-fn get_active_bots_count() -> i32 {
-  if let Some(arc) = get_flow_manager() {
-    let fm = arc.read();
+async fn get_active_bots_count() -> i32 {
+  let mut count = 0;
 
-    let mut count = 0;
-
-    for (nickname, _) in &fm.bots {
-      if let Some(profile) = PROFILES.get(&nickname) {
-        if profile.status.to_lowercase().as_str() == "онлайн" {
-          count += 1;
-        }
-      }
+  for (_, profile) in PROFILES.get_all() {
+    if profile.status.to_lowercase().as_str() == "онлайн" {
+      count += 1;
     }
-
-    return count;
   }
 
-  0
+  count
 }
 
 // Функция получения используемой памяти
 #[tauri::command]
-fn get_memory_usage() -> f64 {
+async fn get_memory_usage() -> f64 {
   if let Some(usage) = memory_stats::memory_stats() {
     return usage.physical_mem as f64 / 1_000_000.0;
   }
@@ -207,7 +181,7 @@ async fn quick_task(name: String) {
     "Быстрая задача",
     format!(
       "{} ботов получили быструю задачу '{}'",
-      get_active_bots_count(),
+      get_active_bots_count().await,
       name
     ),
   );
@@ -218,13 +192,9 @@ async fn quick_task(name: String) {
 // Функция рендеринга карты
 #[tauri::command]
 async fn render_map(nickname: String) -> Option<String> {
-  let mut base64_code = None;
-
-  if let Some(arc) = get_flow_manager() {
-    arc.read().bots.get(&nickname).map(|bot| {
-      base64_code = Some(MAP_RENDERER.render(bot));
-    });
-  }
+  let base64_code = BOT_REGISTRY
+    .get_bot(&nickname, async |bot| MAP_RENDERER.render(bot))
+    .await;
 
   base64_code
 }
@@ -237,13 +207,13 @@ async fn save_map(nickname: String, path: Option<String>, base64code: String) {
 
 // Функция открытия URL в браузере
 #[tauri::command]
-fn open_url(url: String) {
+async fn open_url(url: String) {
   let _ = open::that(url);
 }
 
 // Функция остановки главного процесса
 #[tauri::command]
-fn exit() {
+async fn exit() {
   std::process::exit(0x0);
 }
 

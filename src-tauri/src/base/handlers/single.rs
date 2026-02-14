@@ -1,17 +1,14 @@
-use azalea::entity::metadata::Health;
 use azalea::entity::HumanoidArm;
-use azalea::entity::Position;
 use azalea::local_player::TabList;
 use azalea::prelude::*;
 use azalea::protocol::common::client_information::ParticleStatus;
 use azalea::protocol::packets::game::ClientboundGamePacket;
-use azalea::Vec3;
 use azalea::{ClientInformation, NoState};
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_health, get_satiety};
+use crate::common::SafeClientImpls;
 use crate::emit::*;
 use crate::tools::*;
 use crate::webhook::*;
@@ -37,16 +34,6 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
   match event {
     Event::Login => {
       let nickname = bot.username();
-
-      if let Some(arc) = get_flow_manager() {
-        let mut fm = arc.write();
-        fm.bots.insert(nickname.clone(), bot.clone());
-
-        BOT_REGISTRY.register_bot(&nickname, bot.clone());
-
-        TASKS.push(&nickname);
-        STATES.push(&nickname);
-      }
 
       if let Some(opts) = get_current_options() {
         bot.set_client_information(ClientInformation {
@@ -77,9 +64,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       }));
 
       PROFILES.set_str(&nickname, "status", "Соединение...");
+
+      TASKS.push(&nickname);
+      STATES.push(&nickname);
     }
     Event::Spawn => {
       let nickname = bot.username();
+
+      BOT_REGISTRY.register_bot(&nickname, bot.clone());
 
       BOT_REGISTRY.send_event(BotEvent::LoadPlugins {
         username: nickname.clone(),
@@ -88,17 +80,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       PROFILES.set_str(&nickname, "status", "Онлайн");
 
       if let Some(options) = get_current_options() {
-        let pos = if let Some(p) = bot.get_component::<Position>() {
-          Vec3::new(p.x, p.y, p.z)
-        } else {
-          Vec3::new(0.0, 0.0, 0.0)
-        };
-
-        let health = if let Some(h) = bot.get_component::<Health>() {
-          h.0.to_string()
-        } else {
-          "?".to_string()
-        };
+        let pos = bot.feet_pos();
+        let health = bot.get_health();
 
         let str_pos = format!("{}, {}, {}", pos.x, pos.y, pos.z);
 
@@ -195,6 +178,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 }));
 
                 bot.disconnect();
+                BOT_REGISTRY.remove_bot(&nickname);
 
                 PROFILES.set_bool(&nickname, "skin_is_set", true);
               }
@@ -219,6 +203,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   }));
 
                   bot.disconnect();
+                  BOT_REGISTRY.remove_bot(&nickname);
 
                   PROFILES.set_bool(&nickname, "skin_is_set", true);
                 }
@@ -232,12 +217,6 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Disconnect(packet) => {
       let nickname = bot.username();
 
-      if let Some(arc) = get_flow_manager() {
-        let mut fm = arc.write();
-        fm.bots.remove(&nickname);
-        BOT_REGISTRY.remove_bot(&nickname);
-      }
-
       if let Some(tasks) = TASKS.get(&nickname) {
         tasks.write().unwrap().kill_all_tasks();
       }
@@ -245,6 +224,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       PROFILES.set_bool(&nickname, "captcha_caught", false);
       STATES.reset(&nickname);
       TASKS.remove(&nickname);
+
+      BOT_REGISTRY.remove_bot(&nickname);
 
       PROFILES.set_str(&nickname, "status", "Оффлайн");
 
@@ -278,12 +259,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
           let mut message = packet.message().to_html();
 
-          if let Some(arc) = get_flow_manager() {
-            for (nickname, _) in arc.write().bots.iter() {
-              if *nickname == sender {
-                message = format!("%hbБот%sc ~ {}", message);
-                break;
-              }
+          for (username, _) in PROFILES.get_all() {
+            if username == sender {
+              message = format!("%hbБот%sc ~ {}", message);
+              break;
             }
           }
 
@@ -335,8 +314,21 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Tick => {
       let nickname = bot.username();
 
+      let bot_available = BOT_REGISTRY
+        .get_bot(&nickname, async |_| true)
+        .await
+        .unwrap_or(false);
+
+      if !bot_available {
+        return Ok(());
+      }
+
       if let Some(profile) = PROFILES.get(&nickname) {
         if profile.status.as_str() == "Онлайн" {
+          if bot.get_component::<azalea::entity::Position>().is_none() {
+            return Ok(());
+          }
+
           let ping = if let Some(tab) = bot.get_component::<TabList>() {
             let mut result = 0;
 
@@ -353,8 +345,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           };
 
           PROFILES.set_num(&nickname, "ping", ping);
-          PROFILES.set_num(&nickname, "health", get_health(&bot));
-          PROFILES.set_num(&nickname, "satiety", get_satiety(&bot));
+          PROFILES.set_num(&nickname, "health", bot.get_health() as u32);
+          PROFILES.set_num(&nickname, "satiety", bot.get_satiety());
         }
       }
     }

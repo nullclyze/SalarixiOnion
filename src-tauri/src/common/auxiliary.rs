@@ -6,13 +6,11 @@ use azalea::ecs::prelude::*;
 use azalea::entity::dimensions::EntityDimensions;
 use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::AbstractAnimal;
-use azalea::entity::metadata::Health;
 use azalea::entity::metadata::{AbstractMonster, Player};
 use azalea::entity::LocalEntity;
 use azalea::entity::{Dead, Physics, Position};
 use azalea::inventory::operations::ThrowClick;
 use azalea::inventory::Menu;
-use azalea::local_player::Hunger;
 use azalea::local_player::TabList;
 use azalea::pathfinder::astar::PathfinderTimeout;
 use azalea::pathfinder::goals::XZGoal;
@@ -22,9 +20,7 @@ use azalea::player::GameProfileComponent;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::protocol::packets::game::s_player_action::Action;
-use azalea::protocol::packets::game::{
-  ServerboundPlayerAction, ServerboundSwing, ServerboundUseItem,
-};
+use azalea::protocol::packets::game::{ServerboundPlayerAction, ServerboundUseItem};
 use azalea::registry::builtin::ItemKind;
 use azalea::world::MinecraftEntityId;
 use azalea::SprintDirection;
@@ -35,6 +31,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::SafeClientImpls;
 use crate::tools::*;
 
 // Функция нахождения пустого слота в инвентаре
@@ -170,20 +167,26 @@ pub fn convert_hotbar_slot_to_inventory_slot(slot: u8) -> usize {
 }
 
 // Функция получения UUID игрока
-pub fn get_player_uuid(nickname: String) -> Option<String> {
-  if let Some(arc) = get_flow_manager() {
-    let fm = arc.write();
+pub async fn get_player_uuid(nickname: String) -> Option<String> {
+  for username in PROFILES.get_all().keys() {
+    let uuid = BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        let Some(tab_list) = bot.get_component::<TabList>() else {
+          return None;
+        };
 
-    for (_, bot) in fm.bots.clone().iter() {
-      let Some(tab_list) = bot.get_component::<TabList>() else {
-        continue;
-      };
-
-      for (uuid, info) in tab_list.iter() {
-        if info.profile.name == nickname {
-          return Some(uuid.to_string());
+        for (uuid, info) in tab_list.iter() {
+          if info.profile.name == nickname {
+            return Some(uuid.to_string());
+          }
         }
-      }
+
+        None
+      })
+      .await;
+
+    if let Some(u) = uuid {
+      return u;
     }
   }
 
@@ -497,13 +500,6 @@ pub fn go_to(bot: Client, x: i32, z: i32) {
   }
 }
 
-// Функция отправки пакета SwingArm
-pub fn swing_arm(bot: &Client) {
-  bot.write_packet(ServerboundSwing {
-    hand: InteractionHand::MainHand,
-  });
-}
-
 // Функция отправки пакета StartUseItem
 pub fn start_use_item(bot: &Client, hand: InteractionHand) {
   let direction = bot.direction();
@@ -642,30 +638,18 @@ pub struct EntityFilter {
 
 impl EntityFilter {
   pub fn new(bot: &Client, target: &str, distance: f64) -> Self {
-    let entity_id = if let Some(id) = bot.get_entity_component::<MinecraftEntityId>(bot.entity) {
-      id
-    } else {
-      MinecraftEntityId::default()
-    };
-
     Self {
       target: target.to_string(),
       distance: distance,
       excluded_name: bot.username(),
-      excluded_id: entity_id,
+      excluded_id: bot.id(),
     }
   }
 }
 
 // Функция получения ближайшей сущности
 pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> {
-  let feet_pos = bot.position();
-
-  let eye_pos = Vec3 {
-    x: feet_pos.x,
-    y: feet_pos.y + get_eye_position(bot, bot.entity),
-    z: feet_pos.z,
-  };
+  let eye_pos = bot.eye_pos();
 
   match filter.target.as_str() {
     "player" => {
@@ -696,23 +680,5 @@ pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> 
         data.0.0.name == filter.target && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id
       });
     }
-  }
-}
-
-// Функция безопасного получения здоровья
-pub fn get_health(bot: &Client) -> u32 {
-  if let Some(health) = bot.get_component::<Health>() {
-    health.0 as u32
-  } else {
-    20
-  }
-}
-
-// Функция безопасного получения сытости
-pub fn get_satiety(bot: &Client) -> u32 {
-  if let Some(hunger) = bot.get_component::<Hunger>() {
-    hunger.food
-  } else {
-    20
   }
 }

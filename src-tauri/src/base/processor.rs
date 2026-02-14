@@ -10,22 +10,22 @@ pub async fn event_processor() {
         if let Some(opts) = get_current_options() {
           tokio::spawn(async move {
             let _ = BOT_REGISTRY
-              .get_bot(&username, |bot| {
-                PLUGIN_MANAGER.load(bot, &opts.plugins);
+              .get_bot(&username, async |_| {
+                PLUGIN_MANAGER.load(&username, &opts.plugins);
               })
               .await;
           });
         }
       }
-
       BotEvent::ControlModules {
         name,
         options,
         group,
       } => {
-        MODULE_MANAGER.control(name, options, group);
+        tokio::spawn(async move {
+          MODULE_MANAGER.control(name, options, group).await;
+        });
       }
-
       BotEvent::QuickTask { name } => {
         QUICK_TASK_MANAGER.execute(name);
       }

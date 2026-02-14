@@ -7,8 +7,8 @@ use tokio::time::sleep;
 use crate::base::*;
 use crate::common::{
   convert_hotbar_slot_to_inventory_slot, convert_inventory_slot_to_hotbar_slot, get_block_state,
-  get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, swing_arm, take_item,
-  this_is_solid_block,
+  get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, take_item,
+  this_is_solid_block, SafeClientImpls,
 };
 use crate::tools::*;
 
@@ -129,7 +129,7 @@ impl ScaffoldModule {
         };
 
         if is_air {
-          swing_arm(bot);
+          bot.swing_arm();
 
           bot.start_use_item();
 
@@ -168,7 +168,7 @@ impl ScaffoldModule {
 
           sleep(Duration::from_millis(50)).await;
 
-          swing_arm(bot);
+          bot.swing_arm();
 
           bot.start_use_item();
 
@@ -205,7 +205,7 @@ impl ScaffoldModule {
         };
 
         if is_air {
-          swing_arm(bot);
+          bot.swing_arm();
 
           bot.start_use_item();
 
@@ -249,7 +249,7 @@ impl ScaffoldModule {
         if is_air {
           bot.jump();
 
-          swing_arm(bot);
+          bot.swing_arm();
 
           bot.start_use_item();
 

@@ -117,7 +117,7 @@ impl ChatModule {
     }
   }
 
-  fn process_extra_tags(&self, text: String) -> String {
+  async fn process_extra_tags(&self, text: String) -> String {
     let mut result = text.clone();
 
     let radar_re = Regex::new(r"\#radar\[\w+]").unwrap();
@@ -129,7 +129,7 @@ impl ChatModule {
         if let Some(target) = split_target.get(1) {
           let target_nickname = target.replace("]", "").replace(" ", "");
 
-          if let Some(radar_info) = RADAR_MANAGER.find_target(target_nickname.clone()) {
+          if let Some(radar_info) = RADAR_MANAGER.find_target(target_nickname.clone()).await {
             let msg = format!(
               "{} > X: {}, Y: {}, Z: {}",
               target_nickname,
@@ -155,7 +155,7 @@ impl ChatModule {
         if let Some(target) = split_target.get(1) {
           let target_nickname = target.replace("]", "").replace(" ", "");
 
-          if let Some(uuid) = get_player_uuid(target_nickname.clone()) {
+          if let Some(uuid) = get_player_uuid(target_nickname.clone()).await {
             let msg = format!("{} > UUID: {}", target_nickname, uuid);
 
             result = text.replace(teg.as_str(), msg.as_str());
@@ -174,7 +174,7 @@ impl ChatModule {
 
     if options.use_text_mutation {
       text = Mutator::mutate_text(text);
-      text = self.process_extra_tags(text);
+      text = self.process_extra_tags(text).await;
     }
 
     if !options.use_sync {
@@ -202,7 +202,7 @@ impl ChatModule {
 
       if options.use_text_mutation {
         text = Mutator::mutate_text(text);
-        text = self.process_extra_tags(text);
+        text = self.process_extra_tags(text).await;
       }
 
       if options.use_sync {

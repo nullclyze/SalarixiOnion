@@ -9,7 +9,6 @@ use azalea_viaversion::ViaVersionPlugin;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -336,7 +335,6 @@ pub struct FlowManager {
   pub active: bool,
   pub options: Option<LaunchOptions>,
   pub swarm: Option<Swarm>,
-  pub bots: HashMap<String, Client>,
   pub app_handle: Option<tauri::AppHandle>,
 }
 
@@ -346,7 +344,6 @@ impl FlowManager {
       active: false,
       options: None,
       swarm: None,
-      bots: HashMap::new(),
       app_handle: Some(app_handle),
     }
   }
@@ -354,11 +351,11 @@ impl FlowManager {
   pub fn launch(&mut self, options: LaunchOptions) -> anyhow::Result<()> {
     self.options = Some(options.clone());
     self.swarm.take();
-    self.bots.clear();
 
     PROFILES.clear();
     STATES.clear();
     TASKS.clear();
+    BOT_REGISTRY.destroy();
 
     self.active = true;
 
@@ -515,10 +512,10 @@ impl FlowManager {
 
     self.active = false;
     self.swarm.take();
-    self.bots.clear();
 
     PROFILES.clear();
     TASKS.clear();
+    BOT_REGISTRY.destroy();
 
     if let Some(options) = &self.options {
       if options.use_webhook {
@@ -532,42 +529,62 @@ impl FlowManager {
     ("info".to_string(), format!("Остановка ботов завершена"))
   }
 
-  pub fn send_message(&self, nickname: &String, message: &String) {
-    self.bots.get(nickname).map(|bot| {
-      bot.chat(message);
+  pub fn send_message(&self, username: String, message: String) {
+    tokio::spawn(async move {
+      BOT_REGISTRY
+        .get_bot(&username, async |bot| {
+          bot.chat(message);
+        })
+        .await;
     });
   }
 
-  pub fn reset_bot(&self, nickname: &String) -> Option<String> {
-    let mut msg = None;
+  pub fn reset_bot(&self, username: String) {
+    tokio::spawn(async move {
+      BOT_REGISTRY
+        .get_bot(&username, async |bot| {
+          TASKS.reset(&username);
+          STATES.reset(&username);
 
-    self.bots.get(nickname).map(|bot| {
-      TASKS.reset(nickname);
-      STATES.reset(nickname);
+          bot.set_crouching(false);
+          bot.set_jumping(false);
 
-      bot.set_crouching(false);
-      bot.set_jumping(false);
+          emit_event(EventType::Log(LogEventPayload {
+            name: "info".to_string(),
+            message: format!("Все задачи и состояния бота {} сброшены", username),
+          }));
 
-      emit_message(
-        "Система",
-        format!("Все задачи и состояния бота {} сброшены", nickname),
-      );
-      msg = Some(format!("Все задачи и состояния бота {} сброшены", nickname));
+          emit_message(
+            "Система",
+            format!("Все задачи и состояния бота {} сброшены", username),
+          );
+        })
+        .await;
     });
-
-    msg
   }
 
-  pub fn disconnect_bot(&self, nickname: &String) -> Option<String> {
-    let mut msg = None;
+  pub fn disconnect_bot(&self, username: String) {
+    tokio::spawn(async move {
+      if let Some(bot) = BOT_REGISTRY.take_bot(&username).await {
+        bot.disconnect();
+      }
 
-    self.bots.get(nickname).map(|bot| {
-      bot.disconnect();
-      emit_message("Система", format!("Бот {} отключился", nickname));
-      msg = Some(format!("Бот {} отключился", nickname));
+      if let Some(tasks) = TASKS.get(&username) {
+        tasks.write().unwrap().kill_all_tasks();
+      }
+
+      PROFILES.set_bool(&username, "captcha_caught", false);
+      STATES.reset(&username);
+      TASKS.remove(&username);
+      PROFILES.set_str(&username, "status", "Оффлайн");
+
+      emit_event(EventType::Log(LogEventPayload {
+        name: "info".to_string(),
+        message: format!("Бот {} отключился", username),
+      }));
+      
+      emit_message("Система", format!("Бот {} отключился", username));
     });
-
-    msg
   }
 }
 
@@ -607,268 +624,388 @@ impl ModuleManager {
     }
   }
 
-  pub fn control(&'static self, name: String, options: serde_json::Value, group: String) {
-    if let Some(arc) = get_flow_manager() {
-      let fm = arc.write();
+  pub async fn control(&'static self, name: String, options: serde_json::Value, group: String) {
+    for username in PROFILES.get_all().into_keys() {
+      let current_options = options.clone();
 
-      let bots = fm.bots.clone();
+      if let Some(profile) = PROFILES.get(&username) {
+        if profile.group != group {
+          return;
+        }
+      }
 
-      if fm.bots.len() > 0 {
-        for (nickname, bot) in bots.into_iter() {
-          let current_options = options.clone();
+      match name.as_str() {
+        "chat" => {
+          let options: ChatOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
 
-          if let Some(profile) = PROFILES.get(&nickname) {
-            if profile.group != group {
-              continue;
-            }
+          let mode = options.clone().mode;
+
+          if mode.as_str() == "spamming" {
+            self.chat.stop(&username);
           }
 
-          match name.as_str() {
-            "chat" => {
-              let options: ChatOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
+          if options.state {
+            let nickname = username.clone();
 
-              let mode = options.clone().mode;
-
-              if mode.as_str() == "spamming" {
-                self.chat.stop(&nickname);
-              }
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  match options.mode.as_str() {
-                    "message" => {
-                      let _ = self.chat.message(&bot, &options).await;
-                    }
-                    "spamming" => {
-                      let _ = self.chat.spamming(&bot, &options).await;
-                    }
-                    _ => {}
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| match options.mode.as_str() {
+                  "message" => {
+                    let _ = self.chat.message(bot, &options).await;
                   }
-                });
-
-                if mode.as_str() == "spamming" {
-                  run_task(&nickname, "spamming", task);
-                }
-              } else {
-                if mode.as_str() == "spamming" {
-                  self.chat.stop(&nickname);
-                }
-              }
-            }
-            "action" => {
-              let options: ActionOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              let action = options.action.clone();
-
-              self.action.stop(&bot, action.as_str());
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  match options.action.as_str() {
-                    "jumping" => {
-                      self.action.jumping(&bot, &options).await;
-                    }
-                    "shifting" => {
-                      self.action.shifting(&bot, &options).await;
-                    }
-                    "waving" => {
-                      self.action.waving(&bot, &options).await;
-                    }
-                    _ => {}
+                  "spamming" => {
+                    let _ = self.chat.spamming(bot, &options).await;
                   }
-                });
+                  _ => {}
+                })
+                .await;
+            });
 
-                run_task(&nickname, action.as_str(), task);
-              } else {
-                self.action.stop(&bot, action.as_str());
-              }
+            if mode.as_str() == "spamming" {
+              run_task(&username, "spamming", task);
             }
-            "inventory" => {
-              let options: InventoryOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              tokio::spawn(async move {
-                self.inventory.interact(&bot, &options).await;
-              });
+          } else {
+            if mode.as_str() == "spamming" {
+              self.chat.stop(&username);
             }
-            "movement" => {
-              let options: MovementOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.movement.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.movement.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "movement", task);
-              } else {
-                self.movement.stop(&bot);
-              }
-            }
-            "anti-afk" => {
-              let options: AntiAfkOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.anti_afk.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.anti_afk.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "anti-afk", task);
-              } else {
-                self.anti_afk.stop(&bot);
-              }
-            }
-            "flight" => {
-              let options: FlightOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.flight.stop(&nickname);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.flight.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "flight", task);
-              } else {
-                self.flight.stop(&nickname);
-              }
-            }
-            "killaura" => {
-              let options: KillauraOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.killaura.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.killaura.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "killaura", task);
-              } else {
-                self.killaura.stop(&bot);
-              }
-            }
-            "scaffold" => {
-              let options: ScaffoldOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.scaffold.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.scaffold.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "scaffold", task);
-              } else {
-                self.scaffold.stop(&bot);
-              }
-            }
-            "anti-fall" => {
-              let options: AntiFallOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.anti_fall.stop(&nickname);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.anti_fall.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "anti-fall", task);
-              } else {
-                self.anti_fall.stop(&nickname);
-              }
-            }
-            "bow-aim" => {
-              let options: BowAimOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.bow_aim.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.bow_aim.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "bow-aim", task);
-              } else {
-                self.bow_aim.stop(&bot);
-              }
-            }
-            "stealer" => {
-              let options: StealerOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.stealer.stop(&nickname);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.stealer.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "stealer", task);
-              } else {
-                self.stealer.stop(&nickname);
-              }
-            }
-            "miner" => {
-              let options: MinerOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.miner.stop(&bot);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.miner.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "miner", task);
-              } else {
-                self.miner.stop(&bot);
-              }
-            }
-            "farmer" => {
-              let options: FarmerOptions = serde_json::from_value(current_options)
-                .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-                .unwrap();
-
-              self.farmer.stop(&nickname);
-
-              if options.state {
-                let task = tokio::spawn(async move {
-                  self.farmer.enable(&bot, &options).await;
-                });
-
-                run_task(&nickname, "farmer", task);
-              } else {
-                self.farmer.stop(&nickname);
-              }
-            }
-            _ => {}
           }
         }
+        "action" => {
+          let options: ActionOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          let action = options.action.clone();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.action.stop(bot, action.as_str());
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| match options.action.as_str() {
+                  "jumping" => {
+                    self.action.jumping(bot, &options).await;
+                  }
+                  "shifting" => {
+                    self.action.shifting(bot, &options).await;
+                  }
+                  "waving" => {
+                    self.action.waving(bot, &options).await;
+                  }
+                  _ => {}
+                })
+                .await;
+            });
+
+            run_task(&username, action.as_str(), task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.action.stop(bot, action.as_str());
+              })
+              .await;
+          }
+        }
+        "inventory" => {
+          let options: InventoryOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          tokio::spawn(async move {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.inventory.interact(bot, &options).await;
+              })
+              .await;
+          });
+        }
+        "movement" => {
+          let options: MovementOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.movement.stop(bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.movement.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "movement", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.movement.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "anti-afk" => {
+          let options: AntiAfkOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.anti_afk.stop(&bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.anti_afk.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "anti-afk", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.anti_afk.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "flight" => {
+          let options: FlightOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          self.flight.stop(&username);
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.flight.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "flight", task);
+          } else {
+            self.flight.stop(&username);
+          }
+        }
+        "killaura" => {
+          let options: KillauraOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.killaura.stop(bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.killaura.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "killaura", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.killaura.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "scaffold" => {
+          let options: ScaffoldOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.scaffold.stop(&bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.scaffold.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "scaffold", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.scaffold.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "anti-fall" => {
+          let options: AntiFallOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          self.anti_fall.stop(&username);
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.anti_fall.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "anti-fall", task);
+          } else {
+            self.anti_fall.stop(&username);
+          }
+        }
+        "bow-aim" => {
+          let options: BowAimOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.bow_aim.stop(&bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.bow_aim.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "bow-aim", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.bow_aim.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "stealer" => {
+          let options: StealerOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          self.stealer.stop(&username);
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&nickname, async |bot| {
+                  self.stealer.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&username, "stealer", task);
+          } else {
+            self.stealer.stop(&username);
+          }
+        }
+        "miner" => {
+          let options: MinerOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              self.miner.stop(&bot);
+            })
+            .await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&username, async |bot| {
+                  self.miner.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&nickname, "miner", task);
+          } else {
+            BOT_REGISTRY
+              .get_bot(&username, async |bot| {
+                self.miner.stop(&bot);
+              })
+              .await;
+          }
+        }
+        "farmer" => {
+          let options: FarmerOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          self.farmer.stop(&username);
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              BOT_REGISTRY
+                .get_bot(&username, async |bot| {
+                  self.farmer.enable(&bot, &options).await;
+                })
+                .await;
+            });
+
+            run_task(&nickname, "farmer", task);
+          } else {
+            self.farmer.stop(&username);
+          }
+        }
+        _ => {}
       }
     }
   }
@@ -898,33 +1035,33 @@ impl PluginManager {
     }
   }
 
-  pub fn load(&'static self, bot: &Client, plugins: &Plugins) {
+  pub fn load(&'static self, username: &String, plugins: &Plugins) {
     if plugins.auto_armor {
-      self.auto_armor.enable(bot.clone());
+      self.auto_armor.enable(username.clone());
     }
 
     if plugins.auto_totem {
-      self.auto_totem.enable(bot.clone());
+      self.auto_totem.enable(username.clone());
     }
 
     if plugins.auto_eat {
-      self.auto_eat.enable(bot.clone());
+      self.auto_eat.enable(username.clone());
     }
 
     if plugins.auto_potion {
-      self.auto_potion.enable(bot.clone());
+      self.auto_potion.enable(username.clone());
     }
 
     if plugins.auto_look {
-      self.auto_look.enable(bot.clone());
+      self.auto_look.enable(username.clone());
     }
 
     if plugins.auto_shield {
-      self.auto_shield.enable(bot.clone());
+      self.auto_shield.enable(username.clone());
     }
 
     if plugins.auto_repair {
-      self.auto_repair.enable(bot.clone());
+      self.auto_repair.enable(username.clone());
     }
   }
 }

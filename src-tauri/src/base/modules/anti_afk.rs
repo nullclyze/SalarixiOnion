@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::swing_arm;
+use crate::common::SafeClientImpls;
 use crate::common::{go, run};
 use crate::tools::*;
 
@@ -47,7 +47,7 @@ impl AntiAfkModule {
       );
 
       if randchance(0.4) {
-        swing_arm(bot);
+        bot.swing_arm();
       }
 
       sleep(Duration::from_millis(randuint(400, 800))).await;
@@ -139,7 +139,7 @@ impl AntiAfkModule {
       run(bot, SprintDirection::Forward);
 
       if randchance(0.4) {
-        swing_arm(bot);
+        bot.swing_arm();
       }
 
       sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;

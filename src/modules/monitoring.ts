@@ -17,6 +17,7 @@ interface BotProfile {
   registered: boolean;
   skin_is_set: boolean;
   captcha_caught: boolean;
+  plugins_loaded: boolean;
   group: string;
 }
 
@@ -510,11 +511,9 @@ export class MonitoringManager {
 
     this.addTempListener(`disconnect-${nickname}`, 'click', async () => {
       try {
-        const result = await invoke('disconnect_bot', {
+        await invoke('disconnect_bot', {
           nickname: nickname
-        }) as Array<string>;
-
-        log(result[1], result[0]);
+        });
       } catch (error) {
         log(`Ошибка отключения бота ${nickname}: ${error}`, 'error');
       }
@@ -522,11 +521,9 @@ export class MonitoringManager {
 
     this.addTempListener(`reset-${nickname}`, 'click', async () => {
       try {
-        const result = await invoke('reset_bot', {
+        await invoke('reset_bot', {
           nickname: nickname
-        }) as Array<string>;
-
-        log(result[1], result[0]);
+        });
       } catch (error) {
         log(`Ошибка сбрасывания задач и состояний бота ${nickname}: ${error}`, 'error');
       }

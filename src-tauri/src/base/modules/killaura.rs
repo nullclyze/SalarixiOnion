@@ -195,18 +195,30 @@ impl KillauraModule {
     }
   }
 
-  fn dodging(&self, bot: Client) {
+  fn dodging(&self, username: String) {
     tokio::spawn(async move {
       loop {
-        if !TASKS.get_task_activity(&bot.username(), "killaura") {
-          bot.walk(WalkDirection::None);
-          break;
-        }
+        let bot_available = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            if !TASKS.get_task_activity(&username, "killaura") {
+              if bot.crouching() {
+                bot.set_crouching(false);
+              }
 
-        if !bot.crouching() {
-          bot.set_crouching(true);
-          sleep(Duration::from_millis(randuint(150, 250))).await;
-          bot.set_crouching(false);
+              return;
+            }
+
+            if !bot.crouching() {
+              bot.set_crouching(true);
+              sleep(Duration::from_millis(randuint(150, 250))).await;
+              bot.set_crouching(false);
+            }
+          })
+          .await
+          .is_some();
+
+        if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
+          break;
         }
 
         sleep(Duration::from_millis(50)).await;
@@ -214,54 +226,63 @@ impl KillauraModule {
     });
   }
 
-  fn chase(&self, bot: Client, target: String, distance: f64, min_distance_to_target: f64) {
+  fn chase(&self, username: String, target: String, distance: f64, min_distance_to_target: f64) {
     tokio::spawn(async move {
-      let nickname = bot.username();
-
       loop {
-        if !TASKS.get_task_activity(&nickname, "killaura") {
-          stop_bot_move(&bot);
-          break;
-        }
-
-        if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
-          let feet_pos = bot.position();
-
-          let eye_pos = Vec3 {
-            x: feet_pos.x,
-            y: feet_pos.y + get_eye_position(&bot, bot.entity),
-            z: feet_pos.z,
-          };
-
-          if eye_pos.distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
-            if !bot.jumping() {
-              bot.set_jumping(true);
-            }
-
-            run(&bot, SprintDirection::Forward);
-
-            if STATES.get_state(&nickname, "can_looking") {
-              let entity_pos = get_entity_position(&bot, entity);
-
-              bot.look_at(Vec3::new(
-                entity_pos.x,
-                entity_pos.y + randfloat(0.4, 0.6),
-                entity_pos.z,
-              ));
-            }
-          } else {
-            bot.set_jumping(false);
-
-            if !STATES.get_state(&nickname, "is_walking") {
+        let bot_available = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            if !TASKS.get_task_activity(&username, "killaura") {
               stop_bot_move(&bot);
+              return;
             }
-          }
-        } else {
-          bot.set_jumping(false);
 
-          if !STATES.get_state(&nickname, "is_walking") {
-            stop_bot_move(&bot);
-          }
+            if let Some(entity) =
+              get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance))
+            {
+              let feet_pos = bot.position();
+
+              let eye_pos = Vec3 {
+                x: feet_pos.x,
+                y: feet_pos.y + get_eye_position(&bot, bot.entity),
+                z: feet_pos.z,
+              };
+
+              if eye_pos.distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
+                if !bot.jumping() {
+                  bot.set_jumping(true);
+                }
+
+                run(&bot, SprintDirection::Forward);
+
+                if STATES.get_state(&username, "can_looking") {
+                  let entity_pos = get_entity_position(&bot, entity);
+
+                  bot.look_at(Vec3::new(
+                    entity_pos.x,
+                    entity_pos.y + randfloat(0.4, 0.6),
+                    entity_pos.z,
+                  ));
+                }
+              } else {
+                bot.set_jumping(false);
+
+                if STATES.get_state(&username, "is_sprinting") {
+                  stop_bot_move(&bot);
+                }
+              }
+            } else {
+              bot.set_jumping(false);
+
+              if STATES.get_state(&username, "is_sprinting") {
+                stop_bot_move(&bot);
+              }
+            }
+          })
+          .await
+          .is_some();
+
+        if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
+          break;
         }
 
         sleep(Duration::from_millis(50)).await;
@@ -269,28 +290,36 @@ impl KillauraModule {
     });
   }
 
-  fn aiming(&self, bot: Client, target: String, distance: f64) {
+  fn aiming(&self, username: String, target: String, distance: f64) {
     tokio::spawn(async move {
-      let nickname = bot.username();
-
-      if STATES.get_state(&nickname, "can_looking") {
-        STATES.set_mutual_states(&nickname, "looking", true);
+      if STATES.get_state(&username, "can_looking") {
+        STATES.set_mutual_states(&username, "looking", true);
 
         loop {
-          if !TASKS.get_task_activity(&nickname, "killaura") {
-            STATES.set_mutual_states(&nickname, "looking", false);
+          let bot_available = BOT_REGISTRY
+            .get_bot(&username, async |bot| {
+              if !TASKS.get_task_activity(&username, "killaura") {
+                STATES.set_mutual_states(&username, "looking", false);
+                return;
+              }
+
+              if let Some(entity) =
+                get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance))
+              {
+                let entity_pos = get_entity_position(&bot, entity);
+
+                bot.look_at(Vec3::new(
+                  entity_pos.x,
+                  entity_pos.y + randfloat(0.4, 0.6),
+                  entity_pos.z,
+                ));
+              }
+            })
+            .await
+            .is_some();
+
+          if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
             break;
-          }
-
-          if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance))
-          {
-            let entity_pos = get_entity_position(&bot, entity);
-
-            bot.look_at(Vec3::new(
-              entity_pos.x,
-              entity_pos.y + randfloat(0.4, 0.6),
-              entity_pos.z,
-            ));
           }
 
           sleep(Duration::from_millis(50)).await;
@@ -302,11 +331,11 @@ impl KillauraModule {
   async fn moderate_killaura(&'static self, bot: &Client, options: &KillauraOptions) {
     let config = self.create_config(options);
 
-    self.aiming(bot.clone(), config.target.clone(), config.chase_distance);
+    self.aiming(bot.username(), config.target.clone(), config.chase_distance);
 
     if options.use_chase {
       self.chase(
-        bot.clone(),
+        bot.username(),
         config.target.clone(),
         config.chase_distance,
         config.min_distance_to_target,
@@ -314,7 +343,7 @@ impl KillauraModule {
     }
 
     if options.use_dodging {
-      self.dodging(bot.clone());
+      self.dodging(bot.username());
     }
 
     let nickname = bot.username();
@@ -373,7 +402,7 @@ impl KillauraModule {
 
     if options.use_chase {
       self.chase(
-        bot.clone(),
+        bot.username(),
         config.target.clone(),
         config.chase_distance,
         config.min_distance_to_target,
@@ -381,7 +410,7 @@ impl KillauraModule {
     }
 
     if options.use_dodging {
-      self.dodging(bot.clone());
+      self.dodging(bot.username());
     }
 
     let nickname = bot.username();

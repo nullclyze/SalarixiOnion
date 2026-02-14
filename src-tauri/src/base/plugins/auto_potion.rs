@@ -9,7 +9,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_bot_physics, get_health, get_inventory_menu, start_use_item, take_item};
+use crate::common::SafeClientImpls;
+use crate::common::{get_bot_physics, get_inventory_menu, start_use_item, take_item};
 use crate::tools::*;
 
 #[derive(Clone)]
@@ -26,7 +27,7 @@ impl AutoPotionPlugin {
     Self
   }
 
-  pub fn enable(&'static self, bot: Client) {
+  pub fn enable(&'static self, username: String) {
     tokio::spawn(async move {
       loop {
         if let Some(arc) = get_flow_manager() {
@@ -35,7 +36,11 @@ impl AutoPotionPlugin {
           }
         }
 
-        self.drink(&bot).await;
+        let _ = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            self.drink(&bot).await;
+          })
+          .await;
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -43,16 +48,16 @@ impl AutoPotionPlugin {
   }
 
   async fn drink(&self, bot: &Client) {
-    let health = get_health(bot);
+    let health = bot.get_health();
 
     let nickname = bot.username();
 
-    if health < 20 {
+    if health < 20.0 {
       let potions = self.find_potion_in_inventory(bot);
 
       if potions.len() > 0 {
         if let Some(potion) = self.get_best_potion(bot, potions) {
-          if health < 10 && !STATES.get_state(&nickname, "is_eating") {
+          if health < 10.0 && !STATES.get_state(&nickname, "is_eating") {
             STATES.set_state(&nickname, "can_eating", false);
           } else {
             STATES.set_state(&nickname, "can_eating", true);

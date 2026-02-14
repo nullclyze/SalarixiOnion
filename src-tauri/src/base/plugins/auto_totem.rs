@@ -13,7 +13,7 @@ impl AutoTotemPlugin {
     Self
   }
 
-  pub fn enable(&'static self, bot: Client) {
+  pub fn enable(&'static self, username: String) {
     tokio::spawn(async move {
       loop {
         if let Some(arc) = get_flow_manager() {
@@ -22,7 +22,11 @@ impl AutoTotemPlugin {
           }
         }
 
-        self.take_totem(&bot).await;
+        let _ = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            self.take_totem(&bot).await;
+          })
+          .await;
 
         sleep(Duration::from_millis(50)).await;
       }

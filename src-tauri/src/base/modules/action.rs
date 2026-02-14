@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::swing_arm;
+use crate::common::SafeClientImpls;
 use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,7 +74,7 @@ impl ActionModule {
           sleep(Duration::from_millis(randuint(300, 800))).await;
         }
 
-        swing_arm(bot);
+        bot.swing_arm();
       }
     } else {
       if !options.use_sync {
@@ -82,7 +82,7 @@ impl ActionModule {
       }
 
       loop {
-        swing_arm(bot);
+        bot.swing_arm();
         sleep(Duration::from_millis(300)).await;
       }
     }

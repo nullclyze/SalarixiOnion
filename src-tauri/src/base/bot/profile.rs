@@ -18,6 +18,7 @@ pub struct Profile {
   pub registered: bool,
   pub skin_is_set: bool,
   pub captcha_caught: bool,
+  pub plugins_loaded: bool,
   pub group: String,
 }
 
@@ -35,6 +36,7 @@ impl Profile {
       registered: false,
       skin_is_set: false,
       captcha_caught: false,
+      plugins_loaded: false,
       group: "global".to_string(),
     }
   }
@@ -73,6 +75,10 @@ impl Profile {
 
   pub fn set_captcha_caught(&mut self, state: bool) {
     self.captcha_caught = state;
+  }
+
+  pub fn set_plugins_loaded(&mut self, state: bool) {
+    self.plugins_loaded = state;
   }
 
   pub fn set_group(&mut self, group: &str) {
@@ -137,6 +143,7 @@ impl ProfileManager {
         "registered" => profile.set_registered(value),
         "skin_is_set" => profile.set_skin_is_set(value),
         "captcha_caught" => profile.set_captcha_caught(value),
+        "plugins_loaded" => profile.set_plugins_loaded(value),
         _ => {}
       }
     });

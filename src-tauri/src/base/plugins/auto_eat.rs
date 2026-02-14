@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_health, get_inventory_menu, get_satiety, start_use_item, take_item};
+use crate::common::{get_inventory_menu, start_use_item, take_item, SafeClientImpls};
 use crate::tools::*;
 
 #[derive(Clone, Copy)]
@@ -22,7 +22,7 @@ impl AutoEatPlugin {
     Self
   }
 
-  pub fn enable(&'static self, bot: Client) {
+  pub fn enable(&'static self, username: String) {
     tokio::spawn(async move {
       loop {
         if let Some(arc) = get_flow_manager() {
@@ -31,7 +31,11 @@ impl AutoEatPlugin {
           }
         }
 
-        self.eat(&bot).await;
+        let _ = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            self.eat(&bot).await;
+          })
+          .await;
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -39,12 +43,12 @@ impl AutoEatPlugin {
   }
 
   async fn eat(&self, bot: &Client) {
-    let satiety = get_satiety(bot);
-    let health = get_health(bot);
+    let satiety = bot.get_satiety();
+    let health = bot.get_health();
 
     let nickname = bot.username();
 
-    if satiety < 20 || health < 15 {
+    if satiety < 20 || health < 15.0 {
       let food_list = self.find_food_in_inventory(bot);
 
       if let Some(best_food) = self.get_best_food(bot, &food_list) {
@@ -87,13 +91,13 @@ impl AutoEatPlugin {
   }
 
   fn get_best_food(&self, bot: &Client, food_list: &Vec<Food>) -> Option<Food> {
-    let health = get_health(bot);
-    let satiety = get_satiety(bot);
+    let satiety = bot.get_satiety();
+    let health = bot.get_health();
 
     let mut best_food = None;
 
     if food_list.len() > 1 {
-      if satiety == 20 && health < 12 {
+      if satiety == 20 && health < 12.0 {
         for food in food_list {
           if food.priority == 3 {
             best_food = Some(*food);
@@ -106,11 +110,11 @@ impl AutoEatPlugin {
         let desired_health_priority;
         let desired_satiety_priority;
 
-        if health < 20 && health >= 18 {
+        if health < 20.0 && health >= 18.0 {
           desired_health_priority = 0;
-        } else if health < 18 && health >= 15 {
+        } else if health < 18.0 && health >= 15.0 {
           desired_health_priority = 1;
-        } else if health < 15 && health >= 12 {
+        } else if health < 15.0 && health >= 12.0 {
           desired_health_priority = 2;
         } else {
           desired_health_priority = 3;

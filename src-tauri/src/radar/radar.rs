@@ -1,4 +1,3 @@
-use azalea::entity::Position;
 use azalea::local_player::TabList;
 use azalea::player::GameProfileComponent;
 use chrono::prelude::*;
@@ -8,7 +7,10 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
 
-use crate::base::get_flow_manager;
+use crate::{
+  base::{BOT_REGISTRY, PROFILES},
+  common::get_entity_position,
+};
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
 
@@ -38,38 +40,47 @@ impl RadarManager {
     Self
   }
 
-  pub fn find_target(&self, target: String) -> Option<RadarInfo> {
-    if let Some(arc) = get_flow_manager() {
-      let fm = arc.read();
+  pub async fn find_target(&self, target: String) -> Option<RadarInfo> {
+    for username in PROFILES.get_all().keys() {
+      let info = BOT_REGISTRY
+        .get_bot(username, async |bot| {
+          let Some(tab_list) = bot.get_component::<TabList>() else {
+            return None;
+          };
 
-      if fm.active && fm.bots.len() > 0 {
-        for (_, bot) in &fm.bots {
-          if let Some(tab_list) = bot.get_component::<TabList>() {
-            for uuid in tab_list.keys() {
-              if let Some(entity) = bot.entity_by_uuid(*uuid) {
-                if let Some(profile) = bot.get_entity_component::<GameProfileComponent>(entity) {
-                  if profile.0.name == target {
-                    if let Some(player_pos) = bot.get_entity_component::<Position>(entity) {
-                      let client_pos = bot.position();
+          for uuid in tab_list.keys() {
+            let Some(entity) = bot.entity_by_uuid(*uuid) else {
+              continue;
+            };
 
-                      return Some(RadarInfo {
-                        status: "Найден".to_string(),
-                        uuid: uuid.to_string(),
-                        x: player_pos.x,
-                        y: player_pos.y,
-                        z: player_pos.z,
-                        observer: RadarObserver {
-                          x: client_pos.x,
-                          z: client_pos.z,
-                        },
-                      });
-                    }
-                  }
-                }
-              }
+            let Some(profile) = bot.get_entity_component::<GameProfileComponent>(entity) else {
+              continue;
+            };
+
+            if profile.0.name == target {
+              let player_pos = get_entity_position(bot, entity);
+              let client_pos = bot.position();
+
+              return Some(RadarInfo {
+                status: "Найден".to_string(),
+                uuid: uuid.to_string(),
+                x: player_pos.x,
+                y: player_pos.y,
+                z: player_pos.z,
+                observer: RadarObserver {
+                  x: client_pos.x,
+                  z: client_pos.z,
+                },
+              });
             }
           }
-        }
+
+          None
+        })
+        .await;
+
+      if let Some(radar_info) = info {
+        return radar_info;
       }
     }
 

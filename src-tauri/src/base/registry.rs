@@ -46,13 +46,26 @@ impl BotRegistry {
     self.bots.remove(username);
   }
 
+  /// Атомарно забирает бота из регистра и возвращает клиента. После вызова
+  /// никто не сможет получить этого бота через get_bot, что предотвращает
+  /// обращение к отключающемуся клиенту (и панику на PhysicsState/position).
+  pub async fn take_bot(&self, username: &str) -> Option<Client> {
+    let (_, cell) = self.bots.remove(username)?;
+    let mut guard = cell.write().await;
+    guard.take()
+  }
+
+  pub fn destroy(&self) {
+    self.bots.clear();
+  }
+
   pub async fn get_bot<F, T>(&self, username: &str, f: F) -> Option<T>
   where
-    F: FnOnce(&Client) -> T,
+    F: AsyncFnOnce(&Client) -> T,
   {
     if let Some(reference) = self.bots.get(username) {
       if let Some(bot) = reference.read().await.as_ref() {
-        return Some(f(bot));
+        return Some(f(bot).await);
       }
     }
 
