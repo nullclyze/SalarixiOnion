@@ -2546,9 +2546,10 @@ textarea::-webkit-resizer {
 
 .guide-wrap .section .subsection p .code {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  background-color: #33333349;
+  background-color: #33333350;
   border-radius: 4px;
-  color: #a3a3a3;
+  color: #cccccc;
+  padding: 2px 8px;
 }
 
 .guide-latest-update {
