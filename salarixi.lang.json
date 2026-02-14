@@ -113,6 +113,13 @@
       }
     },
     { 
+      "tags": ["panel-btn:guide", "title:guide"], 
+      "lang": {
+        "ru": "Руководство",
+        "en": "Guide"
+      }
+    },
+    { 
       "tags": ["input:address", "label:address"], 
       "lang": {
         "ru": "Адрес сервера",
