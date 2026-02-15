@@ -350,8 +350,8 @@ export class MonitoringManager {
           <div class="bot-map-render-status" id="map-render-status-${nickname}">Генерация карты, пожайлуста, подождите...</div>
           <div class="bot-map-render-progress" id="map-render-progress-${nickname}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${nickname}">0</span> / 65536</div>
 
-          <div id="save-map-wrap-${nickname}" style="display: none; margin-top: 30px; gap: 15px;">
-            <input type="text" class="glass-input" id="save-map-path-${nickname}" placeholder="/home/User/MinecraftMaps/" style="height: 28px; width: 250px;">
+          <div id="save-map-wrap-${nickname}" style="display: none; margin-top: 25px; gap: 15px;">
+            <input type="text" class="glass-input" id="save-map-path-${nickname}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
             
             <button class="btn min" id="save-map-${nickname}">Сохранить</button>
           </div>  

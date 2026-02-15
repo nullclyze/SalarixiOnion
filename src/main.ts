@@ -878,10 +878,10 @@ class ElementManager {
           root.style.setProperty('--global-font-family', `'Inter', sans-serif`);
           break;
         case 'jetbrains-mono':
-          root.style.setProperty('--global-font-family', `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`);
+          root.style.setProperty('--global-font-family', `'JetBrains Mono', 'Fira Code', monospace`);
           break;
         case 'segoe-ui':
-          root.style.setProperty('--global-font-family', `'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif`);
+          root.style.setProperty('--global-font-family', `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`);
           break;
       }
     } catch (error) {

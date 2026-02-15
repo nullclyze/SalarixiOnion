@@ -53,7 +53,7 @@
 
   <div class="left-panel">
     <div class="section">
-      <div class="name" section-name="true" list="basic" state="show">Основное</div>
+      <div class="name" section-name="true" list="basic" state="show" translator-tag="section:basic">Основное</div>
 
       <div class="list" id="basic-section">
         <button class="panel-btn" id="main" path="main-container">
@@ -110,7 +110,7 @@
     </div>
 
     <div class="section">
-      <div class="name" section-name="true" list="control" state="show">Управление</div>
+      <div class="name" section-name="true" list="control" state="show" translator-tag="section:control">Управление</div>
 
       <div class="list" id="control-section">
         <button class="panel-btn" id="control" path="control-container">
@@ -131,7 +131,7 @@
     </div>
 
     <div class="section">
-      <div class="name" section-name="true" list="data" state="show">Данные</div>
+      <div class="name" section-name="true" list="data" state="show" translator-tag="section:data">Данные</div>
 
       <div class="list" id="data-section">
         <button class="panel-btn" id="graphic" path="graphic-container">
@@ -160,7 +160,7 @@
     </div>
 
     <div class="section">
-      <div class="name" section-name="true" list="tools" state="show">Инструменты</div>
+      <div class="name" section-name="true" list="tools" state="show" translator-tag="section:tools">Инструменты</div>
 
       <div class="list" id="tools-section">
         <button class="panel-btn" id="radar" path="radar-container">
@@ -180,7 +180,7 @@
     </div>
 
     <div class="section">
-      <div class="name" section-name="true" list="logs" state="show">Логи</div>
+      <div class="name" section-name="true" list="logs" state="show" translator-tag="section:logs">Логи</div>
 
       <div class="list" id="logs-section">
         <button class="panel-btn" id="journal" path="journal-container">
@@ -197,7 +197,7 @@
     </div>
 
     <div class="section" style="margin-bottom: 55px;">
-      <div class="name" section-name="true" list="misc" state="show">Разное</div>
+      <div class="name" section-name="true" list="misc" state="show" translator-tag="section:misc">Разное</div>
 
       <div class="list" id="misc-section">
         <button class="panel-btn" id="interface" path="interface-container">
@@ -485,8 +485,6 @@
 
         <div class="settings-column right">
           <div class="checkbox-group">
-            <div class="simple-sep" style="margin-top: 0;"></div>
-
             <label class="checkbox-container">
               <input type="checkbox" name="useAutoRegister" id="use-auto-register" keep="true" checked>
               <span class="checkmark"></span>
@@ -574,8 +572,6 @@
               <span class="checkmark"></span>
               <span translator-tag="checkbox:map-monitoring">Мониторинг карты</span>
             </label>
-
-            <div class="simple-sep"></div>
           </div>
         </div>
       </div>
@@ -1011,7 +1007,7 @@
         <input type="text" id="webhook-url" placeholder="https://discord.com/api/webhooks/..." keep="true">
       </div>
 
-      <div class="checkbox-group" style="width: 300px; margin-top: 20px; border-radius: 6px; border: 1px solid #333333; padding: 10px 0;">
+      <div class="checkbox-group" style="width: 300px; margin-top: 20px; border-radius: 6px; border: 1px solid #333333; padding: 10px 0; padding-left: 4px;">
         <label class="checkbox-container">
           <input type="checkbox" id="use-webhook-information" keep="true">
           <span class="checkmark"></span>
@@ -2017,7 +2013,7 @@
                 <label translator-tag="label:interface-font">Шрифт: </label>
                 <select id="interface-global-font-family" style="width: 120px;" name="interfaceGlobalFontFamily" keep="true">
                   <option value="inter">Inter</option>
-                  <option value="gill-sans">Gill Sans</option>
+                  <option value="jetbrains-mono">JetBrains Mono</option>
                   <option value="segoe-ui">Segoe UI</option>
                 </select>
               </div>
