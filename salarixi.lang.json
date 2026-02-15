@@ -1,6 +1,41 @@
 {
   "map": [
     { 
+      "tags": ["section:basic"], 
+      "lang": {
+        "ru": "Основное",
+        "en": "Basic"
+      }
+    },
+    { 
+      "tags": ["section:control"], 
+      "lang": {
+        "ru": "Управление",
+        "en": "Control"
+      }
+    },
+    { 
+      "tags": ["section:data"], 
+      "lang": {
+        "ru": "Данные",
+        "en": "Data"
+      }
+    },
+    { 
+      "tags": ["section:logs"], 
+      "lang": {
+        "ru": "Логи",
+        "en": "Logs"
+      }
+    },
+    { 
+      "tags": ["section:misc"], 
+      "lang": {
+        "ru": "Разное",
+        "en": "Misc"
+      }
+    },
+    { 
       "tags": ["panel-btn:main", "title:main"], 
       "lang": {
         "ru": "Главная",
