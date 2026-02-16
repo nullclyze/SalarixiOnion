@@ -1242,10 +1242,6 @@ p {
   transition: color 0.15s ease;
 }
 
-.checkbox-container:hover {
-  color: #fff;
-}
-
 .checkbox-container input[type='checkbox'] {
   position: absolute;
   opacity: 0;
@@ -2167,11 +2163,15 @@ textarea::-webkit-resizer {
 }
 
 .plugins-wrap .list .plugin-card.unavailable {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .plugins-wrap .list .plugin-card.unavailable .head .image {
   color: #5c5c5c;
+}
+
+.plugins-wrap .list .plugin-card.unavailable .head .image:hover {
+  color: #c00505;
 }
 
 .plugins-wrap .list .plugin-card.unavailable .head .text .name {
@@ -2179,27 +2179,27 @@ textarea::-webkit-resizer {
 }
 
 .plugins-wrap .list .plugin-card.unavailable .head .text .name .tag {
-  color: #b4b4b4;
+  color: #bdbdbd;
   background-color: #3f3f3f1a;
   border: 1px solid #4b4b4b50;
-  padding: 4px 6px;
-  border-radius: 4px;
+  padding: 3px 6px;
+  border-radius: 6px;
   font-family: var(--global-font-family);
   font-size: 14px;
   font-weight: normal;
-  margin-left: 5px;
+  margin-left: 4px;
 }
 
 .plugins-wrap .list .plugin-card.deprecated .head .text .name .tag {
   color: #d3c017;
   background-color: #3f3f3f1a;
   border: 1px solid #4b4b4b50;
-  padding: 4px 6px;
-  border-radius: 4px;
+  padding: 3px 6px;
+  border-radius: 6px;
   font-family: var(--global-font-family);
   font-size: 14px;
   font-weight: normal;
-  margin-left: 5px;
+  margin-left: 4px;
 }
 
 .plugins-wrap .list .plugin-card .head {
@@ -2214,11 +2214,15 @@ textarea::-webkit-resizer {
   height: 48px;
   color: #a1a1a1;
   flex-shrink: 0;
-  transition: color 0.2s ease;
+  transition: all 0.12s ease;
 }
 
 .plugins-wrap .list .plugin-card .head .image:hover {
   color: var(--spec-color);
+}
+
+.plugins-wrap .list .plugin-card .head .image:active {
+  transform: scale(0.94);
 }
 
 .plugins-wrap .list .plugin-card .head .text {
@@ -2228,6 +2232,9 @@ textarea::-webkit-resizer {
   justify-content: center;
   align-items: start;
   gap: 4px;
+  border-left: 2px solid #424242;
+  padding: 6px 0;
+  padding-left: 12px;
 }
 
 .plugins-wrap .list .plugin-card .head .text .name {
@@ -2277,39 +2284,18 @@ textarea::-webkit-resizer {
   transition: all 0.12s ease;
   cursor: pointer;
   white-space: nowrap;
+  letter-spacing: 0.4px;
 }
 
 .plugins-wrap .list .plugin-card .controls .button:hover {
   background: rgba(95, 95, 95, 0.1);
-  color: #fff;
 }
 
 .plugins-wrap .list .plugin-card .controls .button:active {
   transform: scale(0.96);
 }
 
-.plugin-description {
-  position: fixed;
-  top: 120px;
-  left: 239px;
-  width: 750px;
-  height: 490px;
-  font-family: var(--global-font-family);
-  display: none; 
-  z-index: 1000;
-  border-radius: 12px;
-  padding: 20px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); 
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
-  flex-direction: column;
-  justify-content: flex-start;
-  overscroll-behavior: contain;
-}
-
-.plugin-description .panel {
+.plugin-description-panel {
   display: flex;
   width: 100%;
   justify-content: center;
@@ -2319,7 +2305,7 @@ textarea::-webkit-resizer {
   border-bottom: 1px solid #363636;
 }
 
-.plugin-description .panel .left {
+.plugin-description-panel .left {
   display: flex;
   width: 100%;
   align-items: center;
@@ -2328,7 +2314,7 @@ textarea::-webkit-resizer {
   border-radius: 6px;
 }
 
-.plugin-description .panel .left .name {
+.plugin-description-panel .left .name {
   color: #cacaca;
   font-family: var(--global-font-family);
   font-size: 18px;
@@ -2336,7 +2322,7 @@ textarea::-webkit-resizer {
   margin-top: 8px;
 }
 
-.plugin-description .panel .right {
+.plugin-description-panel .right {
   display: flex;
   width: 100%;
   align-items: center;
@@ -2344,19 +2330,19 @@ textarea::-webkit-resizer {
   gap: 8px;
 }
 
-.plugin-description .description-body {
+.plugin-description-body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 400px;
-  max-height: 400px;
+  height: 410px;
+  max-height: 410px;
   margin-top: 20px;
   gap: 30px;
   overflow-y: auto;
   padding-right: 8px;
 }
 
-.plugin-description .description-body .description {
+.plugin-description-body .description {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -2365,8 +2351,15 @@ textarea::-webkit-resizer {
   overflow-y: auto;
 }
 
-.plugin-description .description-body p {
-  color: #afafaf;
+.plugin-description-body p {
+  color: var(--text-secondary);
+  font-family: var(--global-font-family);
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.plugin-description-body .plugin-latest-update {
+  color: #dddddd;
   font-family: var(--global-font-family);
   font-size: 15px;
   font-weight: normal;
@@ -2540,7 +2533,7 @@ textarea::-webkit-resizer {
   width: 100%;
   height: 480px;
   overflow-y: auto;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   background: var(--card-bg);
   gap: 30px;

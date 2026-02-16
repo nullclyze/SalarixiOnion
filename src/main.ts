@@ -988,7 +988,7 @@ class ElementManager {
               
               const tag = document.createElement('span');
               tag.className = 'tag';
-              tag.innerText = 'Deprecated';
+              tag.innerText = 'Устарел';
 
               document.getElementById(`${name}-name`)?.appendChild(tag);
             }
@@ -1016,7 +1016,7 @@ class ElementManager {
                 </svg>
 
                 <div class="text">
-                  <div class="name">${plugin['header']} <span class="tag">Unavailable</span></div>
+                  <div class="name">${plugin['header']} <span class="tag">Недоступен</span></div>
                   <div class="meta">Статус: <span class="status">Недоступен</span></div>
                 </div>
               </div>
