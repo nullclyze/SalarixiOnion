@@ -1,9 +1,5 @@
 use azalea::{
-  entity::{dimensions::EntityDimensions, metadata::Health, Position},
-  local_player::Hunger,
-  protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing},
-  world::MinecraftEntityId,
-  Client, Vec3,
+  Client, Vec3, entity::{Position, dimensions::EntityDimensions, metadata::Health}, local_player::{Hunger, TabList}, player::GameProfileComponent, protocol::packets::game::{ServerboundSwing, s_interact::InteractionHand}, world::MinecraftEntityId
 };
 
 // Трейт безопасных функций для Client
@@ -14,6 +10,7 @@ pub trait SafeClientImpls {
   fn eye_pos(&self) -> Vec3;
   fn get_health(&self) -> f32;
   fn get_satiety(&self) -> u32;
+  fn get_players(&self) -> Option<TabList>;
   fn swing_arm(&self);
 }
 
@@ -21,8 +18,9 @@ impl SafeClientImpls for Client {
   fn workable(&self) -> bool {
     let position_exists = self.get_component::<Position>().is_some();
     let dimensions_exists = self.get_component::<EntityDimensions>().is_some();
+    let profile_exist = self.get_component::<GameProfileComponent>().is_some();
 
-    position_exists && dimensions_exists
+    position_exists && dimensions_exists && profile_exist
   }
 
   fn id(&self) -> MinecraftEntityId {
@@ -67,6 +65,10 @@ impl SafeClientImpls for Client {
     } else {
       20
     }
+  }
+
+  fn get_players(&self) -> Option<TabList> {
+    self.get_component::<TabList>()
   }
 
   fn swing_arm(&self) {

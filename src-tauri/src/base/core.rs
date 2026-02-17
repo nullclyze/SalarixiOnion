@@ -571,7 +571,7 @@ impl FlowManager {
 
   pub fn disconnect_bot(&self, username: String) {
     tokio::spawn(async move {
-      if let Some(bot) = BOT_REGISTRY.remove_bot(&username).await {
+      if let Some(bot) = BOT_REGISTRY.take_bot(&username).await {
         bot.disconnect();
       }
 

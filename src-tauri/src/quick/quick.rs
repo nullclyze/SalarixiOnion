@@ -317,7 +317,7 @@ impl QuickTaskManager {
           .await;
 
         if name.as_str() == "quit" {
-          let _ = BOT_REGISTRY.remove_bot(&nickname).await;
+          let _ = BOT_REGISTRY.take_bot(&nickname).await;
 
           if let Some(tasks) = TASKS.get(&nickname) {
             tasks.write().unwrap().kill_all_tasks();

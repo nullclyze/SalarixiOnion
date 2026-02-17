@@ -2,12 +2,14 @@ mod base;
 mod common;
 mod emit;
 mod quick;
+mod script;
 mod radar;
 mod tools;
 mod webhook;
 
 use crate::base::*;
 use crate::emit::*;
+use crate::script::*;
 use crate::radar::*;
 use crate::webhook::*;
 
@@ -189,6 +191,18 @@ async fn quick_task(name: String) {
   BOT_REGISTRY.send_event(BotEvent::QuickTask { name });
 }
 
+// Функция выполнения пользовательского скрипта
+#[tauri::command]
+async fn execute_script(script: String) {
+  SCRIPT_EXECUTOR.read().unwrap().execute(script);
+}
+
+// Функция остановки пользовательского скрипта
+#[tauri::command]
+async fn stop_script() {
+  SCRIPT_EXECUTOR.write().unwrap().stop();
+}
+
 // Функция рендеринга карты
 #[tauri::command]
 async fn render_map(nickname: String) -> Option<String> {
@@ -240,6 +254,8 @@ pub fn run() {
       get_memory_usage,
       control,
       quick_task,
+      execute_script,
+      stop_script,
       render_map,
       save_map,
       open_url

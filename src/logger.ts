@@ -38,7 +38,7 @@ export function log(text: string, type: string): void {
 
   if (type === 'extended') {
     line.className += ' log-line-extended';
-    text = `[ Отладка ] ${text}`;
+    line.style.fontStyle = 'italic';
   }
 
   line.innerHTML = `

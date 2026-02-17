@@ -138,8 +138,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 }));
 
                 bot.disconnect();
-                let _ = BOT_REGISTRY.remove_bot(&nickname);
 
+                BOT_REGISTRY.remove_bot(&nickname);
                 PROFILES.set_bool(&nickname, "skin_is_set", true);
               }
               "custom" => {
@@ -163,8 +163,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   }));
 
                   bot.disconnect();
-                  let _ = BOT_REGISTRY.remove_bot(&nickname);
-
+                  
+                  BOT_REGISTRY.remove_bot(&nickname);
                   PROFILES.set_bool(&nickname, "skin_is_set", true);
                 }
               }
@@ -181,7 +181,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         tasks.write().unwrap().kill_all_tasks();
       }
 
-      let _ = BOT_REGISTRY.remove_bot(&nickname).await;
+      BOT_REGISTRY.remove_bot(&nickname);
 
       PROFILES.set_bool(&nickname, "logined", false);
       PROFILES.set_bool(&nickname, "captcha_caught", false);
@@ -276,15 +276,6 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     }
     Event::Tick => {
       let nickname = bot.username();
-
-      let bot_available = BOT_REGISTRY
-        .get_bot(&nickname, async |_| true)
-        .await
-        .unwrap_or(false);
-
-      if !bot_available {
-        return Ok(());
-      }
 
       if let Some(profile) = PROFILES.get(&nickname) {
         if profile.status.as_str() == "Онлайн" {

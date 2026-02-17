@@ -146,12 +146,25 @@ body {
   gap: 80px;
 }
 
+.cover .panel.with-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #363636;
+}
+
 .cover .panel .left {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: left;
   gap: 8px;
+}
+
+.cover .panel.with-header .left .header {
+  color: #cacaca;
+  font-family: var(--global-font-family);
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 8px;
 }
 
 .cover .panel .right {
@@ -434,6 +447,7 @@ body {
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
+  padding-bottom: 100px;
 }
 
 .settings-column.left .form-input {
@@ -730,8 +744,7 @@ p {
   border-right: 1px solid var(--bd-color);
   width: 180px;
   height: 100%;
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.2));
-  transition: background 0.2s ease;
+  background: transparent;
 }
 
 .button-card .button-list {
@@ -912,38 +925,40 @@ p {
   gap: 6px;
 }
 
-.proxy-wrapper {
+.between-wrapper {
   display: flex;
-  margin-top: 10px;
+  margin-top: 5px;
   margin-left: 20px;
   width: 100%;
   padding: 20px;
   padding-top: 0;
 }
 
-.proxy-wrapper .left {
+.between-wrapper .left {
   display: flex;
   justify-content: left;
   width: 100%;
 }
 
-.proxy-wrapper .right {
+.between-wrapper .right {
+  position: relative;
+  right: 40px;
+  top: 0;
   display: flex;
   flex-direction: column;
   width: 320px;
-  margin-right: 40px;
   align-items: center;
   justify-content: center;
 }
 
-.proxy-wrapper .right .sep {
+.between-wrapper .right .sep {
   width: 100%;
   border-top: 1px solid var(--bd-color);
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
-.proxy-wrapper .right .meta {
+.between-wrapper .right .meta {
   display: block;
   justify-content: left;
   align-items: center;
@@ -951,7 +966,7 @@ p {
   font-size: 13px;
 }
 
-.proxy-wrapper .right .proxy-finder {
+.proxy-finder {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -960,16 +975,16 @@ p {
   color: #fff;
 }
 
-.proxy-wrapper .right .proxy-finder .custom-select label {
+.proxy-finder .custom-select label {
   color: #bfbbbb;
   font-size: 15px;
 }
 
-.proxy-wrapper .right .proxy-finder .custom-select select {
+.proxy-finder .custom-select select {
   width: 140px;
 }
 
-.proxy-wrapper .right .proxy-finder .status {
+.proxy-finder .status {
   display: flex;
   text-align: center;
   color: #848080;
@@ -984,7 +999,7 @@ p {
   margin-top: 2px;
 }
 
-.proxy-list {
+.pretty-textarea {
   display: flex;
   flex-direction: column;
   position: relative;
@@ -996,7 +1011,7 @@ p {
   height: 500px;
 }
 
-.proxy-list .frame {
+.pretty-textarea .frame {
   background: rgb(24, 24, 24);
   border: 1px solid rgb(53, 53, 53);
   border-radius: 12px;
@@ -1005,7 +1020,7 @@ p {
   box-shadow: 0 6px 20px rgba(2,6,10,0.6);
 }
 
-.proxy-list .label {
+.pretty-textarea .label {
   position: absolute;
   top: 0; 
   left: 35%;
@@ -1027,7 +1042,7 @@ p {
   align-items: center;
 }
 
-.proxy-list textarea {
+.pretty-textarea textarea {
   max-width: 100%;
   min-width: 100%;
   width: 100%;
@@ -1044,8 +1059,8 @@ p {
   transition: border 0.2s ease;
 }
 
-.proxy-list textarea::placeholder {
-  color: #9aa2ad;
+.pretty-textarea textarea::placeholder {
+  color: #b6b6b6;
 }
 
 .anti-captcha-wrap {
@@ -1561,16 +1576,16 @@ textarea::-webkit-resizer {
   border-radius: 6px;
   border: 1px solid transparent;
   background: transparent;
-  transition: background 0.15s ease;
   cursor: pointer;
   outline: none;
   position: relative;
   overflow: hidden;
   height: 32px;
+  transition: none;
 }
 
 .bot-card .btn.spec:hover {
-  background: rgba(46, 46, 46, 0.418);
+  border-color: rgb(48, 48, 48);
 }
 
 .bot-card .btn.spec:active {
@@ -1610,7 +1625,6 @@ textarea::-webkit-resizer {
   font-size: 15px;
   font-weight: normal;
   font-family: var(--global-font-family);
-  line-height: 1.2;
   -webkit-user-select: text; 
   -moz-user-select: text;
   -ms-user-select: text;
@@ -1621,6 +1635,7 @@ textarea::-webkit-resizer {
   font-size: 14px;
   margin-top: 4px;
   font-weight: bold;
+  font-family: var(--global-font-family);
 }
 
 .bot-advanced-info {
@@ -1837,7 +1852,7 @@ textarea::-webkit-resizer {
   position: relative;
   width: 520px;
   max-width: 90%;
-  background: var(--card-bg);
+  background: rgb(21, 21, 22);
   border: 1px solid var(--card-border);
   border-radius: 16px;
   padding: 28px 24px;
@@ -1860,7 +1875,7 @@ textarea::-webkit-resizer {
   justify-content: center;
   background: transparent;
   border: none;
-  color: #9fb0c8;
+  color: #c8c9cc;
   font-size: 18px;
   cursor: pointer;
   outline: none;
@@ -1975,8 +1990,8 @@ textarea::-webkit-resizer {
   padding: 0;
   width: 100%;
   gap: 12px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--card-border);
   justify-content: center;
   align-items: center;
   height: 50px;
@@ -1984,7 +1999,7 @@ textarea::-webkit-resizer {
 
 .radar-panel .sep {
   display: flex;
-  border-left: 1px solid var(--card-border);
+  border-left: 2px solid var(--card-border);
   height: 30px;
   margin: 0 4px;
 }
@@ -2007,14 +2022,11 @@ textarea::-webkit-resizer {
 .cover.radar .auto-save-settings {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 320px;
+  width: 300px;
   justify-content: start;
   align-items: start;
-  border: 1px solid var(--card-border);
   border-radius: 12px;
   margin-top: 30px;
-  padding: 20px;
 }
 
 .cover.radar .auto-save-settings .checkbox-container {
@@ -2118,7 +2130,6 @@ textarea::-webkit-resizer {
 }
 
 .radar-wrap .radar-target .radar-route-container .radar-chart {
-  margin-top: 10px;
   width: 100%;
   height: 500px;
 }
@@ -2293,41 +2304,6 @@ textarea::-webkit-resizer {
 
 .plugins-wrap .list .plugin-card .controls .button:active {
   transform: scale(0.96);
-}
-
-.plugin-description-panel {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-  gap: 80px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #363636;
-}
-
-.plugin-description-panel .left {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: left;
-  gap: 8px;
-  border-radius: 6px;
-}
-
-.plugin-description-panel .left .name {
-  color: #cacaca;
-  font-family: var(--global-font-family);
-  font-size: 18px;
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-.plugin-description-panel .right {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: right;
-  gap: 8px;
 }
 
 .plugin-description-body {

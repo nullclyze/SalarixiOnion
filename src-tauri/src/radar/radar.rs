@@ -1,4 +1,3 @@
-use azalea::local_player::TabList;
 use azalea::player::GameProfileComponent;
 use chrono::prelude::*;
 use once_cell::sync::Lazy;
@@ -9,7 +8,7 @@ use std::sync::Arc;
 
 use crate::{
   base::{BOT_REGISTRY, PROFILES},
-  common::get_entity_position,
+  common::{SafeClientImpls, get_entity_position},
 };
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
@@ -44,7 +43,7 @@ impl RadarManager {
     for username in PROFILES.get_all().keys() {
       let info = BOT_REGISTRY
         .get_bot(username, async |bot| {
-          let Some(tab_list) = bot.get_component::<TabList>() else {
+          let Some(tab_list) = bot.get_players() else {
             return None;
           };
 
@@ -59,7 +58,7 @@ impl RadarManager {
 
             if profile.0.name == target {
               let player_pos = get_entity_position(bot, entity);
-              let client_pos = bot.position();
+              let client_pos = bot.feet_pos();
 
               return Some(RadarInfo {
                 status: "Найден".to_string(),

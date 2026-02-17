@@ -3,14 +3,17 @@ import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Chart, registerables } from 'chart.js';
 
+import { plugins } from './common/structs';
 import { log, changeLogsVisibility, eraseLogs } from './logger';
 import { initConfig, loadConfig } from './modules/config';
 import { ProxyManager } from './modules/proxy';
 import { ChartManager } from './modules/chart';
+import { ScriptManager } from './modules/script';
 import { MonitoringManager } from './modules/monitoring';
 import { RadarManager } from './modules/radar';
 import { translate, Language } from './modules/translator';
 import { changeMessagesVisibility, spawnMessage } from './message';
+import { downloadJsonContent } from './downloader/downloader';
 
 
 Chart.register(...registerables);
@@ -23,6 +26,7 @@ let process: 'active' | 'sleep' = 'sleep';
 
 const proxyManager = new ProxyManager();
 const chartManager = new ChartManager();
+const scriptManager = new ScriptManager();
 const monitoringManager = new MonitoringManager();
 const radarManager = new RadarManager();
 
@@ -46,39 +50,6 @@ const pressedKeys: { [x: string]: boolean } = {
   r: false,
   t: false,
   z: false
-};
-
-export const pluginList = ['auto-armor', 'auto-totem', 'auto-eat', 'auto-potion', 'auto-look', 'auto-shield', 'auto-repair'];
-
-export const plugins: { [x: string]: { enable: boolean, date: string } } = {
-  'auto-armor': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-totem': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-eat': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-potion': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-look': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-shield': {
-    enable: false,
-    date: '10.02.2026'
-  },
-  'auto-repair': {
-    enable: false,
-    date: '10.02.2026'
-  }
 };
 
 let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
@@ -299,6 +270,184 @@ function changeElementsDisplay(condition: boolean, view: string, show: string[] 
   });
 }
 
+async function initUserGuide(): Promise<void> {
+  try {
+    const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
+
+    if (content) {
+      (document.getElementById('guide-latest-update') as HTMLElement).innerText = content['latest-update'];
+
+      const guide = document.getElementById('guide-wrap') as HTMLElement; 
+
+      const sections = content['sections'];
+
+      for (const section of sections) {
+        const sectionElement = document.createElement('div');
+        sectionElement.className = 'section';
+  
+        const header = section['header'];
+        const subsections = section['subsections'];
+
+        if (header) {
+          const el = document.createElement('div');
+          el.className = 'header';
+          el.innerText = header;
+
+          sectionElement.appendChild(el);
+        }
+
+        for (const subsection of subsections) {
+          const subsectionElement = document.createElement('div');
+          subsectionElement.className = 'subsection';
+
+          const subheader = subsection['subheader'];
+          const paragraphs = subsection['paragraphs'];
+
+          if (subheader) {
+            const el = document.createElement('div');
+            el.className = 'subheader';
+            el.innerText = subheader;
+
+            subsectionElement.appendChild(el);
+          }
+
+          for (const paragraph of paragraphs) {
+            const el = document.createElement('p');
+
+            const html = String(paragraph)
+              .replaceAll('/*', '<span class="bold">')
+              .replaceAll('/!', '<span class="highlight">')
+              .replaceAll('/#', '<span class="link">')
+              .replaceAll('/:', '<span class="code">')
+              .replaceAll('/&', '</span>');
+
+            el.innerHTML = html;
+
+            subsectionElement.appendChild(el);
+          }
+
+          sectionElement.appendChild(subsectionElement);
+        }
+
+        guide.appendChild(sectionElement);
+      }
+    }
+  } catch (error) {
+    log(`Ошибка загрузки руководства: ${error}`, 'error');
+  }
+}
+
+async function initPlugins(): Promise<void> {
+  try {
+    for (const name in plugins) {
+      const plugin = plugins[name];
+
+      const element = document.createElement('div');
+
+      element.className = 'cover';
+      element.id = `${name}-plugin-description`;
+
+      element.innerHTML = `
+        <div class="panel with-header">
+          <div class="left">
+            <div class="header">${plugin.header} - Описание</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" plugin-close-description="true" path="${name}-plugin-description">
+              ⨉
+            </button>
+          </div>
+        </div>
+
+        <div class="plugin-description-body">
+          <div class="description" id="${name}-description"></div>
+          <p class="plugin-latest-update">Последнее обновление: <span id="${name}-latest-update">?</span></p>
+        </div>
+      `;
+
+      document.getElementById('plugins-container')?.appendChild(element);
+    }
+
+    document.querySelectorAll('[plugin-toggler="true"]').forEach(t => t.addEventListener('click', () => {
+      const name = t.getAttribute('plugin-name');
+      const state = t.getAttribute('state') === 'true';
+      updatePluginState(name, state);
+    }));  
+
+    document.querySelectorAll('[plugin-open-description="true"]').forEach(e => e.addEventListener('click', () => {
+      const path = e.getAttribute('path');
+      if (path) {
+        const container = document.getElementById(path) as HTMLElement;
+        container.style.display = 'flex';
+      }
+    })); 
+
+    document.querySelectorAll('[plugin-close-description="true"]').forEach(e => e.addEventListener('click', () => {
+      const path = e.getAttribute('path');
+      if (path) {
+        const container = document.getElementById(path) as HTMLElement;
+        container.style.display = 'none';
+      }
+    })); 
+
+    const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
+    
+    if (content) {
+      for (const plugin of content['list']) {
+        const name = plugin['name'];
+        const description = plugin['description'];
+        const latestUpdate = plugin['latest-update'];
+
+        if (plugins[name]?.date) {
+          if (latestUpdate != plugins[name].date) {
+            document.getElementById(`${name}-plugin`)?.classList.add('deprecated');
+            
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerText = 'Устарел';
+
+            document.getElementById(`${name}-name`)?.appendChild(tag);
+          }
+
+          const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
+          const pluginLatestUpdateContainer = document.getElementById(`${name}-latest-update`) as HTMLElement;
+
+          for (const p of description) {
+            const el = document.createElement('p');
+            el.innerText = p;
+
+            pluginDescriptionContainer.appendChild(el);
+          }
+
+          pluginLatestUpdateContainer.innerText = latestUpdate;
+        } else {
+          const pluginCard = document.createElement('div');
+          pluginCard.className = 'plugin-card';
+          pluginCard.classList.add('unavailable');
+
+          pluginCard.innerHTML = `
+            <div class="head">
+              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+              </svg>
+
+              <div class="text">
+                <div class="name">${plugin['header']} <span class="tag">Недоступен</span></div>
+                <div class="meta">Статус: <span class="status">Недоступен</span></div>
+              </div>
+            </div>
+          `;
+
+          document.getElementById('plugin-list')?.appendChild(pluginCard);
+        }
+      }
+    }
+  } catch (error) {
+    log(`Ошибка загрузки информации о плагинах: ${error}`, 'error');
+  }
+}
+
 class ElementManager {
   private latestControlContainer: HTMLElement | null = null;
 
@@ -360,28 +509,6 @@ class ElementManager {
       }
     }));
 
-    document.querySelectorAll('[plugin-toggler="true"]').forEach(t => t.addEventListener('click', () => {
-      const name = t.getAttribute('plugin-name');
-      const state = t.getAttribute('state') === 'true';
-      updatePluginState(name, state);
-    }));  
-
-    document.querySelectorAll('[plugin-open-description="true"]').forEach(e => e.addEventListener('click', () => {
-      const path = e.getAttribute('path');
-      if (path) {
-        const container = document.getElementById(path) as HTMLElement;
-        container.style.display = 'flex';
-      }
-    })); 
-
-    document.querySelectorAll('[plugin-close-description="true"]').forEach(e => e.addEventListener('click', () => {
-      const path = e.getAttribute('path');
-      if (path) {
-        const container = document.getElementById(path) as HTMLElement;
-        container.style.display = 'none';
-      }
-    })); 
-
     document.querySelectorAll('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
       let state: boolean | string = false;
       let attribute = e.getAttribute('state');
@@ -404,7 +531,10 @@ class ElementManager {
       await this.control((e as any).name, state);
     }));
 
-    (document.getElementById('clear-journal') as HTMLButtonElement).addEventListener('click', () => eraseLogs());
+    document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
+    document.getElementById('stop-script')?.addEventListener('click', async () => await scriptManager.stop());
+
+    document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
 
     const checkChatMonitoringState = (state: boolean) => {
       const input = document.getElementById('chat-history-length-container') as HTMLElement;
@@ -798,8 +928,8 @@ class ElementManager {
     this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
     await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
 
-    await this.initUserGuide();
-    await this.initPluginDescriptions();
+    await initUserGuide();
+    await initPlugins();
   } 
 
   private setInterfaceTheme(theme: string): void {
@@ -819,21 +949,21 @@ class ElementManager {
           root.style.setProperty('--spec-color', '#40cf33');
           root.style.setProperty('--dull-spec-color', '#51be26');
           root.style.setProperty('--chbx-spec-color', '#25a115');
-          root.style.setProperty('--chbx-dull-spec-color', '#1b7210');
+          root.style.setProperty('--chbx-dull-spec-color', '#1d7e11');
           break;
         case 'ice': 
           root.style.setProperty('--title-color', '#1c96c7');
           root.style.setProperty('--spec-color', '#46b2f0');
           root.style.setProperty('--dull-spec-color', '#26b9be');
           root.style.setProperty('--chbx-spec-color', '#26a9e6');
-          root.style.setProperty('--chbx-dull-spec-color', '#0d7696');
+          root.style.setProperty('--chbx-dull-spec-color', '#1386a8');
           break;
         case 'blood':
           root.style.setProperty('--title-color', '#e42525');
           root.style.setProperty('--spec-color', '#f03333');
           root.style.setProperty('--dull-spec-color', '#d62727');
           root.style.setProperty('--chbx-spec-color', '#ce2323');
-          root.style.setProperty('--chbx-dull-spec-color', '#991717');
+          root.style.setProperty('--chbx-dull-spec-color', '#aa1818');
           break;
         case 'gold': 
           root.style.setProperty('--title-color', '#c4c71c');
@@ -968,138 +1098,6 @@ class ElementManager {
     }
   }
 
-  private async initPluginDescriptions(): Promise<void> {
-    try {
-      const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
-
-      if (response.ok) {
-        const data = await response.json();
-
-        const list = data['list'];
-
-        for (const plugin of list) {
-          const name = plugin['name'];
-          const description = plugin['description'];
-          const latestUpdate = plugin['latest-update'];
-
-          if (plugins[name]?.date) {
-            if (latestUpdate != plugins[name].date) {
-              document.getElementById(`${name}-plugin`)?.classList.add('deprecated');
-              
-              const tag = document.createElement('span');
-              tag.className = 'tag';
-              tag.innerText = 'Устарел';
-
-              document.getElementById(`${name}-name`)?.appendChild(tag);
-            }
-
-            const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
-            const pluginLatestUpdateContainer = document.getElementById(`${name}-latest-update`) as HTMLElement;
-
-            for (const p of description) {
-              const el = document.createElement('p');
-              el.innerText = p;
-
-              pluginDescriptionContainer.appendChild(el);
-            }
-
-            pluginLatestUpdateContainer.innerText = latestUpdate;
-          } else {
-            const pluginCard = document.createElement('div');
-            pluginCard.className = 'plugin-card';
-            pluginCard.classList.add('unavailable');
-
-            pluginCard.innerHTML = `
-              <div class="head">
-                <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
-                </svg>
-
-                <div class="text">
-                  <div class="name">${plugin['header']} <span class="tag">Недоступен</span></div>
-                  <div class="meta">Статус: <span class="status">Недоступен</span></div>
-                </div>
-              </div>
-            `;
-
-            document.getElementById('plugin-list')?.appendChild(pluginCard);
-          }
-        }
-      }
-    } catch (error) {
-      log(`Ошибка initPluginDescriptions: ${error}`, 'error');
-    }
-  }
-
-  private async initUserGuide(): Promise<void> {
-    try {
-      const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
-
-      if (response.ok) {
-        const data = await response.json();
-
-        (document.getElementById('guide-latest-update') as HTMLElement).innerText = data['latest-update'];
-
-        const guide = document.getElementById('guide-wrap') as HTMLElement; 
-
-        const sections = data['sections'];
-
-        for (const section of sections) {
-          const sectionElement = document.createElement('div');
-          sectionElement.className = 'section';
-    
-          const header = section['header'];
-          const subsections = section['subsections'];
-
-          if (header) {
-            const el = document.createElement('div');
-            el.className = 'header';
-            el.innerText = header;
-
-            sectionElement.appendChild(el);
-          }
-
-          for (const subsection of subsections) {
-            const subsectionElement = document.createElement('div');
-            subsectionElement.className = 'subsection';
-
-            const subheader = subsection['subheader'];
-            const paragraphs = subsection['paragraphs'];
-
-            if (subheader) {
-              const el = document.createElement('div');
-              el.className = 'subheader';
-              el.innerText = subheader;
-
-              subsectionElement.appendChild(el);
-            }
-
-            for (const paragraph of paragraphs) {
-              const el = document.createElement('p');
-
-              const html = String(paragraph)
-                .replaceAll('/*', '<span class="bold">')
-                .replaceAll('/!', '<span class="highlight">')
-                .replaceAll('/#', '<span class="link">')
-                .replaceAll('/:', '<span class="code">')
-                .replaceAll('/&', '</span>');
-
-              el.innerHTML = html;
-
-              subsectionElement.appendChild(el);
-            }
-
-            sectionElement.appendChild(subsectionElement);
-          }
-
-          guide.appendChild(sectionElement);
-        }
-      }
-    } catch (error) {
-      log(`Ошибка initUserGuide: ${error}`, 'error');
-    }
-  }
-
   private showGlobalContainer(id: string): void {
     globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
     controlContainers.forEach(c => c.el.style.display = 'none');
@@ -1206,6 +1204,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     log('Инициализация...', 'extended');
 
+    (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
+
+    (document.getElementById('window-minimize') as HTMLButtonElement).addEventListener('click', async () => await getCurrentWindow().minimize());
+    (document.getElementById('window-close') as HTMLButtonElement).addEventListener('click', async () => await invoke('exit'));
+
+    document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
+    document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
+
     const elementManager = new ElementManager();
 
     await listen('log', (event) => {
@@ -1231,14 +1237,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         log(`Ошибка принятие message-события: ${error}`, 'error');
       }
     });
-
-    (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
-
-    (document.getElementById('window-minimize') as HTMLButtonElement).addEventListener('click', async () => await getCurrentWindow().minimize());
-    (document.getElementById('window-close') as HTMLButtonElement).addEventListener('click', async () => await invoke('exit'));
-
-    document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
-    document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
 
     addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
     addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 

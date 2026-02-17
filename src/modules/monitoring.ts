@@ -311,9 +311,7 @@ export class MonitoringManager {
             </button>
 
             <button class="btn min pretty" id="close-chat-${nickname}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-              </svg>
+              ⨉
             </button>
           </div>
         </div>
@@ -325,7 +323,7 @@ export class MonitoringManager {
         <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
           <p class="signature">${nickname}:</p>
 
-          <input type="text" class="glass-input" control="this" id="this-chat-message-${nickname}" placeholder="Введите сообщение" style="height: 28px; width: 250px;">
+          <input type="text" class="glass-input" control="this" id="this-chat-message-${nickname}" placeholder="Введите сообщение" style="height: 32px; width: 250px;">
         </div>
       </div>
 
@@ -339,9 +337,7 @@ export class MonitoringManager {
             </button>
 
             <button class="btn min pretty" id="close-map-${nickname}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-              </svg>
+              ⨉
             </button>
           </div>
         </div>
@@ -588,9 +584,7 @@ export class MonitoringManager {
           <div class="panel">
             <div class="right">
               <button class="btn min pretty" id="close-map-captcha-image-${nickname}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                  <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                </svg>
+                ⨉
               </button>
             </div>
           </div>
@@ -600,7 +594,7 @@ export class MonitoringManager {
           <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
             <p class="signature">${nickname}:</p>
 
-            <input type="text" class="glass-input" id="send-captcha-code-${nickname}" placeholder="Введите код с капчи" style="height: 28px; width: 250px;">
+            <input type="text" class="glass-input" id="send-captcha-code-${nickname}" placeholder="Введите код с капчи" style="height: 32px; width: 250px;">
           </div>
         `;
 

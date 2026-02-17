@@ -1,5 +1,6 @@
+import { plugins } from '../common/structs';
 import { log } from '../logger';
-import { pluginList, updatePluginState } from '../main';
+import { updatePluginState } from '../main';
 
 
 interface ConfigElement {
@@ -68,7 +69,7 @@ export function loadConfig(): void {
       } 
     }
 
-    for (const name of pluginList) {
+    for (const name in plugins) {
       const state = localStorage.getItem(`plugin-state:${name}`) === 'true';
       updatePluginState(name, state);
     }

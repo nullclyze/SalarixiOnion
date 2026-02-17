@@ -1,33 +1,22 @@
+import { downloadJsonContent } from '../downloader/downloader';
 import { log } from '../logger';
-
 
 export type Language = 'ru' | 'en';
 
 let cache_map: any = null;
-
-async function uploadTranslation(): Promise<any> {
-  try {
-    const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
-
-    if (!response.ok) {
-      log('Ошибка загрузки перевода: Failed to send request', 'error');
-      return;
-    }
-
-    const data = await response.json();
-
-    return data['map'];
-  } catch (error) {
-    log(`Ошибка загрузки перевода: ${error}`, 'error');
-  }
-}
 
 export async function translate(lang: Language) {
   try {
     let map: any = null;
 
     if (!cache_map) {
-      map = await uploadTranslation();
+      const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
+    
+      if (content) {
+        map = content['map'];
+      } else {
+        log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
+      }
     } else {
       map = cache_map;
     }

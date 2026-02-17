@@ -37,18 +37,18 @@ export class RadarManager {
     addTargetBtn.addEventListener('click', () => {
       if (!this.active) return;
 
-      const nicknameInput = (document.getElementById('radar-target-nickname') as HTMLInputElement);
-      const nickname = nicknameInput.value;
+      const usernameInput = document.getElementById('radar-target-nickname') as HTMLInputElement;
+      const username = usernameInput.value;
 
-      if (this.targets.has(nickname)) return;
+      if (this.targets.has(username)) return;
 
-      nicknameInput.value = '';
+      usernameInput.value = '';
 
-      this.targets.set(nickname, { data: null, interval: null, chart: null });
+      this.targets.set(username, { data: null, interval: null, chart: null });
 
       const card = document.createElement('div');
       card.className = 'radar-target';
-      card.id = `radar-target-${nickname}`;
+      card.id = `radar-target-${username}`;
 
       card.innerHTML = `
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
@@ -58,30 +58,30 @@ export class RadarManager {
         <div class="sep"></div>
 
         <div class="info" style="min-width: 220px; max-width: 220px;">
-          <p>Никнейм: ${nickname.length <= 16 ? nickname : nickname.substr(0, 16) + '...'}</p>
-          <p>Статус: <span id="radar-target-status-${nickname}">Не найден</span></p>
-          <p>UUID: <span id="radar-target-uuid-${nickname}">?</span></p>
+          <p>Никнейм: ${username.length <= 16 ? username : username.substr(0, 16) + '...'}</p>
+          <p>Статус: <span id="radar-target-status-${username}">Не найден</span></p>
+          <p>UUID: <span id="radar-target-uuid-${username}">?</span></p>
         </div>
 
         <div class="sep"></div>
 
         <div class="info" style="min-width: 150px; max-width: 150px;">
-          <p>X: <span id="radar-target-x-${nickname}">?</span></p>
-          <p>Y: <span id="radar-target-y-${nickname}">?</span></p>
-          <p>Z: <span id="radar-target-z-${nickname}">?</span></p>
+          <p>X: <span id="radar-target-x-${username}">?</span></p>
+          <p>Y: <span id="radar-target-y-${username}">?</span></p>
+          <p>Z: <span id="radar-target-z-${username}">?</span></p>
         </div>
 
         <div class="sep"></div>
 
         <div class="btn-group">
           <div class="btn-group-flex" style="margin-top: 0;">
-            <button class="btn min pretty" id="radar-open-route-${nickname}">
+            <button class="btn min pretty" id="radar-open-route-${username}">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
                 <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
               </svg>
             </button>
 
-            <button class="btn min pretty" id="radar-remove-target-${nickname}">
+            <button class="btn min pretty" id="radar-remove-target-${username}">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
                 <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
               </svg>
@@ -95,7 +95,7 @@ export class RadarManager {
               </svg>
             </button>
 
-            <button class="btn min pretty" id="radar-copy-target-info-${nickname}">
+            <button class="btn min pretty" id="radar-copy-target-info-${username}">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
               </svg>
@@ -103,27 +103,26 @@ export class RadarManager {
           </div>
         </div>
 
-        <div class="cover" id="radar-route-${nickname}">
-          <div class="panel">
+        <div class="cover" id="radar-route-${username}">
+          <div class="panel with-header" style="margin-bottom: 30px;">
             <div class="left">
+              <div class="header">Маршрут ${username}</div>
             </div>
 
             <div class="right">
-              <button class="btn min pretty" id="radar-close-route-${nickname}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                  <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                </svg>
+              <button class="btn min pretty" id="radar-close-route-${username}">
+                ⨉
               </button>
             </div>
           </div>
 
-          <canvas class="radar-chart" id="radar-chart-${nickname}"></canvas>
+          <canvas class="radar-chart" id="radar-chart-${username}"></canvas>
         </div>
       `;
 
       this.targetCardsContainer!.appendChild(card);
 
-      setTimeout(() => this.initializeTargetCard(nickname), 200);
+      setTimeout(() => this.initializeTargetCard(username), 200);
     });
 
     setUpdateFrequency.addEventListener('change', () => {
@@ -363,9 +362,7 @@ UUID: ${uuid}
         },
         plugins: {
           title: {
-            text: `Маршрут ${nickname}`,
-            display: true,
-            color: '#a2a2a2ff'
+            display: false,
           },
           legend: {
             display: false 
