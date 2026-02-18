@@ -7,8 +7,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{get_block_state, stop_bot_move};
-use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StealerModule;

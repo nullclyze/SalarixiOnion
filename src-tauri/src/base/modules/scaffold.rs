@@ -5,12 +5,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{
   convert_hotbar_slot_to_inventory_slot, convert_inventory_slot_to_hotbar_slot, get_block_state,
   get_bot_physics, get_inventory_menu, get_selected_hotbar_slot, go, take_item,
   this_is_solid_block, SafeClientImpls,
 };
-use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScaffoldModule;

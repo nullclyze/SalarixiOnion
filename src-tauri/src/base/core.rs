@@ -18,8 +18,8 @@ use crate::base::bot::*;
 use crate::base::handlers::*;
 use crate::base::modules::*;
 use crate::base::*;
+use crate::common::*;
 use crate::emit::*;
-use crate::tools::*;
 use crate::webhook::send_webhook;
 
 pub static FLOW_MANAGER: Lazy<Arc<RwLock<Option<Arc<RwLock<FlowManager>>>>>> =
@@ -588,7 +588,7 @@ impl FlowManager {
         name: "info".to_string(),
         message: format!("Бот {} отключился", username),
       }));
-      
+
       emit_message("Система", format!("Бот {} отключился", username));
     });
   }

@@ -1,21 +1,10 @@
+import { generateId } from './helpers/generate';
+
 let showMessages = true;
 let messageCounter = 0;
 
 function removeMessage(id: string): void {
   document.getElementById(id)?.remove();
-}
-
-function generateId(): string {
-  let chars = '0123456789';
-
-  let id = '';
-
-  for (let i = 0; i < 6; i++) {
-    const index = Math.floor(Math.random() * chars.length);
-    id += chars[index];
-  }
-
-  return id;
 }
 
 export function changeMessagesVisibility(state: string): void {

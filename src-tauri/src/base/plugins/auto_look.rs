@@ -3,9 +3,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{get_entity_position, get_eye_position};
 use crate::common::{get_nearest_entity, EntityFilter};
-use crate::tools::*;
 
 pub struct AutoLookPlugin;
 

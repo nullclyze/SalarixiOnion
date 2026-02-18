@@ -6,8 +6,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{get_block_state, get_inventory_menu, take_item};
-use crate::tools::*;
 
 #[derive(Debug)]
 struct Tool {

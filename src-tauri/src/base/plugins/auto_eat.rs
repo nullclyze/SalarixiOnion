@@ -6,8 +6,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{get_inventory_menu, start_use_item, take_item, SafeClientImpls};
-use crate::tools::*;
 
 #[derive(Clone, Copy)]
 struct Food {

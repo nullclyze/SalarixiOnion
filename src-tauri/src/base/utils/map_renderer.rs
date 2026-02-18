@@ -13,8 +13,8 @@ use std::io::Write;
 use std::sync::Arc;
 
 use crate::common::*;
+use crate::common::{randint, randstr, Classes};
 use crate::emit::{emit_event, EventType, LogEventPayload, MapRenderProgressEventPayload};
-use crate::tools::{randint, randstr, Classes};
 
 pub static MAP_RENDERER: Lazy<Arc<MapRenderer>> = Lazy::new(|| Arc::new(MapRenderer::new()));
 

@@ -5,8 +5,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{go, go_to};
-use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MovementModule;

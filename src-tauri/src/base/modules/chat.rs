@@ -6,8 +6,8 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::get_player_uuid;
-use crate::radar::RADAR_MANAGER;
-use crate::tools::*;
+use crate::common::*;
+use crate::RADAR_MANAGER;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatModule;

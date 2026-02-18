@@ -8,9 +8,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::SafeClientImpls;
+use crate::common::*;
 use crate::emit::*;
-use crate::tools::*;
 use crate::webhook::*;
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -163,7 +162,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   }));
 
                   bot.disconnect();
-                  
+
                   BOT_REGISTRY.remove_bot(&nickname);
                   PROFILES.set_bool(&nickname, "skin_is_set", true);
                 }

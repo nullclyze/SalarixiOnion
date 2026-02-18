@@ -1,5 +1,10 @@
 use azalea::{
-  Client, Vec3, entity::{Position, dimensions::EntityDimensions, metadata::Health}, local_player::{Hunger, TabList}, player::GameProfileComponent, protocol::packets::game::{ServerboundSwing, s_interact::InteractionHand}, world::MinecraftEntityId
+  entity::{dimensions::EntityDimensions, metadata::Health, Position},
+  local_player::{Hunger, TabList},
+  player::GameProfileComponent,
+  protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing},
+  world::MinecraftEntityId,
+  Client, Vec3,
 };
 
 // Трейт безопасных функций для Client

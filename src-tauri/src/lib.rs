@@ -3,14 +3,13 @@ mod common;
 mod emit;
 mod quick;
 mod script;
-mod radar;
 mod tools;
 mod webhook;
 
 use crate::base::*;
 use crate::emit::*;
 use crate::script::*;
-use crate::radar::*;
+use crate::tools::*;
 use crate::webhook::*;
 
 // Функция запуска ботов
@@ -219,6 +218,12 @@ async fn save_map(nickname: String, path: Option<String>, base64code: String) {
   MAP_RENDERER.save_map(nickname, path, base64code);
 }
 
+// Функция пингования сервера
+#[tauri::command]
+async fn get_server_info(address: String) -> ServerInformation {
+  ping_server(address).await
+}
+
 // Функция открытия URL в браузере
 #[tauri::command]
 async fn open_url(url: String) {
@@ -258,6 +263,7 @@ pub fn run() {
       stop_script,
       render_map,
       save_map,
+      get_server_info,
       open_url
     ])
     .run(tauri::generate_context!())

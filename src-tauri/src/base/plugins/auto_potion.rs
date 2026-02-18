@@ -10,8 +10,8 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::SafeClientImpls;
+use crate::common::*;
 use crate::common::{get_bot_physics, get_inventory_menu, start_use_item, take_item};
-use crate::tools::*;
 
 #[derive(Clone)]
 struct Potion {

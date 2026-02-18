@@ -13,7 +13,7 @@ use crate::common::{
   get_average_coordinates_of_bots, get_inventory_menu, go, go_to, inventory_drop_item,
   set_bot_velocity_y, take_item, this_is_solid_block, SafeClientImpls,
 };
-use crate::tools::{randfloat, randint, randuint};
+use crate::common::{randfloat, randint, randuint};
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> =
   Lazy::new(|| Arc::new(QuickTaskManager::new()));
@@ -322,7 +322,7 @@ impl QuickTaskManager {
           if let Some(tasks) = TASKS.get(&nickname) {
             tasks.write().unwrap().kill_all_tasks();
           }
-          
+
           STATES.reset(&nickname);
           TASKS.remove(&nickname);
           PROFILES.set_str(&nickname, "status", "Оффлайн");

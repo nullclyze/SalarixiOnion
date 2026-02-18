@@ -127,6 +127,13 @@
       }
     },
     { 
+      "tags": ["panel-btn:ping", "title:ping"], 
+      "lang": {
+        "ru": "Пинг",
+        "en": "Ping"
+      }
+    },
+    { 
       "tags": ["panel-btn:spy", "title:spy"], 
       "lang": {
         "ru": "Шпион",

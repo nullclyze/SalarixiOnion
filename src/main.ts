@@ -11,6 +11,7 @@ import { ChartManager } from './modules/chart';
 import { ScriptManager } from './modules/script';
 import { MonitoringManager } from './modules/monitoring';
 import { RadarManager } from './modules/radar';
+import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
 import { changeMessagesVisibility, spawnMessage } from './message';
 import { downloadJsonContent } from './downloader/downloader';
@@ -29,6 +30,7 @@ const chartManager = new ChartManager();
 const scriptManager = new ScriptManager();
 const monitoringManager = new MonitoringManager();
 const radarManager = new RadarManager();
+const pingManager = new PingManager();
 
 const pressedKeys: { [x: string]: boolean } = {
   alt: false,
@@ -74,7 +76,7 @@ export function updatePluginState(name: string | null, state: boolean) {
       status.innerText = 'Выключен';
 
       toggler.setAttribute('state', 'true');
-      toggler.style.color = '#d61818';
+      toggler.style.color = '#e61919';
       toggler.innerText = 'Выключен';
     }
   }
@@ -533,6 +535,8 @@ class ElementManager {
 
     document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
     document.getElementById('stop-script')?.addEventListener('click', async () => await scriptManager.stop());
+
+    document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
 
     document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
 

@@ -7,8 +7,8 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::SafeClientImpls;
+use crate::common::*;
 use crate::common::{go, run};
-use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiAfkModule;

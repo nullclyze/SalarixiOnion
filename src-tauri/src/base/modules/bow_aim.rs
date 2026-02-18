@@ -7,11 +7,11 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
+use crate::common::*;
 use crate::common::{
   get_entity_position, get_eye_position, get_inventory_menu, get_nearest_entity, release_use_item,
   start_use_item, take_item, EntityFilter,
 };
-use crate::tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BowAimModule;

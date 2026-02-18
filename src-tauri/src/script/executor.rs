@@ -1,21 +1,20 @@
 use once_cell::sync::Lazy;
+use rhai::Engine;
 use std::sync::{Arc, RwLock};
 use tokio::task::JoinHandle;
-use rhai::Engine;
 
 use crate::script::functions::BasicScriptFunctions;
 
-pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> = Lazy::new(|| Arc::new(RwLock::new(ScriptExecutor::new())));
+pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
+  Lazy::new(|| Arc::new(RwLock::new(ScriptExecutor::new())));
 
 pub struct ScriptExecutor {
   pub worker: Option<JoinHandle<()>>,
 }
 
 impl ScriptExecutor {
-  pub fn new() -> Self { 
-    Self {
-      worker: None,
-    }
+  pub fn new() -> Self {
+    Self { worker: None }
   }
 
   pub fn execute(&self, script: String) {
@@ -24,10 +23,16 @@ impl ScriptExecutor {
 
       engine
         .register_fn("print", |str: &str| BasicScriptFunctions::print(str))
-        .register_fn("log", |text: &str, name: &str| BasicScriptFunctions::log(text, name))
-        .register_fn("message", |content: &str, name: &str| BasicScriptFunctions::message(content, name))
-        .register_fn("webhook", |content: &str| BasicScriptFunctions::webhook(content));
-      
+        .register_fn("log", |text: &str, name: &str| {
+          BasicScriptFunctions::log(text, name)
+        })
+        .register_fn("message", |content: &str, name: &str| {
+          BasicScriptFunctions::message(content, name)
+        })
+        .register_fn("webhook", |content: &str| {
+          BasicScriptFunctions::webhook(content)
+        });
+
       let _ = engine.eval::<()>(script.as_str());
     });
   }

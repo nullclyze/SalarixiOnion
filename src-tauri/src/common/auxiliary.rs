@@ -31,8 +31,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::SafeClientImpls;
-use crate::tools::*;
+use crate::common::*;
 
 // Функция нахождения пустого слота в инвентаре
 pub fn find_empty_slot_in_invenotry(menu: Menu) -> Option<usize> {

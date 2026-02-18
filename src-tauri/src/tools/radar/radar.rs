@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use crate::{
   base::{BOT_REGISTRY, PROFILES},
-  common::{SafeClientImpls, get_entity_position},
+  common::{get_entity_position, SafeClientImpls},
 };
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
