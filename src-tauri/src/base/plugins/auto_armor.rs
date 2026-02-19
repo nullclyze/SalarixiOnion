@@ -5,7 +5,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{find_empty_slot_in_invenotry, get_inventory_menu, inventory_shift_click};
+use crate::common::{find_empty_slot_in_invenotry, get_bot_inventory_menu, inventory_shift_click};
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone)]
 struct Armor {
@@ -40,6 +41,10 @@ impl AutoArmorPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
             self.equip_armor(bot).await;
           })
           .await;
@@ -52,7 +57,7 @@ impl AutoArmorPlugin {
   async fn equip_armor(&self, bot: &Client) {
     let mut armors = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if slot > 8 {
           if let Some(armor) = self.is_armor(item, slot) {
@@ -90,7 +95,7 @@ impl AutoArmorPlugin {
   }
 
   async fn equip(&self, bot: &Client, armor_slot: usize, target_slot: usize) {
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
           if let Some(_) = find_empty_slot_in_invenotry(menu) {
@@ -340,7 +345,7 @@ impl AutoArmorPlugin {
       _ => return false,
     };
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       if let Some(item) = menu.slot(target_slot) {
         if let Some(current_armor) = self.is_armor(item, target_slot) {
           if armor.part == current_armor.part {

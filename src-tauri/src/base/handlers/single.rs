@@ -8,8 +8,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
 use crate::emit::*;
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 use crate::webhook::*;
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -57,10 +58,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         });
       }
 
-      emit_event(EventType::Log(LogEventPayload {
-        name: "system".to_string(),
-        message: format!("Бот {} подключается...", nickname),
-      }));
+      send_log(format!("Бот {} подключается...", nickname), "system");
 
       PROFILES.set_str(&nickname, "status", "Соединение...");
 
@@ -94,15 +92,15 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           );
         }
 
-        emit_event(EventType::Log(LogEventPayload {
-          name: "info".to_string(),
-          message: format!(
+        send_log(
+          format!(
             "Бот {} заспавнился, координаты (XYZ): {}",
             &nickname, str_pos
           ),
-        }));
+          "info",
+        );
 
-        emit_message(
+        send_message(
           "Система",
           format!(
             "Бот {} заспавнился<br><br>Координаты (XYZ): {}<br>Здоровье: {} / 20",
@@ -131,10 +129,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
                 sleep(Duration::from_millis(3000)).await;
 
-                emit_event(EventType::Log(LogEventPayload {
-                  name: "system".to_string(),
-                  message: format!("Бот {} успешно установил скин: {}", nickname, command),
-                }));
+                send_log(
+                  format!("Бот {} успешно установил скин: {}", nickname, command),
+                  "system",
+                );
 
                 bot.disconnect();
 
@@ -156,10 +154,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
                   sleep(Duration::from_millis(3000)).await;
 
-                  emit_event(EventType::Log(LogEventPayload {
-                    name: "system".to_string(),
-                    message: format!("Бот {} успешно установил скин: {}", nickname, command),
-                  }));
+                  send_log(
+                    format!("Бот {} успешно установил скин: {}", nickname, command),
+                    "system",
+                  );
 
                   bot.disconnect();
 
@@ -199,12 +197,11 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           }
         }
 
-        emit_event(EventType::Log(LogEventPayload {
-          name: "info".to_string(),
-          message: format!("Бот {} отключился: {}", &nickname, text.to_html()),
-        }));
-
-        emit_message(
+        send_log(
+          format!("Бот {} отключился: {}", &nickname, text.to_html()),
+          "info",
+        );
+        send_message(
           "Система",
           format!("Бот {} отключился: {}", &nickname, text.to_string()),
         );
@@ -226,7 +223,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             }
           }
 
-          emit_event(EventType::Chat(ChatEventPayload {
+          send_event(PayloadEvent::Chat(ChatEventPayload {
             receiver: nickname.clone(),
             message: message,
           }));
@@ -255,12 +252,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                     );
                   }
 
-                  emit_event(EventType::Log(LogEventPayload {
-                    name: "info".to_string(),
-                    message: format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", nickname),
-                  }));
+                  send_log(
+                    format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", nickname),
+                    "info",
+                  );
 
-                  emit_event(EventType::AntiWebCaptcha(AntiWebCaptchaEventPayload {
+                  send_event(PayloadEvent::AntiWebCaptcha(AntiWebCaptchaEventPayload {
                     captcha_url: url,
                     nickname: nickname,
                   }));
@@ -324,12 +321,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                       );
                     }
 
-                    emit_event(EventType::Log(LogEventPayload {
-                      name: "info".to_string(),
-                      message: format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
-                    }));
+                    send_log(
+                      format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
+                      "info",
+                    );
 
-                    emit_event(EventType::AntiMapCaptcha(AntiMapCaptchaEventPayload {
+                    send_event(PayloadEvent::AntiMapCaptcha(AntiMapCaptchaEventPayload {
                       base64_code: base64_code,
                       nickname: nickname.to_string(),
                     }));

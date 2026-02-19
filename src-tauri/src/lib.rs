@@ -1,6 +1,11 @@
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
 mod base;
 mod common;
 mod emit;
+mod generators;
+mod methods;
 mod quick;
 mod script;
 mod tools;
@@ -37,7 +42,7 @@ async fn launch_bots(options: LaunchOptions) -> (String, String) {
 #[tauri::command(async)]
 async fn stop_bots() -> (String, String) {
   if let Some(arc) = get_flow_manager() {
-    emit_message(
+    send_message(
       "Система",
       format!("Остановка {} ботов...", get_active_bots_count().await),
     );
@@ -53,31 +58,51 @@ async fn stop_bots() -> (String, String) {
 
 // Функция получения профилей ботов
 #[tauri::command]
-async fn get_bot_profiles() -> Option<std::collections::HashMap<String, Profile>> {
+async fn get_bot_profiles() -> Option<HashMap<String, Profile>> {
   Some(PROFILES.get_all())
 }
 
-// Функция отправки сообщения от бота
-#[tauri::command]
-async fn send_message(nickname: String, message: String) {
-  if let Some(arc) = get_flow_manager() {
-    arc.read().send_message(nickname, message);
-  }
+#[derive(Serialize, Deserialize)]
+struct SendMessageCommand {
+  username: String,
+  message: String,
 }
 
-// Функция сброса всех задач и состояний бота
-#[tauri::command]
-async fn reset_bot(nickname: String) {
-  if let Some(arc) = get_flow_manager() {
-    arc.read().reset_bot(nickname);
-  }
+#[derive(Serialize, Deserialize)]
+struct ResetBotCommand {
+  username: String,
 }
 
-// Функция отключения бота
+#[derive(Serialize, Deserialize)]
+struct DisconnectBotCommand {
+  username: String,
+}
+
+// Функция отправки команд в FlowManager
 #[tauri::command]
-async fn disconnect_bot(nickname: String) {
+async fn send_command(command: String, options: serde_json::Value) {
   if let Some(arc) = get_flow_manager() {
-    arc.read().disconnect_bot(nickname);
+    match command.as_str() {
+      "send_message" => {
+        let opts: SendMessageCommand = serde_json::from_value(options)
+          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+          .unwrap();
+        arc.read().send_message(opts.username, opts.message);
+      }
+      "reset_bot" => {
+        let opts: ResetBotCommand = serde_json::from_value(options)
+          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+          .unwrap();
+        arc.read().reset_bot(opts.username);
+      }
+      "disconnect_bot" => {
+        let opts: DisconnectBotCommand = serde_json::from_value(options)
+          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+          .unwrap();
+        arc.read().disconnect_bot(opts.username);
+      }
+      _ => {}
+    }
   }
 }
 
@@ -138,15 +163,15 @@ async fn control(name: String, options: serde_json::Value, group: String) {
     }
   }
 
-  emit_event(EventType::Log(LogEventPayload {
-    name: "extended".to_string(),
-    message: format!(
+  send_log(
+    format!(
       "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
       group, name, options
     ),
-  }));
+    "extended",
+  );
 
-  emit_message(
+  send_message(
     "Управление",
     format!(
       "Группа ботов с названием '{}' приняла команду '{}'",
@@ -173,12 +198,9 @@ async fn quick_task(name: String) {
     }
   }
 
-  emit_event(EventType::Log(LogEventPayload {
-    name: "extended".to_string(),
-    message: format!("Быстрая задача '{}'", name),
-  }));
+  send_log(format!("Быстрая задача '{}'", name), "extended");
 
-  emit_message(
+  send_message(
     "Быстрая задача",
     format!(
       "{} ботов получили быструю задачу '{}'",
@@ -249,9 +271,7 @@ pub fn run() {
       launch_bots,
       stop_bots,
       get_bot_profiles,
-      send_message,
-      reset_bot,
-      disconnect_bot,
+      send_command,
       get_radar_data,
       save_radar_data,
       set_group,

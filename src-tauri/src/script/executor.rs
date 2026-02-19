@@ -26,8 +26,8 @@ impl ScriptExecutor {
         .register_fn("log", |text: &str, name: &str| {
           BasicScriptFunctions::log(text, name)
         })
-        .register_fn("message", |content: &str, name: &str| {
-          BasicScriptFunctions::message(content, name)
+        .register_fn("message", |name: &str, content: &str| {
+          BasicScriptFunctions::message(name, content)
         })
         .register_fn("webhook", |content: &str| {
           BasicScriptFunctions::webhook(content)

@@ -1,14 +1,9 @@
 use azalea::{
-  entity::{dimensions::EntityDimensions, metadata::Health, Position},
-  local_player::{Hunger, TabList},
-  player::GameProfileComponent,
-  protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing},
-  world::MinecraftEntityId,
-  Client, Vec3,
+  Client, Vec3, entity::{Crouching, Jumping, Position, dimensions::EntityDimensions, metadata::Health}, local_player::{Hunger, TabList}, player::GameProfileComponent, protocol::packets::game::{ServerboundSwing, s_interact::InteractionHand}, world::MinecraftEntityId
 };
 
-// Трейт безопасных функций для Client
-pub trait SafeClientImpls {
+// Трейт безопасных методов для Client
+pub trait SafeClientMethods {
   fn workable(&self) -> bool;
   fn id(&self) -> MinecraftEntityId;
   fn feet_pos(&self) -> Vec3;
@@ -19,13 +14,14 @@ pub trait SafeClientImpls {
   fn swing_arm(&self);
 }
 
-impl SafeClientImpls for Client {
+impl SafeClientMethods for Client {
   fn workable(&self) -> bool {
     let position_exists = self.get_component::<Position>().is_some();
     let dimensions_exists = self.get_component::<EntityDimensions>().is_some();
     let profile_exist = self.get_component::<GameProfileComponent>().is_some();
+    let states_exist = self.get_component::<Crouching>().is_some() && self.get_component::<Jumping>().is_some();
 
-    position_exists && dimensions_exists && profile_exist
+    position_exists && dimensions_exists && profile_exist && states_exist
   }
 
   fn id(&self) -> MinecraftEntityId {

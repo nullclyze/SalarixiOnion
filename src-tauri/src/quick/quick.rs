@@ -10,10 +10,11 @@ use tokio::time::sleep;
 
 use crate::base::{BOT_REGISTRY, PROFILES, STATES, TASKS};
 use crate::common::{
-  get_average_coordinates_of_bots, get_inventory_menu, go, go_to, inventory_drop_item,
-  set_bot_velocity_y, take_item, this_is_solid_block, SafeClientImpls,
+  get_average_coordinates_of_bots, get_bot_inventory_menu, go, go_to, inventory_drop_item,
+  set_bot_velocity_y, take_item, this_is_solid_block,
 };
-use crate::common::{randfloat, randint, randuint};
+use crate::generators::{randfloat, randint, randuint};
+use crate::methods::SafeClientMethods;
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> =
   Lazy::new(|| Arc::new(QuickTaskManager::new()));
@@ -34,7 +35,7 @@ impl QuickTaskManager {
         BOT_REGISTRY
           .get_bot(&nickname, async |bot| match name.as_str() {
             "clear-inventory" => {
-              if let Some(menu) = get_inventory_menu(bot) {
+              if let Some(menu) = get_bot_inventory_menu(bot) {
                 for (slot, item) in menu.slots().iter().enumerate() {
                   if !item.is_empty() {
                     inventory_drop_item(&bot, slot, true);
@@ -89,7 +90,7 @@ impl QuickTaskManager {
               {
                 let mut block_slot = None;
 
-                if let Some(menu) = get_inventory_menu(&bot) {
+                if let Some(menu) = get_bot_inventory_menu(&bot) {
                   for (slot, item) in menu.slots().iter().enumerate() {
                     if !item.is_empty() {
                       if this_is_solid_block(item.kind()) {
@@ -197,7 +198,7 @@ impl QuickTaskManager {
               for pos in block_positions {
                 let mut block_slot = None;
 
-                if let Some(menu) = get_inventory_menu(&bot) {
+                if let Some(menu) = get_bot_inventory_menu(&bot) {
                   for (slot, item) in menu.slots().iter().enumerate() {
                     if !item.is_empty() {
                       if this_is_solid_block(item.kind()) {

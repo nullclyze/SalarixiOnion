@@ -3,20 +3,26 @@ use tauri::Emitter;
 
 use crate::base::get_flow_manager;
 
+// Структура данных в log-payload
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogPayload {
+  pub text: String,
+  pub class: String,
+}
+
+// Структура данных в message-payload
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MessagePayload {
+  pub name: String,
+  pub content: String,
+}
+
 #[derive(Debug, Clone)]
-pub enum EventType {
-  Log(LogEventPayload),
+pub enum PayloadEvent {
   Chat(ChatEventPayload),
   MapRenderProgress(MapRenderProgressEventPayload),
   AntiWebCaptcha(AntiWebCaptchaEventPayload),
   AntiMapCaptcha(AntiMapCaptchaEventPayload),
-}
-
-// Структура данных в log-payload
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LogEventPayload {
-  pub name: String,
-  pub message: String,
 }
 
 // Структура данных в chat-payload
@@ -47,42 +53,25 @@ pub struct AntiMapCaptchaEventPayload {
   pub nickname: String,
 }
 
-// Структура данных в message-payload
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MessagePayload {
-  pub name: String,
-  pub content: String,
-}
-
-// Функция отправки события
-pub fn emit_event(event: EventType) {
+// Функция отправки лога
+pub fn send_log(text: String, class: &str) {
   if let Some(arc) = get_flow_manager() {
     let fm = arc.read();
 
     if let Some(handle) = fm.app_handle.as_ref() {
-      match event {
-        EventType::Log(payload) => {
-          let _ = handle.emit("log", payload);
-        }
-        EventType::Chat(payload) => {
-          let _ = handle.emit("chat-message", payload);
-        }
-        EventType::MapRenderProgress(payload) => {
-          let _ = handle.emit("map-render-progress", payload);
-        }
-        EventType::AntiWebCaptcha(payload) => {
-          let _ = handle.emit("anti-web-captcha", payload);
-        }
-        EventType::AntiMapCaptcha(payload) => {
-          let _ = handle.emit("anti-map-captcha", payload);
-        }
-      }
+      let _ = handle.emit(
+        "log",
+        LogPayload {
+          text: text,
+          class: class.to_string(),
+        },
+      );
     }
   }
 }
 
 // Функция отправки сообщения
-pub fn emit_message(name: &str, content: String) {
+pub fn send_message(name: &str, content: String) {
   if let Some(arc) = get_flow_manager() {
     let fm = arc.read();
 
@@ -94,6 +83,30 @@ pub fn emit_message(name: &str, content: String) {
           content: content,
         },
       );
+    }
+  }
+}
+
+// Функция отправки события
+pub fn send_event(event: PayloadEvent) {
+  if let Some(arc) = get_flow_manager() {
+    let fm = arc.read();
+
+    if let Some(handle) = fm.app_handle.as_ref() {
+      match event {
+        PayloadEvent::Chat(payload) => {
+          let _ = handle.emit("chat-message", payload);
+        }
+        PayloadEvent::MapRenderProgress(payload) => {
+          let _ = handle.emit("map-render-progress", payload);
+        }
+        PayloadEvent::AntiWebCaptcha(payload) => {
+          let _ = handle.emit("anti-web-captcha", payload);
+        }
+        PayloadEvent::AntiMapCaptcha(payload) => {
+          let _ = handle.emit("anti-map-captcha", payload);
+        }
+      }
     }
   }
 }

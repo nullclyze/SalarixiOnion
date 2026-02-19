@@ -4,8 +4,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::SafeClientImpls;
-use crate::common::*;
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActionModule;

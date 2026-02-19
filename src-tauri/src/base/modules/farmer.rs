@@ -1,4 +1,5 @@
 use azalea::core::position::BlockPos;
+use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::{BlockKind, ItemKind};
 use azalea::{prelude::*, Vec3};
 use serde::{Deserialize, Serialize};
@@ -6,8 +7,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
-use crate::common::{get_block_state, get_inventory_menu, take_item};
+use crate::common::{get_block_state, get_bot_inventory_menu, look_at_block, start_use_item, take_item};
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug)]
 struct Tool {
@@ -33,7 +35,7 @@ impl FarmerModule {
   async fn auto_tool(&self, bot: &Client) {
     let mut tools = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           match item.kind() {
@@ -137,7 +139,7 @@ impl FarmerModule {
   async fn fertilize_plant(&self, bot: &Client, mode: &String) {
     let mut ferilizer_slot = None;
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           if item.kind() == ItemKind::BoneMeal {
@@ -153,35 +155,15 @@ impl FarmerModule {
 
       for _ in 0..=4 {
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
-        bot.start_use_item();
+        start_use_item(bot, InteractionHand::MainHand);
       }
     }
-  }
-
-  async fn look_at_block(&self, bot: &Client, block_pos: BlockPos) {
-    let center = block_pos.center();
-
-    if randchance(0.3) {
-      let sloppy_pos = Vec3::new(
-        center.x as f64 + randfloat(-1.3289, 1.3289),
-        center.y as f64 + randfloat(-1.3289, 1.3289),
-        center.z as f64 + randfloat(-1.3289, 1.3289),
-      );
-
-      bot.look_at(sloppy_pos);
-
-      sleep(Duration::from_millis(50)).await;
-    }
-
-    bot.look_at(center);
-
-    sleep(Duration::from_millis(80)).await;
   }
 
   async fn take_plant(&self, bot: &Client) -> bool {
     let mut plant_slot = None;
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() && plant_slot.is_none() {
           match item.kind() {
@@ -221,11 +203,11 @@ impl FarmerModule {
       let kind = BlockKind::from(state);
 
       if kind == BlockKind::CoarseDirt || kind == BlockKind::RootedDirt {
-        bot.start_use_item();
+        start_use_item(bot, InteractionHand::MainHand);
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
-        bot.start_use_item();
+        start_use_item(bot, InteractionHand::MainHand);
       } else {
-        bot.start_use_item();
+        start_use_item(bot, InteractionHand::MainHand);
       }
     }
   }
@@ -263,7 +245,7 @@ impl FarmerModule {
         let kind = BlockKind::from(state);
 
         if self.this_is_farmland_without_plant(bot, kind, block_pos) {
-          self.look_at_block(bot, block_pos).await;
+          look_at_block(bot, block_pos, true).await;
 
           if options.mode.as_str() != "ultra" {
             sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
@@ -276,7 +258,7 @@ impl FarmerModule {
           }
         } else {
           if self.this_is_plant(kind) {
-            self.look_at_block(bot, block_pos).await;
+            look_at_block(bot, block_pos, true).await;
 
             sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
 
@@ -305,7 +287,7 @@ impl FarmerModule {
             }
           } else {
             if self.block_can_plowed(bot, kind, block_pos) {
-              self.look_at_block(bot, block_pos).await;
+              look_at_block(bot, block_pos, true).await;
               self.plow_block(bot, block_pos, &options.mode).await;
             }
           }
@@ -320,7 +302,7 @@ impl FarmerModule {
   async fn farmer(&self, bot: &Client, options: &FarmerOptions) {
     loop {
       for y in -1..=1 {
-        let pos = bot.position();
+        let pos = bot.feet_pos();
 
         let block_pos = BlockPos::from(Vec3::new(pos.x, pos.y + y as f64, pos.z));
 
@@ -330,7 +312,7 @@ impl FarmerModule {
       for x in -1..=1 {
         for y in -1..=1 {
           for z in -1..=1 {
-            let pos = bot.position();
+            let pos = bot.feet_pos();
 
             let block_pos = BlockPos::from(Vec3::new(
               pos.x + x as f64,

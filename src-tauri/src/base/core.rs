@@ -9,6 +9,7 @@ use azalea_viaversion::ViaVersionPlugin;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
+use socks5_impl::protocol::UserKey;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -18,8 +19,13 @@ use crate::base::bot::*;
 use crate::base::handlers::*;
 use crate::base::modules::*;
 use crate::base::*;
-use crate::common::*;
 use crate::emit::*;
+use crate::generators::mutate_text;
+use crate::generators::randchance;
+use crate::generators::randelem;
+use crate::generators::randstr;
+use crate::generators::randuint;
+use crate::generators::Classes;
 use crate::webhook::send_webhook;
 
 pub static FLOW_MANAGER: Lazy<Arc<RwLock<Option<Arc<RwLock<FlowManager>>>>>> =
@@ -234,9 +240,9 @@ pub fn generate_nickname_or_password(item: &str, t: String, template: String) ->
       ];
       let chosen_template = randelem(&templates).unwrap();
 
-      Mutator::mutate_text(chosen_template.to_string())
+      mutate_text(chosen_template.to_string())
     }
-    "custom" => Mutator::mutate_text(template),
+    "custom" => mutate_text(template),
     _ => String::new(),
   }
 }
@@ -404,10 +410,7 @@ impl FlowManager {
         }
 
         local_set.spawn_local(async move {
-          emit_event(EventType::Log(LogEventPayload {
-            name: "extended".to_string(),
-            message: format!("Подготовка..."),
-          }));
+          send_log(format!("Подготовка..."), "extended");
 
           let mut flow = SwarmBuilder::new_without_plugins()
             .add_plugins(plugins)
@@ -458,15 +461,41 @@ impl FlowManager {
                       .trim_start_matches("http://");
 
                     let proxy_address: Vec<&str> = clean_proxy_str.split("@").collect();
-                    let address = proxy_address.get(0).unwrap().to_string();
+
+                    let Some(address) = proxy_address.get(0) else {
+                      continue;
+                    };
 
                     if let Ok(addr) = address.parse::<SocketAddr>() {
-                      let proxy = Proxy::new(addr, None);
+                      let mut proxy = Proxy::new(addr, None);
+
+                      if let Some(auth) = proxy_address.get(1) {
+                        let split_auth: Vec<&str> = auth.split(":").collect();
+
+                        let Some(username) = split_auth.get(0) else {
+                          continue;
+                        };
+
+                        let Some(password) = split_auth.get(1) else {
+                          continue;
+                        };
+
+                        proxy.auth = Some(UserKey {
+                          username: username.to_string(),
+                          password: password.to_string(),
+                        });
+                      }
+
                       join_opts = join_opts.proxy(proxy);
 
                       if let Some(mut profile) = PROFILES.get(&account.username) {
                         let split_address: Vec<&str> = address.split(":").collect();
-                        profile.set_proxy(split_address.get(0).unwrap());
+
+                        let Some(ip_address) = split_address.get(0) else {
+                          continue;
+                        };
+
+                        profile.set_proxy(*ip_address);
                       }
                     }
                   }
@@ -480,19 +509,14 @@ impl FlowManager {
               flow = flow.add_account_with_opts(account, opts);
             }
           } else {
-            for account in accounts {
-              flow = flow.add_account(account);
-            }
+            flow = flow.add_accounts(accounts);
 
             if options.version.as_str() != "1.21.11" {
               flow = flow.add_plugins(ViaVersionPlugin::start(options.version).await);
             }
           }
 
-          emit_event(EventType::Log(LogEventPayload {
-            name: "extended".to_string(),
-            message: format!("Подготовка окончена"),
-          }));
+          send_log(format!("Подготовка окончена"), "extended");
 
           let _ = flow.start(options.address).await;
         });
@@ -555,12 +579,11 @@ impl FlowManager {
           bot.set_crouching(false);
           bot.set_jumping(false);
 
-          emit_event(EventType::Log(LogEventPayload {
-            name: "info".to_string(),
-            message: format!("Все задачи и состояния бота {} сброшены", username),
-          }));
-
-          emit_message(
+          send_log(
+            format!("Все задачи и состояния бота {} сброшены", username),
+            "info",
+          );
+          send_message(
             "Система",
             format!("Все задачи и состояния бота {} сброшены", username),
           );
@@ -584,12 +607,8 @@ impl FlowManager {
       TASKS.remove(&username);
       PROFILES.set_str(&username, "status", "Оффлайн");
 
-      emit_event(EventType::Log(LogEventPayload {
-        name: "info".to_string(),
-        message: format!("Бот {} отключился", username),
-      }));
-
-      emit_message("Система", format!("Бот {} отключился", username));
+      send_log(format!("Бот {} отключился", username), "info");
+      send_message("Система", format!("Бот {} отключился", username));
     });
   }
 }

@@ -507,8 +507,11 @@ export class MonitoringManager {
 
     this.addTempListener(`disconnect-${nickname}`, 'click', async () => {
       try {
-        await invoke('disconnect_bot', {
-          nickname: nickname
+        await invoke('send_command', {
+          command: 'disconnect_bot',
+          options: {
+            username: nickname
+          }
         });
       } catch (error) {
         log(`Ошибка отключения бота ${nickname}: ${error}`, 'error');
@@ -517,8 +520,11 @@ export class MonitoringManager {
 
     this.addTempListener(`reset-${nickname}`, 'click', async () => {
       try {
-        await invoke('reset_bot', {
-          nickname: nickname
+        await invoke('send_command', {
+          command: 'reset_bot',
+          options: {
+            username: nickname
+          }
         });
       } catch (error) {
         log(`Ошибка сбрасывания задач и состояний бота ${nickname}: ${error}`, 'error');
@@ -551,9 +557,12 @@ export class MonitoringManager {
     const sendMsg = async (input_id: string) => {
       const message = document.getElementById(input_id) as HTMLInputElement;
 
-      await invoke('send_message', { 
-        nickname: nickname,
-        message: message.value
+      await invoke('send_command', { 
+        command: 'send_message',
+        options: {
+          username: nickname,
+          message: message.value
+        }
       });
 
       message.value = '';

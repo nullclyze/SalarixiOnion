@@ -9,7 +9,7 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::get_block_state;
-use crate::common::*;
+use crate::generators::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinerModule;

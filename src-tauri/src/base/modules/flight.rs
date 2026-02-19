@@ -8,8 +8,8 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
 use crate::common::{get_bot_physics, set_bot_on_ground, set_bot_velocity_y};
+use crate::generators::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlightModule;

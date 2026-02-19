@@ -7,8 +7,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
-use crate::common::{get_inventory_menu, move_item_to_offhand, start_use_item, take_item};
+use crate::common::{get_bot_inventory_menu, move_item_to_offhand, start_use_item, take_item};
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Clone, Debug)]
 struct BrokenItem {
@@ -34,6 +35,10 @@ impl AutoRepairPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
             self.repair_items(&bot).await;
           })
           .await;
@@ -56,7 +61,7 @@ impl AutoRepairPlugin {
   }
 
   async fn take_experience_bottles(&self, bot: &Client) -> Option<i32> {
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::ExperienceBottle {
           take_item(bot, slot, true).await;
@@ -92,7 +97,7 @@ impl AutoRepairPlugin {
             slot = broken_item.slot;
           }
 
-          if let Some(menu) = get_inventory_menu(bot) {
+          if let Some(menu) = get_bot_inventory_menu(bot) {
             if let Some(item) = menu.slot(slot) {
               let current_damage = self.get_current_item_damage(item);
               let max_durability = self.get_max_item_durability(item);
@@ -156,7 +161,7 @@ impl AutoRepairPlugin {
   fn find_broken_items(&self, bot: &Client) -> Vec<BrokenItem> {
     let mut broken_items = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           let current_damage = self.get_current_item_damage(item);

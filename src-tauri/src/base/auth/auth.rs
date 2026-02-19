@@ -3,8 +3,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::{get_current_options, PROFILES};
-use crate::common::randuint;
-use crate::emit::{emit_event, EventType, LogEventPayload};
+use crate::emit::send_log;
+use crate::generators::*;
 
 // Функция default-авторизации бота
 pub async fn default_authorize(bot: &Client) {
@@ -49,10 +49,10 @@ pub async fn default_authorize(bot: &Client) {
 
         bot.chat(&cmd);
 
-        emit_event(EventType::Log(LogEventPayload {
-          name: "info".to_string(),
-          message: format!("Бот {} авторизировался: {}", &username, &cmd),
-        }));
+        send_log(
+          format!("Бот {} авторизировался: {}", &username, &cmd),
+          "info",
+        );
       }
     }
   }
@@ -106,10 +106,10 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
 
         bot.chat(&cmd);
 
-        emit_event(EventType::Log(LogEventPayload {
-          name: "info".to_string(),
-          message: format!("Бот {} авторизировался: {}", &username, &cmd),
-        }));
+        send_log(
+          format!("Бот {} авторизировался: {}", &username, &cmd),
+          "info",
+        );
       }
     }
   }

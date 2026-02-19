@@ -7,11 +7,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
 use crate::common::{
-  get_entity_position, get_eye_position, get_inventory_menu, get_nearest_entity, release_use_item,
-  start_use_item, take_item, EntityFilter,
+  get_bot_inventory_menu, get_entity_eye_height, get_entity_position, get_nearest_entity,
+  release_use_item, start_use_item, take_item, EntityFilter,
 };
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BowAimModule;
@@ -31,7 +32,7 @@ impl BowAimModule {
   }
 
   fn find_bow_in_inventory(&self, bot: &Client) -> Option<usize> {
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::Bow {
           return Some(slot);
@@ -42,31 +43,33 @@ impl BowAimModule {
     None
   }
 
-  fn aiming(&self, bot: Client, filter: EntityFilter) {
+  fn aiming(&self, username: String, filter: EntityFilter) {
     tokio::spawn(async move {
-      let nickname = bot.username();
+      BOT_REGISTRY.get_bot(&username, async |bot| {
+        let nickname = bot.username();
 
-      if STATES.get_state(&nickname, "can_looking") {
-        STATES.set_mutual_states(&nickname, "looking", true);
+        if STATES.get_state(&nickname, "can_looking") {
+          STATES.set_mutual_states(&nickname, "looking", true);
 
-        loop {
-          if !TASKS.get_task_activity(&nickname, "bow-aim") {
-            break;
+          loop {
+            if !TASKS.get_task_activity(&nickname, "bow-aim") {
+              break;
+            }
+
+            if let Some(entity) = get_nearest_entity(bot, filter.clone()) {
+              let target_pos = get_entity_position(bot, entity);
+
+              bot.look_at(Vec3::new(
+                target_pos.x,
+                target_pos.y + get_entity_eye_height(bot, entity),
+                target_pos.z,
+              ));
+            }
+
+            sleep(Duration::from_millis(50)).await;
           }
-
-          if let Some(entity) = get_nearest_entity(&bot, filter.clone()) {
-            let target_pos = get_entity_position(&bot, entity);
-
-            bot.look_at(Vec3::new(
-              target_pos.x + randfloat(-0.11, 0.11),
-              target_pos.y,
-              target_pos.z + randfloat(-0.11, 0.11),
-            ));
-          }
-
-          sleep(Duration::from_millis(50)).await;
         }
-      }
+      }).await;
     });
   }
 
@@ -92,20 +95,12 @@ impl BowAimModule {
         if let Some(entity) = get_nearest_entity(bot, filter) {
           let target_pos = get_entity_position(bot, entity);
 
-          let feet_pos = bot.position();
-
-          let eye_pos = Vec3 {
-            x: feet_pos.x,
-            y: feet_pos.y + get_eye_position(bot, bot.entity),
-            z: feet_pos.z,
-          };
-
-          let distance = eye_pos.distance_to(target_pos);
+          let distance = bot.eye_pos().distance_to(target_pos);
 
           bot.look_at(Vec3::new(
-            target_pos.x + randfloat(-0.001158, 0.001158),
-            target_pos.y + distance * 0.15,
-            target_pos.z + randfloat(-0.001158, 0.001158),
+            target_pos.x,
+            target_pos.y + distance * 0.16,
+            target_pos.z
           ));
 
           if distance > 50.0 {
@@ -115,20 +110,12 @@ impl BowAimModule {
 
             let target_pos = get_entity_position(bot, entity);
 
-            let feet_pos = bot.position();
-
-            let eye_pos = Vec3 {
-              x: feet_pos.x,
-              y: feet_pos.y + get_eye_position(bot, bot.entity),
-              z: feet_pos.z,
-            };
-
-            let distance = eye_pos.distance_to(target_pos);
+            let distance = bot.eye_pos().distance_to(target_pos);
 
             bot.look_at(Vec3::new(
-              target_pos.x + randfloat(-0.001158, 0.001158),
+              target_pos.x,
               target_pos.y + distance * 0.12,
-              target_pos.z + randfloat(-0.001158, 0.001158),
+              target_pos.z,
             ));
           }
 
@@ -162,7 +149,7 @@ impl BowAimModule {
     }
 
     if let Some(filter) = entity_filter {
-      self.aiming(bot.clone(), filter.clone());
+      self.aiming(bot.username(), filter.clone());
 
       loop {
         self.shoot(bot, filter.clone()).await;

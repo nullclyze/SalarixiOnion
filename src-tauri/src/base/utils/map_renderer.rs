@@ -13,8 +13,8 @@ use std::io::Write;
 use std::sync::Arc;
 
 use crate::common::*;
-use crate::common::{randint, randstr, Classes};
-use crate::emit::{emit_event, EventType, LogEventPayload, MapRenderProgressEventPayload};
+use crate::emit::{send_event, send_log, MapRenderProgressEventPayload, PayloadEvent};
+use crate::generators::{randint, randstr, Classes};
 
 pub static MAP_RENDERER: Lazy<Arc<MapRenderer>> = Lazy::new(|| Arc::new(MapRenderer::new()));
 
@@ -37,7 +37,7 @@ impl MapRenderer {
         progress += 1;
 
         if progress % 3 == 0 {
-          emit_event(EventType::MapRenderProgress(
+          send_event(PayloadEvent::MapRenderProgress(
             MapRenderProgressEventPayload {
               nickname: bot.username(),
               progress: progress,
@@ -123,18 +123,18 @@ impl MapRenderer {
               let _ = file.write_all(&bytes);
             }
             Err(err) => {
-              emit_event(EventType::Log(LogEventPayload {
-                name: "error".to_string(),
-                message: format!("Не удалось сохранить карту {}: {}", nickname, err),
-              }));
+              send_log(
+                format!("Не удалось сохранить карту {}: {}", nickname, err),
+                "error",
+              );
             }
           }
         }
         Err(err) => {
-          emit_event(EventType::Log(LogEventPayload {
-            name: "error".to_string(),
-            message: format!("Не удалось декодировать карту {}: {}", nickname, err),
-          }));
+          send_log(
+            format!("Не удалось декодировать карту {}: {}", nickname, err),
+            "error",
+          );
         }
       }
     }

@@ -4,7 +4,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_inventory_menu, inventory_move_item};
+use crate::common::{get_bot_inventory_menu, inventory_move_item};
+use crate::methods::SafeClientMethods;
 
 pub struct AutoTotemPlugin;
 
@@ -24,6 +25,10 @@ impl AutoTotemPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
             self.take_totem(&bot).await;
           })
           .await;
@@ -34,7 +39,7 @@ impl AutoTotemPlugin {
   }
 
   pub async fn take_totem(&self, bot: &Client) {
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       if let Some(item) = menu.slot(45) {
         if !item.is_empty() && item.kind() != ItemKind::Shield {
           return;

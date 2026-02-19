@@ -840,37 +840,6 @@ p {
   margin-top: -4px;
 }
 
-.social-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 25px;
-  background: transparent;
-  padding: 4px;
-  border: none;
-  margin-top: 50px;
-}
-
-.btn-social {
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
-
-.btn-social svg {
-  cursor: pointer;
-  color: #87878a;
-  width: 40px;
-  height: 40px;
-  margin-top: 6px;
-  transition: all 0.2s ease;
-}
-
-.btn-social svg:hover {
-  transform: scale(1.1);
-  color: var(--spec-color);
-}
-
 .form-input {
   display: flex;
   width: 100%;
@@ -1185,8 +1154,8 @@ p {
 }
 
 .about-content p {
-  margin-top: 30px;
-  margin-bottom: 20px;
+  margin-top: 20px;
+  margin-bottom: 10px;
   text-align: center;
   line-height: 1.6;
 }
@@ -1204,7 +1173,7 @@ p {
 
 .features-title {
   color: var(--spec-color);
-  font-weight: 600;
+  font-weight: bold;
   font-size: 1rem;
   text-align: center;
   letter-spacing: 0.3px;
@@ -1236,14 +1205,46 @@ p {
 }
 
 .feature-list:hover {
-  border-color: var(--spec-color);
+  border-bottom-color: var(--spec-color);
   transform: translateY(-4px);
-  box-shadow: 0 0 5px var(--dull-spec-color);
 }
 
 .highlight {
   color: var(--spec-color);
-  font-weight: 600;
+  font-weight: bold;
+}
+
+.social-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  padding: 8px 18px;
+  border: 1px solid #2e2e2e;
+  background-color: #22222270;
+  border-radius: 12px;
+  margin-top: 50px;
+  box-shadow: var(--card-shadow);
+}
+
+.btn-social {
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.btn-social svg {
+  cursor: pointer;
+  color: #87878a;
+  width: 40px;
+  height: 40px;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-social svg:hover {
+  transform: scale(1.1);
+  color: var(--spec-color);
 }
 
 .checkbox-container {
@@ -2107,7 +2108,7 @@ textarea::-webkit-resizer {
   flex-direction: column;
   margin-top: 10px;
   height: auto;
-  max-height: 185px;
+  max-height: 150px;
   width: 100%;
   padding: 0;
   overflow-y: auto;

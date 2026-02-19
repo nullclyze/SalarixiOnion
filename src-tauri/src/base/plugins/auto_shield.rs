@@ -6,11 +6,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
 use crate::common::{
-  get_entity_position, get_inventory_menu, get_nearest_entity, inventory_move_item,
+  get_bot_inventory_menu, get_entity_position, get_nearest_entity, inventory_move_item,
   release_use_item, start_use_item, EntityFilter,
 };
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 pub struct AutoShieldPlugin;
 
@@ -30,6 +31,10 @@ impl AutoShieldPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
             self.defend(&bot).await;
           })
           .await;
@@ -42,7 +47,7 @@ impl AutoShieldPlugin {
   pub async fn defend(&self, bot: &Client) {
     let nickname = bot.username();
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       if let Some(item) = menu.slot(45) {
         if item.is_empty() || item.kind() == ItemKind::Shield {
           if !STATES.get_state(&nickname, "is_eating")

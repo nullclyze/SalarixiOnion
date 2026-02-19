@@ -5119,6 +5119,7 @@ dependencies = [
  "rhai",
  "serde",
  "serde_json",
+ "socks5-impl",
  "tauri",
  "tauri-build",
  "tokio",

@@ -165,8 +165,8 @@ impl StateManager {
     states.clear();
   }
 
-  pub fn reset(&self, nickname: &String) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+  pub fn reset(&self, username: &str) {
+    if let Some(arc) = self.map.write().unwrap().get(username) {
       let mut states = arc.write().unwrap();
       states.can_walking = true;
       states.can_sprinting = true;
@@ -185,25 +185,25 @@ impl StateManager {
     }
   }
 
-  pub fn set_state(&self, nickname: &String, field: &str, value: bool) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+  pub fn set_state(&self, username: &str, field: &str, value: bool) {
+    if let Some(arc) = self.map.write().unwrap().get(username) {
       let mut states = arc.write().unwrap();
       states.set(field, value);
     }
   }
 
-  pub fn set_mutual_states(&self, nickname: &String, name: &str, current_value: bool) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+  pub fn set_mutual_states(&self, username: &str, name: &str, current_value: bool) {
+    if let Some(arc) = self.map.write().unwrap().get(username) {
       let mut states = arc.write().unwrap();
       states.set(format!("is_{}", name).as_str(), current_value);
       states.set(format!("can_{}", name).as_str(), !current_value);
     }
   }
 
-  pub fn get_state(&self, nickname: &String, field: &str) -> bool {
+  pub fn get_state(&self, username: &str, field: &str) -> bool {
     let map = self.map.read().unwrap();
 
-    if let Some(states) = map.get(nickname) {
+    if let Some(states) = map.get(username) {
       return states.read().unwrap().get(field);
     }
 

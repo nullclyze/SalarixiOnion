@@ -6,7 +6,14 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::get_player_uuid;
-use crate::common::*;
+use crate::generators::mutate_text;
+use crate::generators::randchance;
+use crate::generators::randelem;
+use crate::generators::randfloat;
+use crate::generators::randint;
+use crate::generators::randstr;
+use crate::generators::randuint;
+use crate::generators::Classes;
 use crate::RADAR_MANAGER;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -173,7 +180,7 @@ impl ChatModule {
     let mut text = options.message.clone();
 
     if options.use_text_mutation {
-      text = Mutator::mutate_text(text);
+      text = mutate_text(text);
       text = self.process_extra_tags(text).await;
     }
 
@@ -201,7 +208,7 @@ impl ChatModule {
       let mut text = options.message.clone();
 
       if options.use_text_mutation {
-        text = Mutator::mutate_text(text);
+        text = mutate_text(text);
         text = self.process_extra_tags(text).await;
       }
 

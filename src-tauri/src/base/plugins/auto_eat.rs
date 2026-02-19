@@ -7,7 +7,8 @@ use tokio::time::sleep;
 
 use crate::base::*;
 use crate::common::*;
-use crate::common::{get_inventory_menu, start_use_item, take_item, SafeClientImpls};
+use crate::generators::randchance;
+use crate::methods::SafeClientMethods;
 
 #[derive(Clone, Copy)]
 struct Food {
@@ -33,6 +34,10 @@ impl AutoEatPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+            
             self.eat(&bot).await;
           })
           .await;
@@ -165,7 +170,7 @@ impl AutoEatPlugin {
   fn find_food_in_inventory(&self, bot: &Client) -> Vec<Food> {
     let mut food_list = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if let Some(food) = self.is_food(slot, item) {
           food_list.push(food);

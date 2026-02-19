@@ -6,10 +6,9 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
 
-use crate::{
-  base::{BOT_REGISTRY, PROFILES},
-  common::{get_entity_position, SafeClientImpls},
-};
+use crate::base::{BOT_REGISTRY, PROFILES};
+use crate::common::get_entity_position;
+use crate::methods::SafeClientMethods;
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
 

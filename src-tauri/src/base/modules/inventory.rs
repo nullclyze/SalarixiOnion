@@ -29,13 +29,13 @@ impl InventoryModule {
         if s <= 8 {
           bot.set_selected_hotbar_slot(s as u8);
         } else {
-          emit_event(EventType::Log(LogEventPayload {
-            name: "error".to_string(),
-            message: format!(
+          send_log(
+            format!(
               "Бот {} не смог взять слот {} (неверный индекс слота)",
               nickname, s
             ),
-          }));
+            "error",
+          );
         }
       } else {
         match options.state.as_str() {

@@ -1,6 +1,6 @@
 use crate::{
   base::get_current_options,
-  emit::{emit_event, emit_message, EventType, LogEventPayload},
+  emit::{send_log, send_message},
   webhook::send_webhook,
 };
 
@@ -12,15 +12,12 @@ impl BasicScriptFunctions {
     println!("[ script ]: {}", str);
   }
 
-  pub fn log(text: &str, name: &str) {
-    emit_event(EventType::Log(LogEventPayload {
-      name: name.to_string(),
-      message: text.to_string(),
-    }));
+  pub fn log(text: &str, class: &str) {
+    send_log(text.to_string(), class);
   }
 
-  pub fn message(content: &str, name: &str) {
-    emit_message(name, content.to_string());
+  pub fn message(name: &str, content: &str) {
+    send_message(name, content.to_string());
   }
 
   pub fn webhook(content: &str) {

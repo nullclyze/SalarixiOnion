@@ -1,16 +1,16 @@
 use azalea::registry::builtin::ItemKind;
-use azalea::Vec3;
 use azalea::{prelude::*, SprintDirection, WalkDirection};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::*;
 use crate::common::{
-  get_entity_position, get_eye_position, get_inventory_menu, get_nearest_entity, run,
+  get_bot_inventory_menu, get_entity_position, get_nearest_entity, look_at_entity, run,
   stop_bot_move, take_item, EntityFilter,
 };
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug)]
 struct Weapon {
@@ -39,7 +39,7 @@ pub struct KillauraOptions {
   pub state: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 struct KillauraConfig {
   target: String,
   weapon_slot: Option<u8>,
@@ -79,7 +79,7 @@ impl KillauraModule {
   async fn auto_weapon(&self, bot: &Client, weapon: &String) {
     let mut weapons = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           match weapon.as_str() {
@@ -232,22 +232,15 @@ impl KillauraModule {
         let bot_available = BOT_REGISTRY
           .get_bot(&username, async |bot| {
             if !TASKS.get_task_activity(&username, "killaura") {
-              stop_bot_move(&bot);
+              stop_bot_move(bot);
               return;
             }
 
-            if let Some(entity) =
-              get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance))
+            if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, &target, distance))
             {
-              let feet_pos = bot.position();
+              let eye_pos = bot.eye_pos();
 
-              let eye_pos = Vec3 {
-                x: feet_pos.x,
-                y: feet_pos.y + get_eye_position(&bot, bot.entity),
-                z: feet_pos.z,
-              };
-
-              if eye_pos.distance_to(get_entity_position(&bot, entity)) > min_distance_to_target {
+              if eye_pos.distance_to(get_entity_position(bot, entity)) > min_distance_to_target {
                 if !bot.jumping() {
                   bot.set_jumping(true);
                 }
@@ -255,26 +248,20 @@ impl KillauraModule {
                 run(&bot, SprintDirection::Forward);
 
                 if STATES.get_state(&username, "can_looking") {
-                  let entity_pos = get_entity_position(&bot, entity);
-
-                  bot.look_at(Vec3::new(
-                    entity_pos.x,
-                    entity_pos.y + randfloat(0.4, 0.6),
-                    entity_pos.z,
-                  ));
+                  look_at_entity(bot, entity, true);
                 }
               } else {
                 bot.set_jumping(false);
 
                 if STATES.get_state(&username, "is_sprinting") {
-                  stop_bot_move(&bot);
+                  stop_bot_move(bot);
                 }
               }
             } else {
               bot.set_jumping(false);
 
               if STATES.get_state(&username, "is_sprinting") {
-                stop_bot_move(&bot);
+                stop_bot_move(bot);
               }
             }
           })
@@ -292,43 +279,35 @@ impl KillauraModule {
 
   fn aiming(&self, username: String, target: String, distance: f64) {
     tokio::spawn(async move {
-      if STATES.get_state(&username, "can_looking") {
-        STATES.set_mutual_states(&username, "looking", true);
+      STATES.set_mutual_states(&username, "looking", true);
 
-        loop {
-          let bot_available = BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              if !TASKS.get_task_activity(&username, "killaura") {
-                STATES.set_mutual_states(&username, "looking", false);
-                return;
-              }
+      loop {
+        let bot_available = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            if !TASKS.get_task_activity(&username, "killaura") {
+              STATES.set_mutual_states(&username, "looking", false);
+              return;
+            }
 
-              if let Some(entity) =
-                get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance))
-              {
-                let entity_pos = get_entity_position(&bot, entity);
+            if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, &target, distance))
+            {
+              look_at_entity(bot, entity, false);
+            }
+          })
+          .await
+          .is_some();
 
-                bot.look_at(Vec3::new(
-                  entity_pos.x,
-                  entity_pos.y + randfloat(0.4, 0.6),
-                  entity_pos.z,
-                ));
-              }
-            })
-            .await
-            .is_some();
-
-          if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
-            break;
-          }
-
-          sleep(Duration::from_millis(50)).await;
+        if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
+          STATES.set_mutual_states(&username, "looking", false);
+          break;
         }
+
+        sleep(Duration::from_millis(50)).await;
       }
     });
   }
 
-  async fn moderate_killaura(&'static self, bot: &Client, options: &KillauraOptions) {
+  async fn moderate_killaura(&self, bot: &Client, options: &KillauraOptions) {
     let config = self.create_config(options);
 
     self.aiming(bot.username(), config.target.clone(), config.chase_distance);
@@ -355,8 +334,8 @@ impl KillauraModule {
         && !STATES.get_state(&nickname, "is_drinking")
       {
         if let Some(entity) = get_nearest_entity(
-          &bot,
-          EntityFilter::new(&bot, &config.target, config.attack_distance),
+          bot,
+          EntityFilter::new(bot, &config.target, config.attack_distance),
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -380,8 +359,8 @@ impl KillauraModule {
             sleep(Duration::from_millis(randuint(500, 600))).await;
 
             if let Some(e) = get_nearest_entity(
-              &bot,
-              EntityFilter::new(&bot, &config.target, config.attack_distance),
+              bot,
+              EntityFilter::new(bot, &config.target, config.attack_distance),
             ) {
               bot.attack(e);
             }
@@ -397,7 +376,7 @@ impl KillauraModule {
     }
   }
 
-  async fn aggressive_killaura(&'static self, bot: &Client, options: &KillauraOptions) {
+  async fn aggressive_killaura(&self, bot: &Client, options: &KillauraOptions) {
     let config = self.create_config(options);
 
     if options.use_chase {
@@ -422,8 +401,8 @@ impl KillauraModule {
         && !STATES.get_state(&nickname, "is_drinking")
       {
         if let Some(entity) = get_nearest_entity(
-          &bot,
-          EntityFilter::new(&bot, &config.target, config.attack_distance),
+          bot,
+          EntityFilter::new(bot, &config.target, config.attack_distance),
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
@@ -446,8 +425,8 @@ impl KillauraModule {
             sleep(Duration::from_millis(randuint(500, 600))).await;
 
             if let Some(e) = get_nearest_entity(
-              &bot,
-              EntityFilter::new(&bot, &config.target, config.attack_distance),
+              bot,
+              EntityFilter::new(bot, &config.target, config.attack_distance),
             ) {
               bot.attack(e);
             }
@@ -463,7 +442,7 @@ impl KillauraModule {
     }
   }
 
-  pub async fn enable(&'static self, bot: &Client, options: &KillauraOptions) {
+  pub async fn enable(&self, bot: &Client, options: &KillauraOptions) {
     match options.behavior.as_str() {
       "moderate" => {
         self.moderate_killaura(bot, options).await;

@@ -9,9 +9,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::SafeClientImpls;
 use crate::common::*;
-use crate::common::{get_bot_physics, get_inventory_menu, start_use_item, take_item};
+use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Clone)]
 struct Potion {
@@ -38,6 +38,10 @@ impl AutoPotionPlugin {
 
         let _ = BOT_REGISTRY
           .get_bot(&username, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+            
             self.drink(&bot).await;
           })
           .await;
@@ -244,7 +248,7 @@ impl AutoPotionPlugin {
   fn find_potion_in_inventory(&self, bot: &Client) -> Vec<Potion> {
     let mut potion_list = vec![];
 
-    if let Some(menu) = get_inventory_menu(bot) {
+    if let Some(menu) = get_bot_inventory_menu(bot) {
       for (slot, item) in menu.slots().iter().enumerate() {
         if let Some(potion) = self.is_potion(slot, item) {
           potion_list.push(potion);

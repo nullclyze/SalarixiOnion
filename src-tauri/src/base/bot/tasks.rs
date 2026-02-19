@@ -86,8 +86,8 @@ impl TaskManager {
     }
   }
 
-  pub fn push(&self, nickname: &String) {
-    if let Some(arc) = self.map.write().unwrap().get(nickname) {
+  pub fn push(&self, username: &str) {
+    if let Some(arc) = self.map.write().unwrap().get(username) {
       arc.write().unwrap().kill_all_tasks();
     }
 
@@ -95,16 +95,16 @@ impl TaskManager {
       .map
       .write()
       .unwrap()
-      .insert(nickname.clone(), Arc::new(RwLock::new(Tasks::new())));
+      .insert(username.to_string(), Arc::new(RwLock::new(Tasks::new())));
   }
 
-  pub fn remove(&self, nickname: &String) {
-    self.map.write().unwrap().remove(nickname);
+  pub fn remove(&self, username: &str) {
+    self.map.write().unwrap().remove(username);
   }
 
-  pub fn reset(&self, nickname: &String) {
+  pub fn reset(&self, username: &str) {
     for (name, tasks) in self.map.write().unwrap().iter() {
-      if *name == *nickname {
+      if name.as_str() == username {
         tasks.write().unwrap().kill_all_tasks();
       }
     }
@@ -118,16 +118,16 @@ impl TaskManager {
     self.map.write().unwrap().clear();
   }
 
-  pub fn get(&self, nickname: &String) -> Option<Arc<RwLock<Tasks>>> {
+  pub fn get(&self, username: &str) -> Option<Arc<RwLock<Tasks>>> {
     let map = self.map.read().unwrap();
-    map.get(nickname).cloned()
+    map.get(username).cloned()
   }
 
-  pub fn get_task_activity(&self, nickname: &String, task: &str) -> bool {
+  pub fn get_task_activity(&self, username: &str, task: &str) -> bool {
     let map = self.map.read().unwrap();
 
     for (name, tasks) in map.iter() {
-      if name == nickname {
+      if name.as_str() == username {
         return tasks.read().unwrap().get_task_activity(task);
       }
     }
@@ -137,15 +137,15 @@ impl TaskManager {
 }
 
 // Функция запуска задачи
-pub fn run_task(nickname: &String, task: &str, handle: JoinHandle<()>) {
-  if let Some(tasks) = TASKS.get(&nickname) {
+pub fn run_task(username: &str, task: &str, handle: JoinHandle<()>) {
+  if let Some(tasks) = TASKS.get(username) {
     tasks.write().unwrap().run_task(task, handle);
   }
 }
 
 // Функция остановки задачи
-pub fn kill_task(nickname: &String, task: &str) {
-  if let Some(tasks) = TASKS.get(&nickname) {
+pub fn kill_task(username: &str, task: &str) {
+  if let Some(tasks) = TASKS.get(username) {
     tasks.write().unwrap().kill_task(task);
   }
 }

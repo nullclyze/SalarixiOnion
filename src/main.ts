@@ -13,7 +13,7 @@ import { MonitoringManager } from './modules/monitoring';
 import { RadarManager } from './modules/radar';
 import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
-import { changeMessagesVisibility, spawnMessage } from './message';
+import { changeMessagesVisibility, message } from './message';
 import { downloadJsonContent } from './downloader/downloader';
 
 
@@ -87,7 +87,7 @@ async function startBots(): Promise<void> {
 
   if (process === 'active') {
     log('Запуск невозможен, существуют активные боты', 'warning');
-    spawnMessage('Предупреждение', `Запуск невозможен, существуют активные боты`);
+    message('Предупреждение', `Запуск невозможен, существуют активные боты`);
     return;
   }
 
@@ -162,7 +162,7 @@ async function startBots(): Promise<void> {
     actions: (document.getElementById('use-webhook-actions') as HTMLInputElement).checked
   };
 
-  spawnMessage('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
+  message('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
 
   const result = await invoke('launch_bots', { options: {
     address: address || 'localhost',
@@ -1220,11 +1220,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await listen('log', (event) => {
       try {
-        const payload = event.payload as { name: string; message: string; };
-        const name = payload.name;
-        const message = payload.message;
-
-        log(message, name);
+        const payload = event.payload as { text: string; class: string; };
+        log(payload.text, payload.class);
       } catch (error) {
         log(`Ошибка принятие log-события: ${error}`, 'error');
       }
@@ -1233,16 +1230,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     await listen('message', (event) => {
       try {
         const payload = event.payload as { name: string; content: string; };
-        const name = payload.name;
-        const content = payload.content;
-
-        spawnMessage(name, content);
+        message(payload.name, payload.content);
       } catch (error) {
         log(`Ошибка принятие message-события: ${error}`, 'error');
       }
     });
 
     addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
+    addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
     addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
     addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
 

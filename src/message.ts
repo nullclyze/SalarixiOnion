@@ -15,7 +15,7 @@ export function changeMessagesVisibility(state: string): void {
   }
 }
 
-export function spawnMessage(name: string, content: string): void {
+export function message(name: string, content: string): void {
   const wrap = document.getElementById('messages-wrap');
 
   if (wrap && showMessages && messageCounter <= 2) {
