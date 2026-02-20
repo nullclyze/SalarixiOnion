@@ -56,11 +56,6 @@ export class ChartManager {
       }, 1800);
 
       this.intervals.memoryUsage = setInterval(async () => {
-        if (!this.active) {
-          clearInterval(this.intervals.memoryUsage);
-          return;
-        }
-
         try {
           const data = await invoke('get_memory_usage') as number;
           this.addGraphicDataMemoryUsage(parseFloat(data.toFixed(3)) || 0);
@@ -188,10 +183,12 @@ export class ChartManager {
   private createGraphicMemoryUsage(): void {
     const context = (document.getElementById('graphic-memory-usage') as HTMLCanvasElement).getContext('2d');
     if (!context) return;
-    this.chartMemoryUsage = this.createGraphic(context, 'Используемая память', 'График используемой памяти', 1024, 'memory-usage');
+    this.chartMemoryUsage = this.createGraphic(context, 'Используется', 'График используемой памяти', 1024, 'memory-usage');
   }
 
   private addGraphicDataActiveBots(activeBotsQuantity: number): void {
+    if (!this.chartActiveBots) return;
+
     this.chartActiveBots.data.labels?.push(date());
     this.chartActiveBots.data.datasets[0].data.push(activeBotsQuantity);
 
@@ -204,6 +201,8 @@ export class ChartManager {
   }
 
   private addGraphicDataMemoryUsage(memoryUsage: number): void {
+    if (!this.chartMemoryUsage) return;
+
     this.chartMemoryUsage.data.labels?.push(date());
     this.chartMemoryUsage.data.datasets[0].data.push(memoryUsage);
 

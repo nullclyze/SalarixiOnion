@@ -136,14 +136,14 @@ impl TaskManager {
   }
 }
 
-// Функция запуска задачи
+/// Функция запуска задачи
 pub fn run_task(username: &str, task: &str, handle: JoinHandle<()>) {
   if let Some(tasks) = TASKS.get(username) {
     tasks.write().unwrap().run_task(task, handle);
   }
 }
 
-// Функция остановки задачи
+/// Функция остановки задачи
 pub fn kill_task(username: &str, task: &str) {
   if let Some(tasks) = TASKS.get(username) {
     tasks.write().unwrap().kill_task(task);

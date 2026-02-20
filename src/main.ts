@@ -85,157 +85,155 @@ export function updatePluginState(name: string | null, state: boolean) {
 async function startBots(): Promise<void> {
   log('Запуск ботов на сервер...', 'info');
 
-  if (process === 'active') {
-    log('Запуск невозможен, существуют активные боты', 'warning');
-    message('Предупреждение', `Запуск невозможен, существуют активные боты`);
-    return;
-  }
-
   process = 'active';
 
-  const address = (document.getElementById('address') as HTMLInputElement).value;
-  const version = (document.getElementById('version') as HTMLInputElement).value;
-  const botsCount = parseInt((document.getElementById('bots-count') as HTMLInputElement).value);
-  const joinDelay = parseFloat((document.getElementById('join-delay') as HTMLInputElement).value);
+  try {
+    const address = (document.getElementById('address') as HTMLInputElement).value;
+    const version = (document.getElementById('version') as HTMLInputElement).value;
+    const botsCount = parseInt((document.getElementById('bots-count') as HTMLInputElement).value);
+    const joinDelay = parseFloat((document.getElementById('join-delay') as HTMLInputElement).value);
 
-  const nicknameType = (document.getElementById('nickname-type-select') as HTMLSelectElement).value;
-  const passwordType = (document.getElementById('password-type-select') as HTMLSelectElement).value;
-  const nicknameTemplate = (document.getElementById('nickname-template') as HTMLInputElement).value;
-  const passwordTemplate = (document.getElementById('password-template') as HTMLInputElement).value;
+    const nicknameType = (document.getElementById('nickname-type-select') as HTMLSelectElement).value;
+    const passwordType = (document.getElementById('password-type-select') as HTMLSelectElement).value;
+    const nicknameTemplate = (document.getElementById('nickname-template') as HTMLInputElement).value;
+    const passwordTemplate = (document.getElementById('password-template') as HTMLInputElement).value;
 
-  const registerMode = (document.getElementById('register-mode-select') as HTMLSelectElement).value;
-  const registerCommand = (document.getElementById('register-command') as HTMLInputElement).value;
-  const registerTemplate = (document.getElementById('register-template') as HTMLInputElement).value;
-  const registerMinDelay = parseFloat((document.getElementById('register-min-delay') as HTMLInputElement).value);
-  const registerMaxDelay = parseFloat((document.getElementById('register-max-delay') as HTMLInputElement).value);
-  const registerTrigger = (document.getElementById('register-trigger') as HTMLInputElement).value;
-  const loginMode = (document.getElementById('login-mode-select') as HTMLSelectElement).value;
-  const loginCommand = (document.getElementById('login-command') as HTMLInputElement).value;
-  const loginTemplate = (document.getElementById('login-template') as HTMLInputElement).value;
-  const loginMinDelay = parseFloat((document.getElementById('login-min-delay') as HTMLInputElement).value);
-  const loginMaxDelay = parseFloat((document.getElementById('login-max-delay') as HTMLInputElement).value);
-  const loginTrigger = (document.getElementById('login-trigger') as HTMLInputElement).value;
-  const rejoinDelay = parseInt((document.getElementById('rejoin-delay') as HTMLInputElement).value);
-  const updateFrequency = parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value);
-  const chatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value);
-  const viewDistance = parseInt((document.getElementById('view-distance') as HTMLInputElement).value);
-  const language = (document.getElementById('language') as HTMLInputElement).value;
-  const chatColors = (document.getElementById('chat-colors') as HTMLInputElement).value;
-  const humanoidArm = (document.getElementById('humanoid-arm') as HTMLInputElement).value;
+    const registerMode = (document.getElementById('register-mode-select') as HTMLSelectElement).value;
+    const registerCommand = (document.getElementById('register-command') as HTMLInputElement).value;
+    const registerTemplate = (document.getElementById('register-template') as HTMLInputElement).value;
+    const registerMinDelay = parseFloat((document.getElementById('register-min-delay') as HTMLInputElement).value);
+    const registerMaxDelay = parseFloat((document.getElementById('register-max-delay') as HTMLInputElement).value);
+    const registerTrigger = (document.getElementById('register-trigger') as HTMLInputElement).value;
+    const loginMode = (document.getElementById('login-mode-select') as HTMLSelectElement).value;
+    const loginCommand = (document.getElementById('login-command') as HTMLInputElement).value;
+    const loginTemplate = (document.getElementById('login-template') as HTMLInputElement).value;
+    const loginMinDelay = parseFloat((document.getElementById('login-min-delay') as HTMLInputElement).value);
+    const loginMaxDelay = parseFloat((document.getElementById('login-max-delay') as HTMLInputElement).value);
+    const loginTrigger = (document.getElementById('login-trigger') as HTMLInputElement).value;
+    const rejoinDelay = parseInt((document.getElementById('rejoin-delay') as HTMLInputElement).value);
+    const updateFrequency = parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value);
+    const chatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value);
+    const viewDistance = parseInt((document.getElementById('view-distance') as HTMLInputElement).value);
+    const language = (document.getElementById('language') as HTMLInputElement).value;
+    const chatColors = (document.getElementById('chat-colors') as HTMLInputElement).value;
+    const humanoidArm = (document.getElementById('humanoid-arm') as HTMLInputElement).value;
 
-  const useAutoRegister = (document.getElementById('use-auto-register') as HTMLInputElement).checked;
-  const useAutoLogin = (document.getElementById('use-auto-login') as HTMLInputElement).checked;
-  const useProxy = (document.getElementById('use-proxy') as HTMLInputElement).checked;
-  const useAntiCaptcha = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked;
-  const useWebhook = (document.getElementById('use-webhook') as HTMLInputElement).checked;
-  const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
-  const useChatSigning = (document.getElementById('use-chat-signing') as HTMLInputElement).checked;
-  const useExtendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
-  const useChatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
-  const useMapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
+    const useAutoRegister = (document.getElementById('use-auto-register') as HTMLInputElement).checked;
+    const useAutoLogin = (document.getElementById('use-auto-login') as HTMLInputElement).checked;
+    const useProxy = (document.getElementById('use-proxy') as HTMLInputElement).checked;
+    const useAntiCaptcha = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked;
+    const useWebhook = (document.getElementById('use-webhook') as HTMLInputElement).checked;
+    const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
+    const useChatSigning = (document.getElementById('use-chat-signing') as HTMLInputElement).checked;
+    const useExtendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
+    const useChatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
+    const useMapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
 
-  const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
+    const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
 
-  const skinType = (document.getElementById('select-skin-type') as HTMLSelectElement).value;
-  const setSkinCommand = (document.getElementById('set-skin-command') as HTMLInputElement).value;
-  const customSkinByNickname = (document.getElementById('skin-by-nickname') as HTMLInputElement).value;
+    const skinType = (document.getElementById('select-skin-type') as HTMLSelectElement).value;
+    const setSkinCommand = (document.getElementById('set-skin-command') as HTMLInputElement).value;
+    const customSkinByNickname = (document.getElementById('skin-by-nickname') as HTMLInputElement).value;
 
-  const captchaType = (document.getElementById('select-captcha-type') as HTMLSelectElement).value;
+    const captchaType = (document.getElementById('select-captcha-type') as HTMLSelectElement).value;
 
-  const antiWebCaptchaOptions: {
-    regex: null | string;
-    required_url_part: null | string;
-  } = { 
-    regex: (document.getElementById('anti-web-captcha-regex') as HTMLInputElement).value,
-    required_url_part: (document.getElementById('anti-web-captcha-required-url-part') as HTMLInputElement).value
-  };
+    const antiWebCaptchaOptions: {
+      regex: null | string;
+      required_url_part: null | string;
+    } = { 
+      regex: (document.getElementById('anti-web-captcha-regex') as HTMLInputElement).value,
+      required_url_part: (document.getElementById('anti-web-captcha-required-url-part') as HTMLInputElement).value
+    };
 
-  const webhookOptions: {
-    url: null | string;
-    information: boolean;
-    data: boolean;
-    actions: boolean;
-  } = { 
-    url: (document.getElementById('webhook-url') as HTMLInputElement).value,
-    information: (document.getElementById('use-webhook-information') as HTMLInputElement).checked,
-    data: (document.getElementById('use-webhook-data') as HTMLInputElement).checked,
-    actions: (document.getElementById('use-webhook-actions') as HTMLInputElement).checked
-  };
+    const webhookOptions: {
+      url: null | string;
+      information: boolean;
+      data: boolean;
+      actions: boolean;
+    } = { 
+      url: (document.getElementById('webhook-url') as HTMLInputElement).value,
+      information: (document.getElementById('use-webhook-information') as HTMLInputElement).checked,
+      data: (document.getElementById('use-webhook-data') as HTMLInputElement).checked,
+      actions: (document.getElementById('use-webhook-actions') as HTMLInputElement).checked
+    };
 
-  message('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
+    message('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
 
-  const result = await invoke('launch_bots', { options: {
-    address: address || 'localhost',
-    version: version || '1.21.11',
-    bots_count: botsCount || 1,
-    join_delay: joinDelay || 1000,
-    nickname_type: nicknameType,
-    password_type: passwordType,
-    nickname_template: nicknameTemplate || 'player_#m#m',
-    password_template: passwordTemplate || '#m#m#l#n',
-    register_mode: registerMode,
-    register_command: registerCommand || '/reg',
-    register_template: registerTemplate || '@cmd @pass',
-    register_min_delay: registerMinDelay || 2000,
-    register_max_delay: registerMaxDelay || 3500,
-    register_trigger: registerTrigger || 'зарегистрируйтесь',
-    login_mode: loginMode,
-    login_command: loginCommand || '/login',
-    login_template: loginTemplate || '@cmd @pass',
-    login_min_delay: loginMinDelay || 2000,
-    login_max_delay: loginMaxDelay || 3500,
-    login_trigger: loginTrigger || 'авторизируйтесь',
-    rejoin_delay: rejoinDelay || 3000,
-    view_distance: viewDistance || 8,
-    language: language || 'en_us',
-    chat_colors: chatColors === 'true',
-    humanoid_arm: humanoidArm,
-    use_auto_register: useAutoRegister,
-    use_auto_login: useAutoLogin,
-    use_proxy: useProxy,
-    use_anti_captcha: useAntiCaptcha,
-    use_webhook: useWebhook,
-    use_auto_rejoin: useAutoRejoin,
-    use_chat_signing: useChatSigning,
-    use_chat_monitoring: useChatMonitoring,
-    proxy_list: proxyList,
-    skin_settings: {
-      skin_type: skinType,
-      set_skin_command: setSkinCommand,
-      custom_skin_by_nickname: customSkinByNickname 
-    },
-    anti_captcha_settings: {
-      captcha_type: captchaType,
-      options: {
-        web: antiWebCaptchaOptions
+    const result = await invoke('launch_bots', { options: {
+      address: address || 'localhost',
+      version: version || '1.21.11',
+      bots_count: botsCount || 1,
+      join_delay: joinDelay || 1000,
+      nickname_type: nicknameType,
+      password_type: passwordType,
+      nickname_template: nicknameTemplate || 'player_#m#m',
+      password_template: passwordTemplate || '#m#m#l#n',
+      register_mode: registerMode,
+      register_command: registerCommand || '/reg',
+      register_template: registerTemplate || '@cmd @pass',
+      register_min_delay: registerMinDelay || 2000,
+      register_max_delay: registerMaxDelay || 3500,
+      register_trigger: registerTrigger || 'зарегистрируйтесь',
+      login_mode: loginMode,
+      login_command: loginCommand || '/login',
+      login_template: loginTemplate || '@cmd @pass',
+      login_min_delay: loginMinDelay || 2000,
+      login_max_delay: loginMaxDelay || 3500,
+      login_trigger: loginTrigger || 'авторизируйтесь',
+      rejoin_delay: rejoinDelay || 3000,
+      view_distance: viewDistance || 8,
+      language: language || 'en_us',
+      chat_colors: chatColors === 'true',
+      humanoid_arm: humanoidArm,
+      use_auto_register: useAutoRegister,
+      use_auto_login: useAutoLogin,
+      use_proxy: useProxy,
+      use_anti_captcha: useAntiCaptcha,
+      use_webhook: useWebhook,
+      use_auto_rejoin: useAutoRejoin,
+      use_chat_signing: useChatSigning,
+      use_chat_monitoring: useChatMonitoring,
+      proxy_list: proxyList,
+      skin_settings: {
+        skin_type: skinType,
+        set_skin_command: setSkinCommand,
+        custom_skin_by_nickname: customSkinByNickname 
+      },
+      anti_captcha_settings: {
+        captcha_type: captchaType,
+        options: {
+          web: antiWebCaptchaOptions
+        }
+      },
+      webhook_settings: webhookOptions,
+      plugins: {
+        auto_armor: plugins['auto-armor'].enable,
+        auto_totem: plugins['auto-totem'].enable,
+        auto_eat: plugins['auto-eat'].enable,
+        auto_potion: plugins['auto-potion'].enable,
+        auto_look: plugins['auto-look'].enable,
+        auto_shield: plugins['auto-shield'].enable,
+        auto_repair: plugins['auto-repair'].enable
       }
-    },
-    webhook_settings: webhookOptions,
-    plugins: {
-      auto_armor: plugins['auto-armor'].enable,
-      auto_totem: plugins['auto-totem'].enable,
-      auto_eat: plugins['auto-eat'].enable,
-      auto_potion: plugins['auto-potion'].enable,
-      auto_look: plugins['auto-look'].enable,
-      auto_shield: plugins['auto-shield'].enable,
-      auto_repair: plugins['auto-repair'].enable
-    }
-  }}) as Array<string>;
+    }}) as Array<string>;
 
-  log(String(result[1]), result[0]);
+    log(result[1], result[0]);
 
-  chartManager.enable();
+    chartManager.enable();
 
-  monitoringManager.extendedMonitoring = useExtendedMonitoring;
-  monitoringManager.chatMonitoring = useChatMonitoring;
-  monitoringManager.mapMonitoring = useMapMonitoring;
-  monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
-  monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
+    monitoringManager.extendedMonitoring = useExtendedMonitoring;
+    monitoringManager.chatMonitoring = useChatMonitoring;
+    monitoringManager.mapMonitoring = useMapMonitoring;
+    monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
+    monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
 
-  monitoringManager.enable(updateFrequency);
-  monitoringManager.wait();
+    monitoringManager.enable(updateFrequency);
+    monitoringManager.wait();
 
-  radarManager.enable();
+    radarManager.enable();
+  } catch (error) {
+    log(`Ошибка (start-bots-process): ${error}`, 'error');
+  }
 }
 
 async function stopBots(): Promise<void> {
@@ -244,7 +242,7 @@ async function stopBots(): Promise<void> {
   try {
     const result = await invoke('stop_bots') as Array<string>;
 
-    log(String(result[1]), result[0]);
+    log(result[1], result[0]);
 
     process = 'sleep';
 

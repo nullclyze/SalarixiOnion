@@ -196,22 +196,24 @@ impl AntiFallModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &AntiFallOptions) {
-    match options.mode.as_str() {
-      "hovering" => {
-        self.hovering_anti_fall(bot, options).await;
-      }
-      "teleport" => {
-        self.teleport_anti_fall(bot, options).await;
-      }
-      "water-drop" => {
-        self.water_drop_anti_fall(bot, options).await;
-      }
-      _ => {}
-    }
+  pub async fn enable(&self, username: &str, options: &AntiFallOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.mode.as_str() {
+        "hovering" => {
+          self.hovering_anti_fall(bot, options).await;
+        }
+        "teleport" => {
+          self.teleport_anti_fall(bot, options).await;
+        }
+        "water-drop" => {
+          self.water_drop_anti_fall(bot, options).await;
+        }
+        _ => {}
+      })
+      .await;
   }
 
-  pub fn stop(&self, nickname: &String) {
-    kill_task(nickname, "anti-fall");
+  pub fn stop(&self, username: &str) {
+    kill_task(username, "anti-fall");
   }
 }

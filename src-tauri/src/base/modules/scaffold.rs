@@ -262,36 +262,42 @@ impl ScaffoldModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &ScaffoldOptions) {
-    self.go_back(bot.clone());
+  pub async fn enable(&self, username: &str, options: &ScaffoldOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        self.go_back(bot.clone());
 
-    match options.mode.as_str() {
-      "noob-bridge" => {
-        self.noob_bridge_scaffold(bot, options).await;
-      }
-      "ninja-bridge" => {
-        self.ninja_bridge_scaffold(bot, options).await;
-      }
-      "god-bridge" => {
-        self.god_bridge_scaffold(bot, options).await;
-      }
-      "jump-bridge" => {
-        self.jump_bridge_scaffold(bot, options).await;
-      }
-      _ => {}
-    }
+        match options.mode.as_str() {
+          "noob-bridge" => {
+            self.noob_bridge_scaffold(bot, options).await;
+          }
+          "ninja-bridge" => {
+            self.ninja_bridge_scaffold(bot, options).await;
+          }
+          "god-bridge" => {
+            self.god_bridge_scaffold(bot, options).await;
+          }
+          "jump-bridge" => {
+            self.jump_bridge_scaffold(bot, options).await;
+          }
+          _ => {}
+        }
+      })
+      .await;
   }
 
-  pub fn stop(&self, bot: &Client) {
-    let nickname = bot.username();
+  pub async fn stop(&self, username: &str) {
+    kill_task(username, "scaffold");
 
-    kill_task(&nickname, "scaffold");
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        bot.set_crouching(false);
+        bot.walk(WalkDirection::None);
 
-    bot.set_crouching(false);
-    bot.walk(WalkDirection::None);
-
-    STATES.set_mutual_states(&nickname, "walking", false);
-    STATES.set_mutual_states(&nickname, "looking", false);
-    STATES.set_mutual_states(&nickname, "interacting", false);
+        STATES.set_mutual_states(username, "walking", false);
+        STATES.set_mutual_states(username, "looking", false);
+        STATES.set_mutual_states(username, "interacting", false);
+      })
+      .await;
   }
 }

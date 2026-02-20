@@ -146,23 +146,30 @@ impl AntiAfkModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &AntiAfkOptions) {
-    match options.mode.as_str() {
-      "minimal" => {
-        self.minimal(bot, options).await;
-      }
-      "normal" => {
-        self.normal(bot, options).await;
-      }
-      "advanced" => {
-        self.advanced(bot, options).await;
-      }
-      _ => {}
-    }
+  pub async fn enable(&self, username: &str, options: &AntiAfkOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.mode.as_str() {
+        "minimal" => {
+          self.minimal(bot, options).await;
+        }
+        "normal" => {
+          self.normal(bot, options).await;
+        }
+        "advanced" => {
+          self.advanced(bot, options).await;
+        }
+        _ => {}
+      })
+      .await;
   }
 
-  pub fn stop(&self, bot: &Client) {
-    kill_task(&bot.username(), "anti-afk");
-    bot.walk(WalkDirection::None);
+  pub async fn stop(&self, username: &str) {
+    kill_task(username, "anti-afk");
+
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        bot.walk(WalkDirection::None);
+      })
+      .await;
   }
 }

@@ -45,31 +45,33 @@ impl BowAimModule {
 
   fn aiming(&self, username: String, filter: EntityFilter) {
     tokio::spawn(async move {
-      BOT_REGISTRY.get_bot(&username, async |bot| {
-        let nickname = bot.username();
+      BOT_REGISTRY
+        .get_bot(&username, async |bot| {
+          let nickname = bot.username();
 
-        if STATES.get_state(&nickname, "can_looking") {
-          STATES.set_mutual_states(&nickname, "looking", true);
+          if STATES.get_state(&nickname, "can_looking") {
+            STATES.set_mutual_states(&nickname, "looking", true);
 
-          loop {
-            if !TASKS.get_task_activity(&nickname, "bow-aim") {
-              break;
+            loop {
+              if !TASKS.get_task_activity(&nickname, "bow-aim") {
+                break;
+              }
+
+              if let Some(entity) = get_nearest_entity(bot, filter.clone()) {
+                let target_pos = get_entity_position(bot, entity);
+
+                bot.look_at(Vec3::new(
+                  target_pos.x,
+                  target_pos.y + get_entity_eye_height(bot, entity),
+                  target_pos.z,
+                ));
+              }
+
+              sleep(Duration::from_millis(50)).await;
             }
-
-            if let Some(entity) = get_nearest_entity(bot, filter.clone()) {
-              let target_pos = get_entity_position(bot, entity);
-
-              bot.look_at(Vec3::new(
-                target_pos.x,
-                target_pos.y + get_entity_eye_height(bot, entity),
-                target_pos.z,
-              ));
-            }
-
-            sleep(Duration::from_millis(50)).await;
           }
-        }
-      }).await;
+        })
+        .await;
     });
   }
 
@@ -100,7 +102,7 @@ impl BowAimModule {
           bot.look_at(Vec3::new(
             target_pos.x,
             target_pos.y + distance * 0.16,
-            target_pos.z
+            target_pos.z,
           ));
 
           if distance > 50.0 {
@@ -158,18 +160,24 @@ impl BowAimModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &BowAimOptions) {
-    self.shooting(bot, options).await;
+  pub async fn enable(&self, username: &str, options: &BowAimOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        self.shooting(bot, options).await;
+      })
+      .await;
   }
 
-  pub fn stop(&self, bot: &Client) {
-    let nickname = bot.username();
+  pub async fn stop(&self, username: &str) {
+    kill_task(username, "bow-aim");
 
-    kill_task(&nickname, "bow-aim");
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        release_use_item(bot);
 
-    release_use_item(bot);
-
-    STATES.set_mutual_states(&nickname, "looking", false);
-    STATES.set_mutual_states(&nickname, "interacting", false);
+        STATES.set_mutual_states(username, "looking", false);
+        STATES.set_mutual_states(username, "interacting", false);
+      })
+      .await;
   }
 }

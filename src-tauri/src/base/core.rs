@@ -10,6 +10,8 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
+use tokio::task::JoinHandle;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -247,8 +249,21 @@ pub fn generate_nickname_or_password(item: &str, t: String, template: String) ->
   }
 }
 
-// Функция получения текущих опций
-pub fn get_current_options() -> Option<LaunchOptions> {
+/// Функция получения количества активных ботов
+pub fn active_bots_count() -> i32 {
+  let mut count = 0;
+
+  for (_, profile) in PROFILES.get_all() {
+    if profile.status.to_lowercase().as_str() == "онлайн" {
+      count += 1;
+    }
+  }
+
+  count
+}
+
+/// Функция получения текущих опций
+pub fn current_options() -> Option<LaunchOptions> {
   if let Some(arc) = get_flow_manager() {
     return arc.read().options.clone();
   }
@@ -256,7 +271,7 @@ pub fn get_current_options() -> Option<LaunchOptions> {
   None
 }
 
-// Структура опций запуска
+/// Структура опций запуска
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LaunchOptions {
   pub address: String,
@@ -342,7 +357,8 @@ pub struct Plugins {
   pub auto_repair: bool,
 }
 
-// Структура FlowManager
+/// Потоковый менеджер.
+/// Он выполняет базовые функции (запуск / остановка ботов).
 pub struct FlowManager {
   pub active: bool,
   pub options: Option<LaunchOptions>,
@@ -362,16 +378,9 @@ impl FlowManager {
 
   pub fn launch(&mut self, options: LaunchOptions) -> anyhow::Result<()> {
     self.options = Some(options.clone());
-    self.swarm.take();
-
-    PROFILES.clear();
-    STATES.clear();
-    TASKS.clear();
-    BOT_REGISTRY.destroy();
-
     self.active = true;
 
-    tokio::spawn(event_processor());
+    tokio::spawn(registry_event_loop()); // $%#@$*@$1 &!@*$ @#%$&&!^%^ #!@%*!*#^
 
     if options.use_webhook {
       send_webhook(
@@ -410,7 +419,7 @@ impl FlowManager {
         }
 
         local_set.spawn_local(async move {
-          send_log(format!("Подготовка..."), "extended");
+          send_log("Подготовка...".to_string(), "extended");
 
           let mut flow = SwarmBuilder::new_without_plugins()
             .add_plugins(plugins)
@@ -428,6 +437,7 @@ impl FlowManager {
               options.nickname_type.clone(),
               options.nickname_template.clone(),
             );
+
             let password = generate_nickname_or_password(
               "password",
               options.password_type.clone(),
@@ -516,7 +526,7 @@ impl FlowManager {
             }
           }
 
-          send_log(format!("Подготовка окончена"), "extended");
+          send_log("Подготовка окончена".to_string(), "extended");
 
           let _ = flow.start(options.address).await;
         });
@@ -536,84 +546,35 @@ impl FlowManager {
       );
     }
 
+    PLUGIN_MANAGER.clear();
+    PROFILES.clear();
+    TASKS.clear();
+    STATES.clear();
+    BOT_REGISTRY.destroy();
+
     if let Some(swarm) = &self.swarm {
       swarm.ecs_lock.lock().write_message(AppExit::Success);
     }
 
-    self.active = false;
     self.swarm.take();
-
-    PROFILES.clear();
-    TASKS.clear();
-    BOT_REGISTRY.destroy();
+    self.active = false;
 
     if let Some(options) = &self.options {
       if options.use_webhook {
         send_webhook(
           options.webhook_settings.url.clone(),
-          format!("{} ботов было остановлено", options.bots_count),
+          format!("{} ботов было остановлено", active_bots_count()),
         );
       }
     }
 
     ("info".to_string(), format!("Остановка ботов завершена"))
   }
-
-  pub fn send_message(&self, username: String, message: String) {
-    tokio::spawn(async move {
-      BOT_REGISTRY
-        .get_bot(&username, async |bot| {
-          bot.chat(message);
-        })
-        .await;
-    });
-  }
-
-  pub fn reset_bot(&self, username: String) {
-    tokio::spawn(async move {
-      BOT_REGISTRY
-        .get_bot(&username, async |bot| {
-          TASKS.reset(&username);
-          STATES.reset(&username);
-
-          bot.set_crouching(false);
-          bot.set_jumping(false);
-
-          send_log(
-            format!("Все задачи и состояния бота {} сброшены", username),
-            "info",
-          );
-          send_message(
-            "Система",
-            format!("Все задачи и состояния бота {} сброшены", username),
-          );
-        })
-        .await;
-    });
-  }
-
-  pub fn disconnect_bot(&self, username: String) {
-    tokio::spawn(async move {
-      if let Some(bot) = BOT_REGISTRY.take_bot(&username).await {
-        bot.disconnect();
-      }
-
-      if let Some(tasks) = TASKS.get(&username) {
-        tasks.write().unwrap().kill_all_tasks();
-      }
-
-      PROFILES.set_bool(&username, "captcha_caught", false);
-      STATES.reset(&username);
-      TASKS.remove(&username);
-      PROFILES.set_str(&username, "status", "Оффлайн");
-
-      send_log(format!("Бот {} отключился", username), "info");
-      send_message("Система", format!("Бот {} отключился", username));
-    });
-  }
 }
 
-// Структура ModuleManager
+/// Менеджер модулей.
+/// Изначально он хранит в себе объекты всех существующих модулей.
+/// Позволяет конвертировать JSON-данные в Rust структуры, распределять группы, включать / выключать определённые модули.
 pub struct ModuleManager {
   chat: ChatModule,
   action: ActionModule,
@@ -655,7 +616,7 @@ impl ModuleManager {
 
       if let Some(profile) = PROFILES.get(&username) {
         if profile.group != group {
-          return;
+          continue;
         }
       }
 
@@ -675,17 +636,7 @@ impl ModuleManager {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| match options.mode.as_str() {
-                  "message" => {
-                    let _ = self.chat.message(bot, &options).await;
-                  }
-                  "spamming" => {
-                    let _ = self.chat.spamming(bot, &options).await;
-                  }
-                  _ => {}
-                })
-                .await;
+              self.chat.enable(&nickname, &options).await;
             });
 
             if mode.as_str() == "spamming" {
@@ -704,39 +655,18 @@ impl ModuleManager {
 
           let action = options.action.clone();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.action.stop(bot, action.as_str());
-            })
-            .await;
+          self.action.stop(&username, action.as_str()).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| match options.action.as_str() {
-                  "jumping" => {
-                    self.action.jumping(bot, &options).await;
-                  }
-                  "shifting" => {
-                    self.action.shifting(bot, &options).await;
-                  }
-                  "waving" => {
-                    self.action.waving(bot, &options).await;
-                  }
-                  _ => {}
-                })
-                .await;
+              self.action.enable(&nickname, &options).await;
             });
 
             run_task(&username, action.as_str(), task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.action.stop(bot, action.as_str());
-              })
-              .await;
+            self.action.stop(&username, action.as_str()).await;
           }
         }
         "inventory" => {
@@ -744,43 +674,25 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          tokio::spawn(async move {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.inventory.interact(bot, &options).await;
-              })
-              .await;
-          });
+          self.inventory.interact(&username, &options).await;
         }
         "movement" => {
           let options: MovementOptions = serde_json::from_value(current_options)
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.movement.stop(bot);
-            })
-            .await;
+          self.movement.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.movement.enable(&bot, &options).await;
-                })
-                .await;
+              self.movement.enable(&nickname, &options).await;
             });
 
             run_task(&username, "movement", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.movement.stop(&bot);
-              })
-              .await;
+            self.movement.stop(&username).await;
           }
         }
         "anti-afk" => {
@@ -788,30 +700,18 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.anti_afk.stop(&bot);
-            })
-            .await;
+          self.anti_afk.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.anti_afk.enable(&bot, &options).await;
-                })
-                .await;
+              self.anti_afk.enable(&nickname, &options).await;
             });
 
             run_task(&username, "anti-afk", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.anti_afk.stop(&bot);
-              })
-              .await;
+            self.anti_afk.stop(&username).await;
           }
         }
         "flight" => {
@@ -825,11 +725,7 @@ impl ModuleManager {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.flight.enable(&bot, &options).await;
-                })
-                .await;
+              self.flight.enable(&nickname, &options).await;
             });
 
             run_task(&username, "flight", task);
@@ -842,30 +738,18 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.killaura.stop(bot);
-            })
-            .await;
+          self.killaura.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.killaura.enable(&bot, &options).await;
-                })
-                .await;
+              self.killaura.enable(&nickname, &options).await;
             });
 
             run_task(&username, "killaura", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.killaura.stop(&bot);
-              })
-              .await;
+            self.killaura.stop(&username).await;
           }
         }
         "scaffold" => {
@@ -873,30 +757,18 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.scaffold.stop(&bot);
-            })
-            .await;
+          self.scaffold.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.scaffold.enable(&bot, &options).await;
-                })
-                .await;
+              self.scaffold.enable(&nickname, &options).await;
             });
 
             run_task(&username, "scaffold", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.scaffold.stop(&bot);
-              })
-              .await;
+            self.scaffold.stop(&username).await;
           }
         }
         "anti-fall" => {
@@ -910,11 +782,7 @@ impl ModuleManager {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.anti_fall.enable(&bot, &options).await;
-                })
-                .await;
+              self.anti_fall.enable(&nickname, &options).await;
             });
 
             run_task(&username, "anti-fall", task);
@@ -927,30 +795,18 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.bow_aim.stop(&bot);
-            })
-            .await;
+          self.bow_aim.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.bow_aim.enable(&bot, &options).await;
-                })
-                .await;
+              self.bow_aim.enable(&nickname, &options).await;
             });
 
             run_task(&username, "bow-aim", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.bow_aim.stop(&bot);
-              })
-              .await;
+            self.bow_aim.stop(&username).await;
           }
         }
         "stealer" => {
@@ -964,11 +820,7 @@ impl ModuleManager {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&nickname, async |bot| {
-                  self.stealer.enable(&bot, &options).await;
-                })
-                .await;
+              self.stealer.enable(&nickname, &options).await;
             });
 
             run_task(&username, "stealer", task);
@@ -981,30 +833,18 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          BOT_REGISTRY
-            .get_bot(&username, async |bot| {
-              self.miner.stop(&bot);
-            })
-            .await;
+          self.miner.stop(&username).await;
 
           if options.state {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&username, async |bot| {
-                  self.miner.enable(&bot, &options).await;
-                })
-                .await;
+              self.miner.enable(&nickname, &options).await;
             });
 
-            run_task(&nickname, "miner", task);
+            run_task(&username, "miner", task);
           } else {
-            BOT_REGISTRY
-              .get_bot(&username, async |bot| {
-                self.miner.stop(&bot);
-              })
-              .await;
+            self.miner.stop(&username).await;
           }
         }
         "farmer" => {
@@ -1018,14 +858,10 @@ impl ModuleManager {
             let nickname = username.clone();
 
             let task = tokio::spawn(async move {
-              BOT_REGISTRY
-                .get_bot(&username, async |bot| {
-                  self.farmer.enable(&bot, &options).await;
-                })
-                .await;
+              self.farmer.enable(&nickname, &options).await;
             });
 
-            run_task(&nickname, "farmer", task);
+            run_task(&username, "farmer", task);
           } else {
             self.farmer.stop(&username);
           }
@@ -1036,8 +872,15 @@ impl ModuleManager {
   }
 }
 
-// Структура PluginManager
+/// Менеджер плагинов.
+/// Изначально он хранит в себе объекты всех существующих плагинов.
+/// Данный менеджер выполняет роль загрузчика плагинов для бота.
 pub struct PluginManager {
+  tasks: RwLock<HashMap<String, HashMap<String, Option<JoinHandle<()>>>>>,
+  plugins: PluginList,
+}
+
+struct PluginList {
   auto_armor: AutoArmorPlugin,
   auto_totem: AutoTotemPlugin,
   auto_eat: AutoEatPlugin,
@@ -1050,43 +893,76 @@ pub struct PluginManager {
 impl PluginManager {
   pub fn new() -> Self {
     Self {
-      auto_armor: AutoArmorPlugin::new(),
-      auto_totem: AutoTotemPlugin::new(),
-      auto_eat: AutoEatPlugin::new(),
-      auto_potion: AutoPotionPlugin::new(),
-      auto_look: AutoLookPlugin::new(),
-      auto_shield: AutoShieldPlugin::new(),
-      auto_repair: AutoRepairPlugin::new(),
+      tasks: RwLock::new(HashMap::new()),
+      plugins: PluginList { 
+        auto_armor: AutoArmorPlugin::new(),
+        auto_totem: AutoTotemPlugin::new(),
+        auto_eat: AutoEatPlugin::new(),
+        auto_potion: AutoPotionPlugin::new(),
+        auto_look: AutoLookPlugin::new(),
+        auto_shield: AutoShieldPlugin::new(),
+        auto_repair: AutoRepairPlugin::new(),
+      },
     }
   }
 
   pub fn load(&'static self, username: &String, plugins: &Plugins) {
+    self.tasks.write().insert(username.clone(), HashMap::new());
+
     if plugins.auto_armor {
-      self.auto_armor.enable(username.clone());
+      self.plugins.auto_armor.enable(username.clone());
     }
 
     if plugins.auto_totem {
-      self.auto_totem.enable(username.clone());
+      self.plugins.auto_totem.enable(username.clone());
     }
 
     if plugins.auto_eat {
-      self.auto_eat.enable(username.clone());
+      self.plugins.auto_eat.enable(username.clone());
     }
 
     if plugins.auto_potion {
-      self.auto_potion.enable(username.clone());
+      self.plugins.auto_potion.enable(username.clone());
     }
 
     if plugins.auto_look {
-      self.auto_look.enable(username.clone());
+      self.plugins.auto_look.enable(username.clone());
     }
 
     if plugins.auto_shield {
-      self.auto_shield.enable(username.clone());
+      self.plugins.auto_shield.enable(username.clone());
     }
 
     if plugins.auto_repair {
-      self.auto_repair.enable(username.clone());
+      self.plugins.auto_repair.enable(username.clone());
     }
+  }
+
+  pub fn push_task(&self, username: &str, plugin: &str, task: JoinHandle<()>) {
+    if let Some(tasks) = self.tasks.write().get_mut(username) {
+      if let Some(old_task) = tasks.get(plugin) {
+        if let Some(active_old_task) = old_task {
+          active_old_task.abort();
+        }
+      }
+
+      tasks.insert(plugin.to_string(), Some(task));
+    }
+  }
+
+  pub fn destroy_all_tasks(&self, username: &str) {
+    if let Some(tasks) = self.tasks.write().get(username) {
+      for (_, task) in tasks {
+        if let Some(handle) = task {
+          handle.abort();
+        }
+      }
+    }
+  }
+
+  pub fn clear(&self) {
+    for (username, _) in PROFILES.get_all() {
+      self.destroy_all_tasks(&username);
+    } 
   }
 }

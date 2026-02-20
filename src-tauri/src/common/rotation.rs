@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use azalea::BlockPos;
 use azalea::prelude::*;
+use azalea::BlockPos;
 use azalea::Vec3;
 use bevy_ecs::entity::Entity;
 use tokio::time::sleep;
@@ -26,7 +26,6 @@ pub fn look_at_entity(bot: &Client, entity: Entity, with_eye_height: bool) {
   });
 }
 
-
 /// Функция поворота на блок
 pub async fn look_at_block(bot: &Client, block_pos: BlockPos, sloppy: bool) {
   let center = block_pos.center();
@@ -43,9 +42,9 @@ pub async fn look_at_block(bot: &Client, block_pos: BlockPos, sloppy: bool) {
     sleep(Duration::from_millis(100)).await;
   }
 
-  bot.look_at(Vec3 { 
-    x: center.x, 
-    y: center.y, 
-    z: center.z 
+  bot.look_at(Vec3 {
+    x: center.x,
+    y: center.y,
+    z: center.z,
   });
 }

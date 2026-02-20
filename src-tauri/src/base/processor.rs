@@ -1,34 +1,33 @@
-use crate::base::{get_current_options, BotEvent, BOT_REGISTRY, MODULE_MANAGER, PLUGIN_MANAGER};
+use crate::base::{current_options, RegistryEvent, BOT_REGISTRY, MODULE_MANAGER, PLUGIN_MANAGER};
 use crate::quick::QUICK_TASK_MANAGER;
 
-// Функция процессинга всех событий
-pub async fn event_processor() {
+/// Процессор всех событий реестра ботов
+pub async fn registry_event_loop() {
   let mut rx = BOT_REGISTRY.events.subscribe();
 
   while let Ok(event) = rx.recv().await {
     match event {
-      BotEvent::LoadPlugins { username } => {
-        if let Some(opts) = get_current_options() {
-          tokio::spawn(async move {
-            let _ = BOT_REGISTRY
-              .get_bot(&username, async |_| {
-                PLUGIN_MANAGER.load(&username, &opts.plugins);
-              })
-              .await;
-          });
+      RegistryEvent::LoadPlugins { username } => {
+        if let Some(opts) = current_options() {
+          let _ = BOT_REGISTRY
+            .get_bot(&username, async |_| {
+              PLUGIN_MANAGER.load(&username, &opts.plugins);
+            })
+            .await;
         }
       }
-      BotEvent::ControlModules {
+      RegistryEvent::ControlModules {
         name,
         options,
         group,
       } => {
-        tokio::spawn(async move {
-          MODULE_MANAGER.control(name, options, group).await;
-        });
+        MODULE_MANAGER.control(name, options, group).await;
       }
-      BotEvent::QuickTask { name } => {
+      RegistryEvent::QuickTask { name } => {
         QUICK_TASK_MANAGER.execute(name);
+      }
+      RegistryEvent::StopProcessing => {
+        return;
       }
     }
   }

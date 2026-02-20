@@ -176,7 +176,7 @@ impl ChatModule {
     result
   }
 
-  pub async fn message(&self, bot: &Client, options: &ChatOptions) -> anyhow::Result<()> {
+  async fn message(&self, bot: &Client, options: &ChatOptions) {
     let mut text = options.message.clone();
 
     if options.use_text_mutation {
@@ -197,11 +197,9 @@ impl ChatModule {
     }
 
     bot.chat(&text);
-
-    Ok(())
   }
 
-  pub async fn spamming(&self, bot: &Client, options: &ChatOptions) {
+  async fn spamming(&self, bot: &Client, options: &ChatOptions) {
     let mut latest_text = String::new();
 
     loop {
@@ -225,7 +223,7 @@ impl ChatModule {
         .await;
       }
 
-      let mut final_text = text.clone();
+      let mut final_text = text;
 
       if options.use_magic_text {
         final_text = self.create_magic_text(&final_text);
@@ -240,9 +238,9 @@ impl ChatModule {
       }
 
       if options.use_anti_repetition {
-        if latest_text != final_text.clone() {
+        if latest_text != final_text {
           bot.chat(&final_text);
-          latest_text = final_text.clone();
+          latest_text = final_text;
         }
       } else {
         bot.chat(&final_text);
@@ -250,7 +248,21 @@ impl ChatModule {
     }
   }
 
-  pub fn stop(&self, nickname: &String) {
-    kill_task(nickname, "spamming");
+  pub async fn enable(&self, username: &str, options: &ChatOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.mode.as_str() {
+        "message" => {
+          self.message(bot, &options).await;
+        }
+        "spamming" => {
+          self.spamming(bot, &options).await;
+        }
+        _ => {}
+      })
+      .await;
+  }
+
+  pub fn stop(&self, username: &str) {
+    kill_task(username, "spamming");
   }
 }

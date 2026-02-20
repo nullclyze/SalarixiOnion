@@ -24,7 +24,9 @@ impl AutoEatPlugin {
   }
 
   pub fn enable(&'static self, username: String) {
-    tokio::spawn(async move {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
       loop {
         if let Some(arc) = get_flow_manager() {
           if !arc.read().active {
@@ -33,11 +35,11 @@ impl AutoEatPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&username, async |bot| {
+          .get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
-            
+
             self.eat(&bot).await;
           })
           .await;
@@ -45,6 +47,8 @@ impl AutoEatPlugin {
         sleep(Duration::from_millis(50)).await;
       }
     });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-eat", task);
   }
 
   async fn eat(&self, bot: &Client) {

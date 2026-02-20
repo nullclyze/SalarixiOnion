@@ -150,11 +150,15 @@ impl StealerModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &StealerOptions) {
-    self.stealing(bot, options).await;
+  pub async fn enable(&self, username: &str, options: &StealerOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        self.stealing(bot, options).await;
+      })
+      .await;
   }
 
-  pub fn stop(&self, nickname: &String) {
-    kill_task(nickname, "stealer");
+  pub fn stop(&self, username: &str) {
+    kill_task(username, "stealer");
   }
 }

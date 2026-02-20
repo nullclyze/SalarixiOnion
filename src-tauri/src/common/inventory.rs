@@ -90,7 +90,7 @@ pub fn stop_interacting_with_inventory(username: &String) {
   STATES.set_state(username, "can_walking", true);
   STATES.set_state(username, "can_sprinting", true);
   STATES.set_state(username, "can_attacking", true);
-  
+
   STATES.set_mutual_states(username, "interacting", false);
 }
 

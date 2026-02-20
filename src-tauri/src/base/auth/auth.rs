@@ -2,7 +2,7 @@ use azalea::prelude::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::base::{get_current_options, PROFILES};
+use crate::base::{current_options, PROFILES};
 use crate::emit::send_log;
 use crate::generators::*;
 
@@ -10,7 +10,7 @@ use crate::generators::*;
 pub async fn default_authorize(bot: &Client) {
   let username = bot.username();
 
-  if let Some(opts) = get_current_options() {
+  if let Some(opts) = current_options() {
     let mut min_delay = 2000;
     let mut max_delay = 4000;
 
@@ -62,7 +62,7 @@ pub async fn default_authorize(bot: &Client) {
 pub async fn trigger_authorize(bot: &Client, message: String) {
   let username = bot.username();
 
-  if let Some(opts) = get_current_options() {
+  if let Some(opts) = current_options() {
     if let Some(profile) = PROFILES.get(&username) {
       let pat = if !profile.registered {
         opts.register_trigger
@@ -77,7 +77,7 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
   }
 
   if let Some(profile) = PROFILES.get(&username) {
-    if let Some(opts) = get_current_options() {
+    if let Some(opts) = current_options() {
       let mut c = "!NONE".to_string();
       let mut template = "@cmd @pass".to_string();
 

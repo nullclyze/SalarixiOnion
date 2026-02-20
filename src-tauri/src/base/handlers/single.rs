@@ -1,5 +1,4 @@
 use azalea::entity::HumanoidArm;
-use azalea::local_player::TabList;
 use azalea::prelude::*;
 use azalea::protocol::common::client_information::ParticleStatus;
 use azalea::protocol::packets::game::ClientboundGamePacket;
@@ -35,7 +34,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Login => {
       let nickname = bot.username();
 
-      if let Some(opts) = get_current_options() {
+      if let Some(opts) = current_options() {
         bot.set_client_information(ClientInformation {
           view_distance: opts.view_distance,
           language: opts.language,
@@ -70,13 +69,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       BOT_REGISTRY.register_bot(&nickname, bot.clone());
 
-      BOT_REGISTRY.send_event(BotEvent::LoadPlugins {
+      BOT_REGISTRY.send_event(RegistryEvent::LoadPlugins {
         username: nickname.clone(),
       });
 
       PROFILES.set_str(&nickname, "status", "Онлайн");
 
-      if let Some(options) = get_current_options() {
+      if let Some(options) = current_options() {
         let pos = bot.feet_pos();
         let health = bot.get_health();
 
@@ -113,7 +112,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       if let Some(profile) = PROFILES.get(&nickname) {
         if !profile.skin_is_set {
-          if let Some(opts) = get_current_options() {
+          if let Some(opts) = current_options() {
             match opts.skin_settings.skin_type.as_str() {
               "random" => {
                 let command = format!(
@@ -174,9 +173,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Disconnect(packet) => {
       let nickname = bot.username();
 
-      if let Some(tasks) = TASKS.get(&nickname) {
-        tasks.write().unwrap().kill_all_tasks();
-      }
+      TASKS.reset(&nickname);
+      PLUGIN_MANAGER.destroy_all_tasks(&nickname);
 
       BOT_REGISTRY.remove_bot(&nickname);
 
@@ -188,7 +186,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       PROFILES.set_str(&nickname, "status", "Оффлайн");
 
       if let Some(text) = packet {
-        if let Some(options) = get_current_options() {
+        if let Some(options) = current_options() {
           if options.use_webhook {
             send_webhook(
               options.webhook_settings.url,
@@ -210,7 +208,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Chat(packet) => {
       let nickname = bot.username();
 
-      if let Some(options) = get_current_options() {
+      if let Some(options) = current_options() {
         if options.use_chat_monitoring {
           let sender = packet.sender().unwrap_or("unknown".to_string());
 
@@ -279,7 +277,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             return Ok(());
           }
 
-          let ping = if let Some(tab) = bot.get_component::<TabList>() {
+          let ping = if let Some(tab) = bot.get_players() {
             let mut result = 0;
 
             for (_, info) in tab.iter() {
@@ -304,7 +302,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       ClientboundGamePacket::MapItemData(data) => {
         let nickname = bot.username();
 
-        if let Some(options) = get_current_options() {
+        if let Some(options) = current_options() {
           if options.use_anti_captcha {
             if options.anti_captcha_settings.captcha_type.as_str() == "map" {
               if let Some(map_patch) = &data.color_patch.0 {

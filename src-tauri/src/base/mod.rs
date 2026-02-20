@@ -1,6 +1,7 @@
 mod auth;
 mod bot;
 mod core;
+mod functions;
 mod handlers;
 mod modules;
 mod plugins;
@@ -11,6 +12,7 @@ mod utils;
 pub use auth::*;
 pub use bot::*;
 pub use core::*;
+pub use functions::*;
 pub use plugins::*;
 pub use processor::*;
 pub use registry::*;

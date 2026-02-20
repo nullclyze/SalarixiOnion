@@ -23,7 +23,7 @@ impl ActionModule {
     Self
   }
 
-  pub async fn jumping(&self, bot: &Client, options: &ActionOptions) {
+  async fn jumping(&self, bot: &Client, options: &ActionOptions) {
     if options.use_impulsiveness {
       loop {
         if options.use_sync {
@@ -43,7 +43,7 @@ impl ActionModule {
     }
   }
 
-  pub async fn shifting(&self, bot: &Client, options: &ActionOptions) {
+  async fn shifting(&self, bot: &Client, options: &ActionOptions) {
     if options.use_impulsiveness {
       loop {
         if options.use_sync {
@@ -65,7 +65,7 @@ impl ActionModule {
     }
   }
 
-  pub async fn waving(&self, bot: &Client, options: &ActionOptions) {
+  async fn waving(&self, bot: &Client, options: &ActionOptions) {
     if options.use_impulsiveness {
       loop {
         if options.use_sync {
@@ -88,17 +88,36 @@ impl ActionModule {
     }
   }
 
-  pub fn stop(&self, bot: &Client, action: &str) {
-    kill_task(&bot.username(), action);
+  pub async fn enable(&self, username: &str, options: &ActionOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.action.as_str() {
+        "jumping" => {
+          self.jumping(bot, &options).await;
+        }
+        "shifting" => {
+          self.shifting(bot, &options).await;
+        }
+        "waving" => {
+          self.waving(bot, &options).await;
+        }
+        _ => {}
+      })
+      .await;
+  }
 
-    match action {
-      "jumping" => {
-        bot.set_jumping(false);
-      }
-      "shifting" => {
-        bot.set_crouching(false);
-      }
-      _ => {}
-    }
+  pub async fn stop(&self, username: &str, action: &str) {
+    kill_task(username, action);
+
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match action {
+        "jumping" => {
+          bot.set_jumping(false);
+        }
+        "shifting" => {
+          bot.set_crouching(false);
+        }
+        _ => {}
+      })
+      .await;
   }
 }

@@ -58,7 +58,7 @@ export class RadarManager {
         <div class="sep"></div>
 
         <div class="info" style="min-width: 220px; max-width: 220px;">
-          <p>Никнейм: ${username.length <= 16 ? username : username.substr(0, 16) + '...'}</p>
+          <p>Никнейм: <span>${username.length <= 16 ? username : username.substr(0, 16) + '...'}</span></p>
           <p>Статус: <span id="radar-target-status-${username}">Не найден</span></p>
           <p>UUID: <span id="radar-target-uuid-${username}">?</span></p>
         </div>
@@ -104,7 +104,7 @@ export class RadarManager {
         </div>
 
         <div class="cover" id="radar-route-${username}">
-          <div class="panel with-header" style="margin-bottom: 30px;">
+          <div class="panel with-header" style="margin-bottom: 40px;">
             <div class="left">
               <div class="header">Маршрут ${username}</div>
             </div>
@@ -122,7 +122,7 @@ export class RadarManager {
 
       this.targetCardsContainer!.appendChild(card);
 
-      setTimeout(() => this.initializeTargetCard(username), 200);
+      this.initializeTargetCard(username);
     });
 
     setUpdateFrequency.addEventListener('change', () => {
@@ -306,7 +306,7 @@ UUID: ${uuid}
             fill: false,
             pointRadius: 2,
             tension: 0,
-            borderWidth: 1
+            borderWidth: 2
           },
           {
             label: ` Метка наблюдателя`,
@@ -391,10 +391,10 @@ UUID: ${uuid}
       if (target.chart.data.datasets[0].data.length > 30) target.chart.data.datasets[0].data.shift();
       if (target.chart.data.datasets[1].data.length > 1) target.chart.data.datasets[1].data.shift();
 
-      const xMin = x - 200;
-      const xMax = x + 200;
-      const zMin = z - 200;
-      const zMax = z + 200;
+      const xMin = Number(x.toFixed(1)) - 200;
+      const xMax = Number(x.toFixed(1)) + 200;
+      const zMin = Number(z.toFixed(1)) - 200;
+      const zMax = Number(z.toFixed(1)) + 200;
       
       target.chart.options.scales.x.min = xMin;
       target.chart.options.scales.x.max = xMax;

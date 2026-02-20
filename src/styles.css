@@ -227,13 +227,12 @@ body {
   font-size: 15px;
   font-weight: bold;
   color: #979797;
-  padding: 2px 0;
   text-align: left;
   padding-bottom: 8px;
   margin-bottom: 8px;
   border-bottom: 1px solid #313131;
   letter-spacing: 0.3px;
-  transition: color 0.2s ease;
+  transition: color 0.12s ease;
   cursor: pointer;
 }
 
@@ -776,15 +775,14 @@ p {
   text-align: center;
   padding: 6px 12px;
   gap: 10px;
-  height: 28px;
+  height: 26px;
   width: 170px;
   background-color: transparent;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  color: #c4c4c4;
+  color: #c5c5c5;
   outline: none;
-  transition: all 0.15s ease;
   font-weight: normal;
   position: relative;
 }
@@ -824,7 +822,6 @@ p {
 .control-btn:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.05);
-  color: #ddd;
 }
 
 .control-btn .text {
@@ -1081,7 +1078,6 @@ p {
 .log-line {
   display: flex;
   min-height: 20px;
-  transition: background 0.12s ease;
   animation: show-log-line 0.15s;
 }
 
@@ -1131,7 +1127,7 @@ p {
 .log-line-content.warning { color: #f38c2f; }
 .log-line-content.error { color: #ff6b6b; }
 .log-line-content.system { color: #919191; }
-.log-line-content.extended { color: #10b60a; }
+.log-line-content.extended { color: #707070; }
 
 .log-options-wrap {
   display: flex; 
@@ -1269,12 +1265,12 @@ p {
 .checkmark {
   width: 20px;
   height: 20px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--input-border);
+  background-color: #1f1f1f;
+  border: 1px solid #353535;
   border-radius: 5px;
   margin-right: 10px;
   position: relative;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1282,7 +1278,7 @@ p {
 }
 
 .checkbox-container:hover .checkmark {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgb(43, 42, 42);
 }
 
 .checkbox-container input[type='checkbox']:checked ~ .checkmark {
@@ -1302,7 +1298,7 @@ p {
 
 .checkbox-container input[type='checkbox']:disabled ~ .checkmark {
   background-color: #222;
-  border-color: #333;
+  border-color: #3d3d3d;
   cursor: default;
   opacity: 0.5;
 }
@@ -2270,8 +2266,8 @@ textarea::-webkit-resizer {
 
 .radar-wrap .radar-target .info p {
   display: flex;
-  gap: 12px;
   white-space: nowrap;
+  gap: 8px;
 }
 
 .radar-wrap .radar-target .info .value {

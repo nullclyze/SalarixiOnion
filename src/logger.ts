@@ -32,21 +32,25 @@ export function log(text: string, type: string): void {
 
   line.className = 'log-line';
 
-  if (type === 'system') {
-    line.className += ' log-line-system';
-  }
-
-  if (type === 'extended') {
-    line.className += ' log-line-extended';
-    line.style.fontStyle = 'italic';
+  if (type === 'system' || type === 'extended') {
+    line.setAttribute('log-type', type);
   }
 
   line.innerHTML = `
     <div class="log-line-date">${date()}</div>
-    <div class="log-line-content ${type}">${text}</div>
   `;
 
-  if ((line.className.includes('log-line-system') && !statistics.visible.system) || (line.className.includes('log-line-extended') && !statistics.visible.extended)) {
+  const lineContent = document.createElement('div');
+  lineContent.className = `log-line-content ${type}`;
+  lineContent.innerText = text;
+  
+  if (type === 'extended') {
+    lineContent.style.fontStyle = 'italic';
+  }
+
+  line.appendChild(lineContent);
+
+  if ((line.getAttribute('log-type') === 'system' && !statistics.visible.system) || (line.getAttribute('log-type') === 'extended' && !statistics.visible.extended)) {
     line.style.display = 'none';
   }
 
@@ -63,7 +67,7 @@ export function log(text: string, type: string): void {
 export function changeLogsVisibility(type: 'system' | 'extended', state: boolean): void {
   statistics.visible[type] = state;
 
-  document.querySelectorAll<HTMLElement>(`.log-line-${type}`).forEach(e => {
+  document.querySelectorAll<HTMLElement>(`[log-type="${type}"]`).forEach(e => {
     e.style.display = state ? 'flex' : 'none';
   });
 }

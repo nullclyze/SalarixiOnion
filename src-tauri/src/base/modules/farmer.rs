@@ -7,7 +7,9 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::base::*;
-use crate::common::{get_block_state, get_bot_inventory_menu, look_at_block, start_use_item, take_item};
+use crate::common::{
+  get_block_state, get_bot_inventory_menu, look_at_block, start_use_item, take_item,
+};
 use crate::generators::*;
 use crate::methods::SafeClientMethods;
 
@@ -331,14 +333,18 @@ impl FarmerModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &FarmerOptions) {
-    self.farmer(bot, options).await;
+  pub async fn enable(&self, username: &str, options: &FarmerOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        self.farmer(bot, options).await;
+      })
+      .await;
   }
 
-  pub fn stop(&self, nickname: &String) {
-    kill_task(&nickname, "farmer");
+  pub fn stop(&self, username: &str) {
+    kill_task(username, "farmer");
 
-    STATES.set_mutual_states(&nickname, "looking", false);
-    STATES.set_mutual_states(&nickname, "interacting", false);
+    STATES.set_mutual_states(username, "looking", false);
+    STATES.set_mutual_states(username, "interacting", false);
   }
 }

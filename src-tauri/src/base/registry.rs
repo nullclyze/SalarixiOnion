@@ -6,14 +6,14 @@ use tokio::sync::{broadcast, RwLock};
 
 pub static BOT_REGISTRY: Lazy<Arc<BotRegistry>> = Lazy::new(|| Arc::new(BotRegistry::new()));
 
-// Реестр всех ботов и событий
+/// Реестр всех ботов и событий
 pub struct BotRegistry {
   pub bots: Arc<DashMap<String, Arc<RwLock<Option<Client>>>>>,
-  pub events: broadcast::Sender<BotEvent>,
+  pub events: broadcast::Sender<RegistryEvent>,
 }
 
 #[derive(Clone)]
-pub enum BotEvent {
+pub enum RegistryEvent {
   LoadPlugins {
     username: String,
   },
@@ -25,6 +25,7 @@ pub enum BotEvent {
   QuickTask {
     name: String,
   },
+  StopProcessing,
 }
 
 impl BotRegistry {
@@ -53,10 +54,6 @@ impl BotRegistry {
     self.bots.remove(username);
   }
 
-  pub fn destroy(&self) {
-    self.bots.clear();
-  }
-
   pub async fn get_bot<F, T>(&self, username: &str, f: F) -> Option<T>
   where
     F: AsyncFnOnce(&Client) -> T,
@@ -70,7 +67,12 @@ impl BotRegistry {
     None
   }
 
-  pub fn send_event(&self, event: BotEvent) {
+  pub fn send_event(&self, event: RegistryEvent) {
     let _ = self.events.send(event);
+  }
+
+  pub fn destroy(&self) {
+    self.bots.clear();
+    self.send_event(RegistryEvent::StopProcessing);
   }
 }

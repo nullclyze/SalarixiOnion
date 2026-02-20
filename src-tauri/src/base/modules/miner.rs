@@ -282,29 +282,33 @@ impl MinerModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &MinerOptions) {
-    match options.mode.as_str() {
-      "default" => {
-        self.default_mine(bot, options).await;
-      }
-      "extended" => {
-        self.extended_mine(bot, options).await;
-      }
-      _ => {}
-    }
+  pub async fn enable(&self, username: &str, options: &MinerOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.mode.as_str() {
+        "default" => {
+          self.default_mine(bot, options).await;
+        }
+        "extended" => {
+          self.extended_mine(bot, options).await;
+        }
+        _ => {}
+      })
+      .await;
   }
 
-  pub fn stop(&self, bot: &Client) {
-    let nickname = bot.username();
+  pub async fn stop(&self, username: &str) {
+    kill_task(username, "miner");
 
-    kill_task(&nickname, "miner");
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        bot.left_click_mine(false);
+        bot.set_crouching(false);
+        bot.walk(WalkDirection::None);
 
-    bot.left_click_mine(false);
-    bot.set_crouching(false);
-    bot.walk(WalkDirection::None);
-
-    STATES.set_mutual_states(&nickname, "interacting", false);
-    STATES.set_mutual_states(&nickname, "walking", false);
-    STATES.set_mutual_states(&nickname, "looking", false);
+        STATES.set_mutual_states(username, "interacting", false);
+        STATES.set_mutual_states(username, "walking", false);
+        STATES.set_mutual_states(username, "looking", false);
+      })
+      .await;
   }
 }

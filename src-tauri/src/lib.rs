@@ -17,7 +17,7 @@ use crate::script::*;
 use crate::tools::*;
 use crate::webhook::*;
 
-// Функция запуска ботов
+/// Функция запуска ботов
 #[tauri::command(async)]
 async fn launch_bots(options: LaunchOptions) -> (String, String) {
   if let Some(arc) = get_flow_manager() {
@@ -38,13 +38,13 @@ async fn launch_bots(options: LaunchOptions) -> (String, String) {
   ("error".to_string(), format!("Не удалось запустить ботов"))
 }
 
-// Функция остановки ботов
+/// Функция остановки ботов
 #[tauri::command(async)]
 async fn stop_bots() -> (String, String) {
   if let Some(arc) = get_flow_manager() {
     send_message(
       "Система",
-      format!("Остановка {} ботов...", get_active_bots_count().await),
+      format!("Остановка {} ботов...", active_bots_count()),
     );
 
     return arc.write().stop();
@@ -56,7 +56,7 @@ async fn stop_bots() -> (String, String) {
   }
 }
 
-// Функция получения профилей ботов
+/// Функция получения профилей ботов
 #[tauri::command]
 async fn get_bot_profiles() -> Option<HashMap<String, Profile>> {
   Some(PROFILES.get_all())
@@ -78,67 +78,60 @@ struct DisconnectBotCommand {
   username: String,
 }
 
-// Функция отправки команд в FlowManager
+/// Функция отправки команд в FlowManager
 #[tauri::command]
 async fn send_command(command: String, options: serde_json::Value) {
-  if let Some(arc) = get_flow_manager() {
-    match command.as_str() {
-      "send_message" => {
-        let opts: SendMessageCommand = serde_json::from_value(options)
-          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-          .unwrap();
-        arc.read().send_message(opts.username, opts.message);
-      }
-      "reset_bot" => {
-        let opts: ResetBotCommand = serde_json::from_value(options)
-          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-          .unwrap();
-        arc.read().reset_bot(opts.username);
-      }
-      "disconnect_bot" => {
-        let opts: DisconnectBotCommand = serde_json::from_value(options)
-          .map_err(|e| format!("Ошибка парсинга опций: {}", e))
-          .unwrap();
-        arc.read().disconnect_bot(opts.username);
-      }
-      _ => {}
+  match command.as_str() {
+    "send_message" => {
+      let opts: SendMessageCommand = serde_json::from_value(options)
+        .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+        .unwrap();
+
+      send_message_from_bot(opts.username, opts.message);
     }
+    "reset_bot" => {
+      let opts: ResetBotCommand = serde_json::from_value(options)
+        .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+        .unwrap();
+
+      reset_bot(opts.username);
+    }
+    "disconnect_bot" => {
+      let opts: DisconnectBotCommand = serde_json::from_value(options)
+        .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+        .unwrap();
+
+      disconnect_bot(opts.username);
+    }
+    _ => {}
   }
 }
 
-// Функция изменения группы бота
+/// Функция изменения группы бота
 #[tauri::command]
 async fn set_group(nickname: String, group: String) {
   PROFILES.set_str(&nickname, "group", &group);
 }
 
-// Функция получения radar-данных
+/// Функция получения radar-данных
 #[tauri::command]
 async fn get_radar_data(target: String) -> Option<RadarInfo> {
   RADAR_MANAGER.find_target(target).await
 }
 
-// Функция сохранения radar-данных
+/// Функция сохранения radar-данных
 #[tauri::command]
 async fn save_radar_data(target: String, path: String, filename: String, x: f64, y: f64, z: f64) {
   RADAR_MANAGER.save_data(target, path, filename, x, y, z);
 }
 
-// Функция получения количества активных ботов
+/// Функция получения количества активных ботов
 #[tauri::command]
 async fn get_active_bots_count() -> i32 {
-  let mut count = 0;
-
-  for (_, profile) in PROFILES.get_all() {
-    if profile.status.to_lowercase().as_str() == "онлайн" {
-      count += 1;
-    }
-  }
-
-  count
+  active_bots_count()
 }
 
-// Функция получения используемой памяти
+/// Функция получения используемой памяти
 #[tauri::command]
 async fn get_memory_usage() -> f64 {
   if let Some(usage) = memory_stats::memory_stats() {
@@ -148,10 +141,10 @@ async fn get_memory_usage() -> f64 {
   0.0
 }
 
-// Функция управления ботами
+/// Функция управления ботами
 #[tauri::command]
 async fn control(name: String, options: serde_json::Value, group: String) {
-  if let Some(opts) = get_current_options() {
+  if let Some(opts) = current_options() {
     if opts.use_webhook && opts.webhook_settings.actions {
       send_webhook(
         opts.webhook_settings.url,
@@ -179,17 +172,17 @@ async fn control(name: String, options: serde_json::Value, group: String) {
     ),
   );
 
-  BOT_REGISTRY.send_event(BotEvent::ControlModules {
+  BOT_REGISTRY.send_event(RegistryEvent::ControlModules {
     name,
     options,
     group,
   });
 }
 
-// Функция выполнения быстрых задач
+/// Функция выполнения быстрых задач
 #[tauri::command]
 async fn quick_task(name: String) {
-  if let Some(opts) = get_current_options() {
+  if let Some(opts) = current_options() {
     if opts.use_webhook && opts.webhook_settings.actions {
       send_webhook(
         opts.webhook_settings.url,
@@ -209,22 +202,22 @@ async fn quick_task(name: String) {
     ),
   );
 
-  BOT_REGISTRY.send_event(BotEvent::QuickTask { name });
+  BOT_REGISTRY.send_event(RegistryEvent::QuickTask { name });
 }
 
-// Функция выполнения пользовательского скрипта
+/// Функция выполнения пользовательского скрипта
 #[tauri::command]
 async fn execute_script(script: String) {
   SCRIPT_EXECUTOR.read().unwrap().execute(script);
 }
 
-// Функция остановки пользовательского скрипта
+/// Функция остановки пользовательского скрипта
 #[tauri::command]
 async fn stop_script() {
   SCRIPT_EXECUTOR.write().unwrap().stop();
 }
 
-// Функция рендеринга карты
+/// Функция рендеринга карты
 #[tauri::command]
 async fn render_map(nickname: String) -> Option<String> {
   let base64_code = BOT_REGISTRY
@@ -234,31 +227,31 @@ async fn render_map(nickname: String) -> Option<String> {
   base64_code
 }
 
-// Функция сохранения карты
+/// Функция сохранения карты
 #[tauri::command]
 async fn save_map(nickname: String, path: Option<String>, base64code: String) {
   MAP_RENDERER.save_map(nickname, path, base64code);
 }
 
-// Функция пингования сервера
+/// Функция пингования сервера
 #[tauri::command]
 async fn get_server_info(address: String) -> ServerInformation {
   ping_server(address).await
 }
 
-// Функция открытия URL в браузере
+/// Функция открытия URL в браузере
 #[tauri::command]
 async fn open_url(url: String) {
   let _ = open::that(url);
 }
 
-// Функция остановки главного процесса
+/// Функция остановки главного процесса
 #[tauri::command]
-async fn exit() {
+fn exit() {
   std::process::exit(0x0);
 }
 
-// Функция запуска
+/// Функция запуска
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()

@@ -442,36 +442,40 @@ impl KillauraModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &KillauraOptions) {
-    match options.behavior.as_str() {
-      "moderate" => {
-        self.moderate_killaura(bot, options).await;
-      }
-      "aggressive" => {
-        self.aggressive_killaura(bot, options).await;
-      }
-      _ => {}
-    }
+  pub async fn enable(&self, username: &str, options: &KillauraOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.behavior.as_str() {
+        "moderate" => {
+          self.moderate_killaura(bot, options).await;
+        }
+        "aggressive" => {
+          self.aggressive_killaura(bot, options).await;
+        }
+        _ => {}
+      })
+      .await;
   }
 
-  pub fn stop(&self, bot: &Client) {
-    let nickname = bot.username();
+  pub async fn stop(&self, username: &str) {
+    kill_task(username, "killaura");
 
-    kill_task(&nickname, "killaura");
+    BOT_REGISTRY
+      .get_bot(username, async |bot| {
+        bot.walk(WalkDirection::None);
 
-    bot.walk(WalkDirection::None);
+        if bot.jumping() {
+          bot.set_jumping(false);
+        }
 
-    if bot.jumping() {
-      bot.set_jumping(false);
-    }
+        if bot.crouching() {
+          bot.set_crouching(false);
+        }
 
-    if bot.crouching() {
-      bot.set_crouching(false);
-    }
-
-    STATES.set_mutual_states(&nickname, "looking", false);
-    STATES.set_mutual_states(&nickname, "attacking", false);
-    STATES.set_mutual_states(&nickname, "walking", false);
-    STATES.set_mutual_states(&nickname, "sprinting", false);
+        STATES.set_mutual_states(username, "looking", false);
+        STATES.set_mutual_states(username, "attacking", false);
+        STATES.set_mutual_states(username, "walking", false);
+        STATES.set_mutual_states(username, "sprinting", false);
+      })
+      .await;
   }
 }

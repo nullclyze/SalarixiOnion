@@ -376,25 +376,27 @@ impl FlightModule {
     }
   }
 
-  pub async fn enable(&self, bot: &Client, options: &FlightOptions) {
-    match options.mode.as_str() {
-      "vanilla" => {
-        self.vanilla_flight(bot, options).await;
-      }
-      "jump-fly" => {
-        self.jump_flight(bot, options).await;
-      }
-      "teleport-fly" => {
-        self.teleport_flight(bot, options).await;
-      }
-      "bug-fly" => {
-        self.bug_flight(bot, options).await;
-      }
-      _ => {}
-    }
+  pub async fn enable(&self, username: &str, options: &FlightOptions) {
+    BOT_REGISTRY
+      .get_bot(username, async |bot| match options.mode.as_str() {
+        "vanilla" => {
+          self.vanilla_flight(bot, options).await;
+        }
+        "jump-fly" => {
+          self.jump_flight(bot, options).await;
+        }
+        "teleport-fly" => {
+          self.teleport_flight(bot, options).await;
+        }
+        "bug-fly" => {
+          self.bug_flight(bot, options).await;
+        }
+        _ => {}
+      })
+      .await;
   }
 
-  pub fn stop(&self, nickname: &String) {
-    kill_task(nickname, "flight");
+  pub fn stop(&self, username: &str) {
+    kill_task(username, "flight");
   }
 }

@@ -1,5 +1,5 @@
 use crate::{
-  base::get_current_options,
+  base::current_options,
   emit::{send_log, send_message},
   webhook::send_webhook,
 };
@@ -21,7 +21,7 @@ impl BasicScriptFunctions {
   }
 
   pub fn webhook(content: &str) {
-    if let Some(opts) = get_current_options() {
+    if let Some(opts) = current_options() {
       send_webhook(opts.webhook_settings.url, content.to_string());
     }
   }
