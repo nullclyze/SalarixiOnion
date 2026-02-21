@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use tokio::task::JoinHandle;
 
+use crate::emit::send_log;
+
 pub static TASKS: Lazy<Arc<TaskManager>> = Lazy::new(|| Arc::new(TaskManager::new()));
 
 pub struct Tasks {
@@ -116,6 +118,8 @@ impl TaskManager {
     }
 
     self.map.write().unwrap().clear();
+
+    send_log(format!("Активные задачи ботов остановлены"), "extended");
   }
 
   pub fn get(&self, username: &str) -> Option<Arc<RwLock<Tasks>>> {

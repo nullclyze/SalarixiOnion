@@ -2,18 +2,39 @@ use base64::encode;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
+use thirtyfour::{CapabilitiesHelper, DesiredCapabilities, WebDriver};
+use tokio::{sync::broadcast, time::sleep};
 
-pub static ANTI_WEB_CAPTCHA: Lazy<Arc<AntiWebCaptcha>> =
-  Lazy::new(|| Arc::new(AntiWebCaptcha::new()));
-pub static ANTI_MAP_CAPTCHA: Lazy<Arc<AntiMapCaptcha>> =
-  Lazy::new(|| Arc::new(AntiMapCaptcha::new()));
+use crate::{base::current_options, emit::send_log};
 
-pub struct AntiWebCaptcha;
+pub static CAPTCHA_BYPASS: Lazy<Arc<CaptchaBypass>> = Lazy::new(|| Arc::new(CaptchaBypass::new()));
 
-impl AntiWebCaptcha {
+/// Обход капчи (Web-Captcha / Map-Captcha)
+pub struct CaptchaBypass {
+  pub events: broadcast::Sender<CaptchaBypassEvent>,
+}
+
+#[derive(Clone)]
+pub enum CaptchaBypassEvent {
+  CreateWebDriver,
+  SetProxy {
+    proxy: String,
+    username: Option<String>,
+    password: Option<String>,
+  },
+  SolveCaptcha {
+    url: String,
+  },
+  CloseTab,
+  StopProcessing,
+}
+
+impl CaptchaBypass {
   pub fn new() -> Self {
-    Self
+    let (tx, _) = broadcast::channel(1000);
+
+    Self { events: tx }
   }
 
   pub fn catch_url_from_message(
@@ -38,16 +59,8 @@ impl AntiWebCaptcha {
 
     None
   }
-}
 
-pub struct AntiMapCaptcha;
-
-impl AntiMapCaptcha {
-  pub fn new() -> Self {
-    Self
-  }
-
-  fn get_rgb_code(&self, id: u8) -> (u8, u8, u8) {
+  fn convert_id_to_rgb_color(&self, id: u8) -> (u8, u8, u8) {
     match id {
       0 => (255, 255, 255),
       1 => (255, 255, 255),
@@ -268,7 +281,7 @@ impl AntiMapCaptcha {
     let mut img = ImageBuffer::new(width, height);
 
     for (i, &id) in map.iter().enumerate() {
-      let rgb = self.get_rgb_code(id);
+      let rgb = self.convert_id_to_rgb_color(id);
       let x = (i % 128) as u32;
       let y = (i / 128) as u32;
 
@@ -283,5 +296,110 @@ impl AntiMapCaptcha {
     let base64_code = encode(&bytes);
 
     base64_code
+  }
+
+  pub fn send_event(&self, event: CaptchaBypassEvent) {
+    let _ = self.events.send(event);
+  }
+
+  pub async fn captcha_bypass_event_loop(&self) {
+    let mut webdriver = None;
+
+    let mut rx = self.events.subscribe();
+    let mut main_window = None;
+
+    while let Ok(event) = rx.recv().await {
+      match event {
+        CaptchaBypassEvent::CreateWebDriver => {
+          let caps = DesiredCapabilities::firefox();
+
+          // let _ = caps.add_arg("--headless");
+
+          if let Some(options) = current_options() {
+            let server_url = options.anti_captcha_settings.options.web.webdriver_server_url.unwrap_or("http://localhost:9515".to_string());
+
+            match WebDriver::new(server_url.clone(), caps).await {
+              Ok(driver) => {
+                webdriver = Some(driver);
+                send_log(
+                  format!("WebDriver был успешно запущен на {}", server_url),
+                  "system",
+                );
+              }
+              Err(err) => {
+                send_log(format!("Ошибка создания WebDriver: {}", err), "error");
+              }
+            }
+          }
+        }
+        CaptchaBypassEvent::SolveCaptcha { url } => {
+          if let Some(driver) = webdriver.as_ref() {
+            if main_window.is_none() {
+              if let Ok(handle) = driver.window().await {
+                main_window = Some(handle);
+              }
+            }
+            if let Ok(new_handle) = driver.new_tab().await {
+              if driver.switch_to_window(new_handle).await.is_ok() {
+                let _ = driver.goto(url).await;
+
+                sleep(Duration::from_millis(3000)).await;
+
+                self.send_event(CaptchaBypassEvent::CloseTab);
+              }
+            }
+          }
+        }
+        CaptchaBypassEvent::CloseTab => {
+          if let Some(driver) = webdriver.as_ref() {
+            let _ = driver.close_window().await;
+            if let Some(ref main) = main_window {
+              let _ = driver.switch_to_window(main.clone()).await;
+            } else if let Ok(handles) = driver.windows().await {
+              if let Some(first) = handles.first() {
+                let _ = driver.switch_to_window(first.clone()).await;
+              }
+            }
+          }
+        }
+        CaptchaBypassEvent::SetProxy {
+          proxy,
+          username,
+          password,
+        } => {
+          let mut new_caps = DesiredCapabilities::firefox();
+
+          let _ = new_caps.set_proxy(thirtyfour::Proxy::Manual {
+            ftp_proxy: None,
+            http_proxy: None,
+            ssl_proxy: None,
+            socks_proxy: Some(proxy.clone()),
+            socks_version: Some(5),
+            socks_username: username,
+            socks_password: password,
+            no_proxy: None,
+          });
+
+          // let _ = new_caps.add_arg("--headless");
+
+          if let Some(options) = current_options() {
+            let server_url = options.anti_captcha_settings.options.web.webdriver_server_url.unwrap_or("http://localhost:9515".to_string());
+
+            match WebDriver::new(server_url, new_caps).await {
+              Ok(new_driver) => {
+                webdriver = Some(new_driver);
+                main_window = None;
+              }
+              Err(err) => {
+                send_log(format!("Ошибка создания WebDriver с прокси {}: {}", proxy, err), "error");
+              }
+            }
+          }
+        }
+        CaptchaBypassEvent::StopProcessing => {
+          return;
+        }
+      }
+    }
   }
 }

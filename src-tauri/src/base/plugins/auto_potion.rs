@@ -32,10 +32,8 @@ impl AutoPotionPlugin {
 
     let task = tokio::spawn(async move {
       loop {
-        if let Some(arc) = get_flow_manager() {
-          if !arc.read().active {
-            break;
-          }
+        if !process_is_active() {
+          break;
         }
 
         let _ = BOT_REGISTRY

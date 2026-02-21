@@ -838,23 +838,38 @@
       <h1 class="title" translator-tag="title:anti-captcha">Анти-Капча</h1>
 
       <div class="anti-captcha-wrap">
-        <div class="custom-select">
-          <label translator-tag="label:captcha-type">Тип капчи: </label>
-          <select id="select-captcha-type">
-            <option value="web">Web</option>
-            <option value="map">Map</option>
-          </select>
+        <div class="column-wrap" style="gap: 6px; width: max-content;">
+          <div class="custom-select between">
+            <label translator-tag="label:captcha-type">Тип капчи: </label>
+            <select id="select-captcha-type">
+              <option value="web">Web</option>
+              <option value="map">Map</option>
+            </select>
+          </div>
+
+          <div class="custom-select between" id="select-captcha-solve-mode-container">
+            <label translator-tag="label:captcha-solve-mode">Режим: </label>
+            <select id="select-captcha-solve-mode">
+              <option value="manual">Ручной</option>
+              <option value="auto">Авто</option>
+            </select>
+          </div>
         </div>
 
         <div class="options" id="anti-web-captcha-options">
           <div class="form-input">
             <label for="anti-web-captcha-regex" class="text" translator-tag="label:captcha-regex">Регулярное выражение</label>
-            <input type="text" id="anti-web-captcha-regex" placeholder="https?://[^\s]+" value="https?://[^\s]+" name="regex">
+            <input type="text" id="anti-web-captcha-regex" placeholder="https?://[^\s]+" value="https?://[^\s]+" name="regex" keep="true">
           </div>
 
           <div class="form-input">
             <label for="anti-web-captcha-required-url-part" class="text" translator-tag="label:captcha-url-part">Обязательная часть ссылки</label>
-            <input type="text" id="anti-web-captcha-required-url-part" placeholder="anti-bot" name="required_url_part">
+            <input type="text" id="anti-web-captcha-required-url-part" placeholder="anti-bot" name="required_url_part" keep="true">
+          </div>
+
+          <div class="form-input" id="anti-web-captcha-webdriver-server-url-container" style="display: none;">
+            <label for="anti-web-captcha-webdriver-server-url" class="text" translator-tag="label:webdriver-server-url">Адрес сервера для WebDriver</label>
+            <input type="text" id="anti-web-captcha-webdriver-server-url" placeholder="http://localhost:9515" value="http://localhost:9515" name="webdriver_server_url" keep="true">
           </div>
         </div>
       </div>

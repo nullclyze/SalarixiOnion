@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
+use crate::emit::send_log;
+
 pub static PROFILES: Lazy<Arc<ProfileManager>> = Lazy::new(|| Arc::new(ProfileManager::new()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,7 +13,7 @@ pub struct Profile {
   pub nickname: String,
   pub version: String,
   pub password: String,
-  pub proxy: String,
+  pub proxy: ProfileProxy,
   pub ping: u32,
   pub health: u32,
   pub satiety: u32,
@@ -23,6 +25,14 @@ pub struct Profile {
   pub group: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileProxy {
+  pub ip_address: String,
+  pub proxy: Option<String>,
+  pub username: Option<String>,
+  pub password: Option<String>,
+}
+
 impl Profile {
   pub fn new(nickname: &String, password: &String, version: &String) -> Self {
     Self {
@@ -30,7 +40,12 @@ impl Profile {
       nickname: nickname.to_string(),
       version: version.to_string(),
       password: password.to_string(),
-      proxy: "-".to_string(),
+      proxy: ProfileProxy {
+        ip_address: "-".to_string(),
+        proxy: None,
+        username: None,
+        password: None,
+      },
       ping: 0,
       health: 0,
       satiety: 0,
@@ -51,8 +66,8 @@ impl Profile {
     self.password = password.to_string();
   }
 
-  pub fn set_proxy(&mut self, proxy: &str) {
-    self.proxy = proxy.to_string();
+  pub fn set_proxy(&mut self, proxy: ProfileProxy) {
+    self.proxy = proxy;
   }
 
   pub fn set_ping(&mut self, ping: u32) {
@@ -103,33 +118,34 @@ impl ProfileManager {
     }
   }
 
-  pub fn push(&self, nickname: &String, password: String, version: String) {
-    let arc = Arc::new(RwLock::new(Profile::new(nickname, &password, &version)));
+  pub fn push(&self, username: &String, password: String, version: String) {
+    let arc = Arc::new(RwLock::new(Profile::new(username, &password, &version)));
     let mut profiles = self.map.write().unwrap();
-    profiles.insert(nickname.to_string(), arc.clone());
+    profiles.insert(username.clone(), arc.clone());
   }
 
   pub fn clear(&self) {
     let mut profiles = self.map.write().unwrap();
     profiles.clear();
+
+    send_log(format!("Профили ботов очищены"), "extended");
   }
 
-  pub fn set_str(&self, nickname: &String, field: &str, value: &str) {
-    self.map.read().unwrap().get(nickname).map(|arc| {
+  pub fn set_str(&self, username: &str, field: &str, value: &str) {
+    self.map.read().unwrap().get(username).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
         "status" => profile.set_status(value),
         "password" => profile.set_password(value),
-        "proxy" => profile.set_proxy(value),
         "group" => profile.set_group(value),
         _ => {}
       }
     });
   }
 
-  pub fn set_num(&self, nickname: &String, field: &str, value: u32) {
-    self.map.read().unwrap().get(nickname).map(|arc| {
+  pub fn set_num(&self, username: &str, field: &str, value: u32) {
+    self.map.read().unwrap().get(username).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
@@ -141,8 +157,8 @@ impl ProfileManager {
     });
   }
 
-  pub fn set_bool(&self, nickname: &String, field: &str, value: bool) {
-    self.map.read().unwrap().get(nickname).map(|arc| {
+  pub fn set_bool(&self, username: &str, field: &str, value: bool) {
+    self.map.read().unwrap().get(username).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
@@ -156,10 +172,17 @@ impl ProfileManager {
     });
   }
 
-  pub fn get(&self, nickname: &String) -> Option<Profile> {
+  pub fn set_proxy(&self, username: &str, proxy: ProfileProxy) {
+    self.map.read().unwrap().get(username).map(|arc| {
+      let mut profile = arc.write().unwrap();
+      profile.set_proxy(proxy);
+    });
+  }
+
+  pub fn get(&self, username: &str) -> Option<Profile> {
     let map = self.map.read().unwrap();
 
-    if let Some(profile) = map.get(nickname) {
+    if let Some(profile) = map.get(username) {
       return Some(profile.write().unwrap().clone());
     }
 

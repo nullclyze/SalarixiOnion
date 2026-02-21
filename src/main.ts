@@ -88,10 +88,10 @@ async function startBots(): Promise<void> {
   process = 'active';
 
   try {
-    const address = (document.getElementById('address') as HTMLInputElement).value;
-    const version = (document.getElementById('version') as HTMLInputElement).value;
-    const botsCount = parseInt((document.getElementById('bots-count') as HTMLInputElement).value);
-    const joinDelay = parseFloat((document.getElementById('join-delay') as HTMLInputElement).value);
+    const address = (document.getElementById('address') as HTMLInputElement).value || 'localhost';
+    const version = (document.getElementById('version') as HTMLInputElement).value || '1.21.11';
+    const botsCount = parseInt((document.getElementById('bots-count') as HTMLInputElement).value) || 3;
+    const joinDelay = parseFloat((document.getElementById('join-delay') as HTMLInputElement).value) || 5000;
 
     const nicknameType = (document.getElementById('nickname-type-select') as HTMLSelectElement).value;
     const passwordType = (document.getElementById('password-type-select') as HTMLSelectElement).value;
@@ -138,11 +138,15 @@ async function startBots(): Promise<void> {
     const captchaType = (document.getElementById('select-captcha-type') as HTMLSelectElement).value;
 
     const antiWebCaptchaOptions: {
+      mode: string;
       regex: null | string;
       required_url_part: null | string;
+      webdriver_server_url: null | string;
     } = { 
+      mode: (document.getElementById('select-captcha-solve-mode') as HTMLSelectElement).value,
       regex: (document.getElementById('anti-web-captcha-regex') as HTMLInputElement).value,
-      required_url_part: (document.getElementById('anti-web-captcha-required-url-part') as HTMLInputElement).value
+      required_url_part: (document.getElementById('anti-web-captcha-required-url-part') as HTMLInputElement).value,
+      webdriver_server_url: (document.getElementById('anti-web-captcha-webdriver-server-url') as HTMLInputElement).value,
     };
 
     const webhookOptions: {
@@ -159,11 +163,11 @@ async function startBots(): Promise<void> {
 
     message('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
 
-    const result = await invoke('launch_bots', { options: {
-      address: address || 'localhost',
-      version: version || '1.21.11',
-      bots_count: botsCount || 1,
-      join_delay: joinDelay || 1000,
+    const success = await invoke('launch_bots', { options: {
+      address: address,
+      version: version,
+      bots_count: botsCount,
+      join_delay: joinDelay,
       nickname_type: nicknameType,
       password_type: passwordType,
       nickname_template: nicknameTemplate || 'player_#m#m',
@@ -215,22 +219,22 @@ async function startBots(): Promise<void> {
         auto_shield: plugins['auto-shield'].enable,
         auto_repair: plugins['auto-repair'].enable
       }
-    }}) as Array<string>;
+    }}) as boolean;
 
-    log(result[1], result[0]);
+    if (success) {
+      chartManager.enable();
 
-    chartManager.enable();
+      monitoringManager.extendedMonitoring = useExtendedMonitoring;
+      monitoringManager.chatMonitoring = useChatMonitoring;
+      monitoringManager.mapMonitoring = useMapMonitoring;
+      monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
+      monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
 
-    monitoringManager.extendedMonitoring = useExtendedMonitoring;
-    monitoringManager.chatMonitoring = useChatMonitoring;
-    monitoringManager.mapMonitoring = useMapMonitoring;
-    monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
-    monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
+      monitoringManager.enable(updateFrequency);
+      monitoringManager.wait();
 
-    monitoringManager.enable(updateFrequency);
-    monitoringManager.wait();
-
-    radarManager.enable();
+      radarManager.enable();
+    }
   } catch (error) {
     log(`Ошибка (start-bots-process): ${error}`, 'error');
   }
@@ -240,19 +244,19 @@ async function stopBots(): Promise<void> {
   log('Остановка ботов...', 'info');
 
   try {
-    const result = await invoke('stop_bots') as Array<string>;
+    const success = await invoke('stop_bots') as boolean;
 
-    log(result[1], result[0]);
+    if (success) {
+      process = 'sleep';
 
-    process = 'sleep';
+      log('Выключение мониторинга...', 'system');
 
-    log('Выключение мониторинга...', 'system');
+      chartManager.disable();
+      monitoringManager.disable();
+      radarManager.disable();
 
-    chartManager.disable();
-    monitoringManager.disable();
-    radarManager.disable();
-
-    log('Мониторинг выключен', 'system');
+      log('Мониторинг выключен', 'system');
+    }
   } catch (error) {
     log(`Ошибка (stop-bots-process): ${error}`, 'error');
   }
@@ -629,13 +633,24 @@ class ElementManager {
 
     document.getElementById('select-captcha-type')?.addEventListener('change', function (this: HTMLSelectElement) {
       const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
+      const antiWebCaptchaSelectSolveModeContainer = document.getElementById('select-captcha-solve-mode-container') as HTMLElement;
 
       if (this.value === 'web') {
         antiWebCaptchaOptionsContainer.style.display = 'flex';
+        antiWebCaptchaSelectSolveModeContainer.style.display = 'grid';
       } else if (this.value === 'map') {
         antiWebCaptchaOptionsContainer.style.display = 'none';
-      } else if (this.value === 'frame') {
-        antiWebCaptchaOptionsContainer.style.display = 'none';
+        antiWebCaptchaSelectSolveModeContainer.style.display = 'none';
+      }
+    }); 
+
+    document.getElementById('select-captcha-solve-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
+      const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
+
+      if (this.value === 'auto') {
+        antiWebCaptchaWebDriverServerUrlContainer.style.display = 'flex';
+      } else {
+        antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
       }
     }); 
 
@@ -1204,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   log('Клиент запущен', 'info');
 
   try {
-    log('Инициализация...', 'extended');
+    log('Инициализация, пожайлуста, подождите...', 'extended');
 
     (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
 

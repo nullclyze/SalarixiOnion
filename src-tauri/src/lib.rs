@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::thread;
 
 mod base;
 mod common;
@@ -18,48 +19,21 @@ use crate::tools::*;
 use crate::webhook::*;
 
 /// Функция запуска ботов
-#[tauri::command(async)]
-async fn launch_bots(options: LaunchOptions) -> (String, String) {
-  if let Some(arc) = get_flow_manager() {
-    let mut fm = arc.write();
-
-    if fm.active {
-      return (
-        "warning".to_string(),
-        format!("Запуск невозможен, существуют активные боты"),
-      );
-    }
-
-    let _ = fm.launch(options);
-
-    return ("system".to_string(), format!("Запуск принят"));
-  }
-
-  ("error".to_string(), format!("Не удалось запустить ботов"))
+#[tauri::command]
+async fn launch_bots(options: LaunchOptions) -> bool {
+  launch_bots_on_server(options)
 }
 
 /// Функция остановки ботов
-#[tauri::command(async)]
-async fn stop_bots() -> (String, String) {
-  if let Some(arc) = get_flow_manager() {
-    send_message(
-      "Система",
-      format!("Остановка {} ботов...", active_bots_count()),
-    );
-
-    return arc.write().stop();
-  } else {
-    return (
-      "error".to_string(),
-      format!("FlowManager не инициализирован"),
-    );
-  }
+#[tauri::command]
+async fn stop_bots() -> bool {
+  stop_bots_and_destroy_data()
 }
 
 /// Функция получения профилей ботов
 #[tauri::command]
-async fn get_bot_profiles() -> Option<HashMap<String, Profile>> {
-  Some(PROFILES.get_all())
+async fn get_bot_profiles() -> HashMap<String, Profile> {
+  PROFILES.get_all()
 }
 
 #[derive(Serialize, Deserialize)]
@@ -256,7 +230,13 @@ fn exit() {
 pub fn run() {
   tauri::Builder::default()
     .setup(|app| {
-      init_flow_manager(FlowManager::new(app.handle().clone()));
+      let handle = app.handle().clone();
+
+      thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(emit_event_loop(handle));
+      });
+      
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![

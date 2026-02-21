@@ -1,4 +1,3 @@
-use azalea::app::AppExit;
 use azalea::app::PluginGroup;
 use azalea::auto_reconnect::AutoReconnectDelay;
 use azalea::prelude::*;
@@ -10,12 +9,14 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
-use tokio::task::JoinHandle;
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use tokio::task::JoinHandle;
 
 use crate::base::bot::*;
 use crate::base::handlers::*;
@@ -30,24 +31,12 @@ use crate::generators::randuint;
 use crate::generators::Classes;
 use crate::webhook::send_webhook;
 
-pub static FLOW_MANAGER: Lazy<Arc<RwLock<Option<Arc<RwLock<FlowManager>>>>>> =
+pub static ACTIVE: AtomicBool = AtomicBool::new(false);
+pub static CURRENT_OPTIONS: Lazy<Arc<RwLock<Option<LaunchOptions>>>> =
   Lazy::new(|| Arc::new(RwLock::new(None)));
+
 pub static MODULE_MANAGER: Lazy<Arc<ModuleManager>> = Lazy::new(|| Arc::new(ModuleManager::new()));
 pub static PLUGIN_MANAGER: Lazy<Arc<PluginManager>> = Lazy::new(|| Arc::new(PluginManager::new()));
-
-// Функция инициализации FlowManager
-pub fn init_flow_manager(manager: FlowManager) {
-  let arc = Arc::new(RwLock::new(manager));
-
-  let mut write_guard = FLOW_MANAGER.write();
-  *write_guard = Some(arc);
-}
-
-// Функция получения FlowManager
-pub fn get_flow_manager() -> Option<Arc<RwLock<FlowManager>>> {
-  let read_guard = FLOW_MANAGER.read();
-  read_guard.as_ref().cloned()
-}
 
 const LEGIT_NICKNAMES: &[&str] = &[
   "Apple",
@@ -176,8 +165,96 @@ const LEGIT_PASSWORDS: &[&str] = &[
   "possible",
 ];
 
-// Функция генерации никнейма или пароля
-pub fn generate_nickname_or_password(item: &str, t: String, template: String) -> String {
+/// Структура опций запуска
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LaunchOptions {
+  pub address: String,
+  pub version: String,
+  pub bots_count: i32,
+  pub join_delay: u64,
+  pub nickname_type: String,
+  pub password_type: String,
+  pub nickname_template: String,
+  pub password_template: String,
+  pub register_mode: String,
+  pub register_command: String,
+  pub register_template: String,
+  pub register_min_delay: u64,
+  pub register_max_delay: u64,
+  pub register_trigger: String,
+  pub login_mode: String,
+  pub login_command: String,
+  pub login_template: String,
+  pub login_min_delay: u64,
+  pub login_max_delay: u64,
+  pub login_trigger: String,
+  pub rejoin_delay: u64,
+  pub view_distance: u8,
+  pub language: String,
+  pub chat_colors: bool,
+  pub humanoid_arm: Option<String>,
+  pub use_auto_rejoin: bool,
+  pub proxy_list: Option<String>,
+  pub use_auto_register: bool,
+  pub use_auto_login: bool,
+  pub use_proxy: bool,
+  pub use_anti_captcha: bool,
+  pub use_webhook: bool,
+  pub use_chat_signing: bool,
+  pub use_chat_monitoring: bool,
+  pub skin_settings: SkinSettings,
+  pub anti_captcha_settings: AntiCaptchaSettings,
+  pub webhook_settings: WebhookSettings,
+  pub plugins: Plugins,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SkinSettings {
+  pub skin_type: String,
+  pub set_skin_command: Option<String>,
+  pub custom_skin_by_nickname: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AntiCaptchaSettings {
+  pub captcha_type: String,
+  pub options: AntiCaptchaOptions,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AntiCaptchaOptions {
+  pub web: AntiWebCaptchaOptions,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AntiWebCaptchaOptions {
+  pub mode: String,
+  pub regex: Option<String>,
+  pub required_url_part: Option<String>,
+  pub webdriver_server_url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WebhookSettings {
+  pub url: Option<String>,
+  pub information: bool,
+  pub data: bool,
+  pub actions: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Plugins {
+  pub auto_armor: bool,
+  pub auto_totem: bool,
+  pub auto_eat: bool,
+  pub auto_potion: bool,
+  pub auto_look: bool,
+  pub auto_shield: bool,
+  pub auto_repair: bool,
+}
+
+/// Функция генерации никнейма или пароля
+pub fn generate_username_or_password(item: &str, t: String, template: String) -> String {
   match t.as_str() {
     "legit" => {
       let mut value = randelem(if item == "nickname" {
@@ -262,314 +339,248 @@ pub fn active_bots_count() -> i32 {
   count
 }
 
+/// Функция установки опций
+pub fn set_options(options: LaunchOptions) {
+  let mut guard = CURRENT_OPTIONS.write();
+  *guard = Some(options);
+}
+
 /// Функция получения текущих опций
 pub fn current_options() -> Option<LaunchOptions> {
-  if let Some(arc) = get_flow_manager() {
-    return arc.read().options.clone();
+  CURRENT_OPTIONS.read().clone()
+}
+
+/// Функция проверки активности основного процесса
+pub fn process_is_active() -> bool {
+  ACTIVE.load(Ordering::Relaxed)
+}
+
+/// Функция запуска ботов на сервер
+pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
+  if process_is_active() {
+    send_log(
+      format!("Запуск ботов невозможен: The process is already active"),
+      "warning",
+    );
+    return false;
   }
 
-  None
-}
+  send_log("Подготовка...".to_string(), "extended");
 
-/// Структура опций запуска
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LaunchOptions {
-  pub address: String,
-  pub version: String,
-  pub bots_count: i32,
-  pub join_delay: u64,
-  pub nickname_type: String,
-  pub password_type: String,
-  pub nickname_template: String,
-  pub password_template: String,
-  pub register_mode: String,
-  pub register_command: String,
-  pub register_template: String,
-  pub register_min_delay: u64,
-  pub register_max_delay: u64,
-  pub register_trigger: String,
-  pub login_mode: String,
-  pub login_command: String,
-  pub login_template: String,
-  pub login_min_delay: u64,
-  pub login_max_delay: u64,
-  pub login_trigger: String,
-  pub rejoin_delay: u64,
-  pub view_distance: u8,
-  pub language: String,
-  pub chat_colors: bool,
-  pub humanoid_arm: Option<String>,
-  pub use_auto_rejoin: bool,
-  pub proxy_list: Option<String>,
-  pub use_auto_register: bool,
-  pub use_auto_login: bool,
-  pub use_proxy: bool,
-  pub use_anti_captcha: bool,
-  pub use_webhook: bool,
-  pub use_chat_signing: bool,
-  pub use_chat_monitoring: bool,
-  pub skin_settings: SkinSettings,
-  pub anti_captcha_settings: AntiCaptchaSettings,
-  pub webhook_settings: WebhookSettings,
-  pub plugins: Plugins,
-}
+  set_options(options.clone());
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SkinSettings {
-  pub skin_type: String,
-  pub set_skin_command: Option<String>,
-  pub custom_skin_by_nickname: Option<String>,
-}
+  ACTIVE.store(true, Ordering::Relaxed);
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AntiCaptchaSettings {
-  pub captcha_type: String,
-  pub options: AntiCaptchaOptions,
-}
+  tokio::spawn(registry_event_loop());
+  tokio::spawn(CAPTCHA_BYPASS.captcha_bypass_event_loop());
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AntiCaptchaOptions {
-  pub web: AntiWebCaptchaOptions,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AntiWebCaptchaOptions {
-  pub regex: Option<String>,
-  pub required_url_part: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct WebhookSettings {
-  pub url: Option<String>,
-  pub information: bool,
-  pub data: bool,
-  pub actions: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Plugins {
-  pub auto_armor: bool,
-  pub auto_totem: bool,
-  pub auto_eat: bool,
-  pub auto_potion: bool,
-  pub auto_look: bool,
-  pub auto_shield: bool,
-  pub auto_repair: bool,
-}
-
-/// Потоковый менеджер.
-/// Он выполняет базовые функции (запуск / остановка ботов).
-pub struct FlowManager {
-  pub active: bool,
-  pub options: Option<LaunchOptions>,
-  pub swarm: Option<Swarm>,
-  pub app_handle: Option<tauri::AppHandle>,
-}
-
-impl FlowManager {
-  pub fn new(app_handle: tauri::AppHandle) -> Self {
-    Self {
-      active: false,
-      options: None,
-      swarm: None,
-      app_handle: Some(app_handle),
-    }
+  if options.use_anti_captcha && options.anti_captcha_settings.captcha_type.as_str() == "web" && options.anti_captcha_settings.options.web.mode.as_str() == "auto" {
+    CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::CreateWebDriver);
   }
 
-  pub fn launch(&mut self, options: LaunchOptions) -> anyhow::Result<()> {
-    self.options = Some(options.clone());
-    self.active = true;
+  if options.use_webhook {
+    send_webhook(
+      options.webhook_settings.url.clone(),
+      format!(
+        "Запуск {} ботов на {}...",
+        options.bots_count, options.address
+      ),
+    );
+  }
 
-    tokio::spawn(registry_event_loop()); // $%#@$*@$1 &!@*$ @#%$&&!^%^ #!@%*!*#^
+  if options.use_webhook && options.webhook_settings.data {
+    send_webhook(
+      options.webhook_settings.url.clone(),
+      format!("Опции запуска: {:#?}", options),
+    );
+  }
 
-    if options.use_webhook {
-      send_webhook(
-        options.webhook_settings.url.clone(),
-        format!(
-          "Запуск {} ботов на {}...",
-          options.bots_count, options.address
-        ),
-      );
-    }
+  thread::spawn(move || {
+    let rt = tokio::runtime::Runtime::new().unwrap();
 
-    if options.use_webhook && options.webhook_settings.data {
-      send_webhook(
-        options.webhook_settings.url.clone(),
-        format!("Опции запуска: {:#?}", options),
-      );
-    }
+    rt.block_on(async move {
+      let local_set = tokio::task::LocalSet::new();
 
-    thread::spawn(move || {
-      let rt = tokio::runtime::Runtime::new().unwrap();
+      let default_plugins = azalea::DefaultPlugins;
+      let mut plugins = default_plugins.build();
 
-      rt.block_on(async move {
-        let local_set = tokio::task::LocalSet::new();
+      if !options.use_auto_rejoin {
+        plugins = plugins.disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
+      } else {
+        AutoReconnectDelay::new(Duration::from_millis(options.rejoin_delay));
+      }
 
-        let default_plugins = azalea::DefaultPlugins;
-        let mut plugins = default_plugins.build();
+      if !options.use_chat_signing {
+        plugins = plugins.disable::<azalea::chat_signing::ChatSigningPlugin>();
+      }
 
-        if !options.use_auto_rejoin {
-          plugins = plugins.disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
-        } else {
-          AutoReconnectDelay::new(Duration::from_millis(options.rejoin_delay));
+      local_set.spawn_local(async move {
+        let mut flow = SwarmBuilder::new_without_plugins()
+          .add_plugins(plugins)
+          .add_plugins(azalea::bot::DefaultBotPlugins)
+          .add_plugins(azalea::swarm::DefaultSwarmPlugins)
+          .join_delay(Duration::from_millis(options.join_delay))
+          .set_swarm_handler(swarm_handler)
+          .set_handler(single_handler);
+
+        let mut accounts = Vec::new();
+
+        for _ in 0..options.bots_count {
+          let nickname = generate_username_or_password(
+            "nickname",
+            options.nickname_type.clone(),
+            options.nickname_template.clone(),
+          );
+
+          let password = generate_username_or_password(
+            "password",
+            options.password_type.clone(),
+            options.password_template.clone(),
+          );
+
+          accounts.push(Account::offline(&nickname));
+
+          PROFILES.push(&nickname, password, options.version.clone());
         }
 
-        if !options.use_chat_signing {
-          plugins = plugins.disable::<azalea::chat_signing::ChatSigningPlugin>();
-        }
+        if options.use_proxy {
+          let mut accounts_with_opts = Vec::new();
 
-        local_set.spawn_local(async move {
-          send_log("Подготовка...".to_string(), "extended");
+          for (i, account) in accounts.into_iter().enumerate() {
+            let opts_clone = options.clone();
 
-          let mut flow = SwarmBuilder::new_without_plugins()
-            .add_plugins(plugins)
-            .add_plugins(azalea::bot::DefaultBotPlugins)
-            .add_plugins(azalea::swarm::DefaultSwarmPlugins)
-            .join_delay(Duration::from_millis(options.join_delay))
-            .set_swarm_handler(swarm_handler)
-            .set_handler(single_handler);
+            let mut join_opts = JoinOpts::new();
 
-          let mut accounts = Vec::new();
+            if opts_clone.use_proxy {
+              if let Some(proxy_list) = &opts_clone.proxy_list {
+                let list: Vec<&str> = proxy_list.split("\n").collect();
 
-          for _ in 0..options.bots_count {
-            let nickname = generate_nickname_or_password(
-              "nickname",
-              options.nickname_type.clone(),
-              options.nickname_template.clone(),
-            );
+                if !list.is_empty() {
+                  let mut profile_proxy = ProfileProxy {
+                    ip_address: "-".to_string(),
+                    proxy: None,
+                    username: None,
+                    password: None,
+                  };
 
-            let password = generate_nickname_or_password(
-              "password",
-              options.password_type.clone(),
-              options.password_template.clone(),
-            );
+                  let proxy_str = &list[i % list.len()].to_string();
 
-            accounts.push(Account::offline(&nickname));
+                  let clean_proxy_str = proxy_str
+                    .trim_start_matches("socks5://")
+                    .trim_start_matches("socks4://")
+                    .trim_start_matches("https://")
+                    .trim_start_matches("http://");
 
-            PROFILES.push(&nickname, password, options.version.clone());
-          }
+                  let proxy_address: Vec<&str> = clean_proxy_str.split("@").collect();
 
-          if options.use_proxy {
-            let mut accounts_with_opts = Vec::new();
+                  let Some(address) = proxy_address.get(0) else {
+                    continue;
+                  };
 
-            for (i, account) in accounts.into_iter().enumerate() {
-              let opts_clone = options.clone();
+                  profile_proxy.proxy = Some(address.to_string());
 
-              let mut join_opts = JoinOpts::new();
+                  if let Ok(addr) = address.parse::<SocketAddr>() {
+                    let mut proxy = Proxy::new(addr, None);
 
-              if opts_clone.use_proxy {
-                if let Some(proxy_list) = &opts_clone.proxy_list {
-                  let list: Vec<&str> = proxy_list.split("\n").collect();
+                    if let Some(auth) = proxy_address.get(1) {
+                      let split_auth: Vec<&str> = auth.split(":").collect();
 
-                  if !list.is_empty() {
-                    let proxy_str = &list[i % list.len()].to_string();
+                      let Some(username) = split_auth.get(0) else {
+                        continue;
+                      };
 
-                    let clean_proxy_str = proxy_str
-                      .trim_start_matches("socks5://")
-                      .trim_start_matches("socks4://")
-                      .trim_start_matches("https://")
-                      .trim_start_matches("http://");
+                      let Some(password) = split_auth.get(1) else {
+                        continue;
+                      };
 
-                    let proxy_address: Vec<&str> = clean_proxy_str.split("@").collect();
+                      profile_proxy.username = Some(username.to_string());
+                      profile_proxy.password = Some(password.to_string());
 
-                    let Some(address) = proxy_address.get(0) else {
+                      proxy.auth = Some(UserKey {
+                        username: username.to_string(),
+                        password: password.to_string(),
+                      });
+                    }
+
+                    join_opts = join_opts.proxy(proxy);
+
+                    let split_address: Vec<&str> = address.split(":").collect();
+
+                    let Some(ip_address) = split_address.get(0) else {
                       continue;
                     };
 
-                    if let Ok(addr) = address.parse::<SocketAddr>() {
-                      let mut proxy = Proxy::new(addr, None);
+                    profile_proxy.ip_address = ip_address.to_string();
 
-                      if let Some(auth) = proxy_address.get(1) {
-                        let split_auth: Vec<&str> = auth.split(":").collect();
-
-                        let Some(username) = split_auth.get(0) else {
-                          continue;
-                        };
-
-                        let Some(password) = split_auth.get(1) else {
-                          continue;
-                        };
-
-                        proxy.auth = Some(UserKey {
-                          username: username.to_string(),
-                          password: password.to_string(),
-                        });
-                      }
-
-                      join_opts = join_opts.proxy(proxy);
-
-                      if let Some(mut profile) = PROFILES.get(&account.username) {
-                        let split_address: Vec<&str> = address.split(":").collect();
-
-                        let Some(ip_address) = split_address.get(0) else {
-                          continue;
-                        };
-
-                        profile.set_proxy(*ip_address);
-                      }
-                    }
+                    PROFILES.set_proxy(&account.username, profile_proxy);
                   }
                 }
               }
-
-              accounts_with_opts.push((account, join_opts));
             }
 
-            for (account, opts) in accounts_with_opts {
-              flow = flow.add_account_with_opts(account, opts);
-            }
-          } else {
-            flow = flow.add_accounts(accounts);
-
-            if options.version.as_str() != "1.21.11" {
-              flow = flow.add_plugins(ViaVersionPlugin::start(options.version).await);
-            }
+            accounts_with_opts.push((account, join_opts));
           }
 
-          send_log("Подготовка окончена".to_string(), "extended");
+          for (account, opts) in accounts_with_opts {
+            flow = flow.add_account_with_opts(account, opts);
+          }
+        } else {
+          flow = flow.add_accounts(accounts);
 
-          let _ = flow.start(options.address).await;
-        });
+          if options.version.as_str() != "1.21.11" {
+            flow = flow.add_plugins(ViaVersionPlugin::start(options.version).await);
+          }
+        }
 
-        local_set.await;
+        send_log("Подготовка окончена".to_string(), "extended");
+
+        let _ = flow.start(options.address).await;
       });
-    });
 
-    Ok(())
+      local_set.await;
+    });
+  });
+
+  true
+}
+
+/// Функция остановки ботов
+pub fn stop_bots_and_destroy_data() -> bool {
+  if !process_is_active() {
+    send_log(
+      format!("Остановка ботов невозможна: The process is not active now"),
+      "warning",
+    );
+    return false;
   }
 
-  pub fn stop(&mut self) -> (String, String) {
-    if !self.active {
-      return (
-        "warning".to_string(),
-        format!("Нет активных ботов для остановки"),
+  let active_bots = active_bots_count();
+
+  send_message("Система", format!("Остановка {} ботов...", active_bots));
+
+  PLUGIN_MANAGER.clear();
+  TASKS.clear();
+  STATES.clear();
+  PROFILES.clear();
+
+  CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::StopProcessing);
+
+  BOT_REGISTRY.clear();
+
+  ACTIVE.store(false, Ordering::Relaxed);
+
+  if let Some(options) = current_options() {
+    if options.use_webhook {
+      send_webhook(
+        options.webhook_settings.url.clone(),
+        format!("{} ботов было остановлено", active_bots),
       );
     }
-
-    PLUGIN_MANAGER.clear();
-    PROFILES.clear();
-    TASKS.clear();
-    STATES.clear();
-    BOT_REGISTRY.destroy();
-
-    if let Some(swarm) = &self.swarm {
-      swarm.ecs_lock.lock().write_message(AppExit::Success);
-    }
-
-    self.swarm.take();
-    self.active = false;
-
-    if let Some(options) = &self.options {
-      if options.use_webhook {
-        send_webhook(
-          options.webhook_settings.url.clone(),
-          format!("{} ботов было остановлено", active_bots_count()),
-        );
-      }
-    }
-
-    ("info".to_string(), format!("Остановка ботов завершена"))
   }
+
+  send_log(format!("Остановка ботов завершена"), "info");
+
+  true
 }
 
 /// Менеджер модулей.
@@ -894,7 +905,7 @@ impl PluginManager {
   pub fn new() -> Self {
     Self {
       tasks: RwLock::new(HashMap::new()),
-      plugins: PluginList { 
+      plugins: PluginList {
         auto_armor: AutoArmorPlugin::new(),
         auto_totem: AutoTotemPlugin::new(),
         auto_eat: AutoEatPlugin::new(),
@@ -963,6 +974,8 @@ impl PluginManager {
   pub fn clear(&self) {
     for (username, _) in PROFILES.get_all() {
       self.destroy_all_tasks(&username);
-    } 
+    }
+
+    send_log(format!("Активные задачи плагинов остановлены"), "extended");
   }
 }

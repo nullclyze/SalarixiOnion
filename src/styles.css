@@ -831,10 +831,12 @@ p {
 }
 
 .control-btn .tag {
+  display: flex;
+  justify-self: center;
+  align-items: center;
   color: #535353;
   font-weight: bold;
   font-size: 16px;
-  margin-top: -4px;
 }
 
 .form-input {

@@ -13,7 +13,9 @@ use std::io::Write;
 use std::sync::Arc;
 
 use crate::common::*;
-use crate::emit::{send_event, send_log, MapRenderProgressEventPayload, PayloadEvent};
+use crate::emit::{
+  send_log, send_optional_event, MapRenderProgressEventPayload, OptionalEmitEvent,
+};
 use crate::generators::{randint, randstr, Classes};
 
 pub static MAP_RENDERER: Lazy<Arc<MapRenderer>> = Lazy::new(|| Arc::new(MapRenderer::new()));
@@ -37,7 +39,7 @@ impl MapRenderer {
         progress += 1;
 
         if progress % 3 == 0 {
-          send_event(PayloadEvent::MapRenderProgress(
+          send_optional_event(OptionalEmitEvent::MapRenderProgress(
             MapRenderProgressEventPayload {
               nickname: bot.username(),
               progress: progress,

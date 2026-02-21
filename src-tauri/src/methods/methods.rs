@@ -1,5 +1,12 @@
 use azalea::{
-  Client, InGameState, Vec3, entity::{Crouching, Jumping, Position, dimensions::EntityDimensions, metadata::Health}, local_player::{Hunger, TabList}, player::GameProfileComponent, protocol::packets::game::{ServerboundSwing, s_interact::InteractionHand}, world::MinecraftEntityId
+  entity::{
+    dimensions::EntityDimensions, metadata::Health, Crouching, Jumping, LookDirection, Position,
+  },
+  local_player::{Hunger, TabList},
+  player::GameProfileComponent,
+  protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing},
+  world::MinecraftEntityId,
+  Client, InGameState, Vec3,
 };
 
 /// Трейт безопасных методов для Client
@@ -17,13 +24,19 @@ pub trait SafeClientMethods {
 impl SafeClientMethods for Client {
   fn workable(&self) -> bool {
     let position_exists = self.get_component::<Position>().is_some();
+    let look_direction_exists = self.get_component::<LookDirection>().is_some();
     let dimensions_exists = self.get_component::<EntityDimensions>().is_some();
     let profile_exist = self.get_component::<GameProfileComponent>().is_some();
     let in_game_state_exist = self.get_component::<InGameState>().is_some();
     let states_exist =
       self.get_component::<Crouching>().is_some() && self.get_component::<Jumping>().is_some();
 
-    position_exists && dimensions_exists && profile_exist && in_game_state_exist && states_exist
+    position_exists
+      && look_direction_exists
+      && dimensions_exists
+      && profile_exist
+      && in_game_state_exist
+      && states_exist
   }
 
   fn id(&self) -> MinecraftEntityId {

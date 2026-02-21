@@ -32,7 +32,7 @@ const ACCOUNTS_WITH_SKINS: &[&str] = &[
 pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyhow::Result<()> {
   match event {
     Event::Login => {
-      let nickname = bot.username();
+      let username = bot.username();
 
       if let Some(opts) = current_options() {
         bot.set_client_information(ClientInformation {
@@ -57,23 +57,23 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         });
       }
 
-      send_log(format!("Бот {} подключается...", nickname), "system");
+      send_log(format!("Бот {} подключается...", username), "system");
 
-      PROFILES.set_str(&nickname, "status", "Соединение...");
-
-      TASKS.push(&nickname);
-      STATES.push(&nickname);
+      PROFILES.set_str(&username, "status", "Соединение...");
     }
     Event::Spawn => {
-      let nickname = bot.username();
+      let username = bot.username();
 
-      BOT_REGISTRY.register_bot(&nickname, bot.clone());
+      BOT_REGISTRY.register_bot(&username, bot.clone());
 
       BOT_REGISTRY.send_event(RegistryEvent::LoadPlugins {
-        username: nickname.clone(),
+        username: username.clone(),
       });
 
-      PROFILES.set_str(&nickname, "status", "Онлайн");
+      TASKS.push(&username);
+      STATES.push(&username);
+
+      PROFILES.set_str(&username, "status", "Онлайн");
 
       if let Some(options) = current_options() {
         let pos = bot.feet_pos();
@@ -86,7 +86,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             options.webhook_settings.url,
             format!(
               "Бот {} заспавнился | Координаты (XYZ): {} | Здоровье: {} / 20",
-              &nickname, str_pos, health
+              &username, str_pos, health
             ),
           );
         }
@@ -94,7 +94,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         send_log(
           format!(
             "Бот {} заспавнился, координаты (XYZ): {}",
-            &nickname, str_pos
+            &username, str_pos
           ),
           "info",
         );
@@ -103,14 +103,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           "Система",
           format!(
             "Бот {} заспавнился<br><br>Координаты (XYZ): {}<br>Здоровье: {} / 20",
-            &nickname, str_pos, health
+            &username, str_pos, health
           ),
         );
 
         default_authorize(&bot).await;
       }
 
-      if let Some(profile) = PROFILES.get(&nickname) {
+      if let Some(profile) = PROFILES.get(&username) {
         if !profile.skin_is_set {
           if let Some(opts) = current_options() {
             match opts.skin_settings.skin_type.as_str() {
@@ -129,14 +129,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 sleep(Duration::from_millis(3000)).await;
 
                 send_log(
-                  format!("Бот {} успешно установил скин: {}", nickname, command),
+                  format!("Бот {} успешно установил скин: {}", username, command),
                   "system",
                 );
 
                 bot.disconnect();
 
-                BOT_REGISTRY.remove_bot(&nickname);
-                PROFILES.set_bool(&nickname, "skin_is_set", true);
+                BOT_REGISTRY.remove_bot(&username);
+                PROFILES.set_bool(&username, "skin_is_set", true);
               }
               "custom" => {
                 if let Some(n) = opts.skin_settings.custom_skin_by_nickname {
@@ -154,14 +154,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   sleep(Duration::from_millis(3000)).await;
 
                   send_log(
-                    format!("Бот {} успешно установил скин: {}", nickname, command),
+                    format!("Бот {} успешно установил скин: {}", username, command),
                     "system",
                   );
 
                   bot.disconnect();
 
-                  BOT_REGISTRY.remove_bot(&nickname);
-                  PROFILES.set_bool(&nickname, "skin_is_set", true);
+                  BOT_REGISTRY.remove_bot(&username);
+                  PROFILES.set_bool(&username, "skin_is_set", true);
                 }
               }
               _ => {}
@@ -171,37 +171,37 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       }
     }
     Event::Disconnect(packet) => {
-      let nickname = bot.username();
+      let username = bot.username();
 
-      TASKS.reset(&nickname);
-      PLUGIN_MANAGER.destroy_all_tasks(&nickname);
+      TASKS.reset(&username);
+      PLUGIN_MANAGER.destroy_all_tasks(&username);
 
-      BOT_REGISTRY.remove_bot(&nickname);
+      BOT_REGISTRY.remove_bot(&username);
 
-      PROFILES.set_bool(&nickname, "logined", false);
-      PROFILES.set_bool(&nickname, "captcha_caught", false);
-      STATES.reset(&nickname);
-      TASKS.remove(&nickname);
+      PROFILES.set_bool(&username, "logined", false);
+      PROFILES.set_bool(&username, "captcha_caught", false);
+      STATES.reset(&username);
+      TASKS.remove(&username);
 
-      PROFILES.set_str(&nickname, "status", "Оффлайн");
+      PROFILES.set_str(&username, "status", "Оффлайн");
 
       if let Some(text) = packet {
         if let Some(options) = current_options() {
           if options.use_webhook {
             send_webhook(
               options.webhook_settings.url,
-              format!("Бот {} отключился: {}", &nickname, text.to_html()),
+              format!("Бот {} отключился: {}", &username, text.to_html()),
             );
           }
         }
 
         send_log(
-          format!("Бот {} отключился: {}", &nickname, text.to_html()),
+          format!("Бот {} отключился: {}", &username, text.to_string()),
           "info",
         );
         send_message(
           "Система",
-          format!("Бот {} отключился: {}", &nickname, text.to_string()),
+          format!("Бот {} отключился: {}", &username, text.to_string()),
         );
       }
     }
@@ -221,7 +221,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             }
           }
 
-          send_event(PayloadEvent::Chat(ChatEventPayload {
+          send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
             receiver: nickname.clone(),
             message: message,
           }));
@@ -231,7 +231,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           let opts = options.anti_captcha_settings.options.web;
 
           if options.anti_captcha_settings.captcha_type.as_str() == "web" {
-            if let Some(url) = ANTI_WEB_CAPTCHA.catch_url_from_message(
+            if let Some(url) = CAPTCHA_BYPASS.catch_url_from_message(
               packet.message().to_string(),
               opts
                 .regex
@@ -255,10 +255,16 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                     "info",
                   );
 
-                  send_event(PayloadEvent::AntiWebCaptcha(AntiWebCaptchaEventPayload {
-                    captcha_url: url,
-                    nickname: nickname,
-                  }));
+                  if opts.mode.as_str() == "auto" {
+                    CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::SolveCaptcha { url: url.clone() });
+                  } else {
+                    send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
+                      AntiWebCaptchaEventPayload {
+                        captcha_url: url,
+                        nickname: nickname,
+                      },
+                    ));
+                  }
                 }
               }
             }
@@ -310,7 +316,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   if !profile.captcha_caught {
                     PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                    let base64_code = ANTI_MAP_CAPTCHA.create_png_image(&map_patch.map_colors);
+                    let base64_code = CAPTCHA_BYPASS.create_png_image(&map_patch.map_colors);
 
                     if options.use_webhook && options.webhook_settings.information {
                       send_webhook(
@@ -324,10 +330,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                       "info",
                     );
 
-                    send_event(PayloadEvent::AntiMapCaptcha(AntiMapCaptchaEventPayload {
-                      base64_code: base64_code,
-                      nickname: nickname.to_string(),
-                    }));
+                    send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
+                      AntiMapCaptchaEventPayload {
+                        base64_code: base64_code,
+                        nickname: nickname.to_string(),
+                      },
+                    ));
                   }
                 }
               }

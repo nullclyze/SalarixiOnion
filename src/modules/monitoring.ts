@@ -10,7 +10,12 @@ interface BotProfile {
   nickname: string;
   version: string;
   password: string;
-  proxy: string;
+  proxy: { 
+    ip_address: string;
+    proxy: string | null;
+    username: string | null;
+    password: string | null;
+  };
   ping: number;
   health: number;
   satiety: number;
@@ -379,7 +384,7 @@ export class MonitoringManager {
     }
 
     status.innerHTML = `<span style="color: ${statusColor};">• ${profile.status}</span>`;
-    proxy.innerText = profile.proxy;
+    proxy.innerText = profile.proxy.ip_address;
     ping.innerText = `${profile.ping} мс`
     health.innerText = `${profile.health} / 20`;
     satiety.innerText = `${profile.satiety} / 20`;

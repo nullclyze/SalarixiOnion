@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
+use crate::emit::send_log;
+
 pub static STATES: Lazy<Arc<StateManager>> = Lazy::new(|| Arc::new(StateManager::new()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -163,6 +165,8 @@ impl StateManager {
   pub fn clear(&self) {
     let mut states = self.map.write().unwrap();
     states.clear();
+
+    send_log(format!("Состояния ботов очищены"), "extended");
   }
 
   pub fn reset(&self, username: &str) {

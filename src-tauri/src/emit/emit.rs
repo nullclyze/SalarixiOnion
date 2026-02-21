@@ -1,112 +1,143 @@
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use tauri::Emitter;
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter};
+use tokio::sync::broadcast;
 
-use crate::base::get_flow_manager;
+pub static EMIT_MANAGER: Lazy<Arc<EmitManager>> = Lazy::new(|| Arc::new(EmitManager::new()));
 
-// Структура данных в log-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogPayload {
   pub text: String,
   pub class: String,
 }
 
-// Структура данных в message-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MessagePayload {
   pub name: String,
   pub content: String,
 }
 
-#[derive(Debug, Clone)]
-pub enum PayloadEvent {
-  Chat(ChatEventPayload),
-  MapRenderProgress(MapRenderProgressEventPayload),
-  AntiWebCaptcha(AntiWebCaptchaEventPayload),
-  AntiMapCaptcha(AntiMapCaptchaEventPayload),
-}
-
-// Структура данных в chat-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChatEventPayload {
   pub receiver: String,
   pub message: String,
 }
 
-// Структура данных в chat-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MapRenderProgressEventPayload {
   pub nickname: String,
   pub progress: i32,
 }
 
-// Структура данных в anti-web-captcha-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiWebCaptchaEventPayload {
   pub captcha_url: String,
   pub nickname: String,
 }
 
-// Структура данных в anti-map-captcha-payload
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiMapCaptchaEventPayload {
   pub base64_code: String,
   pub nickname: String,
 }
 
-// Функция отправки лога
+pub struct EmitManager {
+  events: broadcast::Sender<EmitEvent>,
+}
+
+#[derive(Clone)]
+pub enum EmitEvent {
+  Log { text: String, class: String },
+  Message { name: String, content: String },
+  Optional(OptionalEmitEvent),
+}
+
+#[derive(Clone)]
+pub enum OptionalEmitEvent {
+  Chat(ChatEventPayload),
+  MapRenderProgress(MapRenderProgressEventPayload),
+  AntiWebCaptcha(AntiWebCaptchaEventPayload),
+  AntiMapCaptcha(AntiMapCaptchaEventPayload),
+}
+
+impl EmitManager {
+  pub fn new() -> Self {
+    let (tx, _) = broadcast::channel(1000);
+
+    Self { events: tx }
+  }
+
+  pub fn send_event(&self, event: EmitEvent) {
+    let _ = self.events.send(event);
+  }
+}
+
+/// Вспомогательная функция отправки лога
 pub fn send_log(text: String, class: &str) {
-  if let Some(arc) = get_flow_manager() {
-    let fm = arc.read();
-
-    if let Some(handle) = fm.app_handle.as_ref() {
-      let _ = handle.emit(
-        "log",
-        LogPayload {
-          text: text,
-          class: class.to_string(),
-        },
-      );
-    }
-  }
+  EMIT_MANAGER.send_event(EmitEvent::Log {
+    text,
+    class: class.to_string(),
+  });
 }
 
-// Функция отправки сообщения
+/// Вспомогательная функция отправки сообщения
 pub fn send_message(name: &str, content: String) {
-  if let Some(arc) = get_flow_manager() {
-    let fm = arc.read();
+  EMIT_MANAGER.send_event(EmitEvent::Message {
+    name: name.to_string(),
+    content,
+  });
+}
 
-    if let Some(handle) = fm.app_handle.as_ref() {
-      let _ = handle.emit(
-        "message",
-        MessagePayload {
-          name: name.to_string(),
-          content: content,
-        },
-      );
+/// Вспомогательная функция отправки дополнительных событий
+pub fn send_optional_event(event: OptionalEmitEvent) {
+  match event {
+    OptionalEmitEvent::Chat(payload) => {
+      EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::Chat(payload)));
+    }
+    OptionalEmitEvent::MapRenderProgress(payload) => {
+      EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::MapRenderProgress(
+        payload,
+      )));
+    }
+    OptionalEmitEvent::AntiWebCaptcha(payload) => {
+      EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::AntiWebCaptcha(
+        payload,
+      )));
+    }
+    OptionalEmitEvent::AntiMapCaptcha(payload) => {
+      EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::AntiMapCaptcha(
+        payload,
+      )));
     }
   }
 }
 
-// Функция отправки события
-pub fn send_event(event: PayloadEvent) {
-  if let Some(arc) = get_flow_manager() {
-    let fm = arc.read();
+pub async fn emit_event_loop(handle: AppHandle) {
+  let mut rx = EMIT_MANAGER.events.subscribe();
 
-    if let Some(handle) = fm.app_handle.as_ref() {
-      match event {
-        PayloadEvent::Chat(payload) => {
+  while let Ok(event) = rx.recv().await {
+    match event {
+      EmitEvent::Log { text, class } => {
+        let _ = handle.emit("log", LogPayload { text, class });
+      }
+      EmitEvent::Message { name, content } => {
+        let _ = handle.emit("message", MessagePayload { name, content });
+      }
+      EmitEvent::Optional(optional_event) => match optional_event {
+        OptionalEmitEvent::Chat(payload) => {
           let _ = handle.emit("chat-message", payload);
         }
-        PayloadEvent::MapRenderProgress(payload) => {
+        OptionalEmitEvent::MapRenderProgress(payload) => {
           let _ = handle.emit("map-render-progress", payload);
         }
-        PayloadEvent::AntiWebCaptcha(payload) => {
+        OptionalEmitEvent::AntiWebCaptcha(payload) => {
           let _ = handle.emit("anti-web-captcha", payload);
         }
-        PayloadEvent::AntiMapCaptcha(payload) => {
+        OptionalEmitEvent::AntiMapCaptcha(payload) => {
           let _ = handle.emit("anti-map-captcha", payload);
         }
-      }
+      },
     }
   }
 }

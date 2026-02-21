@@ -693,6 +693,13 @@
         "en": "Captcha Type:"
       }
     },
+    {
+      "tags": ["label:captcha-solve-mode"], 
+      "lang": {
+        "ru": "Режим:",
+        "en": "Mode:"
+      }
+    },
     { 
       "tags": ["label:captcha-regex"], 
       "lang": {
@@ -705,6 +712,13 @@
       "lang": {
         "ru": "Обязательная часть ссылки",
         "en": "Required URL Part"
+      }
+    },
+    {
+      "tags": ["label:webdriver-server-url"], 
+      "lang": {
+        "ru": "Адрес сервера для WebDriver",
+        "en": "Server address for WebDriver"
       }
     },
     { 
