@@ -9,6 +9,7 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
+use tokio::time::sleep;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
@@ -373,12 +374,18 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
   ACTIVE.store(true, Ordering::Relaxed);
 
   tokio::spawn(registry_event_loop());
-  tokio::spawn(captcha_bypass_event_loop());
+  tokio::spawn(WEB_CAPTCHA_BYPASS.webdriver_event_loop());
 
-  tokio::spawn(async {
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::CreateWebDriver);
-  });
+  if options.use_anti_captcha && options.anti_captcha_settings.captcha_type.as_str() == "web" && options.anti_captcha_settings.options.web.mode.as_str() == "auto" {
+    tokio::spawn(async {
+      sleep(Duration::from_millis(100)).await;
+      WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::CreateWebDriver {
+        proxy: None,
+        username: None,
+        password: None
+      });
+    });
+  }
 
   if options.use_webhook {
     send_webhook(
@@ -565,7 +572,7 @@ pub fn stop_bots_and_destroy_data() -> bool {
   STATES.clear();
   PROFILES.clear();
 
-  CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::StopProcessing);
+  WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::StopProcessing);
 
   BOT_REGISTRY.clear();
 
