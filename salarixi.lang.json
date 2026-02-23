@@ -1,0 +1,1103 @@
+{
+  "map": [
+    { 
+      "tags": ["section:basic"], 
+      "lang": {
+        "ru": "Основное",
+        "en": "Basic"
+      }
+    },
+    { 
+      "tags": ["section:control"], 
+      "lang": {
+        "ru": "Управление",
+        "en": "Control"
+      }
+    },
+    { 
+      "tags": ["section:data"], 
+      "lang": {
+        "ru": "Данные",
+        "en": "Data"
+      }
+    },
+    { 
+      "tags": ["section:tools"], 
+      "lang": {
+        "ru": "Инструменты",
+        "en": "Tools"
+      }
+    },
+    { 
+      "tags": ["section:logs"], 
+      "lang": {
+        "ru": "Логи",
+        "en": "Logs"
+      }
+    },
+    { 
+      "tags": ["section:misc"], 
+      "lang": {
+        "ru": "Разное",
+        "en": "Misc"
+      }
+    },
+    { 
+      "tags": ["panel-btn:main", "title:main"], 
+      "lang": {
+        "ru": "Главная",
+        "en": "Main"
+      }
+    },
+    { 
+      "tags": ["panel-btn:settings", "title:settings"], 
+      "lang": {
+        "ru": "Настройки",
+        "en": "Settings"
+      }
+    },
+    { 
+      "tags": ["panel-btn:plugins", "title:plugins"], 
+      "lang": {
+        "ru": "Плагины",
+        "en": "Plugins"
+      }
+    },
+    { 
+      "tags": ["panel-btn:proxy", "title:proxy"], 
+      "lang": {
+        "ru": "Прокси",
+        "en": "Proxy"
+      }
+    },
+    { 
+      "tags": ["panel-btn:anti-captcha", "title:anti-captcha"], 
+      "lang": {
+        "ru": "Анти-Капча",
+        "en": "Anti-Captcha"
+      }
+    },
+    { 
+      "tags": ["panel-btn:webhook", "title:webhook"], 
+      "lang": {
+        "ru": "Вебхук",
+        "en": "Webhook"
+      }
+    },
+    { 
+      "tags": ["panel-btn:control", "title:control"], 
+      "lang": {
+        "ru": "Управление",
+        "en": "Control"
+      }
+    },
+    { 
+      "tags": ["panel-btn:scripting", "title:scripting"], 
+      "lang": {
+        "ru": "Скриптинг",
+        "en": "Scripting"
+      }
+    },
+    { 
+      "tags": ["panel-btn:graphic", "title:graphic"], 
+      "lang": {
+        "ru": "График",
+        "en": "Graphic"
+      }
+    },
+    { 
+      "tags": ["panel-btn:monitoring", "title:monitoring"], 
+      "lang": {
+        "ru": "Мониторинг",
+        "en": "Monitoring"
+      }
+    },
+    { 
+      "tags": ["panel-btn:analysis", "title:analysis"], 
+      "lang": {
+        "ru": "Анализ",
+        "en": "Analysis"
+      }
+    },
+    { 
+      "tags": ["panel-btn:radar", "title:radar"], 
+      "lang": {
+        "ru": "Радар",
+        "en": "Radar"
+      }
+    },
+    { 
+      "tags": ["panel-btn:ping", "title:ping"], 
+      "lang": {
+        "ru": "Пинг",
+        "en": "Ping"
+      }
+    },
+    { 
+      "tags": ["panel-btn:spy", "title:spy"], 
+      "lang": {
+        "ru": "Шпион",
+        "en": "Spy"
+      }
+    },
+    { 
+      "tags": ["panel-btn:journal", "title:journal"], 
+      "lang": {
+        "ru": "Журнал",
+        "en": "Journal"
+      }
+    },
+    { 
+      "tags": ["panel-btn:interface", "title:interface"], 
+      "lang": {
+        "ru": "Интерфейс",
+        "en": "Interface"
+      }
+    },
+    { 
+      "tags": ["panel-btn:about", "title:about"], 
+      "lang": {
+        "ru": "О проекте",
+        "en": "About"
+      }
+    },
+    { 
+      "tags": ["panel-btn:guide", "title:guide"], 
+      "lang": {
+        "ru": "Руководство",
+        "en": "Guide"
+      }
+    },
+    { 
+      "tags": ["input:address", "label:address"], 
+      "lang": {
+        "ru": "Адрес сервера",
+        "en": "Server Address"
+      }
+    },
+    { 
+      "tags": ["input:version", "label:version"], 
+      "lang": {
+        "ru": "Версия Minecraft",
+        "en": "Minecraft Version"
+      }
+    },
+    { 
+      "tags": ["input:bots-count", "label:bots-count"], 
+      "lang": {
+        "ru": "Кол-во ботов",
+        "en": "Bots Count"
+      }
+    },
+    { 
+      "tags": ["input:join-delay", "label:join-delay"], 
+      "lang": {
+        "ru": "Задержка подключений",
+        "en": "Connection Delay"
+      }
+    },
+    { 
+      "tags": ["button:start"], 
+      "lang": {
+        "ru": "Запустить",
+        "en": "Start"
+      }
+    },
+    { 
+      "tags": ["button:stop"], 
+      "lang": {
+        "ru": "Остановить",
+        "en": "Stop"
+      }
+    },
+    { 
+      "tags": ["button:random"], 
+      "lang": {
+        "ru": "Генерация",
+        "en": "Generate"
+      }
+    },
+    { 
+      "tags": ["button:clear"], 
+      "lang": {
+        "ru": "Очистить",
+        "en": "Clear"
+      }
+    },
+    { 
+      "tags": ["separator:basic-settings"], 
+      "lang": {
+        "ru": "Основные",
+        "en": "Basic"
+      }
+    },
+    { 
+      "tags": ["label:nickname-type", "select:nickname-type"], 
+      "lang": {
+        "ru": "Никнейм:",
+        "en": "Nickname:"
+      }
+    },
+    { 
+      "tags": ["option:nickname-legit"], 
+      "lang": {
+        "ru": "Легитный",
+        "en": "Legit"
+      }
+    },
+    { 
+      "tags": ["option:nickname-random"], 
+      "lang": {
+        "ru": "Случайный",
+        "en": "Random"
+      }
+    },
+    { 
+      "tags": ["option:nickname-custom"], 
+      "lang": {
+        "ru": "Кастомный",
+        "en": "Custom"
+      }
+    },
+    { 
+      "tags": ["label:password-type", "select:password-type"], 
+      "lang": {
+        "ru": "Пароль:",
+        "en": "Password:"
+      }
+    },
+    { 
+      "tags": ["option:password-legit"], 
+      "lang": {
+        "ru": "Легитный",
+        "en": "Legit"
+      }
+    },
+    { 
+      "tags": ["option:password-random"], 
+      "lang": {
+        "ru": "Случайный",
+        "en": "Random"
+      }
+    },
+    {
+      "tags": ["option:password-custom"], 
+      "lang": {
+        "ru": "Кастомный",
+        "en": "Custom"
+      }
+    },
+    { 
+      "tags": ["input:nickname-template", "label:nickname-template"], 
+      "lang": {
+        "ru": "Шаблон никнейма",
+        "en": "Nickname Template"
+      }
+    },
+    { 
+      "tags": ["input:password-template", "label:password-template"], 
+      "lang": {
+        "ru": "Шаблон пароля",
+        "en": "Password Template"
+      }
+    },
+    { 
+      "tags": ["separator:registration"], 
+      "lang": {
+        "ru": "Регистрация",
+        "en": "Registration"
+      }
+    },
+    { 
+      "tags": ["input:register-command", "label:register-command"], 
+      "lang": {
+        "ru": "Команда регистрации",
+        "en": "Register Command"
+      }
+    },
+    { 
+      "tags": ["input:register-template", "label:register-template"], 
+      "lang": {
+        "ru": "Шаблон регистрации",
+        "en": "Register Template"
+      }
+    },
+    { 
+      "tags": ["separator:login"], 
+      "lang": {
+        "ru": "Логин",
+        "en": "Login"
+      }
+    },
+    { 
+      "tags": ["input:login-command", "label:login-command"], 
+      "lang": {
+        "ru": "Команда логина",
+        "en": "Login Command"
+      }
+    },
+    { 
+      "tags": ["input:login-template", "label:login-template"], 
+      "lang": {
+        "ru": "Шаблон логина",
+        "en": "Login Template"
+      }
+    },
+    { 
+      "tags": ["label:mode"], 
+      "lang": {
+        "ru": "Режим:",
+        "en": "Mode:"
+      }
+    },
+    { 
+      "tags": ["option:mode-default"], 
+      "lang": {
+        "ru": "Обычный",
+        "en": "Default"
+      }
+    },
+    { 
+      "tags": ["option:mode-trigger"], 
+      "lang": {
+        "ru": "Триггер",
+        "en": "Trigger"
+      }
+    },
+    { 
+      "tags": ["input:register-min-delay", "label:register-min-delay", "input:login-min-delay", "label:login-min-delay"], 
+      "lang": {
+        "ru": "Задержка (минимум)",
+        "en": "Delay (minimum)"
+      }
+    },
+    { 
+      "tags": ["input:register-max-delay", "label:register-max-delay", "input:login-max-delay", "label:login-max-delay"], 
+      "lang": {
+        "ru": "Задержка (максимум)",
+        "en": "Delay (maximum)"
+      }
+    },
+    { 
+      "tags": ["input:register-trigger", "input:login-trigger"], 
+      "lang": {
+        "ru": "Триггер (сообщение)",
+        "en": "Trigger (message)"
+      }
+    },
+    { 
+      "tags": ["separator:reconnection"], 
+      "lang": {
+        "ru": "Переподключение",
+        "en": "Reconnection"
+      }
+    },
+    { 
+      "tags": ["input:rejoin-delay", "label:rejoin-delay"], 
+      "lang": {
+        "ru": "Задержка переподключения",
+        "en": "Reconnection Delay"
+      }
+    },
+    { 
+      "tags": ["separator:monitoring-settings"], 
+      "lang": {
+        "ru": "Мониторинг",
+        "en": "Monitoring"
+      }
+    },
+    { 
+      "tags": ["input:chat-history-length"], 
+      "lang": {
+        "ru": "Длина истории чата",
+        "en": "Chat History Length"
+      }
+    },
+    { 
+      "tags": ["input:monitoring-update-frequency"], 
+      "lang": {
+        "ru": "Частота обновлений",
+        "en": "Update Frequency"
+      }
+    },
+    { 
+      "tags": ["separator:additional-settings"], 
+      "lang": {
+        "ru": "Дополнительные",
+        "en": "Additional"
+      }
+    },
+    { 
+      "tags": ["input:view-distance", "label:view-distance"], 
+      "lang": {
+        "ru": "Дистанция прогрузки",
+        "en": "View Distance"
+      }
+    },
+    { 
+      "tags": ["input:language", "label:language"], 
+      "lang": {
+        "ru": "Язык клиента",
+        "en": "Client Language"
+      }
+    },
+    { 
+      "tags": ["input:chat-colors", "label:chat-colors"], 
+      "lang": {
+        "ru": "Включить цвета в чате",
+        "en": "Enable Chat Colors"
+      }
+    },
+    { 
+      "tags": ["input:humanoid-arm", "label:humanoid-arm"], 
+      "lang": {
+        "ru": "Ведущая рука",
+        "en": "Dominant Hand"
+      }
+    },
+    { 
+      "tags": ["separator:skins"], 
+      "lang": {
+        "ru": "Скины",
+        "en": "Skins"
+      }
+    },
+    { 
+      "tags": ["label:skin-type", "select:skin-type"], 
+      "lang": {
+        "ru": "Скин:",
+        "en": "Skin:"
+      }
+    },
+    { 
+      "tags": ["option:skin-default"], 
+      "lang": {
+        "ru": "По умолчанию",
+        "en": "Default"
+      }
+    },
+    { 
+      "tags": ["option:skin-random"], 
+      "lang": {
+        "ru": "Случайный",
+        "en": "Random"
+      }
+    },
+    { 
+      "tags": ["option:skin-custom"], 
+      "lang": {
+        "ru": "Кастомный",
+        "en": "Custom"
+      }
+    },
+    { 
+      "tags": ["input:set-skin-command", "label:set-skin-command"], 
+      "lang": {
+        "ru": "Команда установки скина",
+        "en": "Skin Set Command"
+      }
+    },
+    { 
+      "tags": ["input:skin-by-nickname", "label:skin-by-nickname"], 
+      "lang": {
+        "ru": "Скин игрока по никнейму",
+        "en": "Skin by Player Nickname"
+      }
+    },
+    { 
+      "tags": ["checkbox:auto-register"], 
+      "lang": {
+        "ru": "Авто регистрация",
+        "en": "Auto Register"
+      }
+    },
+    { 
+      "tags": ["checkbox:auto-login"], 
+      "lang": {
+        "ru": "Авто логин",
+        "en": "Auto Login"
+      }
+    },
+    { 
+      "tags": ["checkbox:use-proxy"], 
+      "lang": {
+        "ru": "Использовать прокси",
+        "en": "Use Proxy"
+      }
+    },
+    { 
+      "tags": ["checkbox:anti-captcha"], 
+      "lang": {
+        "ru": "Использовать анти-капчу",
+        "en": "Use Anti-Captcha"
+      }
+    },
+    { 
+      "tags": ["checkbox:webhook"], 
+      "lang": {
+        "ru": "Использовать вебхук",
+        "en": "Use Webhook"
+      }
+    },
+    { 
+      "tags": ["checkbox:data-analysis"], 
+      "lang": {
+        "ru": "Анализ данных",
+        "en": "Data Analysis"
+      }
+    },
+    { 
+      "tags": ["checkbox:error-corrector"], 
+      "lang": {
+        "ru": "Корректор ошибок",
+        "en": "Error Corrector"
+      }
+    },
+    { 
+      "tags": ["checkbox:garbage-collector"], 
+      "lang": {
+        "ru": "Сборщик мусора",
+        "en": "Garbage Collector"
+      }
+    },
+    { 
+      "tags": ["checkbox:auto-rejoin"], 
+      "lang": {
+        "ru": "Использовать Auto-Rejoin",
+        "en": "Use Auto-Rejoin"
+      }
+    },
+    { 
+      "tags": ["checkbox:chat-signing"], 
+      "lang": {
+        "ru": "Использовать Chat-Signing",
+        "en": "Use Chat-Signing"
+      }
+    },
+    { 
+      "tags": ["checkbox:extended-monitoring"], 
+      "lang": {
+        "ru": "Расширенный мониторинг",
+        "en": "Extended Monitoring"
+      }
+    },
+    { 
+      "tags": ["checkbox:chat-monitoring"], 
+      "lang": {
+        "ru": "Мониторинг чата",
+        "en": "Chat Monitoring"
+      }
+    },
+    { 
+      "tags": ["checkbox:map-monitoring"], 
+      "lang": {
+        "ru": "Мониторинг карты",
+        "en": "Map Monitoring"
+      }
+    },
+    { 
+      "tags": ["label:plugin-status"], 
+      "lang": {
+        "ru": "Статус:",
+        "en": "Status:"
+      }
+    },
+    { 
+      "tags": ["label:proxy-list"], 
+      "lang": {
+        "ru": "Список прокси",
+        "en": "Proxy List"
+      }
+    },
+    { 
+      "tags": ["button:clear-proxy-list"], 
+      "lang": {
+        "ru": "Очистить список",
+        "en": "Clear List"
+      }
+    },
+    { 
+      "tags": ["label:proxy-finder-algorithm"], 
+      "lang": {
+        "ru": "Алгоритм:",
+        "en": "Algorithm:"
+      }
+    },
+    { 
+      "tags": ["label:proxy-finder-protocol"], 
+      "lang": {
+        "ru": "Протокол:",
+        "en": "Protocol:"
+      }
+    },
+    { 
+      "tags": ["label:proxy-finder-country"], 
+      "lang": {
+        "ru": "Страна:",
+        "en": "Country:"
+      }
+    },
+    { 
+      "tags": ["option:country-any"], 
+      "lang": {
+        "ru": "Любая",
+        "en": "Any"
+      }
+    },
+    { 
+      "tags": ["label:proxy-finder-port"], 
+      "lang": {
+        "ru": "Порт:",
+        "en": "Port:"
+      }
+    },
+    { 
+      "tags": ["option:port-any"], 
+      "lang": {
+        "ru": "Любой",
+        "en": "Any"
+      }
+    },
+    { 
+      "tags": ["label:proxy-finder-count"], 
+      "lang": {
+        "ru": "Кол-во:",
+        "en": "Count:"
+      }
+    },
+    { 
+      "tags": ["option:count-max"], 
+      "lang": {
+        "ru": "Максимум",
+        "en": "Maximum"
+      }
+    },
+    { 
+      "tags": ["button:find-proxy"], 
+      "lang": {
+        "ru": "Найти прокси",
+        "en": "Find Proxy"
+      }
+    },
+    { 
+      "tags": ["label:proxy-counter"], 
+      "lang": {
+        "ru": "Кол-во прокси:",
+        "en": "Proxy Count:"
+      }
+    },
+    { 
+      "tags": ["label:captcha-type"], 
+      "lang": {
+        "ru": "Тип капчи:",
+        "en": "Captcha Type:"
+      }
+    },
+    {
+      "tags": ["label:captcha-solve-mode"], 
+      "lang": {
+        "ru": "Режим:",
+        "en": "Mode:"
+      }
+    },
+    { 
+      "tags": ["label:captcha-regex"], 
+      "lang": {
+        "ru": "Регулярное выражение",
+        "en": "Regular Expression"
+      }
+    },
+    { 
+      "tags": ["label:captcha-url-part"], 
+      "lang": {
+        "ru": "Обязательная часть ссылки",
+        "en": "Required URL Part"
+      }
+    },
+    {
+      "tags": ["label:webdriver-server-url"], 
+      "lang": {
+        "ru": "Адрес сервера для WebDriver",
+        "en": "Server address for WebDriver"
+      }
+    },
+    { 
+      "tags": ["label:webhook-link"], 
+      "lang": {
+        "ru": "Ссылка",
+        "en": "Link"
+      }
+    },
+    { 
+      "tags": ["label:webhook-information"], 
+      "lang": {
+        "ru": "Информация",
+        "en": "Information"
+      }
+    },
+    { 
+      "tags": ["label:webhook-data"], 
+      "lang": {
+        "ru": "Данные",
+        "en": "Data"
+      }
+    },
+    { 
+      "tags": ["label:webhook-actions"], 
+      "lang": {
+        "ru": "Действия",
+        "en": "Actions"
+      }
+    },
+    { 
+      "tags": ["control:chat"], 
+      "lang": {
+        "ru": "Чат",
+        "en": "Chat"
+      }
+    },
+    { 
+      "tags": ["control:actions"], 
+      "lang": {
+        "ru": "Действия",
+        "en": "Actions"
+      }
+    },
+    { 
+      "tags": ["control:inventory"], 
+      "lang": {
+        "ru": "Инвентарь",
+        "en": "Inventory"
+      }
+    },
+    { 
+      "tags": ["control:movement"], 
+      "lang": {
+        "ru": "Движение",
+        "en": "Movement"
+      }
+    },
+    { 
+      "tags": ["control:imitation"], 
+      "lang": {
+        "ru": "Имитация",
+        "en": "Imitation"
+      }
+    },
+    { 
+      "tags": ["control:anti-afk"], 
+      "lang": {
+        "ru": "Анти-АФК",
+        "en": "Anti-AFK"
+      }
+    },
+    { 
+      "tags": ["control:flight"], 
+      "lang": {
+        "ru": "Полёт",
+        "en": "Flight"
+      }
+    },
+    { 
+      "tags": ["control:killaura"], 
+      "lang": {
+        "ru": "Киллаура",
+        "en": "Killaura"
+      }
+    },
+    { 
+      "tags": ["control:scaffold"], 
+      "lang": {
+        "ru": "Скаффолд",
+        "en": "Scaffold"
+      }
+    },
+    { 
+      "tags": ["control:spoofing"], 
+      "lang": {
+        "ru": "Спуфинг",
+        "en": "Spoofing"
+      }
+    },
+    { 
+      "tags": ["control:sprinter"], 
+      "lang": {
+        "ru": "Спринтер",
+        "en": "Sprinter"
+      }
+    },
+    { 
+      "tags": ["control:anti-fall"], 
+      "lang": {
+        "ru": "Анти-Падение",
+        "en": "Anti-Fall"
+      }
+    },
+    { 
+      "tags": ["control:bow-aim"], 
+      "lang": {
+        "ru": "Лук аим",
+        "en": "Bow Aim"
+      }
+    },
+    { 
+      "tags": ["control:stealer"], 
+      "lang": {
+        "ru": "Стиллер",
+        "en": "Stealer"
+      }
+    },
+    { 
+      "tags": ["control:miner"], 
+      "lang": {
+        "ru": "Майнер",
+        "en": "Miner"
+      }
+    },
+    { 
+      "tags": ["control:farmer"], 
+      "lang": {
+        "ru": "Фермер",
+        "en": "Farmer"
+      }
+    },
+    { 
+      "tags": ["header:control-chat"], 
+      "lang": {
+        "ru": "Управление / Чат",
+        "en": "Control / Chat"
+      }
+    },
+    { 
+      "tags": ["header:control-action"], 
+      "lang": {
+        "ru": "Управление / Действия",
+        "en": "Control / Actions"
+      }
+    },
+    { 
+      "tags": ["header:control-inventory"], 
+      "lang": {
+        "ru": "Управление / Инвентарь",
+        "en": "Control / Inventory"
+      }
+    },
+    { 
+      "tags": ["header:control-movement"], 
+      "lang": {
+        "ru": "Управление / Движение",
+        "en": "Control / Movement"
+      }
+    },
+    { 
+      "tags": ["header:control-anti-afk"], 
+      "lang": {
+        "ru": "Управление / Анти-АФК",
+        "en": "Control / Anti-AFK"
+      }
+    },
+    { 
+      "tags": ["header:control-flight"], 
+      "lang": {
+        "ru": "Управление / Полёт",
+        "en": "Control / Flight"
+      }
+    },
+    { 
+      "tags": ["header:control-killaura"], 
+      "lang": {
+        "ru": "Управление / Киллаура",
+        "en": "Control / Killaura"
+      }
+    },
+    { 
+      "tags": ["header:control-scaffold"], 
+      "lang": {
+        "ru": "Управление / Скаффолд",
+        "en": "Control / Scaffold"
+      }
+    },
+    { 
+      "tags": ["header:control-anti-fall"], 
+      "lang": {
+        "ru": "Управление / Анти-Падение",
+        "en": "Control / Anti-Fall"
+      }
+    },
+    { 
+      "tags": ["header:control-bow-aim"], 
+      "lang": {
+        "ru": "Управление / Лук аим",
+        "en": "Control / Bow aim"
+      }
+    },
+    { 
+      "tags": ["header:control-stealer"], 
+      "lang": {
+        "ru": "Управление / Стиллер",
+        "en": "Control / Stealer"
+      }
+    },
+    { 
+      "tags": ["header:control-miner"], 
+      "lang": {
+        "ru": "Управление / Майнер",
+        "en": "Control / Miner"
+      }
+    },
+    { 
+      "tags": ["header:control-farmer"], 
+      "lang": {
+        "ru": "Управление / Фермер",
+        "en": "Control / Farmer"
+      }
+    },
+    {
+      "tags": ["label:info-text"],
+      "lang": {
+        "ru": "Данный раздел не работает",
+        "en": "This section does not work"
+      }
+    },
+    {
+      "tags": ["label:radar-update-frequency"],
+      "lang": {
+        "ru": "Частота обновления:",
+        "en": "Refresh Rate:"
+      }
+    },
+    {
+      "tags": ["label:radar-full-path"],
+      "lang": {
+        "ru": "Полный путь",
+        "en": "Full Path"
+      }
+    },
+    {
+      "tags": ["label:radar-file-name"],
+      "lang": {
+        "ru": "Имя файла",
+        "en": "File Name"
+      }
+    },
+    {
+      "tags": ["label:radar-auto-save"],
+      "lang": {
+        "ru": "Авто сохранение",
+        "en": "Auto Save"
+      }
+    },
+    {
+      "tags": ["label:radar-auto-save"],
+      "lang": {
+        "ru": "Авто сохранение",
+        "en": "Auto Save"
+      }
+    },
+    {
+      "tags": ["label:journal-system-logs"],
+      "lang": {
+        "ru": "Системные логи",
+        "en": "System Logs"
+      }
+    },
+    {
+      "tags": ["label:journal-extended-logs"],
+      "lang": {
+        "ru": "Расширенные логи",
+        "en": "Extended Logs"
+      }
+    },
+    {
+      "tags": ["label:journal-auto-scroll"],
+      "lang": {
+        "ru": "Авто скролл",
+        "en": "Auto Scroll"
+      }
+    },
+    {
+      "tags": ["label:interface-section-global"],
+      "lang": {
+        "ru": "Глобальные",
+        "en": "Global"
+      }
+    },
+    {
+      "tags": ["label:interface-theme"],
+      "lang": {
+        "ru": "Тема:",
+        "en": "Theme:"
+      }
+    },
+    {
+      "tags": ["label:interface-font"],
+      "lang": {
+        "ru": "Шрифт:",
+        "en": "Font:"
+      }
+    },
+    {
+      "tags": ["label:interface-messages"],
+      "lang": {
+        "ru": "Сообщения:",
+        "en": "Messages:"
+      }
+    },
+    {
+      "tags": ["label:interface-section-panel"],
+      "lang": {
+        "ru": "Панель",
+        "en": "Panel"
+      }
+    },
+    {
+      "tags": ["label:interface-icons"],
+      "lang": {
+        "ru": "Иконки:",
+        "en": "Icons:"
+      }
+    },
+    {
+      "tags": ["label:interface-show-messages"],
+      "lang": {
+        "ru": "Показать",
+        "en": "Show"
+      }
+    },
+    {
+      "tags": ["label:interface-hide-messages"],
+      "lang": {
+        "ru": "Скрыть",
+        "en": "Hide"
+      }
+    },
+    {
+      "tags": ["label:interface-font-size"],
+      "lang": {
+        "ru": "Размер шрифта:",
+        "en": "Font Size:"
+      }
+    },
+    {
+      "tags": ["label:interface-internal-gap"],
+      "lang": {
+        "ru": "Внутренний отступ:",
+        "en": "Internal Gap:"
+      }
+    },
+    {
+      "tags": ["label:interface-section-language"],
+      "lang": {
+        "ru": "Язык",
+        "en": "Language"
+      }
+    },
+    {
+      "tags": ["label:interface-client-language"],
+      "lang": {
+        "ru": "Язык клиента:",
+        "en": "Client Language:"
+      }
+    }
+  ]
+}
