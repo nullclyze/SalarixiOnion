@@ -6,7 +6,7 @@ use crate::core::{current_options, PROFILES};
 use crate::emit::send_log;
 use crate::generators::*;
 
-// Функция default-авторизации бота
+/// Функция default-авторизации бота
 pub async fn default_authorize(bot: &Client) {
   let username = bot.username();
 
@@ -19,21 +19,21 @@ pub async fn default_authorize(bot: &Client) {
 
     if let Some(profile) = PROFILES.get(&username) {
       if !profile.registered {
-        if opts.use_auto_register && opts.register_mode == "default" {
-          c = opts.register_command.as_str().trim().to_string();
-          template = opts.register_template.trim().to_string();
-          min_delay = opts.register_min_delay;
-          max_delay = opts.register_max_delay;
+        if opts.basic.use_auto_register && opts.basic.register_mode == "default" {
+          c = opts.basic.register_command.as_str().trim().to_string();
+          template = opts.basic.register_template.trim().to_string();
+          min_delay = opts.basic.register_min_delay;
+          max_delay = opts.basic.register_max_delay;
 
           PROFILES.set_bool(&username, "registered", true);
           PROFILES.set_bool(&username, "logined", true);
         }
       } else if !profile.logined {
-        if opts.use_auto_login && opts.login_mode == "default" {
-          c = opts.login_command.as_str().trim().to_string();
-          template = opts.login_template.trim().to_string();
-          min_delay = opts.login_min_delay;
-          max_delay = opts.login_max_delay;
+        if opts.basic.use_auto_login && opts.basic.login_mode == "default" {
+          c = opts.basic.login_command.as_str().trim().to_string();
+          template = opts.basic.login_template.trim().to_string();
+          min_delay = opts.basic.login_min_delay;
+          max_delay = opts.basic.login_max_delay;
 
           PROFILES.set_bool(&username, "logined", true);
         }
@@ -58,16 +58,16 @@ pub async fn default_authorize(bot: &Client) {
   }
 }
 
-// Функция trigger-авторизации бота
+/// Функция trigger-авторизации бота
 pub async fn trigger_authorize(bot: &Client, message: String) {
   let username = bot.username();
 
   if let Some(opts) = current_options() {
     if let Some(profile) = PROFILES.get(&username) {
       let pat = if !profile.registered {
-        opts.register_trigger
+        opts.basic.register_trigger
       } else {
-        opts.login_trigger
+        opts.basic.login_trigger
       };
 
       if !message.to_lowercase().contains(&pat) {
@@ -82,17 +82,17 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
       let mut template = "@cmd @pass".to_string();
 
       if !profile.registered {
-        if opts.use_auto_register && opts.register_mode == "trigger" {
-          c = opts.register_command.as_str().trim().to_string();
-          template = opts.register_template.trim().to_string();
+        if opts.basic.use_auto_register && opts.basic.register_mode == "trigger" {
+          c = opts.basic.register_command.as_str().trim().to_string();
+          template = opts.basic.register_template.trim().to_string();
 
           PROFILES.set_bool(&username, "registered", true);
           PROFILES.set_bool(&username, "logined", true);
         }
-      } else if !profile.logined && opts.login_mode == "trigger" {
-        if opts.use_auto_login {
-          c = opts.login_command.as_str().trim().to_string();
-          template = opts.login_template.trim().to_string();
+      } else if !profile.logined && opts.basic.login_mode == "trigger" {
+        if opts.basic.use_auto_login {
+          c = opts.basic.login_command.as_str().trim().to_string();
+          template = opts.basic.login_template.trim().to_string();
 
           PROFILES.set_bool(&username, "logined", true);
         }

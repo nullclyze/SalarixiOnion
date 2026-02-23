@@ -22,7 +22,7 @@ impl BasicScriptFunctions {
 
   pub fn webhook(content: &str) {
     if let Some(opts) = current_options() {
-      send_webhook(opts.webhook_settings.url, content.to_string());
+      send_webhook(opts.webhook.url, content.to_string());
     }
   }
 }

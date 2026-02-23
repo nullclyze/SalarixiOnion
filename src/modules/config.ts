@@ -16,20 +16,37 @@ export function initConfig(): void {
   let latest: any = null;
 
   setInterval(async () => {
-    const elements = document.querySelectorAll('[keep="true"]');
+    const elements = document.querySelectorAll<HTMLElement>('[keep="true"]');
     const config: Record<string, ConfigElement> = {};
 
     for (const element of elements) {
-      const el = element as HTMLInputElement;
-      if (el.type === 'checkbox') {
-        config[el.id] = {
-          id: el.id,
-          value: el.checked
-        };
-      } else {
+      if (element.tagName.toLocaleLowerCase() === 'input') {
+        const el = element as HTMLInputElement;
+
+        if (el.type === 'checkbox') {
+          config[el.id] = {
+            id: el.id,
+            value: el.checked
+          };
+        } else {
+          config[el.id] = {
+            id: el.id,
+            value: el.type === 'number' ? parseInt(el.value) : el.value
+          };
+        }
+      } else if (element.tagName.toLocaleLowerCase() === 'textarea') {
+        const el = element as HTMLTextAreaElement;
+
         config[el.id] = {
           id: el.id,
           value: el.type === 'number' ? parseInt(el.value) : el.value
+        };
+      } else {
+        const el = element as HTMLSelectElement;
+        
+        config[el.id] = {
+          id: el.id,
+          value: el.selectedIndex
         };
       }
     }
@@ -54,19 +71,32 @@ export function loadConfig(): void {
     }
 
     for (const [id, el] of Object.entries<ConfigElement>(JSON.parse(config))) {
-      const doc = document.getElementById(id) as HTMLInputElement;
+      if (id === '') continue;
 
-      if (doc) {
-        if (doc.type === 'checkbox') {
-          doc.checked = Boolean(el.value);
+      const doc = document.getElementById(id) as HTMLElement;
+
+      if (doc.tagName.toLocaleLowerCase() === 'input') {
+        const input = doc as HTMLInputElement;
+
+        if (input.type === 'checkbox') {
+          input.checked = Boolean(el.value);
         } else {
           if (typeof el.value === 'number') {
-            doc.valueAsNumber = el.value ? el.value : 0;
+            input.valueAsNumber = el.value;
           } else {
-            doc.value = el.value ? el.value.toString() : '';
+            input.value = el.value ? el.value.toString() : '';
           }
         }
-      } 
+      } else if (doc.tagName.toLocaleLowerCase() === 'textarea') {
+        const textarea = doc as HTMLTextAreaElement;
+        textarea.value = el.value ? el.value.toString() : '';
+      } else {
+        const select = doc as HTMLSelectElement;
+
+        if (typeof el.value === 'number') {
+          select.selectedIndex = el.value;
+        }
+      }
     }
 
     for (const name in plugins) {

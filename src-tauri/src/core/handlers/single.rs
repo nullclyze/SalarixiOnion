@@ -36,10 +36,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       if let Some(opts) = current_options() {
         bot.set_client_information(ClientInformation {
-          view_distance: opts.view_distance,
-          language: opts.language,
-          chat_colors: opts.chat_colors,
-          main_hand: if let Some(arm) = opts.humanoid_arm {
+          view_distance: opts.basic.view_distance,
+          language: opts.basic.language,
+          chat_colors: true,
+          main_hand: if let Some(arm) = opts.basic.humanoid_arm {
             if arm.as_str() == "left" {
               HumanoidArm::Left
             } else {
@@ -81,9 +81,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
         let str_pos = format!("{}, {}, {}", pos.x, pos.y, pos.z);
 
-        if options.use_webhook {
+        if options.basic.use_webhook {
           send_webhook(
-            options.webhook_settings.url,
+            options.webhook.url,
             format!(
               "Бот {} заспавнился | Координаты (XYZ): {} | Здоровье: {} / 20",
               &username, str_pos, health
@@ -113,12 +113,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       if let Some(profile) = PROFILES.get(&username) {
         if !profile.skin_is_set {
           if let Some(opts) = current_options() {
-            match opts.skin_settings.skin_type.as_str() {
+            match opts.basic.skin_type.as_str() {
               "random" => {
                 let command = format!(
                   "{} {}",
                   opts
-                    .skin_settings
+                    .basic
                     .set_skin_command
                     .unwrap_or("/skin".to_string()),
                   randelem(ACCOUNTS_WITH_SKINS).unwrap()
@@ -139,11 +139,11 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 PROFILES.set_bool(&username, "skin_is_set", true);
               }
               "custom" => {
-                if let Some(n) = opts.skin_settings.custom_skin_by_nickname {
+                if let Some(n) = opts.basic.custom_skin_by_nickname {
                   let command = format!(
                     "{} {}",
                     opts
-                      .skin_settings
+                      .basic
                       .set_skin_command
                       .unwrap_or("/skin".to_string()),
                     n
@@ -187,9 +187,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
       if let Some(text) = packet {
         if let Some(options) = current_options() {
-          if options.use_webhook {
+          if options.basic.use_webhook {
             send_webhook(
-              options.webhook_settings.url,
+              options.webhook.url,
               format!("Бот {} отключился: {}", &username, text.to_html()),
             );
           }
@@ -209,7 +209,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       let nickname = bot.username();
 
       if let Some(options) = current_options() {
-        if options.use_chat_monitoring {
+        if options.basic.use_chat_monitoring {
           let sender = packet.sender().unwrap_or("unknown".to_string());
 
           let mut message = packet.message().to_html();
@@ -227,25 +227,23 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           }));
         }
 
-        if options.use_anti_captcha {
-          let opts = options.anti_captcha_settings.options.web;
-
-          if options.anti_captcha_settings.captcha_type.as_str() == "web" {
+        if options.basic.use_anti_captcha {
+          if options.captcha_bypass.captcha_type.as_str() == "web" {
             if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
               packet.message().to_string(),
-              opts
+              options.captcha_bypass
                 .regex
                 .unwrap_or(r"https?://[^\s]+".to_string())
                 .as_str(),
-              opts.required_url_part,
+              options.captcha_bypass.required_url_part,
             ) {
               if let Some(profile) = PROFILES.get(&nickname) {
                 if !profile.captcha_caught {
                   PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                  if options.use_webhook && options.webhook_settings.information {
+                  if options.basic.use_webhook && options.webhook.send_information {
                     send_webhook(
-                      options.webhook_settings.url,
+                      options.webhook.url,
                       format!("Бот {} получил ссылку на капчу: {}", nickname, url),
                     );
                   }
@@ -255,14 +253,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                     "info",
                   );
 
-                  if opts.mode.as_str() == "auto" {
-                    WEB_CAPTCHA_BYPASS
-                      .send_webdriver_event(WebDriverEvent::OpenUrl { 
-                        url: url.clone(),
-                        proxy: profile.proxy.proxy, 
-                        username: profile.proxy.username, 
-                        password: profile.proxy.password
-                      });
+                  if options.captcha_bypass.solve_mode.as_str() == "auto" {
+                    WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::OpenUrl {
+                      url: url.clone(),
+                      proxy: profile.proxy.proxy,
+                      username: profile.proxy.username,
+                      password: profile.proxy.password,
+                    });
                   } else {
                     send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
                       AntiWebCaptchaEventPayload {
@@ -315,8 +312,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         let nickname = bot.username();
 
         if let Some(options) = current_options() {
-          if options.use_anti_captcha {
-            if options.anti_captcha_settings.captcha_type.as_str() == "map" {
+          if options.basic.use_anti_captcha {
+            if options.captcha_bypass.captcha_type.as_str() == "map" {
               if let Some(map_patch) = &data.color_patch.0 {
                 if let Some(profile) = PROFILES.get(&nickname) {
                   if !profile.captcha_caught {
@@ -324,9 +321,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
 
                     let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(&map_patch.map_colors);
 
-                    if options.use_webhook && options.webhook_settings.information {
+                    if options.basic.use_webhook && options.webhook.send_information {
                       send_webhook(
-                        options.webhook_settings.url,
+                        options.webhook.url,
                         format!("Бот {} получил капчу с карты: {}", nickname, base64_code),
                       );
                     }

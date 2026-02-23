@@ -56,200 +56,7 @@ const pressedKeys: { [x: string]: boolean } = {
 
 let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
 let controlContainers: Array<{ id: string; el: HTMLElement }> = [];
-
-async function startBots(): Promise<void> {
-  log('Запуск ботов на сервер...', 'info');
-
-  process = 'active';
-
-  try {
-    const address = (document.getElementById('address') as HTMLInputElement).value || 'localhost';
-    const version = (document.getElementById('version') as HTMLInputElement).value || '1.21.11';
-    const botsCount = parseInt((document.getElementById('bots-count') as HTMLInputElement).value) || 3;
-    const joinDelay = parseFloat((document.getElementById('join-delay') as HTMLInputElement).value) || 5000;
-
-    const nicknameType = (document.getElementById('nickname-type-select') as HTMLSelectElement).value;
-    const passwordType = (document.getElementById('password-type-select') as HTMLSelectElement).value;
-    const nicknameTemplate = (document.getElementById('nickname-template') as HTMLInputElement).value;
-    const passwordTemplate = (document.getElementById('password-template') as HTMLInputElement).value;
-
-    const registerMode = (document.getElementById('register-mode-select') as HTMLSelectElement).value;
-    const registerCommand = (document.getElementById('register-command') as HTMLInputElement).value;
-    const registerTemplate = (document.getElementById('register-template') as HTMLInputElement).value;
-    const registerMinDelay = parseFloat((document.getElementById('register-min-delay') as HTMLInputElement).value);
-    const registerMaxDelay = parseFloat((document.getElementById('register-max-delay') as HTMLInputElement).value);
-    const registerTrigger = (document.getElementById('register-trigger') as HTMLInputElement).value;
-    const loginMode = (document.getElementById('login-mode-select') as HTMLSelectElement).value;
-    const loginCommand = (document.getElementById('login-command') as HTMLInputElement).value;
-    const loginTemplate = (document.getElementById('login-template') as HTMLInputElement).value;
-    const loginMinDelay = parseFloat((document.getElementById('login-min-delay') as HTMLInputElement).value);
-    const loginMaxDelay = parseFloat((document.getElementById('login-max-delay') as HTMLInputElement).value);
-    const loginTrigger = (document.getElementById('login-trigger') as HTMLInputElement).value;
-    const rejoinDelay = parseInt((document.getElementById('rejoin-delay') as HTMLInputElement).value);
-    const updateFrequency = parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value);
-    const chatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value);
-    const viewDistance = parseInt((document.getElementById('view-distance') as HTMLInputElement).value);
-    const language = (document.getElementById('language') as HTMLInputElement).value;
-    const chatColors = (document.getElementById('chat-colors') as HTMLInputElement).value;
-    const humanoidArm = (document.getElementById('humanoid-arm') as HTMLInputElement).value;
-
-    const useAutoRegister = (document.getElementById('use-auto-register') as HTMLInputElement).checked;
-    const useAutoLogin = (document.getElementById('use-auto-login') as HTMLInputElement).checked;
-    const useProxy = (document.getElementById('use-proxy') as HTMLInputElement).checked;
-    const useAntiCaptcha = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked;
-    const useWebhook = (document.getElementById('use-webhook') as HTMLInputElement).checked;
-    const useAutoRejoin = (document.getElementById('use-auto-rejoin') as HTMLInputElement).checked;
-    const useChatSigning = (document.getElementById('use-chat-signing') as HTMLInputElement).checked;
-    const useExtendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
-    const useChatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
-    const useMapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
-
-    const proxyList = (document.getElementById('proxy-list') as HTMLTextAreaElement).value;
-
-    const skinType = (document.getElementById('select-skin-type') as HTMLSelectElement).value;
-    const setSkinCommand = (document.getElementById('set-skin-command') as HTMLInputElement).value;
-    const customSkinByNickname = (document.getElementById('skin-by-nickname') as HTMLInputElement).value;
-
-    const captchaType = (document.getElementById('select-captcha-type') as HTMLSelectElement).value;
-
-    const antiWebCaptchaOptions: {
-      mode: string;
-      browser: string;
-      regex: null | string;
-      required_url_part: null | string;
-      webdriver_server_url: null | string;
-    } = { 
-      mode: (document.getElementById('select-captcha-solve-mode') as HTMLSelectElement).value,
-      browser: (document.getElementById('select-anti-captcha-browser') as HTMLSelectElement).value,
-      regex: (document.getElementById('anti-web-captcha-regex') as HTMLInputElement).value,
-      required_url_part: (document.getElementById('anti-web-captcha-required-url-part') as HTMLInputElement).value,
-      webdriver_server_url: (document.getElementById('anti-web-captcha-webdriver-server-url') as HTMLInputElement).value,
-    };
-
-    const webhookOptions: {
-      url: null | string;
-      information: boolean;
-      data: boolean;
-      actions: boolean;
-    } = { 
-      url: (document.getElementById('webhook-url') as HTMLInputElement).value,
-      information: (document.getElementById('use-webhook-information') as HTMLInputElement).checked,
-      data: (document.getElementById('use-webhook-data') as HTMLInputElement).checked,
-      actions: (document.getElementById('use-webhook-actions') as HTMLInputElement).checked
-    };
-
-    message('Cистема', `Запуск ${botsCount} ботов с версией ${version} на сервер ${address}...`);
-
-    const success = await invoke('launch_bots', { options: {
-      address: address,
-      version: version,
-      bots_count: botsCount,
-      join_delay: joinDelay,
-      nickname_type: nicknameType,
-      password_type: passwordType,
-      nickname_template: nicknameTemplate || 'player_#m#m',
-      password_template: passwordTemplate || '#m#m#l#n',
-      register_mode: registerMode,
-      register_command: registerCommand || '/reg',
-      register_template: registerTemplate || '@cmd @pass',
-      register_min_delay: registerMinDelay || 2000,
-      register_max_delay: registerMaxDelay || 3500,
-      register_trigger: registerTrigger || 'зарегистрируйтесь',
-      login_mode: loginMode,
-      login_command: loginCommand || '/login',
-      login_template: loginTemplate || '@cmd @pass',
-      login_min_delay: loginMinDelay || 2000,
-      login_max_delay: loginMaxDelay || 3500,
-      login_trigger: loginTrigger || 'авторизируйтесь',
-      rejoin_delay: rejoinDelay || 3000,
-      view_distance: viewDistance || 8,
-      language: language || 'en_us',
-      chat_colors: chatColors === 'true',
-      humanoid_arm: humanoidArm,
-      use_auto_register: useAutoRegister,
-      use_auto_login: useAutoLogin,
-      use_proxy: useProxy,
-      use_anti_captcha: useAntiCaptcha,
-      use_webhook: useWebhook,
-      use_auto_rejoin: useAutoRejoin,
-      use_chat_signing: useChatSigning,
-      use_chat_monitoring: useChatMonitoring,
-      proxy_list: proxyList,
-      skin_settings: {
-        skin_type: skinType,
-        set_skin_command: setSkinCommand,
-        custom_skin_by_nickname: customSkinByNickname 
-      },
-      anti_captcha_settings: {
-        captcha_type: captchaType,
-        options: {
-          web: antiWebCaptchaOptions
-        }
-      },
-      webhook_settings: webhookOptions,
-      plugins: {
-        auto_armor: plugins['auto-armor'].enable,
-        auto_totem: plugins['auto-totem'].enable,
-        auto_eat: plugins['auto-eat'].enable,
-        auto_potion: plugins['auto-potion'].enable,
-        auto_look: plugins['auto-look'].enable,
-        auto_shield: plugins['auto-shield'].enable,
-        auto_repair: plugins['auto-repair'].enable
-      }
-    }}) as boolean;
-
-    if (success) {
-      chartManager.enable();
-
-      monitoringManager.extendedMonitoring = useExtendedMonitoring;
-      monitoringManager.chatMonitoring = useChatMonitoring;
-      monitoringManager.mapMonitoring = useMapMonitoring;
-      monitoringManager.maxChatHistoryLength = chatHistoryLength ? chatHistoryLength : 50;
-      monitoringManager.antiCaptchaType = useAntiCaptcha ? captchaType : null;
-
-      monitoringManager.enable(updateFrequency);
-      monitoringManager.wait();
-
-      radarManager.enable();
-    }
-  } catch (error) {
-    log(`Ошибка (start-bots-process): ${error}`, 'error');
-  }
-}
-
-async function stopBots(): Promise<void> {
-  log('Остановка ботов...', 'info');
-
-  try {
-    const success = await invoke('stop_bots') as boolean;
-
-    if (success) {
-      process = 'sleep';
-
-      log('Выключение мониторинга...', 'system');
-
-      chartManager.disable();
-      monitoringManager.disable();
-      radarManager.disable();
-
-      log('Мониторинг выключен', 'system');
-    }
-  } catch (error) {
-    log(`Ошибка (stop-bots-process): ${error}`, 'error');
-  }
-}
-
-function changeElementsDisplay(condition: boolean, view: string, show: string[] = [], hide: string[] = []): void {
-  hide.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) element.style.display = condition ? 'none' : view;
-  });
-  
-  show.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) element.style.display = condition ? view : 'none';
-  });
-}
+let triggerFunctions: Record<string, Function> = {};
 
 async function initUserGuide(): Promise<void> {
   try {
@@ -456,6 +263,160 @@ async function initPlugins(): Promise<void> {
   }
 }
 
+async function startBots(): Promise<void> {
+  try {
+    const options: {
+      basic: any;
+      plugins: any;
+      captcha_bypass: any;
+      webhook: any;
+    } = {
+      basic: {},
+      plugins: {},
+      captcha_bypass: {},
+      webhook: {}
+    };
+
+    document.querySelectorAll<HTMLElement>('[launch-option]').forEach(o => {
+      const optionSection = o.getAttribute('section') || 'basic';
+      const optionKey = o.getAttribute('key') || '';
+
+      const current = options[optionSection as 'basic' | 'plugins' | 'captcha_bypass' | 'webhook'];
+
+      if (o.tagName.toLocaleLowerCase() === 'input') {
+        const input = o as HTMLInputElement;
+
+        if (input.type === 'checkbox') {
+          current[optionKey] = input.checked;
+        } else {
+          const defaultValue = input.getAttribute('default');
+
+          if (input.type === 'number') {
+            current[optionKey] = input.value ? parseInt(input.value) : defaultValue ? parseInt(defaultValue!) : null;
+          } else {
+            current[optionKey] = input.value || defaultValue;
+          }
+        }
+      } else if (o.tagName.toLocaleLowerCase() === 'select') {
+        const select = o as HTMLSelectElement;
+        current[optionKey] = select.value;
+      } else if (o.tagName.toLocaleLowerCase() === 'textarea') {
+        const textarea = o as HTMLTextAreaElement;
+        current[optionKey] = textarea.value;
+      }
+    });
+
+    for (const name in plugins) {
+      options.plugins[name.replaceAll('-', '_')] = plugins[name].enable;
+    }
+
+    const text = `Запуск ${options.basic.bots_count} ботов с версией ${options.basic.version} на сервер ${options.basic.address}...`;
+
+    log(text, 'info');
+    message('Cистема', text);
+
+    const success = await invoke('launch_bots', { options: options }) as boolean;
+
+    if (success) {
+      process = 'active';
+
+      chartManager.enable();
+
+      monitoringManager.extendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
+      monitoringManager.chatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
+      monitoringManager.mapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
+      monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value || '50');
+      monitoringManager.antiCaptchaType = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked ? (document.getElementById('select-captcha-type') as HTMLSelectElement).value : null;
+
+      monitoringManager.enable(parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value || '1800'));
+      monitoringManager.wait();
+
+      radarManager.enable();
+    }
+  } catch (error) {
+    log(`Ошибка (start-bots-process): ${error}`, 'error');
+  }
+}
+
+async function stopBots(): Promise<void> {
+  log('Остановка ботов...', 'info');
+
+  try {
+    const success = await invoke('stop_bots') as boolean;
+
+    if (success) {
+      process = 'sleep';
+
+      log('Выключение мониторинга...', 'system');
+
+      chartManager.disable();
+      monitoringManager.disable();
+      radarManager.disable();
+
+      log('Мониторинг выключен', 'system');
+    }
+  } catch (error) {
+    log(`Ошибка (stop-bots-process): ${error}`, 'error');
+  }
+}
+
+async function controlBots(name: string, state: boolean | string): Promise<void> {
+  try {
+    const elements = document.querySelectorAll(`[control="${name}"]`);
+
+    let options: Record<string, any> = {};
+
+    elements.forEach(e => {
+      if (e.tagName.toLowerCase() === 'select') {
+        options[(e as HTMLSelectElement).name] = (e as HTMLSelectElement).value;
+      } else if (e.tagName.toLowerCase() === 'input') {
+        if ((e as HTMLInputElement).type === 'checkbox') {
+          options[(e as HTMLInputElement).name] = (e as HTMLInputElement).checked;
+        } else {
+          options[(e as HTMLInputElement).name] = (e as HTMLInputElement).type === 'number' ? Number((e as HTMLInputElement).value) : (e as HTMLInputElement).value;
+        }
+      }
+    });
+
+    const group = (document.getElementById('control-group') as HTMLInputElement).value.replace(' ', '');
+
+    await invoke('control_bots', {
+      name: name,
+      options: {
+        ...options,
+        state: state
+      },
+      group: group !== '' ? group : 'global'
+    });
+  } catch (error) {
+    log(`Ошибка управления (${name}): ${error}`, 'error');
+  }
+}
+
+export function invokeElementFunction(id: string) {
+  for (const triggerId in triggerFunctions) {
+    if (triggerId === id) {
+      const el = document.getElementById(id);
+
+      if (el) {
+        triggerFunctions[triggerId](el);
+      }
+    }
+  } 
+}
+
+function registerTriggerFunction(id: string, type: 'checkbox' | 'select', func: Function) {
+  if (type === 'checkbox') {
+    const el = document.getElementById(id) as HTMLInputElement;
+    triggerFunctions[id] = func;
+    el.addEventListener('input', () => func(el));
+  } else {
+    const el = document.getElementById(id) as HTMLSelectElement;
+    triggerFunctions[id] = func;
+    el.addEventListener('change', () => func(el));
+  }
+}
+
 class ElementManager {
   private latestControlContainer: HTMLElement | null = null;
 
@@ -465,8 +426,8 @@ class ElementManager {
     const setRandomValuesBtn =  document.getElementById('random') as HTMLButtonElement;
     const clearInputValuesBtn = document.getElementById('clear') as HTMLButtonElement;
 
-    const panelBtns = document.querySelectorAll('.panel-btn');
-    const controlBtns = document.querySelectorAll('.control-btn');
+    const panelBtns = document.querySelectorAll<HTMLButtonElement>('.panel-btn');
+    const controlBtns = document.querySelectorAll<HTMLButtonElement>('.control-btn');
     
     panelBtns.forEach(btn => {
       if (btn.id === 'main') btn.classList.add('selected');
@@ -491,7 +452,7 @@ class ElementManager {
       });
     });
 
-    document.querySelectorAll('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
+    document.querySelectorAll<HTMLButtonElement>('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
       let state: boolean | string = false;
       let attribute = e.getAttribute('state');
 
@@ -510,7 +471,7 @@ class ElementManager {
           break;
       }
 
-      await this.control((e as any).name, state);
+      await controlBots(e.name, state);
     }));
 
     document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
@@ -519,22 +480,6 @@ class ElementManager {
     document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
 
     document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
-
-    const checkChatMonitoringState = (state: boolean) => {
-      const input = document.getElementById('chat-history-length-container') as HTMLElement;
-
-      if (state) {
-        input.style.display = 'flex';
-      } else {
-        input.style.display = 'none';
-      }
-    }
-
-    checkChatMonitoringState((document.getElementById('use-chat-monitoring') as HTMLInputElement).checked);
-
-    document.getElementById('use-chat-monitoring')?.addEventListener('input', function (this: HTMLInputElement) {
-      checkChatMonitoringState(this.checked);
-    });
 
     document.addEventListener('keydown', async (e) => {
       if (process === 'active') {
@@ -590,49 +535,6 @@ class ElementManager {
           key === k ? pressedKeys[key] = false : null;
         }
       }
-    });
-
-    const switcher = (value: boolean) => {
-      const version = document.getElementById('version') as HTMLInputElement;
-
-      if (value) {
-        version.value = '1.21.11';
-        version.disabled = true;
-      } else {
-        version.disabled = false;
-      }
-    }
-
-    const useProxyChbx = document.getElementById('use-proxy') as HTMLInputElement;
-
-    useProxyChbx.addEventListener('change', () => switcher(useProxyChbx.checked));
-
-    switcher(useProxyChbx.checked);
-
-    document.getElementById('select-captcha-type')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
-      const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
-
-      if (this.value === 'web') {
-        antiWebCaptchaOptionsContainer.style.display = 'flex';
-        antiWebCaptchaSelectsContainer.style.display = 'flex';
-      } else if (this.value === 'map') {
-        antiWebCaptchaOptionsContainer.style.display = 'none';
-        antiWebCaptchaSelectsContainer.style.display = 'none';
-      }
-    }); 
-
-    document.getElementById('select-captcha-solve-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
-      const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
-
-      if (this.value === 'auto') {
-        antiWebCaptchaWebDriverServerUrlContainer.style.display = 'flex';
-        antiWebCaptchaSelectBrowserContainer.style.display = 'grid';
-      } else {
-        antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
-        antiWebCaptchaSelectBrowserContainer.style.display = 'none';
-      }
     }); 
 
     startBotsProcessBtn.addEventListener('click', async () => await startBots());
@@ -676,265 +578,327 @@ class ElementManager {
       (document.getElementById('join-delay') as HTMLInputElement).value = '';
     });
 
-    document.getElementById('nickname-type-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      if (this.value === 'custom') {
-        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'flex';
-      } else {
-        (document.getElementById('custom-nickname-template-container') as HTMLInputElement).style.display = 'none';
-      }
-    });
-
-    document.getElementById('password-type-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      if (this.value === 'custom') {
-        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'flex';
-      } else {
-        (document.getElementById('custom-password-template-container') as HTMLInputElement).style.display = 'none';
-      }
-    });
-
-    document.getElementById('register-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      if (this.value === 'default') {
-        (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
-        (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
-        (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'none';
-      } else {
-        (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'none';
-        (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'none';
-        (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'flex';
-      }
-    });
-
-    document.getElementById('login-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      if (this.value === 'default') {
-        (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
-        (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
-        (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'none';
-      } else {
-        (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'none';
-        (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'none';
-        (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'flex';
-      }
-    });
-
-    document.getElementById('chat-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
-      const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
-            
-      const chatDefaultBtnsContainer = document.getElementById('chat-default-btns-container') as HTMLElement;
-      const chatSpammingBtnsContainer = document.getElementById('chat-spamming-btns-container') as HTMLElement;
-
-      if (this.value === 'spamming') {
-        chatSpammingChbxContainer.style.display = 'flex';
-        chatSpammingInputContainer.style.display = 'flex';
-        chatSpammingBtnsContainer.style.display = 'flex';
-
-        chatDefaultBtnsContainer.style.display = 'none';
-      } else {
-        chatDefaultBtnsContainer.style.display = 'flex';
-
-        chatSpammingChbxContainer.style.display = 'none';
-        chatSpammingInputContainer.style.display = 'none';
-        chatSpammingBtnsContainer.style.display = 'none';
-      }
-    });
-
-    document.getElementById('select-inventory-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
-
-      const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
-      const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
-
-      if (this.value === 'basic') {
-        basicBtnContainer.style.display = 'flex';
-
-        swapInputContainer.style.display = 'none';
-        swapBtnContainer.style.display = 'none';
-      } else if (this.value === 'swap') {
-        swapInputContainer.style.display = 'flex';
-        swapBtnContainer.style.display = 'flex';
-
-        basicBtnContainer.style.display = 'none';
-      } 
-    });
-
-    document.getElementById('select-movement-mode')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
-      const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
-      const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
-
-      if (this.value === 'default') {
-        selectMovementDirectionContainer.style.display = 'flex';
-        movementPathfinderInputContainer.style.display = 'none';
-        movementImpulsivenessContainer.style.display = 'flex';
-      } else {
-        selectMovementDirectionContainer.style.display = 'none';
-        movementPathfinderInputContainer.style.display = 'flex';
-        movementImpulsivenessContainer.style.display = 'none';
-      }
-    });
-
-    document.getElementById('select-flight-settings')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
-      const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
-
-      if (this.value === 'adaptive') {
-        manualSettingsContainer.style.display = 'none';
-        selectAntiCheatContainer.style.display = 'grid';
-      } else {
-        manualSettingsContainer.style.display = 'flex';
-        selectAntiCheatContainer.style.display = 'none';
-      }
-    });
-
-    document.getElementById('select-killaura-settings')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
-
-      if (this.value === 'adaptive') {
-        manualSettingsContainer.style.display = 'none';
-      } else {
-        manualSettingsContainer.style.display = 'flex';
-      }
-    });
-
-    document.getElementById('use-killaura-auto-weapon')?.addEventListener('change', function (this: HTMLInputElement) {
-      const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
-      const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
-
-      if (this.checked) {
-        selectWeaponContainer.style.display = 'grid';
-        weaponSlotContainer.style.display = 'none';
-      } else {
-        selectWeaponContainer.style.display = 'none';
-        weaponSlotContainer.style.display = 'flex';
-      }
-    });
-
-
-    document.getElementById('use-killaura-chase')?.addEventListener('input', function (this: HTMLInputElement) {
-      const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
-
-      if (this.checked) {
-        chaseSettingsContainer.style.display = 'flex';
-      } else {
-        chaseSettingsContainer.style.display = 'none';
-      }
-    });
-
-    document.getElementById('select-bow-aim-target')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
-
-      if (this.value === 'custom') {
-        customGoalInputContainer.style.display = 'flex';
-      } else {
-        customGoalInputContainer.style.display = 'none';
-      }
-    });
-
-    document.getElementById('miner-mode-select')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const tunnelSelectContainer = document.getElementById('miner-tunnel-select-container') as HTMLElement;
-      const lookSelectContainer = document.getElementById('miner-look-select-container') as HTMLElement;
-
-      if (this.value === 'default') {
-        tunnelSelectContainer.style.display = 'none';
-        lookSelectContainer.style.display = 'none';
-      } else {
-        tunnelSelectContainer.style.display = 'grid';
-        lookSelectContainer.style.display = 'grid';
-      }
-    });
-
-    (document.getElementById('use-auto-register') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-register-input-container']); });
-    (document.getElementById('use-auto-login') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-login-input-container']); });
-    (document.getElementById('use-auto-rejoin') as HTMLInputElement).addEventListener('change', function () { changeElementsDisplay((this as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']); });
-
-    changeElementsDisplay((document.getElementById('use-auto-register') as HTMLInputElement).checked, 'flex', ['auto-register-input-container']);
-    changeElementsDisplay((document.getElementById('use-auto-login') as HTMLInputElement).checked, 'flex', ['auto-login-input-container']);
-    changeElementsDisplay((document.getElementById('use-auto-rejoin') as HTMLInputElement).checked, 'flex', ['auto-rejoin-input-container']);
-
-    document.getElementById('show-system-log')?.addEventListener('change', function (this: HTMLInputElement) { 
-      changeLogsVisibility('system', this.checked);
-    });
-
-    document.getElementById('show-extended-log')?.addEventListener('change', function (this: HTMLInputElement) {
-      changeLogsVisibility('extended', this.checked);
-    });
-
-    document.getElementById('proxy-finder-algorithm')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const selectProxyFinderCountry = document.getElementById('proxy-finder-country') as HTMLSelectElement;
-
-      if (this.value === 'apic') {
-        selectProxyFinderCountry.disabled = false;
-      } else {
-        selectProxyFinderCountry.disabled = true;
-      }
-    });
-
-    document.getElementById('select-skin-type')?.addEventListener('change', function (this: HTMLSelectElement) {
-      const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
-      const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
-
-      if (this.value === 'default') {
-        setSkinCommandContainer.style.display = 'none';
-        customSkinContainer.style.display = 'none';
-      } else if (this.value === 'random') {
-        setSkinCommandContainer.style.display = 'flex';
-        customSkinContainer.style.display = 'none';
-      } else if (this.value === 'custom') {
-        setSkinCommandContainer.style.display = 'flex';
-        customSkinContainer.style.display = 'flex';
-      }
-    });
-
-    document.getElementById('interface-theme')?.addEventListener('change', () => {
-      this.setInterfaceTheme((document.getElementById('interface-theme') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-show-messages')?.addEventListener('change', () => {
-      this.setInterfaceShowMessages((document.getElementById('interface-show-messages') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-global-font-family')?.addEventListener('change', () => {
-      this.setInterfaceGlobalFontFamily((document.getElementById('interface-global-font-family') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-show-panel-icons')?.addEventListener('change', () => {
-      this.setInterfaceShowPanelIcons((document.getElementById('interface-show-panel-icons') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-panel-font-family')?.addEventListener('change', () => {
-      this.setInterfacePanelFontFamily((document.getElementById('interface-panel-font-family') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-panel-font-size')?.addEventListener('change', () => {
-      this.setInterfacePanelFontSize((document.getElementById('interface-panel-font-size') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-panel-internal-gap')?.addEventListener('change', () => {
-      this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
-    });
-
-    document.getElementById('interface-client-language')?.addEventListener('change', async () => {
-      await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
-    });
-
-    this.setInterfaceTheme((document.getElementById('interface-theme') as HTMLSelectElement).value);
-    this.setInterfaceGlobalFontFamily((document.getElementById('interface-global-font-family') as HTMLSelectElement).value);
-    this.setInterfaceShowMessages((document.getElementById('interface-show-messages') as HTMLSelectElement).value);
-    this.setInterfaceShowPanelIcons((document.getElementById('interface-show-panel-icons') as HTMLSelectElement).value);
-    this.setInterfacePanelFontFamily((document.getElementById('interface-panel-font-family') as HTMLSelectElement).value);
-    this.setInterfacePanelFontSize((document.getElementById('interface-panel-font-size') as HTMLSelectElement).value);
-    this.setInterfacePanelInternalGap((document.getElementById('interface-panel-internal-gap') as HTMLSelectElement).value);
+    document.getElementById('interface-client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language));
     await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
 
     await initUserGuide();
     await initPlugins();
   } 
 
-  private setInterfaceTheme(theme: string): void {
+  private showGlobalContainer(id: string): void {
+    globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
+    controlContainers.forEach(c => c.el.style.display = 'none');
+
+    if (id === 'control-container') {
+      this.latestControlContainer ? this.latestControlContainer.style.display = 'flex' : (document.getElementById('control-chat-container') as HTMLElement).style.display = 'flex';
+    }
+  }
+
+  private showControlContainer(id: string): void {
+    controlContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
+  }
+}
+
+function registerAllTriggerFunctions() {
+  registerTriggerFunction('use-chat-monitoring', 'checkbox', (current: HTMLInputElement) => {
+    const input = document.getElementById('chat-history-length-container') as HTMLElement;
+
+    if (current.checked) {
+      input.style.display = 'flex';
+    } else {
+      input.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('use-proxy', 'checkbox', (current: HTMLInputElement) => {
+    const version = document.getElementById('version') as HTMLInputElement;
+
+    if (current.checked) {
+      version.value = '1.21.11';
+      version.disabled = true;
+    } else {
+      version.disabled = false;
+    }
+  });
+
+  registerTriggerFunction('select-captcha-type', 'select', (current: HTMLSelectElement) => {
+    const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
+    const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
+
+    if (current.value === 'web') {
+      antiWebCaptchaOptionsContainer.style.display = 'flex';
+      antiWebCaptchaSelectsContainer.style.display = 'flex';
+    } else if (current.value === 'map') {
+      antiWebCaptchaOptionsContainer.style.display = 'none';
+      antiWebCaptchaSelectsContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('select-captcha-solve-mode', 'select', (current: HTMLSelectElement) => {
+    const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
+    const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
+
+    if (current.value === 'auto') {
+      antiWebCaptchaWebDriverServerUrlContainer.style.display = 'flex';
+      antiWebCaptchaSelectBrowserContainer.style.display = 'grid';
+    } else {
+      antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
+      antiWebCaptchaSelectBrowserContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('nickname-type-select', 'select', (current: HTMLSelectElement) => {
+    const container = document.getElementById('custom-nickname-template-container') as HTMLInputElement;
+
+    if (current.value === 'custom') {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('password-type-select', 'select', (current: HTMLSelectElement) => {
+    const container = document.getElementById('custom-password-template-container') as HTMLInputElement;
+
+    if (current.value === 'custom') {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('register-mode-select', 'select', (current: HTMLSelectElement) => {
+    if (current.value === 'default') {
+      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'none';
+    } else {
+      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('login-mode-select', 'select', (current: HTMLSelectElement) => {
+    if (current.value === 'default') {
+      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'none';
+    } else {
+      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('chat-mode', 'select', (current: HTMLSelectElement) => {
+    const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
+    const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
+          
+    const chatDefaultBtnsContainer = document.getElementById('chat-default-btns-container') as HTMLElement;
+    const chatSpammingBtnsContainer = document.getElementById('chat-spamming-btns-container') as HTMLElement;
+
+    if (current.value === 'spamming') {
+      chatSpammingChbxContainer.style.display = 'flex';
+      chatSpammingInputContainer.style.display = 'flex';
+      chatSpammingBtnsContainer.style.display = 'flex';
+
+      chatDefaultBtnsContainer.style.display = 'none';
+    } else {
+      chatDefaultBtnsContainer.style.display = 'flex';
+
+      chatSpammingChbxContainer.style.display = 'none';
+      chatSpammingInputContainer.style.display = 'none';
+      chatSpammingBtnsContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('select-inventory-mode', 'select', (current: HTMLSelectElement) => {
+    const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
+    const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
+    const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
+
+    if (current.value === 'basic') {
+      basicBtnContainer.style.display = 'flex';
+      swapInputContainer.style.display = 'none';
+      swapBtnContainer.style.display = 'none';
+    } else if (current.value === 'swap') {
+      swapInputContainer.style.display = 'flex';
+      swapBtnContainer.style.display = 'flex';
+      basicBtnContainer.style.display = 'none';
+    } 
+  });
+
+  registerTriggerFunction('select-movement-mode', 'select', (current: HTMLSelectElement) => {
+    const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
+    const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
+    const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
+
+    if (current.value === 'default') {
+      selectMovementDirectionContainer.style.display = 'flex';
+      movementPathfinderInputContainer.style.display = 'none';
+      movementImpulsivenessContainer.style.display = 'flex';
+    } else {
+      selectMovementDirectionContainer.style.display = 'none';
+      movementPathfinderInputContainer.style.display = 'flex';
+      movementImpulsivenessContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('select-flight-settings', 'select', (current: HTMLSelectElement) => {
+    const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
+    const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
+
+    if (current.value === 'adaptive') {
+      manualSettingsContainer.style.display = 'none';
+      selectAntiCheatContainer.style.display = 'grid';
+    } else {
+      manualSettingsContainer.style.display = 'flex';
+      selectAntiCheatContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('select-killaura-settings', 'select', (current: HTMLSelectElement) => {
+    const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
+
+    if (current.value === 'adaptive') {
+      manualSettingsContainer.style.display = 'none';
+    } else {
+      manualSettingsContainer.style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('use-killaura-auto-weapon', 'checkbox', (current: HTMLInputElement) => {
+    const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
+    const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
+
+    if (current.checked) {
+      selectWeaponContainer.style.display = 'grid';
+      weaponSlotContainer.style.display = 'none';
+    } else {
+      selectWeaponContainer.style.display = 'none';
+      weaponSlotContainer.style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('use-killaura-chase', 'checkbox', (current: HTMLInputElement) => {
+    const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
+
+    if (current.checked) {
+      chaseSettingsContainer.style.display = 'flex';
+    } else {
+      chaseSettingsContainer.style.display = 'none';
+    }
+  });
+  
+  registerTriggerFunction('select-bow-aim-target', 'select', (current: HTMLSelectElement) => {
+    const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
+
+    if (current.value === 'custom') {
+      customGoalInputContainer.style.display = 'flex';
+    } else {
+      customGoalInputContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('select-miner-mode', 'select', (current: HTMLSelectElement) => {
+    const tunnelSelectContainer = document.getElementById('miner-tunnel-select-container') as HTMLElement;
+    const lookSelectContainer = document.getElementById('miner-look-select-container') as HTMLElement;
+
+    if (current.value === 'default') {
+      tunnelSelectContainer.style.display = 'none';
+      lookSelectContainer.style.display = 'none';
+    } else {
+      tunnelSelectContainer.style.display = 'grid';
+      lookSelectContainer.style.display = 'grid';
+    }
+  });
+
+  registerTriggerFunction('select-skin-type', 'select', (current: HTMLSelectElement) => {
+    const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
+    const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
+
+    if (current.value === 'default') {
+      setSkinCommandContainer.style.display = 'none';
+      customSkinContainer.style.display = 'none';
+    } else if (current.value === 'random') {
+      setSkinCommandContainer.style.display = 'flex';
+      customSkinContainer.style.display = 'none';
+    } else if (current.value === 'custom') {
+      setSkinCommandContainer.style.display = 'flex';
+      customSkinContainer.style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('select-skin-type', 'select', (current: HTMLSelectElement) => {
+    const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
+    const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
+
+    if (current.value === 'default') {
+      setSkinCommandContainer.style.display = 'none';
+      customSkinContainer.style.display = 'none';
+    } else if (current.value === 'random') {
+      setSkinCommandContainer.style.display = 'flex';
+      customSkinContainer.style.display = 'none';
+    } else if (current.value === 'custom') {
+      setSkinCommandContainer.style.display = 'flex';
+      customSkinContainer.style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('show-system-log', 'checkbox', (current: HTMLInputElement) => {
+    changeLogsVisibility('system', current.checked);
+  });
+
+  registerTriggerFunction('show-extended-log', 'checkbox', (current: HTMLInputElement) => {
+    changeLogsVisibility('extended', current.checked);
+  });
+
+  registerTriggerFunction('proxy-finder-algorithm', 'select', (current: HTMLSelectElement) => {
+    const selectProxyFinderCountry = document.getElementById('proxy-finder-country') as HTMLSelectElement;
+
+    if (current.value === 'apic') {
+      selectProxyFinderCountry.disabled = false;
+    } else {
+      selectProxyFinderCountry.disabled = true;
+    }
+  });
+
+  registerTriggerFunction('use-auto-register', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-register-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('use-auto-login', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-login-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('use-auto-rejoin', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-rejoin-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('interface-theme', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
-      switch (theme) {
+      switch (current.value) {
         case 'onion': 
           root.style.setProperty('--title-color', '#7e47ff');
           root.style.setProperty('--spec-color', '#6523ff');
@@ -995,13 +959,13 @@ class ElementManager {
     } catch (error) {
       log(`Ошибка изменения темы: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfaceGlobalFontFamily(fontFamily: string): void {
+  registerTriggerFunction('interface-global-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
-      switch (fontFamily) {
+      switch (current.value) {
         case 'inter':
           root.style.setProperty('--global-font-family', `'Inter', sans-serif`);
           break;
@@ -1015,14 +979,14 @@ class ElementManager {
     } catch (error) {
       log(`Ошибка изменения шрифта: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfaceShowMessages(state: string): void {
+  registerTriggerFunction('interface-show-messages', 'select', (current: HTMLSelectElement) => {
     try {
-      changeMessagesVisibility(state);
+      changeMessagesVisibility(current.value);
 
       document.querySelectorAll<HTMLElement>('.message').forEach(m => {
-        if (state === 'hide') {
+        if (current.value === 'hide') {
           m.style.display = 'none';
         } else {
           m.style.display = 'flex';
@@ -1031,12 +995,12 @@ class ElementManager {
     } catch (error) {
       log(`Ошибка изменения состояния сообщений: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfaceShowPanelIcons(state: string): void {
+  registerTriggerFunction('interface-show-panel-icons', 'select', (current: HTMLSelectElement) => {
     try {
       document.querySelectorAll<SVGElement>('[panel-btn-icon="true"]').forEach(i => {
-        if (state === 'hide') {
+        if (current.value === 'hide') {
           i.style.display = 'none';
         } else {
           i.style.display = 'flex';
@@ -1045,13 +1009,13 @@ class ElementManager {
     } catch (error) {
       log(`Ошибка изменения состояния иконок на панели: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfacePanelFontFamily(fontFamily: string): void {
+  registerTriggerFunction('interface-panel-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
-      switch (fontFamily) {
+      switch (current.value) {
         case 'inter':
           root.style.setProperty('--panel-font-family', `'Inter', sans-serif`);
           root.style.setProperty('--panel-text-margin-top', '1px');
@@ -1076,71 +1040,34 @@ class ElementManager {
     } catch (error) {
       log(`Ошибка изменения шрифта панели: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfacePanelFontSize(size: string): void {
+  registerTriggerFunction('interface-panel-font-size', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
-      root.style.setProperty('--panel-font-size', size);
+      root.style.setProperty('--panel-font-size', current.value);
     } catch (error) {
       log(`Ошибка изменения размера шрифта панели: ${error}`, 'error');
     }
-  }
+  });
 
-  private setInterfacePanelInternalGap(size: string): void {
+  registerTriggerFunction('interface-panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
-      root.style.setProperty('--panel-btn-gap', size);
+      root.style.setProperty('--panel-btn-gap', current.value);
     } catch (error) {
       log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
     }
-  }
+  });
 
-  private showGlobalContainer(id: string): void {
-    globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
-    controlContainers.forEach(c => c.el.style.display = 'none');
-
-    if (id === 'control-container') {
-      this.latestControlContainer ? this.latestControlContainer.style.display = 'flex' : (document.getElementById('control-chat-container') as HTMLElement).style.display = 'flex';
-    }
-  }
-
-  private showControlContainer(id: string): void {
-    controlContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
-  }
-
-  private async control(name: string, state: boolean | string): Promise<void> {
+  registerTriggerFunction('interface-panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
-      const elements = document.querySelectorAll(`[control="${name}"]`);
-
-      let options: Record<string, any> = {};
-
-      elements.forEach(e => {
-        if (e.tagName.toLowerCase() === 'select') {
-          options[(e as HTMLSelectElement).name] = (e as HTMLSelectElement).value;
-        } else if (e.tagName.toLowerCase() === 'input') {
-          if ((e as HTMLInputElement).type === 'checkbox') {
-            options[(e as HTMLInputElement).name] = (e as HTMLInputElement).checked;
-          } else {
-            options[(e as HTMLInputElement).name] = (e as HTMLInputElement).type === 'number' ? Number((e as HTMLInputElement).value) : (e as HTMLInputElement).value;
-          }
-        }
-      });
-
-      const group = (document.getElementById('control-group') as HTMLInputElement).value.replace(' ', '');
-
-      await invoke('control', {
-        name: name,
-        options: {
-          ...options,
-          state: state
-        },
-        group: group !== '' ? group : 'global'
-      });
+      const root = document.documentElement;
+      root.style.setProperty('--panel-btn-gap', current.value);
     } catch (error) {
-      log(`Ошибка управления (${name}): ${error}`, 'error');
+      log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
     }
-  }
+  });
 }
 
 function addOpeningUrlTo(id: string, event: string, url: string): void {
@@ -1210,6 +1137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
     document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
 
+    registerAllTriggerFunctions();
+
     const elementManager = new ElementManager();
 
     await listen('log', (event) => {
@@ -1238,12 +1167,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     initConfig();
     loadConfig();
 
+    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
+
     proxyManager.init();
     chartManager.init();
     radarManager.init();
 
-    await elementManager.init();
     await monitoringManager.init();
+    await elementManager.init();
 
     log('Инициализация прошла успешно', 'extended');
 
