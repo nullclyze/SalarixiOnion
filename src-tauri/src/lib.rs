@@ -117,11 +117,11 @@ async fn get_memory_usage() -> f64 {
 
 /// Функция управления ботами
 #[tauri::command]
-async fn control(name: String, options: serde_json::Value, group: String) {
+async fn control_bots(name: String, options: serde_json::Value, group: String) {
   if let Some(opts) = current_options() {
-    if opts.use_webhook && opts.webhook_settings.actions {
+    if opts.basic.use_webhook && opts.webhook.send_actions {
       send_webhook(
-        opts.webhook_settings.url,
+        opts.webhook.url,
         format!(
           "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
           group, name, options
@@ -157,9 +157,9 @@ async fn control(name: String, options: serde_json::Value, group: String) {
 #[tauri::command]
 async fn quick_task(name: String) {
   if let Some(opts) = current_options() {
-    if opts.use_webhook && opts.webhook_settings.actions {
+    if opts.basic.use_webhook && opts.webhook.send_actions {
       send_webhook(
-        opts.webhook_settings.url,
+        opts.webhook.url,
         format!("Быстрая задача '{}'", name),
       );
     }
@@ -250,7 +250,7 @@ pub fn run() {
       set_group,
       get_active_bots_count,
       get_memory_usage,
-      control,
+      control_bots,
       quick_task,
       execute_script,
       stop_script,

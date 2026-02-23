@@ -3,18 +3,23 @@ use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::sync::{Arc, RwLock};
-use thirtyfour::{CapabilitiesHelper, ChromiumLikeCapabilities, DesiredCapabilities, WebDriver, common::capabilities::firefox::FirefoxPreferences, error::WebDriverError};
-use tokio::{sync::broadcast};
+use thirtyfour::{
+  common::capabilities::firefox::FirefoxPreferences, error::WebDriverError, CapabilitiesHelper,
+  ChromiumLikeCapabilities, DesiredCapabilities, WebDriver,
+};
+use tokio::sync::broadcast;
 
 use crate::{core::current_options, emit::send_log, generators::randint};
 
-pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> = Lazy::new(|| Arc::new(WebCaptchaBypass::new()));
-pub static MAP_CAPTCHA_BYPASS: Lazy<Arc<MapCaptchaBypass>> = Lazy::new(|| Arc::new(MapCaptchaBypass::new()));
+pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> =
+  Lazy::new(|| Arc::new(WebCaptchaBypass::new()));
+pub static MAP_CAPTCHA_BYPASS: Lazy<Arc<MapCaptchaBypass>> =
+  Lazy::new(|| Arc::new(MapCaptchaBypass::new()));
 
 /// Обход web-капчи
 pub struct WebCaptchaBypass {
   pub webdriver_events: broadcast::Sender<WebDriverEvent>,
-  pub active_tabs_count: RwLock<i32>
+  pub active_tabs_count: RwLock<i32>,
 }
 
 #[derive(Clone)]
@@ -38,9 +43,9 @@ impl WebCaptchaBypass {
   pub fn new() -> Self {
     let (tx, _) = broadcast::channel(1000);
 
-    Self { 
+    Self {
       webdriver_events: tx,
-      active_tabs_count: RwLock::new(0)
+      active_tabs_count: RwLock::new(0),
     }
   }
 
@@ -124,7 +129,7 @@ impl WebCaptchaBypass {
         if let Some(p) = proxy {
           caps.set_proxy(p)?;
         }
-              
+
         caps.add_arg(&format!("--user-agent={}", self.random_user_agent()))?;
 
         // let _ = caps.add_arg("--headless");
@@ -182,17 +187,17 @@ impl WebCaptchaBypass {
 
     while let Ok(event) = rx.recv().await {
       match event {
-        WebDriverEvent::OpenUrl { 
+        WebDriverEvent::OpenUrl {
           url,
           proxy,
           username,
-          password
+          password,
         } => {
           if *self.active_tabs_count.read().unwrap() >= 3 {
-            self.send_webdriver_event(WebDriverEvent::CreateWebDriver { 
-              proxy: proxy, 
-              username: username, 
-              password: password
+            self.send_webdriver_event(WebDriverEvent::CreateWebDriver {
+              proxy: proxy,
+              username: username,
+              password: password,
             });
 
             continue;
@@ -258,11 +263,9 @@ impl WebCaptchaBypass {
 
             match self
               .create_webdriver(
-                options.anti_captcha_settings.options.web.browser,
+                options.captcha_bypass.browser,
                 options
-                  .anti_captcha_settings
-                  .options
-                  .web
+                  .captcha_bypass
                   .webdriver_server_url,
                 manual_proxy,
               )
@@ -273,10 +276,7 @@ impl WebCaptchaBypass {
                 main_window = None;
               }
               Err(err) => {
-                send_log(
-                  format!("Ошибка создания WebDriver: {}", err),
-                  "error",
-                );
+                send_log(format!("Ошибка создания WebDriver: {}", err), "error");
               }
             }
           }
