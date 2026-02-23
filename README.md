@@ -19,6 +19,8 @@ This client uses the [azalea-rs](https://github.com/azalea-rs/azalea) library as
 
 > [!WARNING]
 > This client does not promise stability and good support on all operating systems. If you encounter any problems, please report them to the [issues](https://github.com/nullclyze/SalarixiOnion/issues).
+>
+> If the message concerns an error or bug, it should include the client version, operating system, a clear description of the problem, and screenshots (if possible).
 
 ## 🔗 Social
 
