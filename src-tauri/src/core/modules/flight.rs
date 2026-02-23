@@ -10,6 +10,7 @@ use tokio::time::sleep;
 use crate::common::{get_bot_physics, set_bot_on_ground, set_bot_velocity_y};
 use crate::core::*;
 use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlightModule;
@@ -48,8 +49,8 @@ impl FlightModule {
     match anti_cheat {
       "vulcan" => {
         config = FlightConfig {
-          min_delay: 2,
-          max_delay: 5,
+          min_delay: 100,
+          max_delay: 250,
           min_change_y: 0.004,
           max_change_y: 0.007,
           use_ground_spoof: true,
@@ -58,8 +59,8 @@ impl FlightModule {
       }
       "intave" => {
         config = FlightConfig {
-          min_delay: 4,
-          max_delay: 8,
+          min_delay: 200,
+          max_delay: 400,
           min_change_y: 0.0025,
           max_change_y: 0.0048,
           use_ground_spoof: true,
@@ -68,8 +69,8 @@ impl FlightModule {
       }
       "grim" => {
         config = FlightConfig {
-          min_delay: 2,
-          max_delay: 4,
+          min_delay: 100,
+          max_delay: 200,
           min_change_y: 0.0011,
           max_change_y: 0.0018,
           use_ground_spoof: false,
@@ -78,8 +79,8 @@ impl FlightModule {
       }
       _ => {
         config = FlightConfig {
-          min_delay: 6,
-          max_delay: 10,
+          min_delay: 200,
+          max_delay: 500,
           min_change_y: 0.065,
           max_change_y: 0.087,
           use_ground_spoof: true,
@@ -108,8 +109,8 @@ impl FlightModule {
       self.create_adaptive_config(options.anti_cheat.as_str())
     } else {
       FlightConfig {
-        min_delay: options.min_delay.unwrap_or(4),
-        max_delay: options.max_delay.unwrap_or(8),
+        min_delay: options.min_delay.unwrap_or(200),
+        max_delay: options.max_delay.unwrap_or(400),
         min_change_y: options.min_change_y.unwrap_or(0.05),
         max_change_y: options.max_change_y.unwrap_or(0.08),
         use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
@@ -165,8 +166,8 @@ impl FlightModule {
       self.create_adaptive_config(options.anti_cheat.as_str())
     } else {
       FlightConfig {
-        min_delay: options.min_delay.unwrap_or(4),
-        max_delay: options.max_delay.unwrap_or(7),
+        min_delay: options.min_delay.unwrap_or(200),
+        max_delay: options.max_delay.unwrap_or(350),
         min_change_y: options.min_change_y.unwrap_or(0.006),
         max_change_y: options.max_change_y.unwrap_or(0.008),
         use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
@@ -195,7 +196,7 @@ impl FlightModule {
 
         sleep(Duration::from_millis(randuint(50, 80))).await;
 
-        let pos = bot.position();
+        let pos = bot.feet_pos();
 
         let packet = ServerboundMovePlayerPos {
           pos: Vec3::new(
@@ -243,8 +244,8 @@ impl FlightModule {
       self.create_adaptive_config(options.anti_cheat.as_str())
     } else {
       FlightConfig {
-        min_delay: options.min_delay.unwrap_or(3),
-        max_delay: options.max_delay.unwrap_or(8),
+        min_delay: options.min_delay.unwrap_or(150),
+        max_delay: options.max_delay.unwrap_or(400),
         min_change_y: options.min_change_y.unwrap_or(0.08),
         max_change_y: options.max_change_y.unwrap_or(0.09),
         use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
@@ -264,7 +265,7 @@ impl FlightModule {
           set_bot_on_ground(bot, true);
         }
 
-        let pos = bot.position();
+        let pos = bot.feet_pos();
 
         let packet = ServerboundMovePlayerPos {
           pos: Vec3::new(
@@ -312,8 +313,8 @@ impl FlightModule {
       self.create_adaptive_config(options.anti_cheat.as_str())
     } else {
       FlightConfig {
-        min_delay: options.min_delay.unwrap_or(4),
-        max_delay: options.max_delay.unwrap_or(8),
+        min_delay: options.min_delay.unwrap_or(200),
+        max_delay: options.max_delay.unwrap_or(400),
         min_change_y: options.min_change_y.unwrap_or(0.02),
         max_change_y: options.max_change_y.unwrap_or(0.05),
         use_ground_spoof: if let Some(v) = &options.use_ground_spoof {
@@ -330,7 +331,7 @@ impl FlightModule {
         set_bot_on_ground(bot, true);
       }
 
-      let pos = bot.position();
+      let pos = bot.feet_pos();
 
       let block_under = BlockPos::new(pos.x as i32, (pos.y - 1.0) as i32, pos.z as i32);
 
