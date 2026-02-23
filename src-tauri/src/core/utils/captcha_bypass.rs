@@ -2,39 +2,46 @@ use base64::encode;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::{sync::Arc, time::Duration};
-use thirtyfour::{error::WebDriverError, CapabilitiesHelper, DesiredCapabilities, WebDriver};
-use tokio::{sync::broadcast, time::sleep};
+use std::sync::{Arc, RwLock};
+use thirtyfour::{CapabilitiesHelper, ChromiumLikeCapabilities, DesiredCapabilities, WebDriver, common::capabilities::firefox::FirefoxPreferences, error::WebDriverError};
+use tokio::{sync::broadcast};
 
-use crate::{core::current_options, emit::send_log};
+use crate::{core::current_options, emit::send_log, generators::randint};
 
-pub static CAPTCHA_BYPASS: Lazy<Arc<CaptchaBypass>> = Lazy::new(|| Arc::new(CaptchaBypass::new()));
+pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> = Lazy::new(|| Arc::new(WebCaptchaBypass::new()));
+pub static MAP_CAPTCHA_BYPASS: Lazy<Arc<MapCaptchaBypass>> = Lazy::new(|| Arc::new(MapCaptchaBypass::new()));
 
-/// Обход капчи (Web-Captcha / Map-Captcha)
-pub struct CaptchaBypass {
-  pub events: broadcast::Sender<CaptchaBypassEvent>,
+/// Обход web-капчи
+pub struct WebCaptchaBypass {
+  pub webdriver_events: broadcast::Sender<WebDriverEvent>,
+  pub active_tabs_count: RwLock<i32>
 }
 
 #[derive(Clone)]
-pub enum CaptchaBypassEvent {
-  CreateWebDriver,
-  SetProxy {
-    proxy: String,
+pub enum WebDriverEvent {
+  OpenUrl {
+    url: String,
+    proxy: Option<String>,
     username: Option<String>,
     password: Option<String>,
   },
-  SolveCaptcha {
-    url: String,
+  CreateWebDriver {
+    proxy: Option<String>,
+    username: Option<String>,
+    password: Option<String>,
   },
   CloseTab,
   StopProcessing,
 }
 
-impl CaptchaBypass {
+impl WebCaptchaBypass {
   pub fn new() -> Self {
     let (tx, _) = broadcast::channel(1000);
 
-    Self { events: tx }
+    Self { 
+      webdriver_events: tx,
+      active_tabs_count: RwLock::new(0)
+    }
   }
 
   pub fn catch_url_from_message(
@@ -58,6 +65,240 @@ impl CaptchaBypass {
     }
 
     None
+  }
+
+  fn random_user_agent(&self) -> String {
+    let user_agents = vec![
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.127 Safari/537.36",
+      "Mozilla/5.0 (Windows; U; Windows NT 5.0) AppleWebKit/537.2.1 (KHTML, like Gecko) Chrome/33.0.854.0 Safari/537.2.1",
+      "Mozilla/5.0 (Windows NT 5.2; rv:8.6) Gecko/20100101 Firefox/8.6.8",
+      "Mozilla/5.0 (Windows; U; Windows NT 5.0) AppleWebKit/531.2.1 (KHTML, like Gecko) Chrome/30.0.851.0 Safari/531.2.1",
+      "Mozilla/5.0 (Windows; U; Windows NT 6.2) AppleWebKit/532.1.1 (KHTML, like Gecko) Chrome/39.0.889.0 Safari/532.1.1",
+      "Mozilla/5.0 (Windows NT 6.0; rv:7.3) Gecko/20100101 Firefox/7.3.6",
+      "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_9 rv:2.0; MS) AppleWebKit/537.1.1 (KHTML, like Gecko) Version/7.0.5 Safari/537.1.1",
+      "Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/7.0; .NET CLR 1.1.37036.4)",
+      "Mozilla/5.0 (Windows; U; Windows NT 6.1) AppleWebKit/531.2.2 (KHTML, like Gecko) Chrome/17.0.888.0 Safari/531.2.2",
+      "Mozilla/5.0 (Windows; U; Windows NT 5.3) AppleWebKit/535.1.0 (KHTML, like Gecko) Chrome/35.0.864.0 Safari/535.1.0",
+      "Opera/12.49 (Windows NT 5.3; U; SK) Presto/2.9.168 Version/10.00",
+      "Mozilla/5.0 (Windows; U; Windows NT 6.2) AppleWebKit/538.0.2 (KHTML, like Gecko) Chrome/21.0.890.0 Safari/538.0.2",
+      "Mozilla/5.0 (Windows; U; Windows NT 5.0) AppleWebKit/537.0.0 (KHTML, like Gecko) Chrome/37.0.899.0 Safari/537.0.0",
+      "Mozilla/5.0 (Windows; U; Windows NT 6.0) AppleWebKit/536.1.1 (KHTML, like Gecko) Chrome/27.0.815.0 Safari/536.1.1",
+      "Mozilla/5.0 (Windows; U; Windows NT 5.3) AppleWebKit/533.0.2 (KHTML, like Gecko) Chrome/35.0.884.0 Safari/533.0.2",
+      "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7 rv:3.0; NN) AppleWebKit/534.2.2 (KHTML, like Gecko) Version/4.0.6 Safari/534.2.2",
+      "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_8_9 rv:5.0; ID) AppleWebKit/533.2.0 (KHTML, like Gecko) Version/4.1.5 Safari/533.2.0",
+      "Mozilla/5.0 (Windows NT 6.0; Win64; rv:14.0) Gecko/20100101 Firefox/14.0.0"
+    ];
+
+    let idx = (randint(1, user_agents.len() as i32) - 1) as usize;
+    let random_user_agent = user_agents[idx];
+
+    random_user_agent.to_string()
+  }
+
+  pub async fn create_webdriver(
+    &self,
+    browser: String,
+    server_url: Option<String>,
+    proxy: Option<thirtyfour::Proxy>,
+  ) -> Result<WebDriver, WebDriverError> {
+    let url = server_url.unwrap_or("http://localhost:9515".to_string());
+
+    match browser.as_str() {
+      "firefox" => {
+        let mut caps = DesiredCapabilities::firefox();
+
+        if let Some(p) = proxy {
+          caps.set_proxy(p)?;
+        }
+
+        let mut prefs = FirefoxPreferences::new();
+        prefs.set_user_agent(self.random_user_agent())?;
+        caps.set_preferences(prefs)?;
+
+        // let _ = caps.add_arg("--headless");
+        return WebDriver::new(url, caps).await;
+      }
+      "edge" => {
+        let mut caps = DesiredCapabilities::edge();
+
+        if let Some(p) = proxy {
+          caps.set_proxy(p)?;
+        }
+              
+        caps.add_arg(&format!("--user-agent={}", self.random_user_agent()))?;
+
+        // let _ = caps.add_arg("--headless");
+        return WebDriver::new(url, caps).await;
+      }
+      "chrome" => {
+        let mut caps = DesiredCapabilities::chrome();
+
+        if let Some(p) = proxy {
+          caps.set_proxy(p)?;
+        }
+
+        caps.add_arg(&format!("--user-agent={}", self.random_user_agent()))?;
+
+        // let _ = caps.add_arg("--headless");
+        return WebDriver::new(url, caps).await;
+      }
+      "opera" => {
+        let mut caps = DesiredCapabilities::opera();
+
+        if let Some(p) = proxy {
+          caps.set_proxy(p)?;
+        }
+
+        caps.add_arg(&format!("--user-agent={}", self.random_user_agent()))?;
+
+        // let _ = caps.add_arg("--headless");
+        return WebDriver::new(url, caps).await;
+      }
+      "chromium" => {
+        let mut caps = DesiredCapabilities::chromium();
+
+        if let Some(p) = proxy {
+          caps.set_proxy(p)?;
+        }
+
+        caps.add_arg(&format!("--user-agent={}", self.random_user_agent()))?;
+
+        // let _ = caps.add_arg("--headless");
+        return WebDriver::new(url, caps).await;
+      }
+      _ => return Err(WebDriverError::FatalError("Incorrect browser".to_string())),
+    }
+  }
+
+  pub fn send_webdriver_event(&self, event: WebDriverEvent) {
+    let _ = self.webdriver_events.send(event);
+  }
+
+  pub async fn webdriver_event_loop(&'static self) {
+    let mut webdriver: Option<WebDriver> = None;
+
+    let mut rx = self.webdriver_events.subscribe();
+    let mut main_window = None;
+
+    while let Ok(event) = rx.recv().await {
+      match event {
+        WebDriverEvent::OpenUrl { 
+          url,
+          proxy,
+          username,
+          password
+        } => {
+          if *self.active_tabs_count.read().unwrap() >= 3 {
+            self.send_webdriver_event(WebDriverEvent::CreateWebDriver { 
+              proxy: proxy, 
+              username: username, 
+              password: password
+            });
+
+            continue;
+          }
+
+          if let Some(driver) = webdriver.as_ref() {
+            let _ = driver.delete_all_cookies().await;
+
+            if main_window.is_none() {
+              if let Ok(handle) = driver.window().await {
+                main_window = Some(handle);
+              }
+            }
+            if let Ok(new_handle) = driver.new_tab().await {
+              if driver.switch_to_window(new_handle).await.is_ok() {
+                let _ = driver.goto(url).await;
+
+                *self.active_tabs_count.write().unwrap() += 1;
+              }
+            }
+          }
+        }
+        WebDriverEvent::CloseTab => {
+          if let Some(driver) = webdriver.as_ref() {
+            let _ = driver.close_window().await;
+
+            *self.active_tabs_count.write().unwrap() -= 1;
+
+            if let Some(main) = main_window.as_ref() {
+              let _ = driver.switch_to_window(main.clone()).await;
+            } else if let Ok(handles) = driver.windows().await {
+              if let Some(first) = handles.first() {
+                let _ = driver.switch_to_window(first.clone()).await;
+              }
+            }
+          }
+        }
+        WebDriverEvent::CreateWebDriver {
+          proxy,
+          username,
+          password,
+        } => {
+          if let Some(driver) = webdriver.clone() {
+            let _ = driver.quit().await;
+            *self.active_tabs_count.write().unwrap() = 0;
+          }
+
+          if let Some(options) = current_options() {
+            let mut manual_proxy = None;
+
+            if let Some(p) = proxy {
+              manual_proxy = Some(thirtyfour::Proxy::Manual {
+                ftp_proxy: None,
+                http_proxy: None,
+                ssl_proxy: None,
+                socks_proxy: Some(p),
+                socks_version: Some(5),
+                socks_username: username,
+                socks_password: password,
+                no_proxy: None,
+              });
+            }
+
+            match self
+              .create_webdriver(
+                options.anti_captcha_settings.options.web.browser,
+                options
+                  .anti_captcha_settings
+                  .options
+                  .web
+                  .webdriver_server_url,
+                manual_proxy,
+              )
+              .await
+            {
+              Ok(driver) => {
+                webdriver = Some(driver);
+                main_window = None;
+              }
+              Err(err) => {
+                send_log(
+                  format!("Ошибка создания WebDriver: {}", err),
+                  "error",
+                );
+              }
+            }
+          }
+        }
+        WebDriverEvent::StopProcessing => {
+          if let Some(driver) = webdriver.clone() {
+            let _ = driver.quit().await;
+          }
+
+          return;
+        }
+      }
+    }
+  }
+}
+
+/// Обход map-капчи
+pub struct MapCaptchaBypass;
+
+impl MapCaptchaBypass {
+  pub fn new() -> Self {
+    Self
   }
 
   fn convert_id_to_rgb_color(&self, id: u8) -> (u8, u8, u8) {
@@ -296,180 +537,5 @@ impl CaptchaBypass {
     let base64_code = encode(&bytes);
 
     base64_code
-  }
-
-  pub async fn create_webdriver(
-    &self,
-    browser: String,
-    server_url: Option<String>,
-    proxy: Option<thirtyfour::Proxy>,
-  ) -> Result<WebDriver, WebDriverError> {
-    let url = server_url.unwrap_or("http://localhost:9515".to_string());
-
-    match browser.as_str() {
-      "firefox" => {
-        let mut caps = DesiredCapabilities::firefox();
-
-        if let Some(p) = proxy {
-          let _ = caps.set_proxy(p);
-        }
-
-        // let _ = caps.add_arg("--headless");
-        return WebDriver::new(url, caps).await;
-      }
-      "edge" => {
-        let mut caps = DesiredCapabilities::edge();
-
-        if let Some(p) = proxy {
-          let _ = caps.set_proxy(p);
-        }
-
-        // let _ = caps.add_arg("--headless");
-        return WebDriver::new(url, caps).await;
-      }
-      "chrome" => {
-        let mut caps = DesiredCapabilities::chrome();
-
-        if let Some(p) = proxy {
-          let _ = caps.set_proxy(p);
-        }
-
-        // let _ = caps.add_arg("--headless");
-        return WebDriver::new(url, caps).await;
-      }
-      "opera" => {
-        let mut caps = DesiredCapabilities::opera();
-
-        if let Some(p) = proxy {
-          let _ = caps.set_proxy(p);
-        }
-
-        // let _ = caps.add_arg("--headless");
-        return WebDriver::new(url, caps).await;
-      }
-      "chromium" => {
-        let mut caps = DesiredCapabilities::chromium();
-
-        if let Some(p) = proxy {
-          let _ = caps.set_proxy(p);
-        }
-
-        // let _ = caps.add_arg("--headless");
-        return WebDriver::new(url, caps).await;
-      }
-      _ => return Err(WebDriverError::FatalError("Incorrect browser".to_string())),
-    }
-  }
-
-  pub fn send_event(&self, event: CaptchaBypassEvent) {
-    let _ = self.events.send(event);
-  }
-}
-
-pub async fn captcha_bypass_event_loop() {
-  let mut webdriver = None;
-
-  let mut rx = CAPTCHA_BYPASS.events.subscribe();
-  let mut main_window = None;
-
-  while let Ok(event) = rx.recv().await {
-    match event {
-      CaptchaBypassEvent::CreateWebDriver => {
-        if let Some(options) = current_options() {
-          match CAPTCHA_BYPASS
-            .create_webdriver(
-              options.anti_captcha_settings.options.web.browser,
-              options
-                .anti_captcha_settings
-                .options
-                .web
-                .webdriver_server_url,
-              None,
-            )
-            .await
-          {
-            Ok(driver) => {
-              webdriver = Some(driver);
-            }
-            Err(err) => {
-              send_log(format!("Ошибка создания WebDriver: {}", err), "error");
-            }
-          }
-        }
-      }
-      CaptchaBypassEvent::SolveCaptcha { url } => {
-        if let Some(driver) = webdriver.as_ref() {
-          if main_window.is_none() {
-            if let Ok(handle) = driver.window().await {
-              main_window = Some(handle);
-            }
-          }
-          if let Ok(new_handle) = driver.new_tab().await {
-            if driver.switch_to_window(new_handle).await.is_ok() {
-              let _ = driver.goto(url).await;
-
-              sleep(Duration::from_millis(3000)).await;
-
-              CAPTCHA_BYPASS.send_event(CaptchaBypassEvent::CloseTab);
-            }
-          }
-        }
-      }
-      CaptchaBypassEvent::CloseTab => {
-        if let Some(driver) = webdriver.as_ref() {
-          let _ = driver.close_window().await;
-          if let Some(ref main) = main_window {
-            let _ = driver.switch_to_window(main.clone()).await;
-          } else if let Ok(handles) = driver.windows().await {
-            if let Some(first) = handles.first() {
-              let _ = driver.switch_to_window(first.clone()).await;
-            }
-          }
-        }
-      }
-      CaptchaBypassEvent::SetProxy {
-        proxy,
-        username,
-        password,
-      } => {
-        if let Some(options) = current_options() {
-          match CAPTCHA_BYPASS
-            .create_webdriver(
-              options.anti_captcha_settings.options.web.browser,
-              options
-                .anti_captcha_settings
-                .options
-                .web
-                .webdriver_server_url,
-              Some(thirtyfour::Proxy::Manual {
-                ftp_proxy: None,
-                http_proxy: None,
-                ssl_proxy: None,
-                socks_proxy: Some(proxy.clone()),
-                socks_version: Some(5),
-                socks_username: username,
-                socks_password: password,
-                no_proxy: None,
-              }),
-            )
-            .await
-          {
-            Ok(new_driver) => {
-              webdriver = Some(new_driver);
-              main_window = None;
-            }
-            Err(err) => {
-              send_log(
-                format!("Ошибка создания WebDriver с прокси {}: {}", proxy, err),
-                "error",
-              );
-            }
-          }
-        }
-      }
-      CaptchaBypassEvent::StopProcessing => {
-        return;
-      }
-    }
   }
 }

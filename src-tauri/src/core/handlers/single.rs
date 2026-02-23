@@ -231,7 +231,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           let opts = options.anti_captcha_settings.options.web;
 
           if options.anti_captcha_settings.captcha_type.as_str() == "web" {
-            if let Some(url) = CAPTCHA_BYPASS.catch_url_from_message(
+            if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
               packet.message().to_string(),
               opts
                 .regex
@@ -256,8 +256,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   );
 
                   if opts.mode.as_str() == "auto" {
-                    CAPTCHA_BYPASS
-                      .send_event(CaptchaBypassEvent::SolveCaptcha { url: url.clone() });
+                    WEB_CAPTCHA_BYPASS
+                      .send_webdriver_event(WebDriverEvent::OpenUrl { 
+                        url: url.clone(),
+                        proxy: profile.proxy.proxy, 
+                        username: profile.proxy.username, 
+                        password: profile.proxy.password
+                      });
                   } else {
                     send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
                       AntiWebCaptchaEventPayload {
@@ -317,7 +322,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                   if !profile.captcha_caught {
                     PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                    let base64_code = CAPTCHA_BYPASS.create_png_image(&map_patch.map_colors);
+                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(&map_patch.map_colors);
 
                     if options.use_webhook && options.webhook_settings.information {
                       send_webhook(
