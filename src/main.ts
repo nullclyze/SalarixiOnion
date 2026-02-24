@@ -1,11 +1,13 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { readFile } from '@tauri-apps/plugin-fs';
+import { open } from '@tauri-apps/plugin-dialog';
 import { Chart, registerables } from 'chart.js';
 
 import { plugins } from './common/structs';
 import { log, changeLogsVisibility, eraseLogs } from './logger';
-import { initConfig, loadConfig } from './modules/config';
+import { initConfig, uploadConfig, shareConfig } from './modules/config';
 import { ProxyManager } from './modules/proxy';
 import { ChartManager } from './modules/chart';
 import { ScriptManager } from './modules/script';
@@ -576,6 +578,33 @@ class ElementManager {
       (document.getElementById('version') as HTMLInputElement).value = '';
       (document.getElementById('bots-count') as HTMLInputElement).value = '';
       (document.getElementById('join-delay') as HTMLInputElement).value = '';
+    });
+
+    document.getElementById('upload-config')?.addEventListener('click', async () => {
+      const path = await open({
+        directory: false,
+        multiple: false
+      });
+
+      if (path) {
+        const data = await readFile(path);
+
+        if (data) {
+          const config = JSON.parse(data.toString());
+          uploadConfig(config);
+        }
+      }
+    });
+
+    document.getElementById('share-config')?.addEventListener('click', async () => {
+      const directory = await open({
+        directory: true,
+        multiple: false
+      });
+
+      if (directory) {
+        await shareConfig(directory);
+      }
     });
 
     document.getElementById('interface-client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language));
@@ -1165,9 +1194,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
 
     initConfig();
-    loadConfig();
-
-    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
 
     proxyManager.init();
     chartManager.init();

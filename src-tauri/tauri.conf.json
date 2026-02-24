@@ -39,7 +39,11 @@
             "core:event:allow-listen",
             "core:event:default",
             "core:path:allow-is-absolute",
-            "core:path:default"
+            "core:path:default",
+            "dialog:allow-open",
+            "dialog:default",
+            "fs:allow-write-file",
+            "fs:default"
           ]
         }
       ]

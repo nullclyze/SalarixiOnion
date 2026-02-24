@@ -199,7 +199,6 @@ body {
 .left-panel .separator {
   display: flex;
   width: 100%;
-  height: 2px;
   margin-top: 8px;
   margin-bottom: 8px;
   border-bottom: 1px solid var(--bd-color);
@@ -572,8 +571,8 @@ p {
   width: 130px;
   height: 34px;
   padding: 0 12px;
-  background-color: rgb(24, 24, 24);
-  border: 1px solid rgba(80, 80, 100, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
   color: #fff;
   font-size: 14px;
@@ -594,12 +593,11 @@ p {
 }
 
 .btn:hover {
-  background-color: rgba(99, 99, 99, 0.1);
+  border-color: rgb(51, 51, 51);
 }
 
 .btn:active {
-  background-color: rgb(27, 27, 27);
-  border-color: #222222;
+  border-color: rgb(43, 42, 42);
 }
 
 .btn svg {
@@ -2469,6 +2467,63 @@ textarea::-webkit-resizer {
   align-items: start;
   padding-left: 10px;
   gap: 12px;
+}
+
+.config-wrap {
+  display: flex;
+  width: 100%;
+  height: 530px;
+  margin-top: 15px;
+  gap: 50px;
+  justify-content: center;
+  align-items: center;
+}
+
+.config-wrap .card {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  height: 400px;
+  background-color: #131313;
+  border: 2px solid #272727;
+  box-shadow: var(--card-shadow);
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  transition: all 0.15s ease;
+}
+
+.config-wrap .card:hover {
+  transform: translateY(-10px);
+  border-bottom-color: var(--spec-color);
+}
+
+.config-wrap .card:hover .icon {
+  color: var(--spec-color);
+}
+
+.config-wrap .card:active {
+  transform: translateY(0);
+}
+
+.config-wrap .card .icon {
+  display: flex;
+  flex-direction: column;
+  width: 80px;
+  height: 80px;
+  color: #999999;
+  transition: color 0.15s ease;
+}
+
+.config-wrap .card .text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--global-font-family);
+  font-size: 20px;
+  width: 90%;
+  color: #999999;
 }
 
 .messages-wrap {
