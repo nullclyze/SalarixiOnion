@@ -1,15 +1,64 @@
+import { writeFile } from '@tauri-apps/plugin-fs';
 import { plugins } from '../common/structs';
 import { log } from '../logger';
-import { updatePluginState } from '../main';
+import { invokeElementFunction, updatePluginState } from '../main';
+import { message } from '../message';
+import { path } from '@tauri-apps/api';
 
+type ConfigValue = string | number | boolean | null;
 
-interface ConfigElement {
-  id: string;
-  value: string | number | boolean | null;
+function setValue(id: string, value: ConfigValue): void {
+  if (id === '') return;
+
+  try {
+    const doc = document.getElementById(id) as HTMLElement;
+
+    if (doc.tagName.toLocaleLowerCase() === 'input') {
+      const input = doc as HTMLInputElement;
+
+      if (input.type === 'checkbox') {
+        input.checked = Boolean(value);
+      } else {
+        if (typeof value === 'number') {
+          input.valueAsNumber = value;
+        } else {
+          input.value = value ? value.toString() : '';
+        }
+      }
+    } else if (doc.tagName.toLocaleLowerCase() === 'textarea') {
+      const textarea = doc as HTMLTextAreaElement;
+      textarea.value = value ? value.toString() : '';
+    } else {
+      const select = doc as HTMLSelectElement;
+
+      if (typeof value === 'number') {
+        select.selectedIndex = value;
+      }
+    }
+  } catch (error) {
+    log(`Ошибка установки значения для ${id}: ${error}`, 'error');
+  }
 }
 
 export function initConfig(): void {
-  if (!localStorage.getItem('salarixionion:config')) {
+  const current_config = localStorage.getItem('salarixionion:config');
+
+  if (current_config) {
+    log('Загрузка конфига...', 'system');
+
+    for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(current_config))) {
+      setValue(id, value);
+    }
+
+    for (const name in plugins) {
+      const state = localStorage.getItem(`plugin-state:${name}`) === 'true';
+      updatePluginState(name, state);
+    }
+
+    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
+
+    log('Конфиг успешно загружен', 'system');
+  } else {
     localStorage.setItem('salarixionion:config', JSON.stringify({}, null, 2));
   }
 
@@ -17,37 +66,25 @@ export function initConfig(): void {
 
   setInterval(async () => {
     const elements = document.querySelectorAll<HTMLElement>('[keep="true"]');
-    const config: Record<string, ConfigElement> = {};
+    const config: Record<string, ConfigValue> = {};
 
     for (const element of elements) {
       if (element.tagName.toLocaleLowerCase() === 'input') {
         const el = element as HTMLInputElement;
 
         if (el.type === 'checkbox') {
-          config[el.id] = {
-            id: el.id,
-            value: el.checked
-          };
+          config[el.id] = el.checked;
         } else {
-          config[el.id] = {
-            id: el.id,
-            value: el.type === 'number' ? parseInt(el.value) : el.value
-          };
+          config[el.id] = el.type === 'number' ? parseInt(el.value) : el.value;
         }
       } else if (element.tagName.toLocaleLowerCase() === 'textarea') {
         const el = element as HTMLTextAreaElement;
 
-        config[el.id] = {
-          id: el.id,
-          value: el.type === 'number' ? parseInt(el.value) : el.value
-        };
+        config[el.id] = el.type === 'number' ? parseInt(el.value) : el.value;
       } else {
         const el = element as HTMLSelectElement;
         
-        config[el.id] = {
-          id: el.id,
-          value: el.selectedIndex
-        };
+        config[el.id] = el.selectedIndex;
       }
     }
 
@@ -59,53 +96,35 @@ export function initConfig(): void {
   }, 1500);
 }
 
-export function loadConfig(): void {
+export function uploadConfig(config: any): void {
   log('Загрузка конфига...', 'system');
 
   try {
-    let config = localStorage.getItem('salarixionion:config');
-
-    if (!config) {
-      log('Ошибка загрузки конфига: Config not found', 'error');
-      return;
+    for (const [id, value] of Object.entries<ConfigValue>(config)) {
+      setValue(id, value);
     }
 
-    for (const [id, el] of Object.entries<ConfigElement>(JSON.parse(config))) {
-      if (id === '') continue;
+    message('Система', 'Конфиг успешно загружен');
 
-      const doc = document.getElementById(id) as HTMLElement;
-
-      if (doc.tagName.toLocaleLowerCase() === 'input') {
-        const input = doc as HTMLInputElement;
-
-        if (input.type === 'checkbox') {
-          input.checked = Boolean(el.value);
-        } else {
-          if (typeof el.value === 'number') {
-            input.valueAsNumber = el.value;
-          } else {
-            input.value = el.value ? el.value.toString() : '';
-          }
-        }
-      } else if (doc.tagName.toLocaleLowerCase() === 'textarea') {
-        const textarea = doc as HTMLTextAreaElement;
-        textarea.value = el.value ? el.value.toString() : '';
-      } else {
-        const select = doc as HTMLSelectElement;
-
-        if (typeof el.value === 'number') {
-          select.selectedIndex = el.value;
-        }
-      }
-    }
-
-    for (const name in plugins) {
-      const state = localStorage.getItem(`plugin-state:${name}`) === 'true';
-      updatePluginState(name, state);
-    }
+    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
 
     log('Конфиг успешно загружен', 'system');
   } catch (error) {
     log(`Ошибка загрузки конфига: ${error}`, 'error');
+  }
+}
+
+export async function shareConfig(directory: string): Promise<void> {
+  try {
+    const config = localStorage.getItem('salarixionion:config');
+
+    if (config) {
+      let encoder = new TextEncoder();
+      let data = encoder.encode(config);
+
+      await writeFile(await path.join(directory, 'salarixi.conf.json'), data);
+    }
+  } catch (error) {
+    log(`Ошибка создания конфига: ${error}`, 'error');
   }
 }

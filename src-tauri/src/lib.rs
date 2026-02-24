@@ -158,10 +158,7 @@ async fn control_bots(name: String, options: serde_json::Value, group: String) {
 async fn quick_task(name: String) {
   if let Some(opts) = current_options() {
     if opts.basic.use_webhook && opts.webhook.send_actions {
-      send_webhook(
-        opts.webhook.url,
-        format!("Быстрая задача '{}'", name),
-      );
+      send_webhook(opts.webhook.url, format!("Быстрая задача '{}'", name));
     }
   }
 
@@ -229,6 +226,8 @@ fn exit() {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_dialog::init())
     .setup(|app| {
       let handle = app.handle().clone();
 

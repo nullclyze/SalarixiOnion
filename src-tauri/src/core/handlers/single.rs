@@ -117,10 +117,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
               "random" => {
                 let command = format!(
                   "{} {}",
-                  opts
-                    .basic
-                    .set_skin_command
-                    .unwrap_or("/skin".to_string()),
+                  opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
                   randelem(ACCOUNTS_WITH_SKINS).unwrap()
                 );
 
@@ -142,10 +139,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 if let Some(n) = opts.basic.custom_skin_by_nickname {
                   let command = format!(
                     "{} {}",
-                    opts
-                      .basic
-                      .set_skin_command
-                      .unwrap_or("/skin".to_string()),
+                    opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
                     n
                   );
 
@@ -231,7 +225,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           if options.captcha_bypass.captcha_type.as_str() == "web" {
             if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
               packet.message().to_string(),
-              options.captcha_bypass
+              options
+                .captcha_bypass
                 .regex
                 .unwrap_or(r"https?://[^\s]+".to_string())
                 .as_str(),

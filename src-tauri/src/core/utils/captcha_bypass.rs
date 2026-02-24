@@ -264,9 +264,7 @@ impl WebCaptchaBypass {
             match self
               .create_webdriver(
                 options.captcha_bypass.browser,
-                options
-                  .captcha_bypass
-                  .webdriver_server_url,
+                options.captcha_bypass.webdriver_server_url,
                 manual_proxy,
               )
               .await
