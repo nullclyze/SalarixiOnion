@@ -11,7 +11,7 @@ function setValue(id: string, value: ConfigValue): void {
   if (id === '') return;
 
   try {
-    const doc = document.getElementById(id) as HTMLElement;
+    const doc = document.getElementById(id.replaceAll('.', '_')) as HTMLElement;
 
     if (doc.tagName.toLocaleLowerCase() === 'input') {
       const input = doc as HTMLInputElement;
@@ -69,22 +69,21 @@ export function initConfig(): void {
     const config: Record<string, ConfigValue> = {};
 
     for (const element of elements) {
+      const id = element.id.replaceAll('_', '.');
+
       if (element.tagName.toLocaleLowerCase() === 'input') {
         const el = element as HTMLInputElement;
-
         if (el.type === 'checkbox') {
-          config[el.id] = el.checked;
+          config[id] = el.checked;
         } else {
-          config[el.id] = el.type === 'number' ? parseInt(el.value) : el.value;
+          config[id] = el.type === 'number' ? parseInt(el.value) : el.value;
         }
       } else if (element.tagName.toLocaleLowerCase() === 'textarea') {
         const el = element as HTMLTextAreaElement;
-
-        config[el.id] = el.type === 'number' ? parseInt(el.value) : el.value;
+        config[id] = el.type === 'number' ? parseInt(el.value) : el.value;
       } else {
         const el = element as HTMLSelectElement;
-        
-        config[el.id] = el.selectedIndex;
+        config[id] = el.selectedIndex;
       }
     }
 
@@ -119,8 +118,18 @@ export async function shareConfig(directory: string): Promise<void> {
     const config = localStorage.getItem('salarixionion:config');
 
     if (config) {
+      const clean_config: Record<string, ConfigValue> = {};
+
+      for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
+        const el = document.getElementById(id.replaceAll('.', '_'));
+
+        if (el && !el.getAttribute('ignore-config')) {
+          clean_config[id] = value;
+        }
+      }
+
       let encoder = new TextEncoder();
-      let data = encoder.encode(config);
+      let data = encoder.encode(JSON.stringify(clean_config, null, 2));
 
       await writeFile(await path.join(directory, 'salarixi.conf.json'), data);
     }

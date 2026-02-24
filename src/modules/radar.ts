@@ -29,10 +29,10 @@ export class RadarManager {
     this.targetCardsContainer = document.getElementById('radar-target-cards-container') as HTMLElement;
 
     const addTargetBtn = document.getElementById('radar-add-target') as HTMLButtonElement;
-    const setUpdateFrequency = document.getElementById('radar-update-frequency') as HTMLSelectElement;
     const openSettingsBtn = document.getElementById('radar-open-settings') as HTMLButtonElement;
     const closeSettingsBtn = document.getElementById('radar-close-settings') as HTMLButtonElement;
     const removeAllTargetsBtn = document.getElementById('radar-remove-all-targets') as HTMLElement;
+    const updateFrequency = document.getElementById('radar_select_update-frequency') as HTMLSelectElement;
 
     addTargetBtn.addEventListener('click', () => {
       if (!this.active) return;
@@ -125,15 +125,6 @@ export class RadarManager {
       this.initializeTargetCard(username);
     });
 
-    setUpdateFrequency.addEventListener('change', () => {
-      this.updateFrequency = setUpdateFrequency.value ? parseInt(setUpdateFrequency.value) : 1500;
-
-      this.targets.forEach((i, n) => {
-        clearInterval(i.interval);
-        this.setTargetUpdateInterval(n, this.updateFrequency);
-      });
-    });
-
     openSettingsBtn.addEventListener('click', () => {
       const settings = document.getElementById('radar-settings') as HTMLElement;
       settings.style.display = 'flex';
@@ -153,6 +144,15 @@ export class RadarManager {
       });
 
       this.targets.clear();
+    });
+
+    updateFrequency.addEventListener('change', () => {
+      this.updateFrequency = updateFrequency.value ? parseInt(updateFrequency.value) : 1500;
+
+      this.targets.forEach((i, n) => {
+        clearInterval(i.interval);
+        this.setTargetUpdateInterval(n, this.updateFrequency);
+      });
     });
   }
 
@@ -267,9 +267,9 @@ UUID: ${uuid}
 
             this.addRoutePointToChart(nickname, parseFloat(x), parseFloat(z), data.observer);
 
-            if ((document.getElementById('radar-auto-save') as HTMLInputElement).checked) {
-              const path = (document.getElementById('radar-path') as HTMLInputElement).value;
-              const filename = (document.getElementById('radar-filename') as HTMLInputElement).value;
+            if ((document.getElementById('radar_chbx_auto-save') as HTMLInputElement).checked) {
+              const path = (document.getElementById('radar_option_path') as HTMLInputElement).value;
+              const filename = (document.getElementById('radar_option_filename') as HTMLInputElement).value;
 
               if (await isAbsolute(path)) {
                 await invoke('save_radar_data', {

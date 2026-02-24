@@ -73,11 +73,11 @@ export class ProxyManager {
   
   private async collectProxy(): Promise<void> {
     try {
-      const algorithm = (document.getElementById('proxy-finder-algorithm') as HTMLSelectElement).value;
-      const protocol = (document.getElementById('proxy-finder-protocol') as HTMLSelectElement).value;
-      const country = (document.getElementById('proxy-finder-country') as HTMLSelectElement).value;
-      const port = (document.getElementById('proxy-finder-port') as HTMLSelectElement).value;
-      const count = (document.getElementById('proxy-finder-count') as HTMLInputElement).value;
+      const algorithm = (document.getElementById('proxy-finder_select_algorithm') as HTMLSelectElement).value;
+      const protocol = (document.getElementById('proxy-finder_select_protocol') as HTMLSelectElement).value;
+      const country = (document.getElementById('proxy-finder_select_country') as HTMLSelectElement).value;
+      const port = (document.getElementById('proxy-finder_select_port') as HTMLSelectElement).value;
+      const count = (document.getElementById('proxy-finder_select_count') as HTMLInputElement).value;
 
       this.proxyFinderStatus!.innerText = 'Поиск прокси...';
 

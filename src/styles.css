@@ -2177,12 +2177,12 @@ textarea::-webkit-resizer {
   color: #c00505;
 }
 
-.plugins-wrap .list .plugin-card.unavailable .head .text .name {
+.plugins-wrap .list .plugin-card.unavailable .head .text .header {
   color: #8d8d8d;
 }
 
-.plugins-wrap .list .plugin-card.unavailable .head .text .name .tag {
-  color: #bdbdbd;
+.plugins-wrap .list .plugin-card.unavailable .head .text .header .tag,
+.plugins-wrap .list .plugin-card.deprecated .head .text .header .tag {
   background-color: #3f3f3f1a;
   border: 1px solid #4b4b4b50;
   padding: 3px 6px;
@@ -2193,16 +2193,12 @@ textarea::-webkit-resizer {
   margin-left: 6px;
 }
 
-.plugins-wrap .list .plugin-card.deprecated .head .text .name .tag {
+.plugins-wrap .list .plugin-card.unavailable .head .text .header .tag {
+  color: #bdbdbd;
+} 
+
+.plugins-wrap .list .plugin-card.deprecated .head .text .header .tag {
   color: #d3c017;
-  background-color: #3f3f3f1a;
-  border: 1px solid #4b4b4b50;
-  padding: 3px 6px;
-  border-radius: 6px;
-  font-family: var(--global-font-family);
-  font-size: 14px;
-  font-weight: normal;
-  margin-left: 6px;
 }
 
 .plugins-wrap .list .plugin-card .head {
@@ -2240,7 +2236,7 @@ textarea::-webkit-resizer {
   padding-left: 12px;
 }
 
-.plugins-wrap .list .plugin-card .head .text .name {
+.plugins-wrap .list .plugin-card .head .text .header {
   color: #e0e0e0;
   font-family: var(--global-font-family);
   font-size: 16px;
