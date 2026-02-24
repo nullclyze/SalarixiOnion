@@ -56,7 +56,7 @@ export function log(text: string, type: string): void {
 
   journal.appendChild(line);
 
-  if ((document.getElementById('auto-scroll-log') as HTMLInputElement).checked) {
+  if ((document.getElementById('journal_chbx_auto-scroll') as HTMLInputElement).checked) {
     journal.scrollTo({
       top: journal.scrollHeight,
       behavior: 'smooth'

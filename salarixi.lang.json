@@ -472,15 +472,15 @@
     { 
       "tags": ["checkbox:auto-register"], 
       "lang": {
-        "ru": "Авто регистрация",
-        "en": "Auto Register"
+        "ru": "Использовать Auto-Register",
+        "en": "Использовать Auto-Register"
       }
     },
     { 
       "tags": ["checkbox:auto-login"], 
       "lang": {
-        "ru": "Авто логин",
-        "en": "Auto Login"
+        "ru": "Использовать Auto-Login",
+        "en": "use Auto-Login"
       }
     },
     { 

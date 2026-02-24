@@ -58,6 +58,7 @@ const pressedKeys: { [x: string]: boolean } = {
 
 let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
 let controlContainers: Array<{ id: string; el: HTMLElement }> = [];
+let latestControlContainer: HTMLElement | null = null;
 let triggerFunctions: Record<string, Function> = {};
 
 async function initUserGuide(): Promise<void> {
@@ -154,11 +155,37 @@ export function updatePluginState(name: string, state: boolean) {
   }
 }
 
-async function initPlugins(): Promise<void> {
+function initPlugins(): void {
   try {
     for (const name in plugins) {
       const plugin = plugins[name];
 
+      const pluginCard = document.createElement('div');
+      pluginCard.className = 'plugin-card';
+      pluginCard.id = `${name}-plugin`;
+
+      pluginCard.innerHTML = `
+        <div class="head">
+          <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+          </svg>
+
+          <div class="text">
+            <div class="header" id="${name}-header">${plugin.header}</div>
+            <div class="meta">
+              <span translator-tag="label:plugin-status">Статус:</span> <span id="${name}-status">Выключен</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="button" plugin-toggler="true" plugin-name="${name}" state="true" id="${name}-toggler" style="color: #d61818;">Выключен</button>
+          <button class="button" plugin-open-description="true" path="${name}-plugin-description">Описание</button>
+        </div>
+      `;
+
+      document.getElementById('plugin-list')?.appendChild(pluginCard);
+      
       const element = document.createElement('div');
 
       element.className = 'cover';
@@ -207,7 +234,13 @@ async function initPlugins(): Promise<void> {
         container.style.display = 'none';
       }
     })); 
+  } catch (error) {
+    log(`Ошибка инициализации плагинов: ${error}`, 'error');
+  }
+}
 
+async function initPluginDescriptions(): Promise<void> {
+  try {
     const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
     
     if (content) {
@@ -224,7 +257,7 @@ async function initPlugins(): Promise<void> {
             tag.className = 'tag';
             tag.innerText = 'Устарел';
 
-            document.getElementById(`${name}-name`)?.appendChild(tag);
+            document.getElementById(`${name}-header`)?.appendChild(tag);
           }
 
           const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
@@ -250,7 +283,7 @@ async function initPlugins(): Promise<void> {
               </svg>
 
               <div class="text">
-                <div class="name">${plugin['header']} <span class="tag">Недоступен</span></div>
+                <div class="header">${plugin['header']} <span class="tag">Недоступен</span></div>
                 <div class="meta">Статус: <span class="status">Недоступен</span></div>
               </div>
             </div>
@@ -324,13 +357,13 @@ async function startBots(): Promise<void> {
 
       chartManager.enable();
 
-      monitoringManager.extendedMonitoring = (document.getElementById('use-extended-monitoring') as HTMLInputElement).checked;
-      monitoringManager.chatMonitoring = (document.getElementById('use-chat-monitoring') as HTMLInputElement).checked;
-      monitoringManager.mapMonitoring = (document.getElementById('use-map-monitoring') as HTMLInputElement).checked;
-      monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('chat-history-length') as HTMLInputElement).value || '50');
-      monitoringManager.antiCaptchaType = (document.getElementById('use-anti-captcha') as HTMLInputElement).checked ? (document.getElementById('select-captcha-type') as HTMLSelectElement).value : null;
+      monitoringManager.extendedMonitoring = (document.getElementById('settings_chbx_use-extended-monitoring') as HTMLInputElement).checked;
+      monitoringManager.chatMonitoring = (document.getElementById('settings_chbx_use-chat-monitoring') as HTMLInputElement).checked;
+      monitoringManager.mapMonitoring = (document.getElementById('settings_chbx_use-map-monitoring') as HTMLInputElement).checked;
+      monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('monitoring_option_chat-history-length') as HTMLInputElement).value || '50');
+      monitoringManager.antiCaptchaType = (document.getElementById('settings_chbx_use-anti-captcha') as HTMLInputElement).checked ? (document.getElementById('captcha-bypass_select_captcha-type') as HTMLSelectElement).value : null;
 
-      monitoringManager.enable(parseInt((document.getElementById('monitoring-update-frequency') as HTMLInputElement).value || '1800'));
+      monitoringManager.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
       monitoringManager.wait();
 
       radarManager.enable();
@@ -419,218 +452,214 @@ function registerTriggerFunction(id: string, type: 'checkbox' | 'select', func: 
   }
 }
 
-class ElementManager {
-  private latestControlContainer: HTMLElement | null = null;
+async function initFunctions(): Promise<void> {
+  const startBotsProcessBtn = document.getElementById('start') as HTMLButtonElement;
+  const stopBotsProcessBtn = document.getElementById('stop') as HTMLButtonElement;
+  const setRandomValuesBtn =  document.getElementById('random') as HTMLButtonElement;
+  const clearInputValuesBtn = document.getElementById('clear') as HTMLButtonElement;
 
-  public async init(): Promise<void> {
-    const startBotsProcessBtn = document.getElementById('start') as HTMLButtonElement;
-    const stopBotsProcessBtn = document.getElementById('stop') as HTMLButtonElement;
-    const setRandomValuesBtn =  document.getElementById('random') as HTMLButtonElement;
-    const clearInputValuesBtn = document.getElementById('clear') as HTMLButtonElement;
+  const panelBtns = document.querySelectorAll<HTMLButtonElement>('.panel-btn');
+  const controlBtns = document.querySelectorAll<HTMLButtonElement>('.control-btn');
+  
+  panelBtns.forEach(btn => {
+    if (btn.id === 'main') btn.classList.add('selected');
 
-    const panelBtns = document.querySelectorAll<HTMLButtonElement>('.panel-btn');
-    const controlBtns = document.querySelectorAll<HTMLButtonElement>('.control-btn');
-    
-    panelBtns.forEach(btn => {
-      if (btn.id === 'main') btn.classList.add('selected');
+    btn.addEventListener('click', () => {
+      showGlobalContainer(btn.getAttribute('path') || '');
+      panelBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+  
+  controlBtns.forEach(btn => {
+    if (btn.id === 'control-chat') btn.classList.add('selected');
 
-      btn.addEventListener('click', () => {
-        this.showGlobalContainer(btn.getAttribute('path') || '');
-        panelBtns.forEach(b => b.classList.remove('selected'));
+    btn.addEventListener('click', () => {
+      if (btn.getAttribute('path')) {
+        showControlContainer(btn.getAttribute('path') || '');
+        controlBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-      });
-    });
-    
-    controlBtns.forEach(btn => {
-      if (btn.id === 'control-chat') btn.classList.add('selected');
-
-      btn.addEventListener('click', () => {
-        if (btn.getAttribute('path')) {
-          this.showControlContainer(btn.getAttribute('path') || '');
-          controlBtns.forEach(b => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          this.latestControlContainer = document.getElementById(btn.getAttribute('path') || '');
-        }
-      });
-    });
-
-    document.querySelectorAll<HTMLButtonElement>('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
-      let state: boolean | string = false;
-      let attribute = e.getAttribute('state');
-
-      switch (attribute) {
-        case 'true':
-          state = true;
-          break;
-        case 'false':
-          state = false;
-          break;
-        case null:
-          state = false;
-          break;
-        default:
-          state = attribute;
-          break;
-      }
-
-      await controlBots(e.name, state);
-    }));
-
-    document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
-    document.getElementById('stop-script')?.addEventListener('click', async () => await scriptManager.stop());
-
-    document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
-
-    document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
-
-    document.addEventListener('keydown', async (e) => {
-      if (process === 'active') {
-        const key = e.key.toLowerCase();
-    
-        for (const k in pressedKeys) {
-          key === k ? pressedKeys[key] = true : null;
-        }
-      
-        if (pressedKeys.shift && pressedKeys.i && pressedKeys.c) {
-          await invoke('quick_task', { name: 'clear-inventory' });
-        } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.c) {
-          await invoke('quick_task', { name: 'form-circle' });
-        } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.l) {
-          await invoke('quick_task', { name: 'form-line' });
-        } else if (pressedKeys.shift && pressedKeys.p && pressedKeys.s) {
-          await invoke('quick_task', { name: 'pathfinder-stop' });
-        } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.f) {
-          await invoke('quick_task', { name: 'fly' });
-        } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.r) {
-          await invoke('quick_task', { name: 'rise' });
-        } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.c) {
-          await invoke('quick_task', { name: 'capsule' });
-        } else if (pressedKeys.alt && pressedKeys.shift && pressedKeys.q) {
-          await invoke('quick_task', { name: 'quit' });
-        } else if (pressedKeys.shift && pressedKeys.w) {
-          await invoke('quick_task', { name: 'move-forward' });
-        } else if (pressedKeys.shift && pressedKeys.s) {
-          await invoke('quick_task', { name: 'move-backward' });
-        } else if (pressedKeys.shift && pressedKeys.a) {
-          await invoke('quick_task', { name: 'move-left' });
-        } else if (pressedKeys.shift && pressedKeys.d) {
-          await invoke('quick_task', { name: 'move-right' });
-        } else if (pressedKeys.shift && pressedKeys.j) {
-          await invoke('quick_task', { name: 'jump' });
-        } else if (pressedKeys.shift && pressedKeys.c) {
-          await invoke('quick_task', { name: 'shift' });
-        } else if (pressedKeys.shift && pressedKeys.u) {
-          await invoke('quick_task', { name: 'unite' });
-        } else if (pressedKeys.shift && pressedKeys.t) {
-          await invoke('quick_task', { name: 'turn' });
-        } else if (pressedKeys.shift && pressedKeys.z) {
-          await invoke('quick_task', { name: 'zero' });
-        }
+        latestControlContainer = document.getElementById(btn.getAttribute('path') || '');
       }
     });
+  });
 
-    document.addEventListener('keyup', (e) => {
-      if (process === 'active') {
-        const key = e.key.toLowerCase();
-    
-        for (const k in pressedKeys) {
-          key === k ? pressedKeys[key] = false : null;
-        }
-      }
-    }); 
+  document.querySelectorAll<HTMLButtonElement>('[control-toggler="true"]').forEach(e => e.addEventListener('click', async () => { 
+    let state: boolean | string = false;
+    let attribute = e.getAttribute('state');
 
-    startBotsProcessBtn.addEventListener('click', async () => await startBots());
-    stopBotsProcessBtn.addEventListener('click', async () => await stopBots());
-
-    setRandomValuesBtn.addEventListener('click', () => {
-      const versions = [
-        '1.8.9', '1.12.2', '1.12',
-        '1.14', '1.16.4', '1.16.5',
-        '1.19', '1.20.1', '1.20.3',
-        '1.21', '1.21.1', '1.21.3',
-        '1.21.6', '1.21.5', '1.20.4',
-        '1.21.10', '1.21.11', '1.21.8'
-      ];
-
-      const setRandomValue = (e: string) => {
-        let current = document.getElementById(e) as HTMLInputElement; 
-
-        switch (e) {
-          case 'version':
-            const randomVersion = String(versions[Math.floor(Math.random() * versions.length)]);
-            current.value = (document.getElementById('use-proxy') as HTMLInputElement).checked ? '1.21.11' : randomVersion; break;
-          case 'bots-count':
-            const randomQuantity = Math.floor(Math.random() * (50 - 10 + 1) + 10);
-            current.valueAsNumber = randomQuantity; break;
-          case 'join-delay':
-            const randomDelay = Math.floor(Math.random() * (7000 - 1000 + 1) + 1000);
-            current.valueAsNumber = randomDelay; break;
-        }
-      }
-
-      setRandomValue('version');
-      setRandomValue('bots-count');
-      setRandomValue('join-delay');
-    });
-
-    clearInputValuesBtn.addEventListener('click', () => {
-      (document.getElementById('address') as HTMLInputElement).value = '';
-      (document.getElementById('version') as HTMLInputElement).value = '';
-      (document.getElementById('bots-count') as HTMLInputElement).value = '';
-      (document.getElementById('join-delay') as HTMLInputElement).value = '';
-    });
-
-    document.getElementById('upload-config')?.addEventListener('click', async () => {
-      const path = await open({
-        directory: false,
-        multiple: false
-      });
-
-      if (path) {
-        const data = await readFile(path);
-
-        if (data) {
-          const decoder = new TextDecoder();
-          const config = JSON.parse(decoder.decode(data));
-          uploadConfig(config);
-        }
-      }
-    });
-
-    document.getElementById('share-config')?.addEventListener('click', async () => {
-      const directory = await open({
-        directory: true,
-        multiple: false
-      });
-
-      if (directory) {
-        await shareConfig(directory);
-      }
-    });
-
-    document.getElementById('interface-client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language));
-    await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language);
-
-    await initUserGuide();
-    await initPlugins();
-  } 
-
-  private showGlobalContainer(id: string): void {
-    globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
-    controlContainers.forEach(c => c.el.style.display = 'none');
-
-    if (id === 'control-container') {
-      this.latestControlContainer ? this.latestControlContainer.style.display = 'flex' : (document.getElementById('control-chat-container') as HTMLElement).style.display = 'flex';
+    switch (attribute) {
+      case 'true':
+        state = true;
+        break;
+      case 'false':
+        state = false;
+        break;
+      case null:
+        state = false;
+        break;
+      default:
+        state = attribute;
+        break;
     }
-  }
 
-  private showControlContainer(id: string): void {
-    controlContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
+    await controlBots(e.name, state);
+  }));
+
+  document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
+  document.getElementById('stop-script')?.addEventListener('click', async () => await scriptManager.stop());
+
+  document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
+
+  document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
+
+  document.addEventListener('keydown', async (e) => {
+    if (process === 'active') {
+      const key = e.key.toLowerCase();
+  
+      for (const k in pressedKeys) {
+        key === k ? pressedKeys[key] = true : null;
+      }
+    
+      if (pressedKeys.shift && pressedKeys.i && pressedKeys.c) {
+        await invoke('quick_task', { name: 'clear-inventory' });
+      } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.c) {
+        await invoke('quick_task', { name: 'form-circle' });
+      } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.l) {
+        await invoke('quick_task', { name: 'form-line' });
+      } else if (pressedKeys.shift && pressedKeys.p && pressedKeys.s) {
+        await invoke('quick_task', { name: 'pathfinder-stop' });
+      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.f) {
+        await invoke('quick_task', { name: 'fly' });
+      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.r) {
+        await invoke('quick_task', { name: 'rise' });
+      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.c) {
+        await invoke('quick_task', { name: 'capsule' });
+      } else if (pressedKeys.alt && pressedKeys.shift && pressedKeys.q) {
+        await invoke('quick_task', { name: 'quit' });
+      } else if (pressedKeys.shift && pressedKeys.w) {
+        await invoke('quick_task', { name: 'move-forward' });
+      } else if (pressedKeys.shift && pressedKeys.s) {
+        await invoke('quick_task', { name: 'move-backward' });
+      } else if (pressedKeys.shift && pressedKeys.a) {
+        await invoke('quick_task', { name: 'move-left' });
+      } else if (pressedKeys.shift && pressedKeys.d) {
+        await invoke('quick_task', { name: 'move-right' });
+      } else if (pressedKeys.shift && pressedKeys.j) {
+        await invoke('quick_task', { name: 'jump' });
+      } else if (pressedKeys.shift && pressedKeys.c) {
+        await invoke('quick_task', { name: 'shift' });
+      } else if (pressedKeys.shift && pressedKeys.u) {
+        await invoke('quick_task', { name: 'unite' });
+      } else if (pressedKeys.shift && pressedKeys.t) {
+        await invoke('quick_task', { name: 'turn' });
+      } else if (pressedKeys.shift && pressedKeys.z) {
+        await invoke('quick_task', { name: 'zero' });
+      }
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    if (process === 'active') {
+      const key = e.key.toLowerCase();
+  
+      for (const k in pressedKeys) {
+        key === k ? pressedKeys[key] = false : null;
+      }
+    }
+  }); 
+
+  startBotsProcessBtn.addEventListener('click', async () => await startBots());
+  stopBotsProcessBtn.addEventListener('click', async () => await stopBots());
+
+  setRandomValuesBtn.addEventListener('click', () => {
+    const versions = [
+      '1.8.9', '1.12.2', '1.12',
+      '1.14', '1.16.4', '1.16.5',
+      '1.19', '1.20.1', '1.20.3',
+      '1.21', '1.21.1', '1.21.3',
+      '1.21.6', '1.21.5', '1.20.4',
+      '1.21.10', '1.21.11', '1.21.8'
+    ];
+
+    const setRandomValue = (e: string) => {
+      let current = document.getElementById(e) as HTMLInputElement; 
+
+      switch (e) {
+        case 'settings_option_version':
+          const randomVersion = String(versions[Math.floor(Math.random() * versions.length)]);
+          current.value = (document.getElementById('settings_chbx_use-proxy') as HTMLInputElement).checked ? '1.21.11' : randomVersion; break;
+        case 'settings_option_bots-count':
+          const randomQuantity = Math.floor(Math.random() * (50 - 10 + 1) + 10);
+          current.valueAsNumber = randomQuantity; break;
+        case 'settings_option_join-delay':
+          const randomDelay = Math.floor(Math.random() * (7000 - 1000 + 1) + 1000);
+          current.valueAsNumber = randomDelay; break;
+      }
+    }
+
+    setRandomValue('settings_option_version');
+    setRandomValue('settings_option_bots-count');
+    setRandomValue('settings_option_join-delay');
+  });
+
+  clearInputValuesBtn.addEventListener('click', () => {
+    (document.getElementById('settings_option_address') as HTMLInputElement).value = '';
+    (document.getElementById('settings_option_version') as HTMLInputElement).value = '';
+    (document.getElementById('settings_option_bots-count') as HTMLInputElement).value = '';
+    (document.getElementById('settings_option_join-delay') as HTMLInputElement).value = '';
+  });
+
+  document.getElementById('upload-config')?.addEventListener('click', async () => {
+    const path = await open({
+      directory: false,
+      multiple: false
+    });
+
+    if (path) {
+      const data = await readFile(path);
+
+      if (data) {
+        const decoder = new TextDecoder();
+        const config = JSON.parse(decoder.decode(data));
+        uploadConfig(config);
+      }
+    }
+  });
+
+  document.getElementById('share-config')?.addEventListener('click', async () => {
+    const directory = await open({
+      directory: true,
+      multiple: false
+    });
+
+    if (directory) {
+      await shareConfig(directory);
+    }
+  });
+
+  document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language));
+  await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language);
+
+  await initUserGuide();
+  await initPluginDescriptions();
+} 
+
+function showGlobalContainer(id: string): void {
+  globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
+  controlContainers.forEach(c => c.el.style.display = 'none');
+
+  if (id === 'control-container') {
+    latestControlContainer ? latestControlContainer.style.display = 'flex' : (document.getElementById('control-chat-container') as HTMLElement).style.display = 'flex';
   }
 }
 
+function showControlContainer(id: string): void {
+  controlContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
+}
+
 function registerAllTriggerFunctions() {
-  registerTriggerFunction('use-chat-monitoring', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('settings_chbx_use-chat-monitoring', 'checkbox', (current: HTMLInputElement) => {
     const input = document.getElementById('chat-history-length-container') as HTMLElement;
 
     if (current.checked) {
@@ -640,8 +669,8 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('use-proxy', 'checkbox', (current: HTMLInputElement) => {
-    const version = document.getElementById('version') as HTMLInputElement;
+  registerTriggerFunction('settings_chbx_use-proxy', 'checkbox', (current: HTMLInputElement) => {
+    const version = document.getElementById('settings_option_version') as HTMLInputElement;
 
     if (current.checked) {
       version.value = '1.21.11';
@@ -651,7 +680,81 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-captcha-type', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('settings_select_nickname-type', 'select', (current: HTMLSelectElement) => {
+    const container = document.getElementById('custom-nickname-template-container') as HTMLInputElement;
+
+    if (current.value === 'custom') {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('settings_select_password-type', 'select', (current: HTMLSelectElement) => {
+    const container = document.getElementById('custom-password-template-container') as HTMLInputElement;
+
+    if (current.value === 'custom') {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('settings_select_register-mode', 'select', (current: HTMLSelectElement) => {
+    if (current.value === 'default') {
+      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'none';
+    } else {
+      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('settings_select_login-mode', 'select', (current: HTMLSelectElement) => {
+    if (current.value === 'default') {
+      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
+      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'none';
+    } else {
+      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'none';
+      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'flex';
+    }
+  });
+
+  registerTriggerFunction('settings_chbx_use-auto-register', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-register-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('settings_chbx_use-auto-login', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-login-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('settings_chbx_use-auto-rejoin', 'checkbox', (current: HTMLInputElement) => {
+    const container = document.getElementById('auto-rejoin-input-container') as HTMLElement;
+
+    if (current.checked) {
+      container.style.display = 'flex';
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('captcha-bypass_select_captcha-type', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
     const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
 
@@ -664,7 +767,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-captcha-solve-mode', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('captcha-bypass_select_solve-mode', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
     const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
 
@@ -677,51 +780,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('nickname-type-select', 'select', (current: HTMLSelectElement) => {
-    const container = document.getElementById('custom-nickname-template-container') as HTMLInputElement;
-
-    if (current.value === 'custom') {
-      container.style.display = 'flex';
-    } else {
-      container.style.display = 'none';
-    }
-  });
-
-  registerTriggerFunction('password-type-select', 'select', (current: HTMLSelectElement) => {
-    const container = document.getElementById('custom-password-template-container') as HTMLInputElement;
-
-    if (current.value === 'custom') {
-      container.style.display = 'flex';
-    } else {
-      container.style.display = 'none';
-    }
-  });
-
-  registerTriggerFunction('register-mode-select', 'select', (current: HTMLSelectElement) => {
-    if (current.value === 'default') {
-      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
-      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
-      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'none';
-    } else {
-      (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'none';
-      (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'none';
-      (document.getElementById('register-trigger-container') as HTMLInputElement).style.display = 'flex';
-    }
-  });
-
-  registerTriggerFunction('login-mode-select', 'select', (current: HTMLSelectElement) => {
-    if (current.value === 'default') {
-      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
-      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
-      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'none';
-    } else {
-      (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'none';
-      (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'none';
-      (document.getElementById('login-trigger-container') as HTMLInputElement).style.display = 'flex';
-    }
-  });
-
-  registerTriggerFunction('chat-mode', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_chat_select_mode', 'select', (current: HTMLSelectElement) => {
     const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
     const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
           
@@ -743,7 +802,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-inventory-mode', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_inventory_select_mode', 'select', (current: HTMLSelectElement) => {
     const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
     const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
     const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
@@ -759,7 +818,7 @@ function registerAllTriggerFunctions() {
     } 
   });
 
-  registerTriggerFunction('select-movement-mode', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_movement_select_mode', 'select', (current: HTMLSelectElement) => {
     const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
     const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
     const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
@@ -775,7 +834,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-flight-settings', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_flight_select_settings', 'select', (current: HTMLSelectElement) => {
     const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
     const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
 
@@ -788,7 +847,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-killaura-settings', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_killaura_select_settings', 'select', (current: HTMLSelectElement) => {
     const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
 
     if (current.value === 'adaptive') {
@@ -798,7 +857,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('use-killaura-auto-weapon', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('module_killaura_select_weapon', 'checkbox', (current: HTMLInputElement) => {
     const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
     const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
 
@@ -811,7 +870,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('use-killaura-chase', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('module_killaura_chbx_use-chase', 'checkbox', (current: HTMLInputElement) => {
     const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
 
     if (current.checked) {
@@ -821,7 +880,7 @@ function registerAllTriggerFunctions() {
     }
   });
   
-  registerTriggerFunction('select-bow-aim-target', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_bow-aim_select_target', 'select', (current: HTMLSelectElement) => {
     const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
 
     if (current.value === 'custom') {
@@ -831,7 +890,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-miner-mode', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('module_miner_select_mode', 'select', (current: HTMLSelectElement) => {
     const tunnelSelectContainer = document.getElementById('miner-tunnel-select-container') as HTMLElement;
     const lookSelectContainer = document.getElementById('miner-look-select-container') as HTMLElement;
 
@@ -844,7 +903,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-skin-type', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('settings_select_skin-type', 'select', (current: HTMLSelectElement) => {
     const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
     const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
 
@@ -860,32 +919,16 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('select-skin-type', 'select', (current: HTMLSelectElement) => {
-    const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
-    const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
-
-    if (current.value === 'default') {
-      setSkinCommandContainer.style.display = 'none';
-      customSkinContainer.style.display = 'none';
-    } else if (current.value === 'random') {
-      setSkinCommandContainer.style.display = 'flex';
-      customSkinContainer.style.display = 'none';
-    } else if (current.value === 'custom') {
-      setSkinCommandContainer.style.display = 'flex';
-      customSkinContainer.style.display = 'flex';
-    }
-  });
-
-  registerTriggerFunction('show-system-log', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('journal_chbx_show-system-logs', 'checkbox', (current: HTMLInputElement) => {
     changeLogsVisibility('system', current.checked);
   });
 
-  registerTriggerFunction('show-extended-log', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('journal_chbx_show-extended-logs', 'checkbox', (current: HTMLInputElement) => {
     changeLogsVisibility('extended', current.checked);
   });
 
-  registerTriggerFunction('proxy-finder-algorithm', 'select', (current: HTMLSelectElement) => {
-    const selectProxyFinderCountry = document.getElementById('proxy-finder-country') as HTMLSelectElement;
+  registerTriggerFunction('proxy-finder_select_algorithm', 'select', (current: HTMLSelectElement) => {
+    const selectProxyFinderCountry = document.getElementById('proxy-finder_select_country') as HTMLSelectElement;
 
     if (current.value === 'apic') {
       selectProxyFinderCountry.disabled = false;
@@ -894,37 +937,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('use-auto-register', 'checkbox', (current: HTMLInputElement) => {
-    const container = document.getElementById('auto-register-input-container') as HTMLElement;
-
-    if (current.checked) {
-      container.style.display = 'flex';
-    } else {
-      container.style.display = 'none';
-    }
-  });
-
-  registerTriggerFunction('use-auto-login', 'checkbox', (current: HTMLInputElement) => {
-    const container = document.getElementById('auto-login-input-container') as HTMLElement;
-
-    if (current.checked) {
-      container.style.display = 'flex';
-    } else {
-      container.style.display = 'none';
-    }
-  });
-
-  registerTriggerFunction('use-auto-rejoin', 'checkbox', (current: HTMLInputElement) => {
-    const container = document.getElementById('auto-rejoin-input-container') as HTMLElement;
-
-    if (current.checked) {
-      container.style.display = 'flex';
-    } else {
-      container.style.display = 'none';
-    }
-  });
-
-  registerTriggerFunction('interface-theme', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_theme', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -991,7 +1004,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-global-font-family', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_global-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -1011,7 +1024,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-show-messages', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_show-messages', 'select', (current: HTMLSelectElement) => {
     try {
       changeMessagesVisibility(current.value);
 
@@ -1027,7 +1040,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-show-panel-icons', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_show-panel-icons', 'select', (current: HTMLSelectElement) => {
     try {
       document.querySelectorAll<SVGElement>('[panel-btn-icon="true"]').forEach(i => {
         if (current.value === 'hide') {
@@ -1041,7 +1054,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-panel-font-family', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_panel-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -1072,7 +1085,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-panel-font-size', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_panel-font-size', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-font-size', current.value);
@@ -1081,7 +1094,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-panel-internal-gap', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-btn-gap', current.value);
@@ -1090,7 +1103,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface-panel-internal-gap', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-btn-gap', current.value);
@@ -1168,8 +1181,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
 
     registerAllTriggerFunctions();
+    initPlugins();
 
-    const elementManager = new ElementManager();
+    addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
+    addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
+    addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
+    addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
+
+    initConfig();
+
+    proxyManager.init();
+    chartManager.init();
+    radarManager.init();
 
     await listen('log', (event) => {
       try {
@@ -1189,19 +1212,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
-    addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
-    addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
-    addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
-
-    initConfig();
-
-    proxyManager.init();
-    chartManager.init();
-    radarManager.init();
-
     await monitoringManager.init();
-    await elementManager.init();
+    
+    await initFunctions();
 
     log('Инициализация прошла успешно', 'extended');
 
