@@ -590,7 +590,8 @@ class ElementManager {
         const data = await readFile(path);
 
         if (data) {
-          const config = JSON.parse(data.toString());
+          const decoder = new TextDecoder();
+          const config = JSON.parse(decoder.decode(data));
           uploadConfig(config);
         }
       }
