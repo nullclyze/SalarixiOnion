@@ -118,39 +118,41 @@ async fn get_memory_usage() -> f64 {
 /// Функция управления ботами
 #[tauri::command]
 async fn control_bots(name: String, options: serde_json::Value, group: String) {
-  if let Some(opts) = current_options() {
-    if opts.basic.use_webhook && opts.webhook.send_actions {
-      send_webhook(
-        opts.webhook.url,
-        format!(
-          "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
-          group, name, options
-        ),
-      );
+  if process_is_active() {
+    if let Some(opts) = current_options() {
+      if opts.basic.use_webhook && opts.webhook.send_actions {
+        send_webhook(
+          opts.webhook.url,
+          format!(
+            "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
+            group, name, options
+          ),
+        );
+      }
     }
+
+    send_log(
+      format!(
+        "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
+        group, name, options
+      ),
+      "extended",
+    );
+
+    send_message(
+      "Управление",
+      format!(
+        "Группа ботов с названием '{}' приняла команду '{}'",
+        group, name
+      ),
+    );
+
+    BOT_REGISTRY.send_event(RegistryEvent::ControlModules {
+      name,
+      options,
+      group,
+    });
   }
-
-  send_log(
-    format!(
-      "Группа ботов с названием '{}' приняла команду '{}'. Полученные опции: {}",
-      group, name, options
-    ),
-    "extended",
-  );
-
-  send_message(
-    "Управление",
-    format!(
-      "Группа ботов с названием '{}' приняла команду '{}'",
-      group, name
-    ),
-  );
-
-  BOT_REGISTRY.send_event(RegistryEvent::ControlModules {
-    name,
-    options,
-    group,
-  });
 }
 
 /// Функция выполнения быстрых задач

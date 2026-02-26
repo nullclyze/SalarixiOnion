@@ -1,14 +1,11 @@
 use azalea::core::position::BlockPos;
-use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::{BlockKind, ItemKind};
 use azalea::{prelude::*, Vec3};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{
-  get_block_state, get_bot_inventory_menu, look_at_block, start_use_item, take_item,
-};
+use crate::common::{get_block_state, get_bot_inventory_menu, look_at_block, take_item};
 use crate::core::*;
 use crate::generators::*;
 use crate::methods::SafeClientMethods;
@@ -157,7 +154,7 @@ impl FarmerModule {
 
       for _ in 0..=4 {
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_item();
       }
     }
   }
@@ -205,11 +202,11 @@ impl FarmerModule {
       let kind = BlockKind::from(state);
 
       if kind == BlockKind::CoarseDirt || kind == BlockKind::RootedDirt {
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_item();
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_item();
       } else {
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_item();
       }
     }
   }
@@ -238,10 +235,8 @@ impl FarmerModule {
     if !STATES.get_state(&nickname, "is_eating")
       && !STATES.get_state(&nickname, "is_drinking")
       && STATES.get_state(&nickname, "can_interacting")
-      && STATES.get_state(&nickname, "can_looking")
     {
       if let Some(state) = get_block_state(bot, block_pos) {
-        STATES.set_mutual_states(&nickname, "looking", true);
         STATES.set_mutual_states(&nickname, "interacting", true);
 
         let kind = BlockKind::from(state);
@@ -295,14 +290,17 @@ impl FarmerModule {
           }
         }
 
-        STATES.set_mutual_states(&nickname, "looking", false);
         STATES.set_mutual_states(&nickname, "interacting", false);
       }
     }
   }
 
   async fn farmer(&self, bot: &Client, options: &FarmerOptions) {
+    let username = bot.username();
+
     loop {
+      STATES.set_mutual_states(&username, "looking", true);
+
       for y in -1..=1 {
         let pos = bot.feet_pos();
 
@@ -330,6 +328,8 @@ impl FarmerModule {
       }
 
       sleep(Duration::from_millis(options.delay.unwrap_or(100))).await;
+
+      STATES.set_mutual_states(&username, "looking", false);
     }
   }
 

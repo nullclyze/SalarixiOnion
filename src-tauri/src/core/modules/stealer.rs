@@ -80,7 +80,7 @@ impl StealerModule {
 
   async fn extract_all_items(&self, bot: &Client, container: &ContainerHandle) {
     if let Some(menu) = container.menu() {
-      bot.block_move();
+      bot.freeze_move();
 
       let username = bot.username();
 
@@ -97,7 +97,7 @@ impl StealerModule {
         }
       }
 
-      bot.unblock_move();
+      bot.unfreeze_move();
 
       STATES.set_state(&username, "can_attacking", true);
       STATES.set_state(&username, "can_interacting", true);

@@ -201,18 +201,13 @@ impl KillauraModule {
         let bot_available = BOT_REGISTRY
           .get_bot(&username, async |bot| {
             if !TASKS.get_task_activity(&username, "killaura") {
-              if bot.crouching() {
-                bot.set_crouching(false);
-              }
-
+              bot.stop_crouching();
               return;
             }
 
-            if !bot.crouching() {
-              bot.set_crouching(true);
-              sleep(Duration::from_millis(randuint(150, 250))).await;
-              bot.set_crouching(false);
-            }
+            bot.start_crouching();
+            sleep(Duration::from_millis(randuint(150, 250))).await;
+            bot.stop_crouching();
           })
           .await
           .is_some();
@@ -241,24 +236,21 @@ impl KillauraModule {
               let eye_pos = bot.eye_pos();
 
               if eye_pos.distance_to(get_entity_position(bot, entity)) > min_distance_to_target {
-                if !bot.jumping() {
-                  bot.set_jumping(true);
-                }
-
+                bot.start_jumping();
                 bot.start_sprinting(SprintDirection::Forward);
 
                 if STATES.get_state(&username, "can_looking") {
                   look_at_entity(bot, entity, true);
                 }
               } else {
-                bot.set_jumping(false);
+                bot.stop_jumping();
 
                 if STATES.get_state(&username, "is_sprinting") {
                   bot.stop_move();
                 }
               }
             } else {
-              bot.set_jumping(false);
+              bot.stop_jumping();
 
               if STATES.get_state(&username, "is_sprinting") {
                 bot.stop_move();
@@ -462,18 +454,12 @@ impl KillauraModule {
     BOT_REGISTRY
       .get_bot(username, async |bot| {
         bot.stop_move();
-
-        if bot.jumping() {
-          bot.set_jumping(false);
-        }
-
-        if bot.crouching() {
-          bot.set_crouching(false);
-        }
-
-        STATES.set_mutual_states(username, "looking", false);
-        STATES.set_mutual_states(username, "attacking", false);
+        bot.stop_crouching();
+        bot.stop_jumping();
       })
       .await;
+
+    STATES.set_mutual_states(username, "looking", false);
+    STATES.set_mutual_states(username, "attacking", false);
   }
 }

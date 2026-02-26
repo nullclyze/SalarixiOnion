@@ -757,6 +757,13 @@
       }
     },
     { 
+      "tags": ["control:stalker"], 
+      "lang": {
+        "ru": "Сталкер",
+        "en": "Stalker"
+      }
+    },
+    { 
       "tags": ["control:flight"], 
       "lang": {
         "ru": "Полёт",
@@ -859,6 +866,13 @@
       "lang": {
         "ru": "Управление / Анти-АФК",
         "en": "Control / Anti-AFK"
+      }
+    },
+    { 
+      "tags": ["header:control-stalker"], 
+      "lang": {
+        "ru": "Управление / Сталкер",
+        "en": "Control / Stalker"
       }
     },
     { 

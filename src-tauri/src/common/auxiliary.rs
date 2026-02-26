@@ -4,7 +4,7 @@ use azalea::core::position::BlockPos;
 use azalea::ecs::query::{With, Without};
 use azalea::entity::dimensions::EntityDimensions;
 use azalea::entity::inventory::Inventory;
-use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, Player};
+use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
 use azalea::entity::{Dead, LocalEntity, Physics, Position};
 use azalea::inventory::Menu;
 use azalea::player::GameProfileComponent;
@@ -198,6 +198,11 @@ pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> 
     }
     "animal" => {
       return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
+      });
+    }
+    "vehicle" => {
+      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractVehicle>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
         eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
       });
     }

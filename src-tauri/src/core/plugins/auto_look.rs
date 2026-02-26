@@ -41,12 +41,10 @@ impl AutoLookPlugin {
   }
 
   async fn look(&self, bot: &Client) {
-    if STATES.get_state(&bot.username(), "can_looking") {
-      if bot.is_goto_target_reached() {
-        if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, "any", 14.0)) {
-          look_at_entity(bot, entity, true);
-          sleep(Duration::from_millis(randuint(50, 100))).await;
-        }
+    if STATES.get_state(&bot.username(), "can_looking") && bot.is_goto_target_reached() {
+      if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, "any", 14.0)) {
+        look_at_entity(bot, entity, true);
+        sleep(Duration::from_millis(randuint(50, 100))).await;
       }
     }
   }
