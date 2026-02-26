@@ -21,6 +21,7 @@ impl Tasks {
       "shifting",
       "waving",
       "anti-afk",
+      "stalker",
       "flight",
       "killaura",
       "scaffold",

@@ -76,7 +76,7 @@ pub fn find_empty_slot_in_hotbar(menu: Menu) -> Option<u8> {
 pub fn start_interacting_with_inventory(bot: &Client) {
   let username = bot.username();
 
-  bot.block_move();
+  bot.freeze_move();
 
   STATES.set_state(&username, "can_eating", false);
   STATES.set_state(&username, "can_drinking", false);
@@ -89,7 +89,7 @@ pub fn start_interacting_with_inventory(bot: &Client) {
 pub fn stop_interacting_with_inventory(bot: &Client) {
   let username = bot.username();
 
-  bot.unblock_move();
+  bot.unfreeze_move();
 
   STATES.set_state(&username, "can_eating", true);
   STATES.set_state(&username, "can_drinking", true);

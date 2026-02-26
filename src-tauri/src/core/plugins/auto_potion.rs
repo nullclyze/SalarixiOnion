@@ -92,8 +92,6 @@ impl AutoPotionPlugin {
 
               STATES.set_state(&nickname, "can_eating", true);
               STATES.set_state(&nickname, "can_interacting", true);
-              STATES.set_state(&nickname, "can_walking", true);
-              STATES.set_state(&nickname, "can_sprinting", true);
               STATES.set_state(&nickname, "can_attacking", true);
               STATES.set_mutual_states(&nickname, "drinking", false);
             }
@@ -106,8 +104,10 @@ impl AutoPotionPlugin {
   async fn use_potion(&self, bot: &Client, kind: String) {
     match kind.as_str() {
       "default" => {
+        bot.freeze_move();
         start_use_item(bot, InteractionHand::MainHand);
         sleep(Duration::from_millis(2600)).await;
+        bot.unfreeze_move();
       }
       "splash" => {
         let direction = bot.direction();

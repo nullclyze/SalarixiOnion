@@ -174,10 +174,10 @@ impl BowAimModule {
     BOT_REGISTRY
       .get_bot(username, async |bot| {
         release_use_item(bot);
-
-        STATES.set_mutual_states(username, "looking", false);
-        STATES.set_mutual_states(username, "interacting", false);
       })
       .await;
+
+    STATES.set_mutual_states(username, "looking", false);
+    STATES.set_mutual_states(username, "interacting", false);
   }
 }

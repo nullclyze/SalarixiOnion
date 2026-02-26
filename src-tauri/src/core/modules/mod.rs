@@ -10,6 +10,7 @@ mod killaura;
 mod miner;
 mod movement;
 mod scaffold;
+mod stalker;
 mod stealer;
 
 pub use action::*;
@@ -24,4 +25,5 @@ pub use killaura::*;
 pub use miner::*;
 pub use movement::*;
 pub use scaffold::*;
+pub use stalker::*;
 pub use stealer::*;

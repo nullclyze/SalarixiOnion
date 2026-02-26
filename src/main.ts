@@ -638,7 +638,7 @@ async function initFunctions(): Promise<void> {
     }
   });
 
-  document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface-client-language') as HTMLSelectElement).value as Language));
+  document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language));
   await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language);
 
   await initUserGuide();
@@ -857,7 +857,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_killaura_select_weapon', 'checkbox', (current: HTMLInputElement) => {
+  registerTriggerFunction('module_killaura_chbx_use-auto-weapon', 'checkbox', (current: HTMLInputElement) => {
     const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
     const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
 

@@ -1,5 +1,4 @@
 use azalea::prelude::*;
-use azalea::SprintDirection;
 use azalea::WalkDirection;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -26,16 +25,8 @@ impl AntiAfkModule {
   }
 
   async fn minimal(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay {
-      delay
-    } else {
-      2000
-    };
-    let max_delay = if let Some(delay) = options.max_delay {
-      delay
-    } else {
-      4000
-    };
+    let min_delay = options.min_delay.unwrap_or(1000);
+    let max_delay = options.max_delay.unwrap_or(2500);
 
     loop {
       let original_direction = bot.direction();
@@ -52,7 +43,7 @@ impl AntiAfkModule {
       sleep(Duration::from_millis(randuint(400, 800))).await;
 
       bot.set_direction(
-        original_direction.0 + randfloat(-8.0, 8.0) as f32,
+        original_direction.0 + randfloat(-10.0, 10.0) as f32,
         original_direction.1 + randfloat(-4.5, 4.5) as f32,
       );
 
@@ -61,16 +52,8 @@ impl AntiAfkModule {
   }
 
   async fn normal(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay {
-      delay
-    } else {
-      2000
-    };
-    let max_delay = if let Some(delay) = options.max_delay {
-      delay
-    } else {
-      4000
-    };
+    let min_delay = options.min_delay.unwrap_or(1000);
+    let max_delay = options.max_delay.unwrap_or(2500);
 
     loop {
       let walk_directions = vec![
@@ -91,54 +74,67 @@ impl AntiAfkModule {
       let direction = bot.direction();
 
       bot.set_direction(
-        direction.0 + randfloat(-40.0, 40.0) as f32,
-        direction.1 + randfloat(-40.0, 40.0) as f32,
+        direction.0 + randfloat(-35.0, 35.0) as f32,
+        direction.1 + randfloat(-20.0, 20.0) as f32,
       );
 
       sleep(Duration::from_millis(randuint(150, 400))).await;
 
-      bot.walk(WalkDirection::None);
+      bot.stop_move();
 
       sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
     }
   }
 
   async fn advanced(&self, bot: &Client, options: &AntiAfkOptions) {
-    let min_delay = if let Some(delay) = options.min_delay {
-      delay
-    } else {
-      1000
-    };
-    let max_delay = if let Some(delay) = options.max_delay {
-      delay
-    } else {
-      1800
-    };
+    let min_delay = options.min_delay.unwrap_or(1000);
+    let max_delay = options.max_delay.unwrap_or(2500);
 
-    let bot_clone = bot.clone();
+    let username = bot.username();
 
     tokio::spawn(async move {
       loop {
-        if !TASKS.get_task_activity(&bot_clone.username(), "anti-afk") {
+        let ok = BOT_REGISTRY
+          .get_bot(&username, async |bot| {
+            let direction = bot.direction();
+
+            bot.set_direction(
+              direction.0 + randfloat(-35.0, 35.0) as f32,
+              direction.1 + randfloat(-10.0, 10.0) as f32,
+            );
+          })
+          .await
+          .is_some();
+
+        if !ok || !TASKS.get_task_activity(&username, "anti-afk") {
+          STATES.set_mutual_states(&username, "looking", false);
           break;
         }
 
         sleep(Duration::from_millis(50)).await;
-
-        let direction = bot_clone.direction();
-
-        bot_clone.set_direction(
-          direction.0 + randfloat(-15.0, 15.0) as f32,
-          direction.1 + randfloat(-15.0, 15.0) as f32,
-        );
       }
     });
 
     loop {
-      bot.start_sprinting(SprintDirection::Forward);
+      bot.start_walking(WalkDirection::Forward);
 
       if randchance(0.4) {
         bot.swing_arm();
+      }
+
+      if randchance(0.4) {
+        bot.start_crouching();
+        sleep(Duration::from_millis(randuint(300, 500))).await;
+        bot.stop_crouching();
+      }
+
+      if randchance(0.3) {
+        bot.jump();
+      }
+
+      if !TASKS.get_task_activity(&bot.username(), "anti-afk") {
+        bot.stop_move();
+        break;
       }
 
       sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
@@ -146,6 +142,8 @@ impl AntiAfkModule {
   }
 
   pub async fn enable(&self, username: &str, options: &AntiAfkOptions) {
+    STATES.set_mutual_states(username, "looking", false);
+
     BOT_REGISTRY
       .get_bot(username, async |bot| match options.mode.as_str() {
         "minimal" => {
@@ -167,8 +165,11 @@ impl AntiAfkModule {
 
     BOT_REGISTRY
       .get_bot(username, async |bot| {
-        bot.walk(WalkDirection::None);
+        bot.stop_move();
+        bot.stop_crouching();
       })
       .await;
+
+    STATES.set_mutual_states(&username, "looking", false);
   }
 }

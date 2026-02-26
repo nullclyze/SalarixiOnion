@@ -746,19 +746,19 @@
 
       <div class="checkbox-group" style="width: 300px; margin-top: 20px; border-radius: 6px; border: 1px solid #333333; padding: 10px 0; padding-left: 4px;">
         <label class="checkbox-container">
-          <input type="checkbox" id="webhook_send-information" keep="true" section="webhook" key="send_information" launch-option>
+          <input type="checkbox" id="webhook_send-information" keep="true" section="webhook" key="send_information" ignore-config="true" launch-option>
           <span class="checkmark"></span>
           <span translator-tag="label:webhook-information">Информация</span>
         </label>
 
         <label class="checkbox-container">
-          <input type="checkbox" id="webhook_send-data" keep="true" section="webhook" key="send_data" launch-option>
+          <input type="checkbox" id="webhook_send-data" keep="true" section="webhook" ignore-config="true" key="send_data" launch-option>
           <span class="checkmark"></span>
           <span translator-tag="label:webhook-data">Данные</span>
         </label>
 
         <label class="checkbox-container">
-          <input type="checkbox" id="webhook_send-actions" keep="true" section="webhook" key="send_actions" launch-option>
+          <input type="checkbox" id="webhook_send-actions" keep="true" section="webhook" ignore-config="true" key="send_actions" launch-option>
           <span class="checkmark"></span>
           <span translator-tag="label:webhook-actions">Действия</span>
         </label>
@@ -800,6 +800,11 @@
           <button class="control-btn" id="control-anti-afk" path="control-anti-afk-container">
             <span class="tag">‒</span>
             <span class="text" translator-tag="control:anti-afk">Анти-АФК</span>
+          </button>
+
+          <button class="control-btn" id="control-stalker" path="control-stalker-container">
+            <span class="tag">‒</span>
+            <span class="text" translator-tag="control:stalker">Сталкер</span>
           </button>
 
           <div class="sep"></div>
@@ -1138,6 +1143,44 @@
           </div>
         </div>
 
+        <div class="control-container" id="control-stalker-container" style="display: none;" sector="true">
+          <h1 class="header" translator-tag="header:control-stalker">Управление / Сталкер</h1>
+
+          <div class="columns">
+            <div class="wrap left">
+              <div class="custom-select">
+                <label>Режим: </label>
+                <select id="module_stalker_select_mode" control="stalker" name="mode" keep="true">
+                  <option value="default">Обычный</option>
+                  <option value="advanced">Продвинутый</option>
+                </select>
+              </div>
+
+              <div class="input-wrap">
+                <div class="form-input">
+                  <label for="module_stalker_option_target-nickname" class="text">Никнейм цели</label>
+                  <input type="text" control="stalker" id="module_stalker_option_target-nickname" placeholder="player_123" name="target_nickname" keep="true">
+                </div>
+
+                <div class="form-input">
+                  <label for="module_stalker_option_min-distance" class="text">Минимальная дистанция</label>
+                  <input type="number" control="stalker" id="module_stalker_option_min-distance" placeholder="6" value="6" name="min_distance" keep="true">
+                </div>
+
+                <div class="form-input">
+                  <label for="module_stalker_option_max-distance" class="text">Максимальная дистанция</label>
+                  <input type="number" control="stalker" id="module_stalker_option_max-distance" placeholder="100" value="100" name="max_distance" keep="true">
+                </div>
+              </div>
+
+              <div class="btn-group-flex" style="margin-top: 25px;">
+                <button class="btn green toggler" control-toggler="true" name="stalker" state="true">Старт</button>
+                <button class="btn red toggler" control-toggler="true" name="stalker" state="false">Стоп</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="control-container" id="control-flight-container" style="display: none;" sector="true">
           <h1 class="header" translator-tag="header:control-flight">Управление / Полёт</h1>
 
@@ -1238,6 +1281,7 @@
                     <option value="player">Игрок</option>
                     <option value="monster">Монстр</option>
                     <option value="animal">Животное</option>
+                    <option value="vehicle">Транспорт</option>
                   </select>
                 </div>
 
@@ -1292,7 +1336,7 @@
             <div class="wrap right">
               <div class="checkbox-group">
                 <label class="checkbox-container">
-                  <input type="checkbox" control="killaura" id="module_killaura_chbx_use-auto-weapon" name="use_auto_weapon" keep="true" checked>
+                  <input type="checkbox" control="killaura" id="module_killaura_chbx_use-auto-weapon" name="use_auto_weapon" keep="true" trigger checked>
                   <span class="checkmark"></span>
                   Авто оружие
                 </label>
@@ -1306,7 +1350,7 @@
                 </label>
 
                 <label class="checkbox-container">
-                  <input type="checkbox" control="killaura" id="module_killaura_chbx_use-chase" name="use_chase" keep="true">
+                  <input type="checkbox" control="killaura" id="module_killaura_chbx_use-chase" name="use_chase" keep="true" trigger>
                   <span class="checkmark"></span>
                   Преследование
                 </label>
@@ -1414,6 +1458,7 @@
                   <option value="player">Игрок</option>
                   <option value="monster">Монстр</option>
                   <option value="animal">Животное</option>
+                  <option value="vehicle">Транспорт</option>
                   <option value="custom">Своя цель</option>
                 </select>
               </div>
@@ -1421,7 +1466,7 @@
               <div class="input-wrap">
                 <div class="hidden-wrapper input" id="bow-aim-custom-goal-input-container">
                   <div class="form-input">
-                    <label for="module_bow-aim_option_nickname" class="text">Никнейм</label>
+                    <label for="module_bow-aim_option_nickname" class="text">Никнейм цели</label>
                     <input type="text" control="bow-aim" id="module_bow-aim_option_nickname" placeholder="player_123" name="nickname" keep="true">
                   </div>
                 </div>

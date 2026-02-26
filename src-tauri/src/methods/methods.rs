@@ -24,8 +24,12 @@ pub trait SafeClientMethods {
   fn start_walking(&self, direction: WalkDirection);
   fn start_sprinting(&self, direction: SprintDirection);
   fn stop_move(&self);
-  fn block_move(&self);
-  fn unblock_move(&self);
+  fn freeze_move(&self);
+  fn unfreeze_move(&self);
+  fn start_jumping(&self);
+  fn start_crouching(&self);
+  fn stop_jumping(&self);
+  fn stop_crouching(&self);
 }
 
 impl SafeClientMethods for Client {
@@ -146,7 +150,7 @@ impl SafeClientMethods for Client {
     STATES.set_mutual_states(&username, "sprinting", false);
   }
 
-  fn block_move(&self) {
+  fn freeze_move(&self) {
     self.ecs.lock().write_message(StartWalkEvent {
       entity: self.entity,
       direction: WalkDirection::None,
@@ -160,10 +164,38 @@ impl SafeClientMethods for Client {
     STATES.set_state(&username, "can_sprinting", false);
   }
 
-  fn unblock_move(&self) {
+  fn unfreeze_move(&self) {
     let username = self.username();
 
     STATES.set_state(&username, "can_walking", true);
     STATES.set_state(&username, "can_sprinting", true);
+  }
+
+  fn stop_jumping(&self) {
+    if let Some(jumping) = self.get_component::<Jumping>() {
+      if jumping.0 {
+        self.set_jumping(false);
+      }
+    }
+  }
+
+  fn stop_crouching(&self) {
+    if self.crouching() {
+      self.set_crouching(false);
+    }
+  }
+
+  fn start_jumping(&self) {
+    if let Some(jumping) = self.get_component::<Jumping>() {
+      if !jumping.0 {
+        self.set_jumping(true);
+      }
+    }
+  }
+
+  fn start_crouching(&self) {
+    if !self.crouching() {
+      self.set_crouching(true);
+    }
   }
 }

@@ -231,7 +231,7 @@ pub struct CaptchaBypassOptions {
   pub captcha_type: String,
   pub solve_mode: String,
   pub browser: String,
-  pub regex: Option<String>,
+  pub regex: String,
   pub required_url_part: Option<String>,
   pub webdriver_server_url: Option<String>,
 }
@@ -593,6 +593,7 @@ pub struct ModuleManager {
   inventory: InventoryModule,
   movement: MovementModule,
   anti_afk: AntiAfkModule,
+  stalker: StalkerModule,
   flight: FlightModule,
   killaura: KillauraModule,
   scaffold: ScaffoldModule,
@@ -611,6 +612,7 @@ impl ModuleManager {
       inventory: InventoryModule::new(),
       movement: MovementModule::new(),
       anti_afk: AntiAfkModule::new(),
+      stalker: StalkerModule::new(),
       flight: FlightModule::new(),
       killaura: KillauraModule::new(),
       scaffold: ScaffoldModule::new(),
@@ -724,6 +726,25 @@ impl ModuleManager {
             run_task(&username, "anti-afk", task);
           } else {
             self.anti_afk.stop(&username).await;
+          }
+        }
+        "stalker" => {
+          let options: StalkerOptions = serde_json::from_value(current_options)
+            .map_err(|e| format!("Ошибка парсинга опций: {}", e))
+            .unwrap();
+
+          self.stalker.stop(&username).await;
+
+          if options.state {
+            let nickname = username.clone();
+
+            let task = tokio::spawn(async move {
+              self.stalker.enable(&nickname, &options).await;
+            });
+
+            run_task(&username, "stalker", task);
+          } else {
+            self.stalker.stop(&username).await;
           }
         }
         "flight" => {

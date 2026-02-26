@@ -225,11 +225,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           if options.captcha_bypass.captcha_type.as_str() == "web" {
             if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
               packet.message().to_string(),
-              options
-                .captcha_bypass
-                .regex
-                .unwrap_or(r"https?://[^\s]+".to_string())
-                .as_str(),
+              options.captcha_bypass.regex.as_str(),
               options.captcha_bypass.required_url_part,
             ) {
               if let Some(profile) = PROFILES.get(&nickname) {

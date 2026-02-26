@@ -81,8 +81,6 @@ impl AutoEatPlugin {
 
             STATES.set_state(&nickname, "can_drinking", true);
             STATES.set_state(&nickname, "can_interacting", true);
-            STATES.set_state(&nickname, "can_walking", true);
-            STATES.set_state(&nickname, "can_sprinting", true);
             STATES.set_mutual_states(&nickname, "eating", false);
           } else {
             sleep(Duration::from_millis(1800)).await;
@@ -93,8 +91,10 @@ impl AutoEatPlugin {
   }
 
   async fn start_eating(&self, bot: &Client) {
+    bot.freeze_move();
     start_use_item(bot, InteractionHand::MainHand);
     sleep(Duration::from_millis(1800)).await;
+    bot.unfreeze_move();
   }
 
   fn get_best_food(&self, bot: &Client, food_list: &Vec<Food>) -> Option<Food> {
