@@ -22,6 +22,10 @@
     </div>
   </div>
 
+  <div class="particle-wrap" id="particle-wrap">
+    <canvas id="particles"></canvas>
+  </div>
+
   <div class="notice-wrap" id="notice" style="display: none;">
     <div class="notice" role="dialog" aria-labelledby="update-title" aria-describedby="update-info">
       <button class="close-notice-btn" aria-label="Закрыть" id="close-notice-btn">✕</button>
@@ -1665,7 +1669,7 @@
         <canvas id="graphic-active-bots" style="height: 230px; max-height: 230px;"></canvas>
       </div>
 
-      <div class="graphic-wrapper" id="graphic-memory-usage-container" style="display: none;">
+      <div class="graphic-wrapper" id="graphic-memory-usage-container" style="display: none; margin-top: 10px;">
         <canvas id="graphic-memory-usage" style="height: 230px; max-height: 230px;"></canvas>
       </div>
     </div>
@@ -1701,6 +1705,8 @@
 
       <div class="radar-panel">
         <input type="text" id="radar-target-nickname" placeholder="player_123" style="width: 140px;">
+
+        <div class="sep"></div>
 
         <button class="btn min pretty" id="radar-add-target">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
@@ -1935,7 +1941,7 @@
             <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
           </svg>
 
-          <p class="text">Загрузить конфиг</p>
+          <p class="header" translator-tag="label:upload-config">Загрузить конфиг</p>
         </div>
 
         <div class="card" id="share-config">
@@ -1943,7 +1949,7 @@
             <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
           </svg>
 
-          <p class="text">Поделиться конфигом</p>
+          <p class="header" translator-tag="label:share-config">Поделиться конфигом</p>
         </div>
       </div>
     </div>

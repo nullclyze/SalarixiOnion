@@ -8,9 +8,8 @@
   --s-font-family: 'JetBrains Mono', 'Fira Code', monospace;
   --o-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
-  --bg-color: #141414;
+  --bg-color: #050505;
   --bd-color: #383838;
-  --tbd-color: #3b3a3acc;
 
   --global-font-family: 'Inter', sans-serif;
 
@@ -27,11 +26,10 @@
   --panel-font-size: 15px;
   --panel-btn-gap: 6px;
 
-  --card-bg: rgba(21, 21, 22, 0.8);
-  --card-border: rgb(41, 41, 41);
+  --card-border: rgb(36, 36, 36);
   --card-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-  --input-bg: rgb(24, 24, 24);
-  --input-border: rgb(44, 44, 44);
+  --input-bg: rgba(15, 15, 15, 0.7);
+  --input-border: rgb(39, 39, 39);
   --text-secondary: #a0a0a0;
 }
 
@@ -61,7 +59,9 @@ body {
   left: 0;
   width: 100%;
   -webkit-app-region: drag; 
-  background-color: #141414;
+  background-color: #0c0c0c7a;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px); 
   height: 40px; 
   display: flex;
   align-items: center;
@@ -117,6 +117,16 @@ body {
   background-color: #57555525;
 }
 
+.particle-wrap {
+  position: absolute;
+  left: 0; 
+  top: 0; 
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-color); 
+}
+
 .cover {
   position: fixed;
   top: 120px;
@@ -128,11 +138,10 @@ body {
   z-index: 1000;
   border-radius: 12px;
   padding: 20px;
-  background: var(--card-bg);
+  background-color: #0a0a0adc;
   border: 1px solid var(--card-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); 
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px); 
   flex-direction: column;
   justify-content: flex-start;
   overscroll-behavior: contain;
@@ -179,7 +188,9 @@ body {
   position: fixed;
   left: 0;
   top: 40px;
-  background-color: var(--bg-color);
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   width: 210px;
   height: 100vh;
   font-family: var(--global-font-family);
@@ -251,7 +262,7 @@ body {
 
 .panel-btn.selected::before {
   background-color: var(--spec-color);
-  box-shadow: 0 0 8px var(--spec-color);
+  box-shadow: 0 0 10px var(--spec-color);
   opacity: 1;
   animation: show-button-border 0.2s ease;
 }
@@ -328,10 +339,10 @@ body {
   margin-top: -10px;
   margin-bottom: 20px;
   padding: 0 20px;
-  background: rgba(22, 22, 26, 0.7);
+  background: rgba(31, 31, 32, 0.452);
   border: 1px solid rgb(41, 41, 41);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px); 
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px); 
   border-radius: 12px;
   height: 34px;
   min-height: 34px;
@@ -350,7 +361,7 @@ body {
   width: 100%;
   justify-content: center;
   padding: 5px;
-  background: transparent;
+  background-color: transparent;
   border-radius: 16px;
 }
 
@@ -358,14 +369,14 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: 12px;
-  max-height: 540px;
+  max-height: 520px;
   overflow-y: auto;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
   box-sizing: border-box;
   scroll-behavior: smooth;
-  backdrop-filter: blur(10px);
+  background-color: transparent;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--card-border);
 }
 
 .settings-column.left {
@@ -375,11 +386,9 @@ body {
   width: 100%;
   align-items: center;
   justify-content: start;
-  border: none;
-  background: transparent;
   box-shadow: none;
-  backdrop-filter: none;
   padding-bottom: 100px;
+  padding-top: 20px;
 }
 
 .settings-column.left .form-input {
@@ -397,7 +406,7 @@ body {
 .settings-column.left .separator {
   display: flex;
   position: relative;
-  width: 100%;
+  width: 90%;
   margin-top: 30px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--bd-color);
@@ -410,13 +419,14 @@ body {
   font-weight: bold;
   white-space: nowrap;
   text-align: center;
-  color: #b4b4b4;
+  color: #c9c9c9;
   padding: 0 12px; 
   font-size: 16px; 
   border: none;
   margin-bottom: -10px;
-  background: var(--bg-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background-color: #050505;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .settings-column.right {
@@ -427,8 +437,6 @@ body {
   max-width: 300px;
   max-width: 300px;
   padding: 14px 10px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
   border-radius: 12px;
   align-items: start;
   justify-content: start;
@@ -455,7 +463,7 @@ body {
   display: flex;
   width: 100%;
   margin: 6px 0;
-  border-bottom: 1px solid #3a3a3a;
+  border-bottom: 1px solid var(--card-border);
 }
 
 .columns {
@@ -499,12 +507,13 @@ body {
 }
 
 .columns .wrap.right {
-  background: var(--card-bg);
+  background-color: #0e0e0eb4;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   max-width: 240px;
   padding: 12px 0;
-  box-shadow: var(--card-shadow);
 }
 
 .columns .wrap.right .checkbox-container {
@@ -542,7 +551,6 @@ input {
   outline: none;
   background-color: var(--input-bg);
   border: 1px solid var(--input-border);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   padding: 0 10px;
   line-height: 1;
   color: rgba(243, 244, 246);
@@ -551,6 +559,10 @@ input {
 
 input:disabled {
   color: #a7a7a7;
+}
+
+input:focus {
+  border-color: #3d3d3d;
 }
 
 input::placeholder {
@@ -566,7 +578,6 @@ input::-webkit-inner-spin-button {
 .glass-input {
   background-color: #2525251f;
   border: 1px solid #3d3d3d86;
-  box-shadow: none;
 }
 
 p {
@@ -581,7 +592,7 @@ p {
   height: 34px;
   padding: 0 12px;
   border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(19, 19, 19, 0.8);
   border-radius: 6px;
   color: #fff;
   font-size: 14px;
@@ -678,11 +689,13 @@ p {
   flex-direction: column;
   justify-content: start;
   align-items: center;
-  padding: 10px;
+  padding: 10px 0;
   border-right: 1px solid var(--bd-color);
-  width: 180px;
+  width: 200px;
   height: 100%;
-  background: transparent;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .button-card .button-list {
@@ -745,7 +758,7 @@ p {
 
 .control-btn.selected::before {
   background-color: var(--spec-color);
-  box-shadow: 0 0 8px var(--spec-color);
+  box-shadow: 0 0 10px var(--spec-color);
 }
 
 .control-btn:disabled {
@@ -812,15 +825,6 @@ p {
   line-height: 1;
   border-radius: 4px;
   letter-spacing: 0.2px;
-}
-
-.form-input input[type='text'].input {
-  border: 1px solid #343632;
-  background: var(--bg-color);
-}
-
-.form-input input[type='text'].input:focus {
-  outline: none;
 }
 
 .double-input-wrapper {
@@ -918,8 +922,10 @@ p {
 }
 
 .pretty-textarea .frame {
-  background: rgb(24, 24, 24);
-  border: 1px solid rgb(53, 53, 53);
+  background-color: rgba(12, 12, 12, 0.6);
+  border: 1px solid rgb(41, 41, 41);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
   border-radius: 12px;
   padding-top: -4px;
   padding-bottom: 10px;
@@ -931,7 +937,7 @@ p {
   top: 0; 
   left: 35%;
   transform: translateY(-50%);
-  background: #171716;
+  background-color: #171716a4;
   color: #cecece;
   font-weight: normal;
   font-size: 14px;
@@ -949,6 +955,7 @@ p {
 }
 
 .pretty-textarea textarea {
+  margin-top: 20px;
   max-width: 100%;
   min-width: 100%;
   width: 100%;
@@ -963,7 +970,18 @@ p {
   outline: none;
   padding: 8px;
   padding-left: 16px;
-  transition: border 0.2s ease;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: none;
+  scroll-behavior: smooth;
+  resize: none; 
+}
+
+.pretty-textarea textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.pretty-textarea textarea::-webkit-resizer {
+  display: none;
 }
 
 .pretty-textarea textarea::placeholder {
@@ -1002,7 +1020,9 @@ p {
   overflow-y: auto;
   padding: 0;
   border-radius: 12px;
-  background-color: #151515;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border: 1px solid #2b2b2b;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1029,7 +1049,7 @@ p {
 }
 
 .log-line:hover {
-  background: #1f1d1db8;
+  background: #18181885;
 }
 
 .log-line-date {
@@ -1044,7 +1064,7 @@ p {
   color: #8d8d8d;
   background-color: transparent;
   border: 1px solid transparent;
-  border-right: 2px solid #2f2e2e;
+  border-right: 1px solid #2f2e2e;
   font-size: 14px;
   user-select: none;
 }
@@ -1060,7 +1080,7 @@ p {
   word-break: break-all;
   font-family: var(--global-font-family);
   font-size: 15px;
-  margin-left: 4px;
+  margin-left: 5px;
   text-rendering: optimizeSpeed;
 }
 
@@ -1074,7 +1094,9 @@ p {
   display: flex; 
   margin-top: 30px; 
   width: 100%;
-  background-color: #151515;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border: 1px solid #2b2b2b;
   border-radius: 12px;
   padding: 15px 0;
@@ -1101,11 +1123,12 @@ p {
   padding: 20px;
   border-radius: 12px;
   border: 1px solid var(--card-border);
-  background: var(--card-bg); 
+  background-color: transparent; 
   font-family: var(--global-font-family);
   font-size: 16px;
   color: #d1d1d1;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .features-title {
@@ -1131,13 +1154,15 @@ p {
   margin: 0;
   margin-top: 10px;
   gap: 6px;
-  background: var(--card-bg);
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border-radius: 12px;
   border: 1px solid var(--card-border);
   font-family: var(--global-font-family);
   font-size: 14px;
   color: var(--text-secondary);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-shadow: var(--card-shadow);
 }
 
@@ -1157,8 +1182,10 @@ p {
   justify-content: center;
   gap: 25px;
   padding: 8px 18px;
-  border: 1px solid #2e2e2e;
-  background-color: #22222270;
+  border: 1px solid #272727;
+  background-color: #1d1d1d70;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border-radius: 12px;
   margin-top: 50px;
   box-shadow: var(--card-shadow);
@@ -1206,12 +1233,12 @@ p {
 .checkmark {
   width: 20px;
   height: 20px;
-  background-color: #1f1f1f;
-  border: 1px solid #353535;
+  background-color: #181818;
+  border: 1px solid #2c2c2c;
   border-radius: 5px;
   margin-right: 10px;
   position: relative;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1219,12 +1246,13 @@ p {
 }
 
 .checkbox-container:hover .checkmark {
-  background-color: rgb(43, 42, 42);
+  background-color: rgb(32, 32, 32);
 }
 
 .checkbox-container input[type='checkbox']:checked ~ .checkmark {
   background-color: var(--chbx-dull-spec-color);
   border-color: var(--chbx-spec-color);
+  box-shadow: 0 0 8px var(--chbx-dull-spec-color);
 }
 
 .checkbox-container input[type='checkbox']:checked ~ .checkmark:after {
@@ -1284,17 +1312,15 @@ p {
   height: 34px;
   font-family: var(--global-font-family);
 	font-size: 14px;
-  font-weight: 400;
+  font-weight: normal;
 	padding: 0 30px 0 10px;
 	background-color: var(--input-bg);
   border: 1px solid var(--input-border);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin: 0;
 	border-radius: 6px;
 	color: #fff;
 	cursor: pointer;
 	outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease;
 }
 
 .custom-select select:disabled {
@@ -1328,37 +1354,13 @@ p {
   align-items: center;
   width: 98%;
   margin-top: 10px;
-  background: var(--card-bg);
+  background-color: transparent;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 8px;
   box-shadow: var(--card-shadow);
-}
-
-textarea {
-  color: #e3e3e3df;
-  margin-top: 20px;
-  min-width: 770px;
-  max-width: 770px;
-  min-height: 450px;
-  max-height: 450px;
-  font-family: var(--s-font-family);
-  font-size: 16px;
-  letter-spacing: 0.2px;
-  padding: 15px;
-  outline: none;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: none;
-  scroll-behavior: smooth;
-  resize: none; 
-}
-
-textarea::-webkit-scrollbar {
-  display: none;
-}
-
-textarea::-webkit-resizer {
-  display: none;
 }
 
 .cards-container {
@@ -1385,14 +1387,13 @@ textarea::-webkit-resizer {
   box-sizing: border-box;
   width: 240px;
   height: auto;
-  background: var(--card-bg);
+  background-color: transparent;
   border: 1px solid var(--card-border);
   border-radius: 12px;
   display: flex;
   overflow: hidden;  
   flex-direction: column;
   transition: border 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .bot-card.glow {
@@ -1432,6 +1433,8 @@ textarea::-webkit-resizer {
   background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
   border-bottom: 1px solid var(--card-border);
   padding: 12px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .bot-card-head .image {
@@ -1531,7 +1534,7 @@ textarea::-webkit-resizer {
   height: 370px;
   overflow-y: auto;
   padding: 0;
-  border: 1px solid #252525;
+  border: 1px solid #1d1d1d;
   border-radius: 4px;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1551,7 +1554,7 @@ textarea::-webkit-resizer {
 }
 
 .monitoring-line:hover {
-  background: #252525b8;
+  background: #1d1d1d8a;
 }
 
 .monitoring-line-time {
@@ -1561,8 +1564,8 @@ textarea::-webkit-resizer {
   text-align: right;
   font-family: var(--s-font-family);
   color: #fff;
-  background: transparent;
-  border: 1px solid transparent;
+  background-color: transparent;
+  border: 2px solid transparent;
   border-right: 2px solid #2e2e2e;
   user-select: none;
   font-size: 14px;
@@ -1571,7 +1574,7 @@ textarea::-webkit-resizer {
 .monitoring-line-content {
   flex: 1;
   color: #f0f0f0;
-  padding: 6px;
+  padding: 6px 8px;
   text-align: left;
   white-space: pre-wrap;
   font-family: var(--o-font-family);
@@ -1667,9 +1670,9 @@ textarea::-webkit-resizer {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  background: rgba(15, 15, 15, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background-color: transparent;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   height: 100vh;
   width: 100%;
 }
@@ -1678,13 +1681,14 @@ textarea::-webkit-resizer {
   position: relative;
   width: 520px;
   max-width: 90%;
-  background: rgb(21, 21, 22);
+  background-color: rgb(12, 12, 12);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--card-border);
   border-radius: 16px;
   padding: 28px 24px;
   text-align: center;
   font-family: var(--global-font-family);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -1797,7 +1801,7 @@ textarea::-webkit-resizer {
   color: #ebbf31;
   margin-top: 24px;
   padding: 12px 16px;
-  background: rgba(235, 191, 49, 0.05);
+  background-color: rgba(235, 191, 49, 0.05);
   border-radius: 12px;
   border: 1px solid rgba(235, 191, 49, 0.1);
   line-height: 1.5;
@@ -1830,10 +1834,11 @@ textarea::-webkit-resizer {
   height: 100%;
   max-height: 370px;
   margin-top: 10px;
-  background-color: var(--card-bg);
+  background-color: transparent;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  box-shadow: var(--card-shadow);
   animation: show-ping-info 0.12s ease forwards;
 }
 
@@ -1978,15 +1983,15 @@ textarea::-webkit-resizer {
 
 .radar-panel {
   display: flex;
-  margin: 0 0 20px 0;
-  padding: 0;
-  width: 100%;
-  gap: 12px;
-  padding-bottom: 4px;
-  border-bottom: 2px solid var(--card-border);
+  margin: 10px 0 20px 0;
+  padding: 6px 6px;
+  width: 98%;
+  gap: 6px;
+  background-color: #0e0e0ea1;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
   justify-content: center;
   align-items: center;
-  height: 50px;
 }
 
 .radar-panel .sep {
@@ -1999,6 +2004,8 @@ textarea::-webkit-resizer {
 .radar-panel input {
   height: 32px; 
   max-width: 140px;
+  border: none;
+  background-color: transparent;
 }
 
 .radar-panel .btn {
@@ -2046,7 +2053,7 @@ textarea::-webkit-resizer {
 .radar-wrap .radar-target {
   display: flex;
   width: 96%;
-  background: var(--card-bg);
+  background-color: #0e0e0ea1;
   border: 1px solid var(--card-border);
   border-radius: 12px;
   gap: 12px;
@@ -2054,7 +2061,6 @@ textarea::-webkit-resizer {
   align-items: center;
   animation: show-target-card 0.2s;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .radar-wrap .radar-target.glow .icon {
@@ -2157,12 +2163,12 @@ textarea::-webkit-resizer {
   height: auto;
   min-height: 90px;
   width: 95%;
-  background: var(--card-bg);
+  background-color: #0f0f0f79;
   border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 2px 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .plugins-wrap .list .plugin-card.unavailable {
@@ -2213,7 +2219,7 @@ textarea::-webkit-resizer {
   height: 48px;
   color: #a1a1a1;
   flex-shrink: 0;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .plugins-wrap .list .plugin-card .head .image:hover {
@@ -2261,8 +2267,8 @@ textarea::-webkit-resizer {
 }
 
 .plugins-wrap .list .plugin-card .controls .button {
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgb(29, 29, 29);
+  background-color: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
   padding: 6px 12px;
   height: 32px;
@@ -2377,9 +2383,10 @@ textarea::-webkit-resizer {
   flex-direction: column;
   width: 300px;
   height: 350px;
-  background-color: #131313;
-  border: 2px solid #272727;
-  box-shadow: var(--card-shadow);
+  background-color: transparent;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid #272727;
   border-radius: 12px;
   justify-content: center;
   align-items: center;
@@ -2409,7 +2416,7 @@ textarea::-webkit-resizer {
   transition: color 0.15s ease;
 }
 
-.config-wrap .card .text {
+.config-wrap .card .header {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2441,7 +2448,7 @@ textarea::-webkit-resizer {
   justify-content: center;
   align-items: start;
   z-index: 9000;
-  background: var(--card-bg);
+  background-color: transparent;
   border: 1px solid var(--card-border);
   border-radius: 8px;
   backdrop-filter: blur(6px);
@@ -2449,7 +2456,6 @@ textarea::-webkit-resizer {
   height: auto;
   width: 360px;
   animation: show-message 0.3s ease;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -2488,7 +2494,7 @@ textarea::-webkit-resizer {
   height: 40px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgb(31, 31, 31);
 }
 
 .message .up-part .name {
@@ -2524,7 +2530,7 @@ textarea::-webkit-resizer {
 }
 
 .message .down-part {
-  width: 100%;
+  width: 90%;
   padding: 16px 12px;
   display: flex;
   justify-content: start;
@@ -2547,20 +2553,21 @@ textarea::-webkit-resizer {
   overflow-y: auto;
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  background: var(--card-bg);
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   gap: 30px;
   font-family: var(--global-font-family);
   font-size: 14px;
   color: var(--text-secondary);
   margin-top: 10px;
-  padding-top: 20px;
+  padding-top: 30px;
   padding-bottom: 20px;
   -webkit-user-select: text; 
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
   -ms-overflow-style: text;
-  box-shadow: var(--card-shadow);
 }
 
 .guide-wrap .section {
@@ -2641,4 +2648,8 @@ textarea::-webkit-resizer {
   margin-top: 25px;
   padding: 8px 0;
   border-radius: 12px;
+  background-color: transparent;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid var(--card-border);
 }

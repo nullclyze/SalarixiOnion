@@ -17,6 +17,7 @@ import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
 import { changeMessagesVisibility, message } from './message';
 import { downloadJsonContent } from './downloader/downloader';
+import { enableParticles } from './particles';
 
 
 Chart.register(...registerables);
@@ -1179,6 +1180,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
     document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
+
+    enableParticles();
 
     registerAllTriggerFunctions();
     initPlugins();
