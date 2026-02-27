@@ -3,6 +3,7 @@ import { isAbsolute } from '@tauri-apps/api/path';
 import { Chart } from 'chart.js';
 
 import { log } from '../logger';
+import { message } from '../message';
 
 
 interface RadarInfo {
@@ -207,6 +208,8 @@ UUID: ${uuid}
           `.trim();
 
           await navigator.clipboard.writeText(text);
+
+          message('Радар', `Данные игрока ${nickname} успешно скопированы в буфер обмена`);
         } catch (error) {
           log(`Ошибка копирования radar-данных: ${error}`, 'error');
         }

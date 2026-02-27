@@ -1077,6 +1077,20 @@
         "ru": "Язык клиента:",
         "en": "Client Language:"
       }
+    },
+    {
+      "tags": ["label:upload-config"],
+      "lang": {
+        "ru": "Загрузить конфиг",
+        "en": "Upload Config"
+      }
+    },
+    {
+      "tags": ["label:share-config"],
+      "lang": {
+        "ru": "Поделиться конфигом",
+        "en": "Share Config"
+      }
     }
   ]
 }
