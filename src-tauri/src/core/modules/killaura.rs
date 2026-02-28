@@ -78,23 +78,20 @@ impl KillauraModule {
     }
   }
 
-  fn find_nearest_entity(bot: &Client, target: &String, target_nickname: &Option<String>, max_distance: f64) -> Option<Entity> {
+  fn find_nearest_entity(
+    bot: &Client,
+    target: &String,
+    target_nickname: &Option<String>,
+    max_distance: f64,
+  ) -> Option<Entity> {
     let mut entity_filter = None;
 
     if target.as_str() == "custom" {
       if let Some(nickname) = target_nickname {
-        entity_filter = Some(EntityFilter::new(
-          bot,
-          nickname,
-          max_distance,
-        ));
+        entity_filter = Some(EntityFilter::new(bot, nickname, max_distance));
       }
     } else {
-      entity_filter = Some(EntityFilter::new(
-        bot,
-        target,
-        max_distance,
-      ));
+      entity_filter = Some(EntityFilter::new(bot, target, max_distance));
     }
 
     if let Some(filter) = entity_filter {
@@ -249,7 +246,14 @@ impl KillauraModule {
     });
   }
 
-  fn chase(&self, username: String, target: String, target_nickname: Option<String>, distance: f64, min_distance_to_target: f64) {
+  fn chase(
+    &self,
+    username: String,
+    target: String,
+    target_nickname: Option<String>,
+    distance: f64,
+    min_distance_to_target: f64,
+  ) {
     tokio::spawn(async move {
       loop {
         let bot_available = BOT_REGISTRY
@@ -259,7 +263,9 @@ impl KillauraModule {
               return;
             }
 
-            if let Some(entity) = Self::find_nearest_entity(bot, &target, &target_nickname, distance){
+            if let Some(entity) =
+              Self::find_nearest_entity(bot, &target, &target_nickname, distance)
+            {
               let eye_pos = bot.eye_pos();
 
               if eye_pos.distance_to(get_entity_position(bot, entity)) > min_distance_to_target {
@@ -294,7 +300,13 @@ impl KillauraModule {
     });
   }
 
-  fn aiming(&self, username: String, target: String, target_nickname: Option<String>, distance: f64) {
+  fn aiming(
+    &self,
+    username: String,
+    target: String,
+    target_nickname: Option<String>,
+    distance: f64,
+  ) {
     tokio::spawn(async move {
       STATES.set_mutual_states(&username, "looking", true);
 
@@ -306,7 +318,9 @@ impl KillauraModule {
               return;
             }
 
-            if let Some(entity) = Self::find_nearest_entity(bot, &target, &target_nickname, distance) {
+            if let Some(entity) =
+              Self::find_nearest_entity(bot, &target, &target_nickname, distance)
+            {
               look_at_entity(bot, entity, false);
             }
           })
@@ -326,7 +340,12 @@ impl KillauraModule {
   async fn moderate_killaura(&self, bot: &Client, options: &KillauraOptions) {
     let config = self.create_config(options);
 
-    self.aiming(bot.username(), config.target.clone(), options.target_nickname.clone(), config.attack_distance);
+    self.aiming(
+      bot.username(),
+      config.target.clone(),
+      options.target_nickname.clone(),
+      config.attack_distance,
+    );
 
     if options.use_chase {
       self.chase(
@@ -350,7 +369,12 @@ impl KillauraModule {
         && !STATES.get_state(&nickname, "is_eating")
         && !STATES.get_state(&nickname, "is_drinking")
       {
-        if let Some(entity) = Self::find_nearest_entity(bot, &options.target, &options.target_nickname, config.attack_distance) {
+        if let Some(entity) = Self::find_nearest_entity(
+          bot,
+          &options.target,
+          &options.target_nickname,
+          config.attack_distance,
+        ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
           if options.use_auto_weapon {
@@ -372,7 +396,12 @@ impl KillauraModule {
 
             sleep(Duration::from_millis(randuint(500, 600))).await;
 
-            if let Some(e) = Self::find_nearest_entity(bot, &options.target, &options.target_nickname, config.attack_distance) {
+            if let Some(e) = Self::find_nearest_entity(
+              bot,
+              &options.target,
+              &options.target_nickname,
+              config.attack_distance,
+            ) {
               bot.attack(e);
             }
           } else {
@@ -412,7 +441,12 @@ impl KillauraModule {
         && !STATES.get_state(&nickname, "is_eating")
         && !STATES.get_state(&nickname, "is_drinking")
       {
-        if let Some(entity) = Self::find_nearest_entity(bot, &options.target, &options.target_nickname, config.attack_distance) {
+        if let Some(entity) = Self::find_nearest_entity(
+          bot,
+          &options.target,
+          &options.target_nickname,
+          config.attack_distance,
+        ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
 
           if options.use_auto_weapon {
@@ -433,7 +467,12 @@ impl KillauraModule {
             bot.jump();
             sleep(Duration::from_millis(randuint(500, 600))).await;
 
-            if let Some(e) = Self::find_nearest_entity(bot, &options.target, &options.target_nickname, config.attack_distance) {
+            if let Some(e) = Self::find_nearest_entity(
+              bot,
+              &options.target,
+              &options.target_nickname,
+              config.attack_distance,
+            ) {
               bot.attack(e);
             }
           } else {

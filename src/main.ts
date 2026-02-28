@@ -665,6 +665,9 @@ async function initFunctions(): Promise<void> {
   document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language));
   await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language);
 
+  document.getElementById('interface_select_discord-rpc')?.addEventListener('change', async () => await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' }));
+  await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' });
+
   await initUserGuide();
   await initPluginDescriptions();
   await initDownloadCount();

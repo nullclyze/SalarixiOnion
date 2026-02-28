@@ -1079,6 +1079,20 @@
       }
     },
     {
+      "tags": ["label:enable"],
+      "lang": {
+        "ru": "Включить",
+        "en": "Enable"
+      }
+    },
+    {
+      "tags": ["label:disable"],
+      "lang": {
+        "ru": "Выключить",
+        "en": "Disable"
+      }
+    },
+    {
       "tags": ["label:upload-config"],
       "lang": {
         "ru": "Загрузить конфиг",
