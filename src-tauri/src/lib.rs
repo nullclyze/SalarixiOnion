@@ -181,7 +181,7 @@ async fn quick_task(name: String) {
 /// Функция выполнения пользовательского скрипта
 #[tauri::command]
 async fn execute_script(script: String) {
-  SCRIPT_EXECUTOR.read().unwrap().execute(script);
+  SCRIPT_EXECUTOR.write().unwrap().execute(script);
 }
 
 /// Функция остановки пользовательского скрипта

@@ -872,6 +872,16 @@ function registerAllTriggerFunctions() {
     }
   });
 
+  registerTriggerFunction('module_killaura_select_target', 'select', (current: HTMLSelectElement) => {
+    const customGoalInputContainer = document.getElementById('killaura-custom-goal-input-container') as HTMLElement;
+
+    if (current.value === 'custom') {
+      customGoalInputContainer.style.display = 'flex';
+    } else {
+      customGoalInputContainer.style.display = 'none';
+    }
+  });
+
   registerTriggerFunction('module_killaura_select_settings', 'select', (current: HTMLSelectElement) => {
     const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
 

@@ -100,7 +100,7 @@ export function uploadConfig(config: any): void {
 
   try {
     for (const [id, value] of Object.entries<ConfigValue>(config)) {
-      if (!value) continue;
+      if (!value && value !== 0) continue;
       setValue(id, value);
     }
 

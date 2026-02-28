@@ -20,7 +20,7 @@ pub struct BowAimModule;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BowAimOptions {
   pub target: String,
-  pub nickname: Option<String>,
+  pub target_nickname: Option<String>,
   pub delay: Option<u64>,
   pub max_distance: Option<f64>,
   pub state: bool,
@@ -135,7 +135,7 @@ impl BowAimModule {
     let mut entity_filter = None;
 
     if options.target.as_str() == "custom" {
-      if let Some(target_nickname) = &options.nickname {
+      if let Some(target_nickname) = &options.target_nickname {
         entity_filter = Some(EntityFilter::new(
           bot,
           target_nickname,
