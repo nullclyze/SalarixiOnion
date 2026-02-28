@@ -644,8 +644,7 @@ p {
 }
 
 .btn.pretty:active {
-  background-color: #30303056;
-  color: var(--spec-color);
+  background-color: #20202056;
 }
 
 .btn.pretty:disabled {

@@ -236,11 +236,10 @@ pub async fn inventory_swap_click(
     if let Some(menu) = get_bot_inventory_menu(bot) {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
-          if let Some(_) = find_empty_slot_in_invenotry(menu) {
-            inventory.shift_click(target_slot);
-            // inventory.left_click(target_slot);
-            // sleep(Duration::from_millis(100)).await;
-            // inventory.left_click(empty_slot);
+          if let Some(empty_slot) = find_empty_slot_in_invenotry(menu) {
+            inventory.left_click(target_slot);
+            sleep(Duration::from_millis(100)).await;
+            inventory.left_click(empty_slot);
           } else {
             inventory_drop_item(bot, target_slot, false);
           }

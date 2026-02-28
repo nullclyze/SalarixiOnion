@@ -1281,11 +1281,12 @@
 
                 <div class="custom-select between">
                   <label>Цель: </label>
-                  <select id="module_killaura_select_target" control="killaura" name="target" keep="true">
+                  <select id="module_killaura_select_target" control="killaura" name="target" keep="true" trigger>
                     <option value="player">Игрок</option>
                     <option value="monster">Монстр</option>
                     <option value="animal">Животное</option>
                     <option value="vehicle">Транспорт</option>
+                    <option value="custom">Своя цель</option>
                   </select>
                 </div>
 
@@ -1299,6 +1300,13 @@
               </div>
 
               <div class="input-wrap">
+                <div class="hidden-wrapper input" id="killaura-custom-goal-input-container">
+                  <div class="form-input">
+                    <label for="module_killaura_option_target-nickname" class="text">Никнейм цели</label>
+                    <input type="text" control="killaura" id="module_killaura_option_target-nickname" placeholder="player_123" name="target_nickname" keep="true">
+                  </div>
+                </div>
+
                 <div class="hidden-wrapper input" id="killaura-weapon-slot-container">
                   <div class="form-input">
                     <label for="module_killaura_option_slot" class="text">Слот с оружием</label>
@@ -1470,8 +1478,8 @@
               <div class="input-wrap">
                 <div class="hidden-wrapper input" id="bow-aim-custom-goal-input-container">
                   <div class="form-input">
-                    <label for="module_bow-aim_option_nickname" class="text">Никнейм цели</label>
-                    <input type="text" control="bow-aim" id="module_bow-aim_option_nickname" placeholder="player_123" name="nickname" keep="true">
+                    <label for="module_bow-aim_option_target-nickname" class="text">Никнейм цели</label>
+                    <input type="text" control="bow-aim" id="module_bow-aim_option_target-nickname" placeholder="player_123" name="target_nickname" keep="true">
                   </div>
                 </div>
 
@@ -1875,7 +1883,7 @@
                 </select>
               </div>
 
-              <div class="custom-select">
+              <div class="custom-select between">
                 <label translator-tag="label:interface-client-language">Язык: </label>
                 <select id="interface_select_client-language" style="width: 150px;" keep="true" trigger>
                   <option value="ru">RU (Русский)</option>
