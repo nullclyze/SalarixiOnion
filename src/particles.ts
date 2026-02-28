@@ -5,7 +5,7 @@ class Particles {
   private enabled: boolean = false;
 
   constructor() {
-    this.canvas = document.getElementById('particles') as HTMLCanvasElement;
+    this.canvas = document.getElementById('particle-background') as HTMLCanvasElement;
 
     if (this.canvas) {
       this.ctx = this.canvas.getContext('2d');
@@ -26,7 +26,7 @@ class Particles {
   private spawn() {
     this.particles = [];
 
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 80; i++) {
       const particle = {
         x: Math.random() * this.canvas!.width,
         y: Math.random() * this.canvas!.height,
@@ -60,7 +60,7 @@ class Particles {
     this.particles.forEach(p => {
       this.ctx!.beginPath();
       this.ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      this.ctx!.fillStyle = 'rgba(216, 216, 216, 0.8)'; 
+      this.ctx!.fillStyle = 'rgba(216, 216, 216, 0.6)'; 
       this.ctx!.fill();
       this.ctx!.closePath();
     });
@@ -98,11 +98,16 @@ class Particles {
   }
 
   public enable() {
+    if (this.enabled) return;
+
     this.enabled = true;
+
+    this.ctx!.reset();
     this.animate();
   }
 
   public disable() {
+    this.ctx!.reset();
     this.enabled = false;
   }
 }
@@ -110,9 +115,11 @@ class Particles {
 const particles = new Particles();
 
 export function enableParticles() {
+  (document.getElementById('particle-wrapper') as HTMLElement).style.display = 'flex';
   particles.enable();
 }
 
 export function disableParticles() {
+  (document.getElementById('particle-wrapper') as HTMLElement).style.display = 'none';
   particles.disable();
 }

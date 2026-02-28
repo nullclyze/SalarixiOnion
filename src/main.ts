@@ -17,7 +17,7 @@ import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
 import { changeMessagesVisibility, message } from './message';
 import { downloadJsonContent } from './downloader/downloader';
-import { enableParticles } from './particles';
+import { disableParticles, enableParticles } from './particles';
 
 
 Chart.register(...registerables);
@@ -296,6 +296,29 @@ async function initPluginDescriptions(): Promise<void> {
     }
   } catch (error) {
     log(`Ошибка загрузки информации о плагинах: ${error}`, 'error');
+  }
+}
+
+async function initDownloadCount(): Promise<void> {
+  try {
+    const content = await downloadJsonContent('https://api.github.com/repos/nullclyze/SalarixiOnion/releases');
+    
+    if (content) {
+      let globalDownloadCount = 0;
+
+      for (const release of content) {
+        const assets = release['assets']
+        
+        for (const build of assets) {
+          const downloadCount = build['download_count'] ? build['download_count'] as number : 0;
+          globalDownloadCount += downloadCount;
+        }
+      }
+
+      (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCount.toString();
+    }
+  } catch (error) {
+    log(`Ошибка загрузки количества скачиваний: ${error}`, 'error');
   }
 }
 
@@ -644,6 +667,7 @@ async function initFunctions(): Promise<void> {
 
   await initUserGuide();
   await initPluginDescriptions();
+  await initDownloadCount();
 } 
 
 function showGlobalContainer(id: string): void {
@@ -938,13 +962,60 @@ function registerAllTriggerFunctions() {
     }
   });
 
+  registerTriggerFunction('interface_select_style', 'select', (current: HTMLSelectElement) => {
+    try {
+      const root = document.documentElement;
+
+      switch (current.value) {
+        case 'cosmic': 
+          enableParticles();
+
+          root.style.setProperty('--global-bg', 'rgb(5, 5, 5)');
+          root.style.setProperty('--cover-bg', 'rgba(10, 10, 10, 0.9)');
+          root.style.setProperty('--common-bg', 'rgba(14, 14, 14, 0.5)');
+          root.style.setProperty('--common-border', 'rgb(36, 36, 36)');
+          root.style.setProperty('--card-bg', 'rgba(14, 14, 14, 0.6)');
+          root.style.setProperty('--input-bg', 'rgba(15, 15, 15, 0.7)');
+          root.style.setProperty('--input-border', 'rgb(39, 39, 39)');
+
+          break;
+        case 'null': 
+          disableParticles();
+
+          root.style.setProperty('--global-bg', 'rgb(5, 5, 5)');
+          root.style.setProperty('--cover-bg', 'rgba(10, 10, 10, 0.9)');
+          root.style.setProperty('--common-bg', 'rgba(14, 14, 14, 0.5)');
+          root.style.setProperty('--common-border', 'rgb(36, 36, 36)');
+          root.style.setProperty('--card-bg', 'rgba(14, 14, 14, 0.6)');
+          root.style.setProperty('--input-bg', 'rgba(15, 15, 15, 0.7)');
+          root.style.setProperty('--input-border', 'rgb(39, 39, 39)');
+
+          break;
+        case 'salarixi-old': 
+          disableParticles();
+
+          root.style.setProperty('--global-bg', 'rgb(15, 15, 15)');
+          root.style.setProperty('--cover-bg', 'rgba(17, 17, 17, 0.9)');
+          root.style.setProperty('--common-bg', 'rgba(19, 19, 19, 0.5)');
+          root.style.setProperty('--common-border', 'rgb(37, 37, 37)');
+          root.style.setProperty('--card-bg', 'rgba(19, 19, 19, 0.6)');
+          root.style.setProperty('--input-bg', 'rgba(20, 20, 20, 0.7)');
+          root.style.setProperty('--input-border', 'rgb(41, 41, 41)');
+
+          break;
+      }
+    } catch (error) {
+      log(`Ошибка изменения стиля: ${error}`, 'error');
+    }
+  });
+
   registerTriggerFunction('interface_select_theme', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
       switch (current.value) {
         case 'onion': 
-          root.style.setProperty('--title-color', '#7e47ff');
+          root.style.setProperty('--title-color', '#814bff');
           root.style.setProperty('--spec-color', '#6523ff');
           root.style.setProperty('--dull-spec-color', '#6a39dd');
           root.style.setProperty('--chbx-spec-color', '#6a3fce');
@@ -958,21 +1029,21 @@ function registerAllTriggerFunctions() {
           root.style.setProperty('--chbx-dull-spec-color', '#1d7e11');
           break;
         case 'ice': 
-          root.style.setProperty('--title-color', '#19a8e0');
+          root.style.setProperty('--title-color', '#17b2f0');
           root.style.setProperty('--spec-color', '#46b2f0');
           root.style.setProperty('--dull-spec-color', '#26b9be');
           root.style.setProperty('--chbx-spec-color', '#26a9e6');
           root.style.setProperty('--chbx-dull-spec-color', '#1386a8');
           break;
         case 'blood':
-          root.style.setProperty('--title-color', '#e42525');
+          root.style.setProperty('--title-color', '#f72323');
           root.style.setProperty('--spec-color', '#f03333');
           root.style.setProperty('--dull-spec-color', '#d62727');
           root.style.setProperty('--chbx-spec-color', '#ce2323');
           root.style.setProperty('--chbx-dull-spec-color', '#aa1818');
           break;
         case 'gold': 
-          root.style.setProperty('--title-color', '#ecf019');
+          root.style.setProperty('--title-color', '#f8fc12');
           root.style.setProperty('--spec-color', '#ccbd33');
           root.style.setProperty('--dull-spec-color', '#bbbe26');
           root.style.setProperty('--chbx-spec-color', '#95a319');
@@ -986,9 +1057,9 @@ function registerAllTriggerFunctions() {
           root.style.setProperty('--chbx-dull-spec-color', '#3f3f3f');
           break;
         case 'magenta': 
-          root.style.setProperty('--title-color', '#aa27f7');
-          root.style.setProperty('--spec-color', '#9215e6');
-          root.style.setProperty('--dull-spec-color', '#8e13be');
+          root.style.setProperty('--title-color', '#f727e6');
+          root.style.setProperty('--spec-color', '#eb28db');
+          root.style.setProperty('--dull-spec-color', '#be13a1');
           root.style.setProperty('--chbx-spec-color', '#9e0b97');
           root.style.setProperty('--chbx-dull-spec-color', '#960676');
           break;
@@ -998,6 +1069,13 @@ function registerAllTriggerFunctions() {
           root.style.setProperty('--dull-spec-color', '#979797');
           root.style.setProperty('--chbx-spec-color', '#a5a5a5');
           root.style.setProperty('--chbx-dull-spec-color', '#999999');
+          break;
+        case 'fire': 
+          root.style.setProperty('--title-color', '#ff5e00');
+          root.style.setProperty('--spec-color', '#ff6600');
+          root.style.setProperty('--dull-spec-color', '#d14d25');
+          root.style.setProperty('--chbx-spec-color', '#ee4c01');
+          root.style.setProperty('--chbx-dull-spec-color', '#d64a1f');
           break;
       }
     } catch (error) {

@@ -1002,6 +1002,13 @@
       }
     },
     {
+      "tags": ["label:interface-style"],
+      "lang": {
+        "ru": "Стиль:",
+        "en": "Style:"
+      }
+    },
+    {
       "tags": ["label:interface-theme"],
       "lang": {
         "ru": "Тема:",
@@ -1037,14 +1044,14 @@
       }
     },
     {
-      "tags": ["label:interface-show-messages"],
+      "tags": ["label:interface-show-messages", "label:interface-show-icons"],
       "lang": {
         "ru": "Показать",
         "en": "Show"
       }
     },
     {
-      "tags": ["label:interface-hide-messages"],
+      "tags": ["label:interface-hide-messages", "label:interface-hide-icons"],
       "lang": {
         "ru": "Скрыть",
         "en": "Hide"
@@ -1065,17 +1072,10 @@
       }
     },
     {
-      "tags": ["label:interface-section-language"],
-      "lang": {
-        "ru": "Язык",
-        "en": "Language"
-      }
-    },
-    {
       "tags": ["label:interface-client-language"],
       "lang": {
-        "ru": "Язык клиента:",
-        "en": "Client Language:"
+        "ru": "Язык:",
+        "en": "Language:"
       }
     },
     {

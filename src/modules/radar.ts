@@ -22,12 +22,14 @@ export class RadarManager {
   private active: boolean = false;
 
   private targetCardsContainer: HTMLElement | null = null;
+  private targetWrappersContainer: HTMLElement | null = null;
 
   private updateFrequency: number = 1500;
   private targets: Map<string, { data: any, interval: any, chart: any }> = new Map();
 
   public init(): void {
     this.targetCardsContainer = document.getElementById('radar-target-cards-container') as HTMLElement;
+    this.targetWrappersContainer = document.getElementById('radar-target-wrappers-container') as HTMLElement;
 
     const addTargetBtn = document.getElementById('radar-add-target') as HTMLButtonElement;
     const openSettingsBtn = document.getElementById('radar-open-settings') as HTMLButtonElement;
@@ -103,25 +105,30 @@ export class RadarManager {
             </button>
           </div>
         </div>
-
-        <div class="cover" id="radar-route-${username}">
-          <div class="panel with-header" style="margin-bottom: 40px;">
-            <div class="left">
-              <div class="header">Маршрут ${username}</div>
-            </div>
-
-            <div class="right">
-              <button class="btn min pretty" id="radar-close-route-${username}">
-                ⨉
-              </button>
-            </div>
-          </div>
-
-          <canvas class="radar-chart" id="radar-chart-${username}"></canvas>
-        </div>
       `;
 
-      this.targetCardsContainer!.appendChild(card);
+      const routeWrapper = document.createElement('div');
+      routeWrapper.className = 'cover';
+      routeWrapper.id = `radar-route-${username}`;
+
+      routeWrapper.innerHTML = `
+        <div class="panel with-header" style="margin-bottom: 40px;">
+          <div class="left">
+            <div class="header">Маршрут ${username}</div>
+          </div>
+
+          <div class="right">
+            <button class="btn min pretty" id="radar-close-route-${username}">
+              ⨉
+            </button>
+          </div>
+        </div>
+
+        <canvas class="radar-chart" id="radar-chart-${username}"></canvas>
+      `;
+
+      this.targetCardsContainer?.appendChild(card);
+      this.targetWrappersContainer?.appendChild(routeWrapper);
 
       this.initializeTargetCard(username);
     });
