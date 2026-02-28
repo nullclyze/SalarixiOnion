@@ -33,6 +33,7 @@ export class MonitoringManager {
 
   private statusText: HTMLElement | null = null;
   private botCardsContainer: HTMLElement | null = null;
+  private botWrappersContainer: HTMLElement | null = null;
 
   private chatMessageCounter: Record<string, number> = {};
   private chatHistoryFilters: Record<string, string> = {};
@@ -51,6 +52,7 @@ export class MonitoringManager {
   public async init(): Promise<void> {
     this.statusText = document.getElementById('monitoring-status-text');
     this.botCardsContainer = document.getElementById('bot-cards-container');
+    this.botWrappersContainer = document.getElementById('bot-wrappers-container');
 
     this.statusText!.innerText = 'Объекты ботов отсутствуют';
     this.statusText!.style.color = '#646464f7';
@@ -287,82 +289,94 @@ export class MonitoringManager {
       <button class="btn spec" id="solve-captcha-${nickname}" style="display: none;">Решить капчу</button>
       <button class="btn spec" id="reset-${nickname}">Сбросить</button>
       <button class="btn spec" id="disconnect-${nickname}" style="margin-bottom: 12px;">Отключить</button>
+    `;
 
-      <div class="chat-container cover" id="chat-${nickname}">
-        <div class="panel">
-          <div class="left">
-            <div class="custom-select">
-              <select id="select-chat-filter-${nickname}">
-                <option value="all">Все сообщения</option>
-                <option value="bans">Блокировки</option>
-                <option value="mentions">Упоминания</option>
-                <option value="warnings">Предупреждения</option>
-                <option value="links">Ссылки</option>
-              </select>
-            </div>
+    const chatWrapper = document.createElement('div');
+    chatWrapper.className = 'chat-container cover';
+    chatWrapper.id = `chat-${nickname}`;
 
-            <button class="btn min pretty" id="filter-chat-${nickname}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
-                <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z"/>
-              </svg>
-            </button>
+    chatWrapper.innerHTML = `
+      <div class="panel">
+        <div class="left">
+          <div class="custom-select">
+            <select id="select-chat-filter-${nickname}">
+              <option value="all">Все сообщения</option>
+              <option value="bans">Блокировки</option>
+              <option value="mentions">Упоминания</option>
+              <option value="warnings">Предупреждения</option>
+              <option value="links">Ссылки</option>
+            </select>
           </div>
 
-          <div class="right">
-            <button class="btn min pretty" id="clear-chat-${nickname}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-              </svg>
-            </button>
-
-            <button class="btn min pretty" id="close-chat-${nickname}">
-              ⨉
-            </button>
-          </div>
+          <button class="btn min pretty" id="filter-chat-${nickname}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
+              <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z"/>
+            </svg>
+          </button>
         </div>
 
-        <div class="chat-content">
-          <div class="monitoring-content" id="monitoring-chat-content-${nickname}"></div>
-        </div>
+        <div class="right">
+          <button class="btn min pretty" id="clear-chat-${nickname}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+              <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+            </svg>
+          </button>
 
-        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
-          <p class="signature">${nickname}:</p>
-
-          <input type="text" class="glass-input" control="this" id="this-chat-message-${nickname}" placeholder="Введите сообщение" style="height: 32px; width: 250px;">
+          <button class="btn min pretty" id="close-chat-${nickname}">
+            ⨉
+          </button>
         </div>
       </div>
 
-      <div class="cover" id="map-${nickname}">
-        <div class="panel">
-          <div class="right">
-            <button class="btn min pretty" id="remove-map-${nickname}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-              </svg>
-            </button>
+      <div class="chat-content">
+        <div class="monitoring-content" id="monitoring-chat-content-${nickname}"></div>
+      </div>
 
-            <button class="btn min pretty" id="close-map-${nickname}">
-              ⨉
-            </button>
-          </div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
+        <p class="signature">${nickname}:</p>
+
+        <input type="text" control="this" id="this-chat-message-${nickname}" placeholder="Введите сообщение" style="height: 32px; width: 250px;">
+      </div>
+    `;
+
+    const mapWrapper = document.createElement('div');
+    mapWrapper.className = 'cover';
+    mapWrapper.id = `map-${nickname}`;
+
+    mapWrapper.innerHTML = `
+      <div class="panel">
+        <div class="right">
+          <button class="btn min pretty" id="remove-map-${nickname}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+              <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+            </svg>
+          </button>
+
+          <button class="btn min pretty" id="close-map-${nickname}">
+            ⨉
+          </button>
         </div>
+      </div>
 
-        <div class="bot-map-wrap" id="map-wrap-${nickname}">
-          <div class="bot-map-render-status" id="map-render-status-${nickname}">Генерация карты, пожайлуста, подождите...</div>
-          <div class="bot-map-render-progress" id="map-render-progress-${nickname}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${nickname}">0</span> / 65536</div>
+      <div class="bot-map-wrap" id="map-wrap-${nickname}">
+        <div class="bot-map-render-status" id="map-render-status-${nickname}">Генерация карты, пожайлуста, подождите...</div>
+        <div class="bot-map-render-progress" id="map-render-progress-${nickname}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${nickname}">0</span> / 40000</div>
 
-          <div id="save-map-wrap-${nickname}" style="display: none; margin-top: 25px; gap: 15px;">
-            <input type="text" class="glass-input" id="save-map-path-${nickname}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
-            
-            <button class="btn min" id="save-map-${nickname}">Сохранить</button>
-          </div>  
-        </div>
+        <div id="save-map-wrap-${nickname}" style="display: none; margin-top: 25px; gap: 15px;">
+          <input type="text" id="save-map-path-${nickname}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
+          
+          <button class="btn min" id="save-map-${nickname}">Сохранить</button>
+        </div>  
       </div>
     `;
 
     this.botCardsContainer?.appendChild(card);
+    this.botWrappersContainer?.appendChild(chatWrapper);
+    this.botWrappersContainer?.appendChild(mapWrapper);
+
     this.chatHistoryFilters[nickname] = 'all';
     this.usernameList.push(nickname);
+
     this.initializeBotCard(nickname);
   }
 

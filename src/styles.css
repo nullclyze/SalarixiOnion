@@ -8,16 +8,14 @@
   --s-font-family: 'JetBrains Mono', 'Fira Code', monospace;
   --o-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
-  --bg-color: #050505;
-  --bd-color: #383838;
+  --global-bg: rgb(5, 5, 5);
+  --global-border: rgb(56, 56, 56);
 
   --global-font-family: 'Inter', sans-serif;
 
   --title-color: #7e47ff;
-
   --spec-color: #7946f0;
   --dull-spec-color: #5426be;
-
   --chbx-spec-color: #7946f0;
   --chbx-dull-spec-color: #5426be;
 
@@ -26,15 +24,17 @@
   --panel-font-size: 15px;
   --panel-btn-gap: 6px;
 
-  --card-border: rgb(36, 36, 36);
-  --card-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  --cover-bg: rgba(10, 10, 10, 0.9);
+  --common-bg: rgba(14, 14, 14, 0.5);
+  --common-border: rgb(36, 36, 36);
+  --card-bg: rgba(14, 14, 14, 0.6);
   --input-bg: rgba(15, 15, 15, 0.7);
   --input-border: rgb(39, 39, 39);
   --text-secondary: #a0a0a0;
 }
 
 body {
-  background-color: var(--bg-color);
+  background-color: var(--global-bg);
   font-family: var(--global-font-family);
   -webkit-user-select: none; 
   -moz-user-select: none;
@@ -46,7 +46,7 @@ body {
 }
 
 ::selection {
-  background-color: #444444a9;
+  background-color: rgba(68, 68, 68, 0.6);
 }
 
 ::-webkit-scrollbar {
@@ -59,14 +59,14 @@ body {
   left: 0;
   width: 100%;
   -webkit-app-region: drag; 
-  background-color: #0c0c0c7a;
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px); 
+  background-color: rgba(12, 12, 12, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); 
   height: 40px; 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--bd-color);
+  border-bottom: 1px solid var(--global-border);
   z-index: 99999;
 }
 
@@ -117,14 +117,14 @@ body {
   background-color: #57555525;
 }
 
-.particle-wrap {
+.particle-wrapper {
   position: absolute;
   left: 0; 
   top: 0; 
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--bg-color); 
+  background-color: var(--global-bg); 
 }
 
 .cover {
@@ -138,8 +138,8 @@ body {
   z-index: 1000;
   border-radius: 12px;
   padding: 20px;
-  background-color: #0a0a0adc;
-  border: 1px solid var(--card-border);
+  background-color: var(--cover-bg);
+  border: 1px solid var(--common-border);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px); 
   flex-direction: column;
@@ -189,12 +189,12 @@ body {
   left: 0;
   top: 40px;
   background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   width: 210px;
   height: 100vh;
   font-family: var(--global-font-family);
-  border-right: 1px solid var(--bd-color);
+  border-right: 1px solid var(--global-border);
   padding-top: 15px;
   margin: 0;
   display: flex;
@@ -212,7 +212,7 @@ body {
   width: 100%;
   margin-top: 8px;
   margin-bottom: 8px;
-  border-bottom: 1px solid var(--bd-color);
+  border-bottom: 1px solid var(--global-border);
 }
 
 .panel-btn {
@@ -339,16 +339,15 @@ body {
   margin-top: -10px;
   margin-bottom: 20px;
   padding: 0 20px;
-  background: rgba(31, 31, 32, 0.452);
+  background-color: var(--common-bg);
   border: 1px solid rgb(41, 41, 41);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px); 
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); 
   border-radius: 12px;
   height: 34px;
   min-height: 34px;
   max-height: 34px;
   width: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .control-container .header {
@@ -373,10 +372,10 @@ body {
   overflow-y: auto;
   box-sizing: border-box;
   scroll-behavior: smooth;
-  background-color: transparent;
+  background-color: var(--common-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
 }
 
 .settings-column.left {
@@ -409,7 +408,7 @@ body {
   width: 90%;
   margin-top: 30px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--bd-color);
+  border-bottom: 1px solid var(--global-border);
   align-items: center;
   justify-content: center;
 }
@@ -424,7 +423,7 @@ body {
   font-size: 16px; 
   border: none;
   margin-bottom: -10px;
-  background-color: #050505;
+  background-color: var(--global-bg);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
 }
@@ -463,7 +462,7 @@ body {
   display: flex;
   width: 100%;
   margin: 6px 0;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
 }
 
 .columns {
@@ -507,13 +506,13 @@ body {
 }
 
 .columns .wrap.right {
-  background-color: #0e0e0eb4;
+  background-color: var(--common-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   border-radius: 8px;
   max-width: 240px;
-  padding: 12px 0;
+  padding: 16px 0;
 }
 
 .columns .wrap.right .checkbox-container {
@@ -530,6 +529,18 @@ body {
 
 .hidden-wrapper.input {
   gap: 0;
+}
+
+.glass-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-top: 40px;
+  background-color: var(--common-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid #1d1d1d;
+  border-radius: 8px;
+  padding: 30px 50px;
 }
 
 .info-text {
@@ -554,7 +565,7 @@ input {
   padding: 0 10px;
   line-height: 1;
   color: rgba(243, 244, 246);
-  transition: border 0.15s ease, box-shadow 0.15s ease;
+  transition: border 0.15s ease;
 }
 
 input:disabled {
@@ -573,11 +584,6 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none; 
   margin: 0;
-}
-
-.glass-input {
-  background-color: #2525251f;
-  border: 1px solid #3d3d3d86;
 }
 
 p {
@@ -630,14 +636,16 @@ p {
   background-color: transparent;
   color: #f0f0f0;
   border: 1px solid #3636366e;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .btn.pretty:hover {
-  background-color: #413f3f46;
+  background-color: #30303056;
 }
 
 .btn.pretty:active {
-  background-color: #31303031;
+  background-color: #30303056;
+  color: var(--spec-color);
 }
 
 .btn.pretty:disabled {
@@ -677,8 +685,8 @@ p {
   background-color: transparent;
   border: none;
   border-radius: 0;
-  border-top: 1px solid var(--bd-color);
-  border-bottom: 1px solid var(--bd-color);
+  border-top: 1px solid var(--global-border);
+  border-bottom: 1px solid var(--global-border);
 }
 
 .button-card {
@@ -690,7 +698,7 @@ p {
   justify-content: start;
   align-items: center;
   padding: 10px 0;
-  border-right: 1px solid var(--bd-color);
+  border-right: 1px solid var(--global-border);
   width: 200px;
   height: 100%;
   background-color: transparent;
@@ -710,7 +718,7 @@ p {
 
 .button-card .button-list .sep {
   width: 90%;
-  border-bottom: 1px solid var(--bd-color);
+  border-bottom: 1px solid var(--global-border);
   margin: 8px 0;
 }
 
@@ -819,7 +827,7 @@ p {
   top: -8px;
   left: 12px;
   padding: 0 2px;
-  background-color: var(--bg-color);
+  background-color: var(--global-bg);
   width: auto;
   z-index: 1;
   line-height: 1;
@@ -863,7 +871,7 @@ p {
 
 .between-wrapper .right .sep {
   width: 100%;
-  border-top: 1px solid var(--bd-color);
+  border-top: 1px solid var(--global-border);
   margin-top: 20px;
   margin-bottom: 20px;
 }
@@ -922,14 +930,13 @@ p {
 }
 
 .pretty-textarea .frame {
-  background-color: rgba(12, 12, 12, 0.6);
-  border: 1px solid rgb(41, 41, 41);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  background-color: var(--common-bg);
+  border: 1px solid var(--common-border);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-radius: 12px;
   padding-top: -4px;
   padding-bottom: 10px;
-  box-shadow: 0 6px 20px rgba(2,6,10,0.6);
 }
 
 .pretty-textarea .label {
@@ -937,15 +944,13 @@ p {
   top: 0; 
   left: 35%;
   transform: translateY(-50%);
-  background-color: #171716a4;
+  background-color: var(--global-bg);
   color: #cecece;
   font-weight: normal;
   font-size: 14px;
   padding: 4px 15px;
   border-radius: 16px;
-  border: 1px solid rgb(56, 56, 56);
-  box-shadow: 0 2px 8px rgba(2,6,10,0.6);
-  backdrop-filter: blur(4px);
+  border: 1px solid var(--common-border);
   pointer-events: none;
   white-space: nowrap;
   width: 100px;
@@ -1012,6 +1017,16 @@ p {
   margin-top: 30px;
 }
 
+.webhook-options {
+  width: 294px; 
+  margin-top: 20px; 
+  background-color: var(--common-bg);
+  border-radius: 6px; 
+  border: 1px solid var(--common-border); 
+  padding: 10px 0; 
+  padding-left: 4px;
+}
+
 .log-content {
   width: 100%;
   margin-top: 10px;
@@ -1021,8 +1036,8 @@ p {
   padding: 0;
   border-radius: 12px;
   background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid #2b2b2b;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1095,48 +1110,54 @@ p {
   margin-top: 30px; 
   width: 100%;
   background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid #2b2b2b;
   border-radius: 12px;
   padding: 15px 0;
   padding-left: 6px;
 }
 
-.about-content {
+.about-wrap {
   display: flex;
   flex-direction: column;
-  color: #fff;
-  max-width: 1000px;
-  margin: 0;
-  margin-top: -20px;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  width: 100%;
+  max-height: 535px;
 }
 
-.about-content p {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  text-align: center;
-  line-height: 1.6;
-}
-
-.about-content .description {
-  padding: 20px;
+.about-wrap .description {
+  padding: 10px 20px;
   border-radius: 12px;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   background-color: transparent; 
   font-family: var(--global-font-family);
   font-size: 16px;
+  text-align: center;
   color: #d1d1d1;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 
+.about-wrap .download-count {
+  font-family: var(--global-font-family);
+  font-size: 16px;
+  text-align: center;
+  color: #b8b8b8;
+  margin-top: 35px;
+  padding: 4px;
+  background-color: var(--global-bg);
+}
+
 .features-title {
+  margin-top: 35px;
+  margin-bottom: 10px;
   color: var(--spec-color);
   font-weight: bold;
   font-size: 1rem;
   text-align: center;
-  letter-spacing: 0.3px;
 }
 
 .feature-lists-container {
@@ -1150,20 +1171,19 @@ p {
   flex-direction: column;
   list-style-type: none;
   width: 200px;
-  padding: 20px;
+  padding: 15px 20px;
   margin: 0;
   margin-top: 10px;
   gap: 6px;
   background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 12px;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   font-family: var(--global-font-family);
   font-size: 14px;
   color: var(--text-secondary);
   transition: all 0.2s ease;
-  box-shadow: var(--card-shadow);
 }
 
 .feature-list:hover {
@@ -1187,8 +1207,8 @@ p {
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
   border-radius: 12px;
-  margin-top: 50px;
-  box-shadow: var(--card-shadow);
+  margin-top: 40px;
+  width: max-content;
 }
 
 .btn-social {
@@ -1357,10 +1377,9 @@ p {
   background-color: transparent;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
   padding: 8px;
-  box-shadow: var(--card-shadow);
 }
 
 .cards-container {
@@ -1388,7 +1407,9 @@ p {
   width: 240px;
   height: auto;
   background-color: transparent;
-  border: 1px solid var(--card-border);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
   display: flex;
   overflow: hidden;  
@@ -1430,11 +1451,11 @@ p {
 
 .bot-card-head {
   display: flex;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
-  border-bottom: 1px solid var(--card-border);
+  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.7), transparent);
+  border-bottom: 1px solid var(--common-border);
   padding: 12px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .bot-card-head .image {
@@ -1501,7 +1522,7 @@ p {
 
 .bot-card .sep {
   display: flex;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
   width: 100%;
   margin: 8px 0;
 }
@@ -1589,10 +1610,10 @@ p {
 
 .monitoring-line-content .bot-tag {
   color: var(--spec-color); 
-  font-weight: normal;
-  border: 1px solid #363636;
+  font-weight: bold;
+  border: 1px solid #2e2e2e;
   border-radius: 4px;
-  padding: 3px 10px;
+  padding: 1px 10px;
 }
 
 .bot-captcha-image {
@@ -1681,16 +1702,14 @@ p {
   position: relative;
   width: 520px;
   max-width: 90%;
-  background-color: rgb(12, 12, 12);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--card-border);
+  background-color: var(--cover-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--common-border);
   border-radius: 16px;
   padding: 28px 24px;
   text-align: center;
   font-family: var(--global-font-family);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 .notice .close-notice-btn {
@@ -1762,14 +1781,14 @@ p {
   background: transparent;
   padding: 12px 16px;
   border-radius: 12px;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
 }
 
 .notice .info-wrapper .logo {
   width: 98px; 
   height: 98px; 
   margin: 0;
-  border: 2px solid var(--card-border);
+  border: 2px solid var(--common-border);
   border-radius: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
@@ -1837,7 +1856,7 @@ p {
   background-color: transparent;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
   animation: show-ping-info 0.12s ease forwards;
 }
@@ -1858,7 +1877,7 @@ p {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
   padding: 6px 0;
 }
 
@@ -1881,13 +1900,13 @@ p {
   align-items: center;
   width: 100%;
   height: auto;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
 }
 
 .ping-wrap .info .card .head .sep {
   display: flex;
   height: 100%;
-  border-left: 1px solid var(--card-border);
+  border-left: 1px solid var(--common-border);
   margin-left: 40px;
 }
 
@@ -1908,7 +1927,7 @@ p {
 .ping-wrap .info .card .head .text .sep {
   display: flex;
   width: 100%;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
   margin: 6px 0;
 }
 
@@ -1942,7 +1961,7 @@ p {
   width: 100%;
   padding: 0;
   overflow-y: auto;
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid var(--common-border);
 }
 
 .ping-wrap .info .card .list .element {
@@ -1950,7 +1969,7 @@ p {
   height: auto;
   width: 100%;
   background-color: #18181885;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--common-border);
   padding: 5px 0;
 }
 
@@ -1977,7 +1996,7 @@ p {
 .ping-wrap .info .card .list .element .sep {
   display: flex;
   height: 100%;
-  border-left: 1px solid var(--card-border);
+  border-left: 1px solid var(--common-border);
   margin: 0 8px;
 }
 
@@ -1988,15 +2007,17 @@ p {
   width: 98%;
   gap: 6px;
   background-color: #0e0e0ea1;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-radius: 8px;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   justify-content: center;
   align-items: center;
 }
 
 .radar-panel .sep {
   display: flex;
-  border-left: 2px solid var(--card-border);
+  border-left: 2px solid var(--common-border);
   height: 30px;
   margin: 0 4px;
 }
@@ -2010,7 +2031,6 @@ p {
 
 .radar-panel .btn {
   border: none;
-  box-shadow: none;
 }
 
 .cover.radar {
@@ -2053,18 +2073,16 @@ p {
 .radar-wrap .radar-target {
   display: flex;
   width: 96%;
-  background-color: #0e0e0ea1;
-  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
   gap: 12px;
   padding: 12px;
   align-items: center;
   animation: show-target-card 0.2s;
   transition: all 0.2s ease;
-}
-
-.radar-wrap .radar-target.glow .icon {
-  color: var(--spec-color);
 }
 
 @keyframes show-target-card {
@@ -2078,9 +2096,10 @@ p {
   min-width: 45px;
   height: 45px;
   margin-left: 8px;
-  transition: color 0.12s ease;
+  transition: color 0.12s ease, filter 0.12s ease;
 }
 
+.radar-wrap .radar-target.glow .icon,
 .radar-wrap .radar-target .icon:hover {
   color: var(--spec-color);
 }
@@ -2112,7 +2131,7 @@ p {
 
 .radar-wrap .radar-target .sep {
   display: flex;
-  border-left: 1px solid var(--card-border);
+  border-left: 1px solid var(--common-border);
   height: 60px;
   margin: 0 8px;
 }
@@ -2163,8 +2182,8 @@ p {
   height: auto;
   min-height: 90px;
   width: 95%;
-  background-color: #0f0f0f79;
-  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
   padding: 2px 8px;
   backdrop-filter: blur(3px);
@@ -2267,7 +2286,7 @@ p {
 }
 
 .plugins-wrap .list .plugin-card .controls .button {
-  border: 1px solid rgb(29, 29, 29);
+  border: 1px solid rgb(31, 31, 31);
   background-color: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
   padding: 6px 12px;
@@ -2449,7 +2468,7 @@ p {
   align-items: start;
   z-index: 9000;
   background-color: transparent;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   border-radius: 8px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -2530,7 +2549,7 @@ p {
 }
 
 .message .down-part {
-  width: 90%;
+  width: 94%;
   padding: 16px 12px;
   display: flex;
   justify-content: start;
@@ -2551,11 +2570,11 @@ p {
   width: 100%;
   height: 480px;
   overflow-y: auto;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--common-border);
   border-radius: 12px;
-  background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background-color: #0e0e0eb4;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   gap: 30px;
   font-family: var(--global-font-family);
   font-size: 14px;
@@ -2648,8 +2667,8 @@ p {
   margin-top: 25px;
   padding: 8px 0;
   border-radius: 12px;
-  background-color: transparent;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  border: 1px solid var(--card-border);
+  background-color: #0e0e0eb4;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--common-border);
 }
