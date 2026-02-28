@@ -272,7 +272,7 @@ export class MonitoringManager {
       <div class="bot-advanced-info">
         <p>Версия:<span class="value" id="bot-version-${nickname}">${profile.version}</span></p>
         <p>Пароль:<span class="value" id="bot-password-${nickname}">${profile.password}</span></p>
-        <p>Прокси:<span class="value" id="bot-proxy-${nickname}">${profile.proxy}</span></p>
+        <p>Прокси:<span class="value" id="bot-proxy-${nickname}">${profile.proxy.ip_address}</span></p>
         <p id="extended-monitoring-ping-${nickname}" style="display: none;">Пинг:<span class="value" id="bot-ping-${nickname}">${profile.ping} мс</span></p>
         <p id="extended-monitoring-health-${nickname}" style="display: none;">Здоровье:<span class="value" id="bot-health-${nickname}">${profile.health} / 20</span></p>
         <p id="extended-monitoring-satiety-${nickname}" style="display: none;">Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>

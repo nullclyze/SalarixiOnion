@@ -6,7 +6,6 @@ use azalea::swarm::*;
 use azalea::JoinOpts;
 use azalea_viaversion::ViaVersionPlugin;
 use once_cell::sync::Lazy;
-use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
 use std::collections::HashMap;
@@ -14,6 +13,7 @@ use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::RwLock;
 use std::thread;
 use std::time::Duration;
 use tokio::task::JoinHandle;
@@ -332,13 +332,13 @@ pub fn active_bots_count() -> i32 {
 
 /// Функция установки опций
 pub fn set_options(options: LaunchOptions) {
-  let mut guard = CURRENT_OPTIONS.write();
+  let mut guard = CURRENT_OPTIONS.write().unwrap();
   *guard = Some(options);
 }
 
 /// Функция получения текущих опций
 pub fn current_options() -> Option<LaunchOptions> {
-  CURRENT_OPTIONS.read().clone()
+  CURRENT_OPTIONS.read().unwrap().clone()
 }
 
 /// Функция проверки активности основного процесса
@@ -940,7 +940,11 @@ impl PluginManager {
   }
 
   pub fn load(&'static self, username: &String, plugins: &PluginOptions) {
-    self.tasks.write().insert(username.clone(), HashMap::new());
+    self
+      .tasks
+      .write()
+      .unwrap()
+      .insert(username.clone(), HashMap::new());
 
     if plugins.auto_armor {
       self.plugins.auto_armor.enable(username.clone());
@@ -972,7 +976,7 @@ impl PluginManager {
   }
 
   pub fn push_task(&self, username: &str, plugin: &str, task: JoinHandle<()>) {
-    if let Some(tasks) = self.tasks.write().get_mut(username) {
+    if let Some(tasks) = self.tasks.write().unwrap().get_mut(username) {
       if let Some(old_task) = tasks.get(plugin) {
         if let Some(active_old_task) = old_task {
           active_old_task.abort();
@@ -984,7 +988,7 @@ impl PluginManager {
   }
 
   pub fn destroy_all_tasks(&self, username: &str) {
-    if let Some(tasks) = self.tasks.write().get(username) {
+    if let Some(tasks) = self.tasks.read().unwrap().get(username) {
       for (_, task) in tasks {
         if let Some(handle) = task {
           handle.abort();

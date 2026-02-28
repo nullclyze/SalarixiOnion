@@ -8,12 +8,14 @@ mod emit;
 mod generators;
 mod methods;
 mod quick;
+mod rpc;
 mod script;
 mod tools;
 mod webhook;
 
 use crate::core::*;
 use crate::emit::*;
+use crate::rpc::*;
 use crate::script::*;
 use crate::tools::*;
 use crate::webhook::*;
@@ -224,6 +226,18 @@ fn exit() {
   std::process::exit(0x0);
 }
 
+/// Функция задания статуса Discord RPC
+#[tauri::command]
+async fn set_discord_rpc(state: bool) {
+  tokio::spawn(async move {
+    if state {
+      DISCORD_RPC_MANAGER.write().unwrap().enable();
+    } else {
+      DISCORD_RPC_MANAGER.write().unwrap().disable();
+    }
+  });
+}
+
 /// Функция запуска
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -258,7 +272,8 @@ pub fn run() {
       render_map,
       save_map,
       get_server_info,
-      open_url
+      open_url,
+      set_discord_rpc
     ])
     .run(tauri::generate_context!())
     .expect("Не удалось запустить клиент");

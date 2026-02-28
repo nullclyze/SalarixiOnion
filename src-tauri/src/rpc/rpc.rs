@@ -1,0 +1,45 @@
+use discord_presence::Client;
+use once_cell::sync::Lazy;
+use std::sync::{Arc, RwLock};
+
+use crate::emit::send_log;
+
+pub static DISCORD_RPC_MANAGER: Lazy<Arc<RwLock<DiscordRpcManager>>> =
+  Lazy::new(|| Arc::new(RwLock::new(DiscordRpcManager::new())));
+
+pub struct DiscordRpcManager {
+  client: Option<Client>,
+}
+
+impl DiscordRpcManager {
+  pub fn new() -> Self {
+    Self { client: None }
+  }
+
+  pub fn enable(&mut self) {
+    let mut client = Client::new(1477312950271213729);
+
+    self.client = Some(client.clone());
+
+    client.start();
+    let _ = client.block_until_event(discord_presence::Event::Ready);
+
+    match client.set_activity(|act| act.state("Best client for Minecraft botting")) {
+      Ok(_) => {}
+      Err(err) => {
+        send_log(format!("Ошибка включения Discord RPC: {}", err), "error");
+      }
+    }
+  }
+
+  pub fn disable(&mut self) {
+    if let Some(client) = self.client.take() {
+      match client.shutdown() {
+        Ok(_) => {}
+        Err(err) => {
+          send_log(format!("Ошибка выключения Discord RPC: {}", err), "error");
+        }
+      }
+    }
+  }
+}
