@@ -7,7 +7,7 @@ export const plugins: Record<string, { header: string; enable: boolean; date: st
   'auto-totem': {
     header: 'Авто Тотем',
     enable: false,
-    date: '22.02.2026'
+    date: '01.03.2026'
   },
   'auto-eat': {
     header: 'Авто Еда',
@@ -22,12 +22,12 @@ export const plugins: Record<string, { header: string; enable: boolean; date: st
   'auto-look': {
     header: 'Авто Взгляд',
     enable: false,
-    date: '22.02.2026'
+    date: '01.03.2026'
   },
   'auto-shield': {
     header: 'Авто Щит',
     enable: false,
-    date: '22.02.2026'
+    date: '01.03.2026'
   },
   'auto-repair': {
     header: 'Авто Починка',
