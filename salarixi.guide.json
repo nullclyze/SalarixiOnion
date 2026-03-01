@@ -274,6 +274,50 @@
       ]
     },
     {
+      "header": "Скриптинг",
+      "subsections": [
+        {
+          "subheader": "О разделе",
+          "paragraphs": [
+            "Здесь вы можете писать свои сценарии для ботов на Rust, который будет выполняться в оболочке Rhai.",
+            "Важно: В скрипте не рекомендуется использовать бесконечные циклы рода /:while true/&, /:loop/&."
+          ]
+        },
+        {
+          "subheader": "Основные функции",
+          "paragraphs": [
+            "/:sleep(delay: u64)/& — остановка выполнения скрипта на время (в секундах).",
+            "/:print(str: &str)/& — логгирование информации в терминал.",
+            "/:log(text: &str, class: &str)/& — логгирование информации в журнал клиента.",
+            "/:message(name: &str, content: &str)/& — отправка уведомления в клиент.",
+            "/:webhook(content: &str)/& — отправка вебхука по ранее указанной ссылке.",
+            "/:active_bots_count()/& — получение числа активных ботов.",
+            "/:chat(message: &str)/& — отправка сообщения в чат от всех ботов.",
+            "/:jump()/& — одноразовый прыжок.",
+            "/:set_jumping(state: bool)/& — установка состояния для jumping.",
+            "/:set_crouching(state: bool)/& — установка состояния для crouching.",
+            "/:set_velocity_y(velocity_y: f64)/& — установка скорости по Y.",
+            "/:set_on_ground(on_ground: bool)/& — установка значения для on_ground.",
+            "/:start_walking(direction: &str)/& — задание направления ходьбы.",
+            "/:start_sprinting(direction: &str)/& — задание направления спринта.",
+            "/:start_pathfinder(x: i64, z: i64)/& — задание координат для pathfinder.",
+            "/:stop_move()/& — остановка движения (walk & sprint)",
+            "/:stop_pathfinder()/& — остановка задач pathfinder.",
+            "/:place_block(x: i64, y: i64, z: i64)/& — установка блока на координаты.",
+            "/:look_at(x: f64, y: f64, z: f64)/& — поворот на координаты.",
+            "/:look_at_block(x: i64, y: i64, z: i64)/& — поворот на координаты блока с учётом его центра.",
+            "/:drop_selected_item(lock: bool)/& — выбрасить выбранный предмет. Аргументом /:lock/& вы указываете, будет ли операция влиять на состояние бота.",
+            "/:drop_all_items(lock: bool)/& — выбросить все предметы из инвенторя.",
+            "/:inv_drop_click(slot: i64, lock: bool)/& — drop-клик в инвентаре.",
+            "/:inv_shift_click(slot: i64, lock: bool)/& — shift-клик в инвентаре.",
+            "/:inv_left_click(slot: i64, lock: bool)/& — left-клик в инвентаре.",
+            "/:inv_right_click(slot: i64, lock: bool)/& — right-клик в инвентаре.",
+            "/:attack(target: &str, distance: f64, look_at_target: bool)/& — атака определённой ближайшей сущности. Аргумент /:target/& может иметь значения: any (любая сущность), player, monster, animal, vehicle."
+          ]
+        }
+      ]
+    },
+    {
       "header": "График",
       "subsections": [
         {
