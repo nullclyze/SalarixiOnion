@@ -35,21 +35,19 @@ impl MovementModule {
       }
 
       loop {
-        match options.direction.as_str() {
-          "forward" => {
-            bot.start_walking(WalkDirection::Forward);
-          }
-          "backward" => {
-            bot.start_walking(WalkDirection::Backward);
-          }
-          "left" => {
-            bot.start_walking(WalkDirection::Left);
-          }
-          "right" => {
-            bot.start_walking(WalkDirection::Right);
-          }
-          _ => {}
-        }
+        let direction = match options.direction.as_str() {
+          "forward" => WalkDirection::Forward,
+          "backward" => WalkDirection::Backward,
+          "left" => WalkDirection::Left,
+          "right" => WalkDirection::Right,
+          "forward-left" => WalkDirection::ForwardLeft,
+          "forward-right" => WalkDirection::ForwardRight,
+          "backward-left" => WalkDirection::BackwardLeft,
+          "backward-right" => WalkDirection::BackwardRight,
+          _ => return,
+        };
+
+        bot.start_walking(direction);
 
         if options.use_sync {
           sleep(Duration::from_millis(1200)).await;
@@ -64,21 +62,19 @@ impl MovementModule {
         sleep(Duration::from_millis(randuint(500, 2000))).await;
       }
 
-      match options.direction.as_str() {
-        "forward" => {
-          bot.start_walking(WalkDirection::Forward);
-        }
-        "backward" => {
-          bot.start_walking(WalkDirection::Backward);
-        }
-        "left" => {
-          bot.start_walking(WalkDirection::Left);
-        }
-        "right" => {
-          bot.start_walking(WalkDirection::Right);
-        }
-        _ => {}
-      }
+      let direction = match options.direction.as_str() {
+        "forward" => WalkDirection::Forward,
+        "backward" => WalkDirection::Backward,
+        "left" => WalkDirection::Left,
+        "right" => WalkDirection::Right,
+        "forward-left" => WalkDirection::ForwardLeft,
+        "forward-right" => WalkDirection::ForwardRight,
+        "backward-left" => WalkDirection::BackwardLeft,
+        "backward-right" => WalkDirection::BackwardRight,
+        _ => return,
+      };
+
+      bot.start_walking(direction);
     }
   }
 
