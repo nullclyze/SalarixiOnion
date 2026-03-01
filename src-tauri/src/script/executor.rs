@@ -1,4 +1,4 @@
-use azalea::{SprintDirection, WalkDirection};
+use azalea::{BlockPos, SprintDirection, Vec3, WalkDirection, bot::BotClientExt, prelude::PathfinderClientExt};
 use once_cell::sync::Lazy;
 use rhai::Engine;
 use std::sync::{
@@ -7,12 +7,7 @@ use std::sync::{
 };
 
 use crate::{
-  common::{set_bot_on_ground, set_bot_velocity_y},
-  core::{current_options, BOT_REGISTRY, PROFILES},
-  emit::{send_log, send_message},
-  generators::randfloat,
-  methods::SafeClientMethods,
-  webhook::send_webhook,
+  common::{convert_hotbar_slot_to_inventory_slot, go_to, inventory_drop_item, inventory_left_click, inventory_right_click, inventory_shift_click}, core::{BOT_REGISTRY, PROFILES, active_bots_count, current_options}, emit::{send_log, send_message}, methods::SafeClientMethods, webhook::send_webhook
 };
 
 pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
@@ -29,36 +24,12 @@ impl ScriptExecutor {
     }
   }
 
-  fn set_direction(y_rot: f32, x_rot: f32) {
-    tokio::spawn(async move {
-      for username in PROFILES.get_all().keys() {
-        BOT_REGISTRY
-          .get_bot(username, async |bot| {
-            let y = if y_rot == 255.0 {
-              randfloat(-180.0, 180.0) as f32
-            } else {
-              y_rot
-            };
-
-            let x = if x_rot == 255.0 {
-              randfloat(-90.0, 90.0) as f32
-            } else {
-              x_rot
-            };
-
-            bot.set_direction(y, x);
-          })
-          .await;
-      }
-    });
-  }
-
   fn set_velocity_y(velocity_y: f64) {
     tokio::spawn(async move {
       for username in PROFILES.get_all().keys() {
         BOT_REGISTRY
           .get_bot(username, async |bot| {
-            set_bot_velocity_y(bot, velocity_y);
+            bot.set_velocity_y(velocity_y);
           })
           .await;
       }
@@ -70,7 +41,19 @@ impl ScriptExecutor {
       for username in PROFILES.get_all().keys() {
         BOT_REGISTRY
           .get_bot(username, async |bot| {
-            set_bot_on_ground(bot, on_ground);
+            bot.set_on_ground(on_ground);
+          })
+          .await;
+      }
+    });
+  }
+
+  fn jump() {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            bot.jump();
           })
           .await;
       }
@@ -164,12 +147,144 @@ impl ScriptExecutor {
     });
   }
 
+  fn start_pathfinder(x: i32, z: i32) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().into_keys() {
+        go_to(username, x, z);
+      }
+    });
+  }
+
   fn stop_move() {
     tokio::spawn(async move {
       for username in PROFILES.get_all().keys() {
         BOT_REGISTRY
           .get_bot(username, async |bot| {
             bot.stop_move();
+          })
+          .await;
+      }
+    });
+  }
+
+  fn stop_pathfinder() {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            bot.stop_pathfinding();
+          })
+          .await;
+      }
+    });
+  }
+
+  fn look_at(x: f64, y: f64, z: f64) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            bot.look_at(Vec3 { x, y, z });
+          })
+          .await;
+      }
+    });
+  }
+
+  fn look_at_block(x: i32, y: i32, z: i32) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            bot.look_at(BlockPos::new(x, y, z).center());
+          })
+          .await;
+      }
+    });
+  }
+
+  fn place_block(x: i32, y: i32, z: i32) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            bot.block_interact(BlockPos::new(x, y, z));
+          })
+          .await;
+      }
+    });
+  }
+
+  fn drop_selected_item(lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            inventory_drop_item(bot, convert_hotbar_slot_to_inventory_slot(bot.get_selected_hotbar_slot()), lock);
+          })
+          .await;
+      }
+    });
+  }
+
+  fn drop_all_items(lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            if let Some(menu) = bot.get_inventory_menu() {
+              for (slot, _) in menu.slots().iter().enumerate() {
+                inventory_drop_item(bot, slot, lock);
+              }
+            }
+          })
+          .await;
+      }
+    });
+  }
+
+  fn inv_drop_click(slot: usize, lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            inventory_drop_item(bot, slot, lock);
+          })
+          .await;
+      }
+    });
+  }
+
+  fn inv_shift_click(slot: usize, lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            inventory_shift_click(bot, slot, lock);
+          })
+          .await;
+      }
+    });
+  }
+
+  fn inv_left_click(slot: usize, lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            inventory_left_click(bot, slot, lock);
+          })
+          .await;
+      }
+    });
+  }
+
+  fn inv_right_click(slot: usize, lock: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            inventory_right_click(bot, slot, lock);
           })
           .await;
       }
@@ -208,8 +323,14 @@ impl ScriptExecutor {
       });
 
     engine
+      .register_fn("active_bots_count", || {
+        active_bots_count()
+      })
       .register_fn("chat", |message: &str| {
         Self::chat(message.to_string());
+      })
+      .register_fn("jump", || {
+        Self::jump();
       })
       .register_fn("set_jumping", |state: bool| {
         Self::set_jumping(state);
@@ -217,14 +338,11 @@ impl ScriptExecutor {
       .register_fn("set_crouching", |state: bool| {
         Self::set_crouching(state);
       })
-      .register_fn("set_direction", |y_rot: f32, x_rot: f32| {
-        Self::set_direction(y_rot, x_rot)
-      })
       .register_fn("set_velocity_y", |velocity_y: f64| {
         Self::set_velocity_y(velocity_y);
       })
       .register_fn("set_on_ground", |on_ground: bool| {
-        Self::set_on_ground(on_ground)
+        Self::set_on_ground(on_ground);
       })
       .register_fn("start_walking", |direction: &str| {
         Self::start_walking(direction.to_string());
@@ -232,8 +350,45 @@ impl ScriptExecutor {
       .register_fn("start_sprinting", |direction: &str| {
         Self::start_sprinting(direction.to_string());
       })
+      .register_fn("start_pathfinder", |x: i64, z: i64| {
+        Self::start_pathfinder(x as i32, z as i32);
+      })
       .register_fn("stop_move", || {
         Self::stop_move();
+      })
+      .register_fn("stop_pathfinder", || {
+        Self::stop_pathfinder();
+      });
+
+    engine
+      .register_fn("place_block", |x: i64, y: i64, z: i64| {
+        Self::place_block(x as i32, y as i32, z as i32);
+      })
+      .register_fn("look_at", |x: f64, y: f64, z: f64| {
+        Self::look_at(x, y, z);
+      })
+      .register_fn("look_at_block", |x: i64, y: i64, z: i64| {
+        Self::look_at_block(x as i32, y as i32, z as i32);
+      });
+
+    engine
+      .register_fn("drop_selected_item", |lock: bool| {
+        Self::drop_selected_item(lock);
+      })
+      .register_fn("drop_all_items", |lock: bool| {
+        Self::drop_all_items(lock);
+      })
+      .register_fn("inv_drop_click", |slot: i64, lock: bool| {
+        Self::inv_drop_click(slot as usize, lock);
+      })
+      .register_fn("inv_shift_click", |slot: i64, lock: bool| {
+        Self::inv_shift_click(slot as usize, lock);
+      })
+      .register_fn("inv_left_click", |slot: i64, lock: bool| {
+        Self::inv_left_click(slot as usize, lock);
+      })
+      .register_fn("inv_right_click", |slot: i64, lock: bool| {
+        Self::inv_right_click(slot as usize, lock);
       });
 
     match engine.eval::<()>(script.as_str()) {

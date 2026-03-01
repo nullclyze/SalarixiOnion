@@ -8,7 +8,6 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::common::get_block_state;
-use crate::common::get_bot_inventory_menu;
 use crate::core::*;
 use crate::generators::*;
 use crate::methods::SafeClientMethods;
@@ -216,7 +215,7 @@ impl MinerModule {
               if let Some(slot) = options.slot {
                 bot.set_selected_hotbar_slot(slot);
               } else {
-                if let Some(menu) = get_bot_inventory_menu(bot) {
+                if let Some(menu) = bot.get_inventory_menu() {
                   let best_tool = best_tool_in_hotbar_for_block(state, &menu).index;
                   bot.set_selected_hotbar_slot(best_tool as u8);
                 }

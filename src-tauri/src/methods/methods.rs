@@ -1,12 +1,7 @@
 use azalea::{
-  entity::{
-    dimensions::EntityDimensions, metadata::Health, Crouching, Jumping, LookDirection, Position,
-  },
-  local_player::{Hunger, TabList},
-  player::GameProfileComponent,
-  protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing},
-  world::MinecraftEntityId,
-  Client, InGameState, SprintDirection, StartSprintEvent, StartWalkEvent, Vec3, WalkDirection,
+  Client, InGameState, SprintDirection, StartSprintEvent, StartWalkEvent, Vec3, WalkDirection, container::ContainerHandleRef, ecs::entity::Entity, entity::{
+    Crouching, Jumping, LookDirection, Physics, Position, dimensions::EntityDimensions, inventory::Inventory, metadata::Health
+  }, inventory::Menu, local_player::{Hunger, TabList}, player::GameProfileComponent, protocol::packets::game::{ServerboundSwing, s_interact::InteractionHand}, world::MinecraftEntityId
 };
 
 use crate::core::STATES;
@@ -30,6 +25,13 @@ pub trait SafeClientMethods {
   fn start_crouching(&self);
   fn stop_jumping(&self);
   fn stop_crouching(&self);
+  fn set_velocity_y(&self, velocity_y: f64);
+  fn set_on_ground(&self, on_ground: bool);
+  fn get_entity_eye_height(&self, entity: Entity) -> f64;
+  fn get_entity_position(&self, entity: Entity) -> Vec3;
+  fn get_selected_hotbar_slot(&self) -> u8;
+  fn get_current_inventory(&self) -> Option<ContainerHandleRef>;
+  fn get_inventory_menu(&self) -> Option<Menu>;
 }
 
 impl SafeClientMethods for Client {
@@ -197,5 +199,63 @@ impl SafeClientMethods for Client {
     if !self.crouching() {
       self.set_crouching(true);
     }
+  }
+
+  fn set_velocity_y(&self, velocity_y: f64) {
+    let mut ecs = self.ecs.lock();
+
+    if let Some(mut physics) = ecs.get_mut::<Physics>(self.entity) {
+      physics.velocity.y = velocity_y;
+    }
+  }
+
+  fn set_on_ground(&self, on_ground: bool) {
+    let mut ecs = self.ecs.lock();
+
+    if let Some(mut physics) = ecs.get_mut::<Physics>(self.entity) {
+      physics.set_on_ground(on_ground);
+    }
+  }
+
+  fn get_entity_position(&self, entity: Entity) -> Vec3 {
+    let position = self.get_entity_component::<Position>(entity);
+
+    if let Some(pos) = position {
+      return Vec3::new(pos.x, pos.y, pos.z);
+    }
+
+    Vec3::new(0.0, 0.0, 0.0)
+  }
+
+  fn get_entity_eye_height(&self, entity: Entity) -> f64 {
+    if let Some(dimensions) = self.get_entity_component::<EntityDimensions>(entity) {
+      return dimensions.eye_height as f64;
+    }
+
+    0.0
+  }
+
+  fn get_current_inventory(&self) -> Option<ContainerHandleRef> {
+    if let Some(inventory) = self.get_component::<Inventory>() {
+      return Some(ContainerHandleRef::new(inventory.id, self.clone()));
+    }
+
+    None
+  }
+
+  fn get_selected_hotbar_slot(&self) -> u8 {
+    if let Some(inventory) = self.get_component::<Inventory>() {
+      return inventory.selected_hotbar_slot;
+    }
+
+    0
+  }
+
+  fn get_inventory_menu(&self) -> Option<Menu> {
+    if let Some(inventory) = self.get_component::<Inventory>() {
+      return Some(inventory.menu().clone());
+    }
+
+    None
   }
 }

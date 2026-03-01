@@ -250,7 +250,7 @@ impl AutoPotionPlugin {
   fn find_potion_in_inventory(&self, bot: &Client) -> Vec<Potion> {
     let mut potion_list = vec![];
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if let Some(potion) = self.is_potion(slot, item) {
           potion_list.push(potion);

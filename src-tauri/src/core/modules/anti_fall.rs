@@ -11,10 +11,11 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 use crate::common::{
-  get_block_state, get_bot_physics, set_bot_on_ground, set_bot_velocity_y, take_item,
+  get_block_state, get_bot_physics, take_item,
 };
 use crate::core::*;
 use crate::generators::*;
+use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiFallModule;
@@ -107,12 +108,12 @@ impl AntiFallModule {
               break;
             }
 
-            set_bot_velocity_y(bot, 0.001);
-            set_bot_on_ground(bot, true);
+            bot.set_velocity_y(0.001);
+            bot.set_on_ground(true);
 
             sleep(Duration::from_millis(50)).await;
 
-            set_bot_on_ground(bot, false);
+            bot.set_on_ground(false);
           }
         }
       }

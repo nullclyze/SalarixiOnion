@@ -1,12 +1,8 @@
 use azalea::block::BlockState;
-use azalea::container::ContainerHandleRef;
 use azalea::core::position::BlockPos;
 use azalea::ecs::query::{With, Without};
-use azalea::entity::dimensions::EntityDimensions;
-use azalea::entity::inventory::Inventory;
 use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
 use azalea::entity::{Dead, LocalEntity, Physics, Position};
-use azalea::inventory::Menu;
 use azalea::player::GameProfileComponent;
 use azalea::prelude::*;
 use azalea::world::MinecraftEntityId;
@@ -69,24 +65,6 @@ pub fn get_average_coordinates_of_bots(positions: &Vec<Vec3>) -> (f64, f64, f64)
   (x_average, y_average, z_average)
 }
 
-/// Функция установки velocity по Y
-pub fn set_bot_velocity_y(bot: &Client, velocity_y: f64) {
-  let mut ecs = bot.ecs.lock();
-
-  if let Some(mut physics) = ecs.get_mut::<Physics>(bot.entity) {
-    physics.velocity.y = velocity_y;
-  }
-}
-
-/// Функция установки параметра on_ground
-pub fn set_bot_on_ground(bot: &Client, on_ground: bool) {
-  let mut ecs = bot.ecs.lock();
-
-  if let Some(mut physics) = ecs.get_mut::<Physics>(bot.entity) {
-    physics.set_on_ground(on_ground);
-  }
-}
-
 /// Функция получения UUID игрока
 pub async fn get_player_uuid(nickname: String) -> Option<String> {
   for username in PROFILES.get_all().keys() {
@@ -109,53 +87,6 @@ pub async fn get_player_uuid(nickname: String) -> Option<String> {
     if let Some(u) = uuid {
       return u;
     }
-  }
-
-  None
-}
-
-/// Функция получения позиции сущности
-pub fn get_entity_position(bot: &Client, entity: Entity) -> Vec3 {
-  let position = bot.get_entity_component::<Position>(entity);
-
-  if let Some(pos) = position {
-    return Vec3::new(pos.x, pos.y, pos.z);
-  }
-
-  Vec3::new(0.0, 0.0, 0.0)
-}
-
-/// Функция безопасного получения высоты глаз сущности
-pub fn get_entity_eye_height(bot: &Client, entity: Entity) -> f64 {
-  if let Some(dimensions) = bot.get_entity_component::<EntityDimensions>(entity) {
-    return dimensions.eye_height as f64;
-  }
-
-  0.0
-}
-
-/// Функция безопасного получения инвентаря бота
-pub fn get_bot_inventory(bot: &Client) -> Option<ContainerHandleRef> {
-  if let Some(inventory) = bot.get_component::<Inventory>() {
-    return Some(ContainerHandleRef::new(inventory.id, bot.clone()));
-  }
-
-  None
-}
-
-/// Функция безопасного получения выбранного слота в hotbar у бота
-pub fn get_bot_selected_hotbar_slot(bot: &Client) -> u8 {
-  if let Some(inventory) = bot.get_component::<Inventory>() {
-    return inventory.selected_hotbar_slot;
-  }
-
-  0
-}
-
-/// Функция безопасного получения текущего меню инвентаря у бота
-pub fn get_bot_inventory_menu(bot: &Client) -> Option<Menu> {
-  if let Some(inventory) = bot.get_component::<Inventory>() {
-    return Some(inventory.menu().clone());
   }
 
   None

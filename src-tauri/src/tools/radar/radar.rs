@@ -6,7 +6,6 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
 
-use crate::common::get_entity_position;
 use crate::core::{BOT_REGISTRY, PROFILES};
 use crate::methods::SafeClientMethods;
 
@@ -56,7 +55,7 @@ impl RadarManager {
             };
 
             if profile.0.name == target {
-              let player_pos = get_entity_position(bot, entity);
+              let player_pos = bot.get_entity_position(entity);
               let client_pos = bot.feet_pos();
 
               return Some(RadarInfo {

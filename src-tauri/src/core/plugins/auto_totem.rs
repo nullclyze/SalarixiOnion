@@ -3,7 +3,7 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_bot_inventory_menu, inventory_move_item};
+use crate::common::{inventory_move_item};
 use crate::core::*;
 use crate::methods::SafeClientMethods;
 
@@ -41,7 +41,7 @@ impl AutoTotemPlugin {
   }
 
   async fn take_totem(&self, bot: &Client) {
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(45) {
         if !item.is_empty() && item.kind() != ItemKind::Shield {
           return;

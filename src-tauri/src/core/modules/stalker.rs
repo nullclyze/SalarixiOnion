@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_entity_position, get_nearest_entity, go_to, EntityFilter};
+use crate::common::{get_nearest_entity, go_to, EntityFilter};
 use crate::core::*;
 use crate::methods::SafeClientMethods;
 
@@ -36,7 +36,7 @@ impl StalkerModule {
         bot,
         EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(100.0)),
       ) {
-        let target_pos = get_entity_position(bot, target);
+        let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 
         if bot.feet_pos().distance_to(target_pos) > min_distance {
@@ -72,7 +72,7 @@ impl StalkerModule {
         bot,
         EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(100.0)),
       ) {
-        let target_pos = get_entity_position(bot, target);
+        let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 
         if bot.feet_pos().distance_to(target_pos) > min_distance {

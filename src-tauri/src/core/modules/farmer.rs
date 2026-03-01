@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_block_state, get_bot_inventory_menu, look_at_block, take_item};
+use crate::common::{get_block_state, look_at_block, take_item};
 use crate::core::*;
 use crate::generators::*;
 use crate::methods::SafeClientMethods;
@@ -34,7 +34,7 @@ impl FarmerModule {
   async fn auto_tool(&self, bot: &Client) {
     let mut tools = vec![];
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           match item.kind() {
@@ -138,7 +138,7 @@ impl FarmerModule {
   async fn fertilize_plant(&self, bot: &Client, mode: &String) {
     let mut ferilizer_slot = None;
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           if item.kind() == ItemKind::BoneMeal {
@@ -162,7 +162,7 @@ impl FarmerModule {
   async fn take_plant(&self, bot: &Client) -> bool {
     let mut plant_slot = None;
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() && plant_slot.is_none() {
           match item.kind() {
