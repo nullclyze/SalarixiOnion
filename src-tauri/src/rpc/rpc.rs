@@ -17,17 +17,17 @@ impl DiscordRpcManager {
   }
 
   pub fn enable(&mut self) {
-    let mut client = Client::new(1477312950271213729);
+    self.client = Some(Client::new(1477312950271213729));
 
-    self.client = Some(client.clone());
+    if let Some(client) = self.client.as_mut() {
+      client.start();
+      let _ = client.block_until_event(discord_presence::Event::Ready);
 
-    client.start();
-    let _ = client.block_until_event(discord_presence::Event::Ready);
-
-    match client.set_activity(|act| act.state("Best client for Minecraft botting")) {
-      Ok(_) => {}
-      Err(err) => {
-        send_log(format!("Ошибка включения Discord RPC: {}", err), "error");
+      match client.set_activity(|act| act.state("Best client for Minecraft botting")) {
+        Ok(_) => {}
+        Err(err) => {
+          send_log(format!("Ошибка включения Discord RPC: {}", err), "error");
+        }
       }
     }
   }

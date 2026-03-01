@@ -142,7 +142,7 @@ impl AntiAfkModule {
   }
 
   pub async fn enable(&self, username: &str, options: &AntiAfkOptions) {
-    STATES.set_mutual_states(username, "looking", false);
+    STATES.set_mutual_states(username, "looking", true);
 
     BOT_REGISTRY
       .get_bot(username, async |bot| match options.mode.as_str() {
