@@ -7,7 +7,7 @@ use std::sync::{
 };
 
 use crate::{
-  common::{convert_hotbar_slot_to_inventory_slot, go_to, inventory_drop_item, inventory_left_click, inventory_right_click, inventory_shift_click}, core::{BOT_REGISTRY, PROFILES, active_bots_count, current_options}, emit::{send_log, send_message}, methods::SafeClientMethods, webhook::send_webhook
+  common::{EntityFilter, convert_hotbar_slot_to_inventory_slot, get_nearest_entity, go_to, inventory_drop_item, inventory_left_click, inventory_right_click, inventory_shift_click, look_at_entity}, core::{BOT_REGISTRY, PROFILES, active_bots_count, current_options}, emit::{send_log, send_message}, methods::SafeClientMethods, webhook::send_webhook
 };
 
 pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
@@ -291,6 +291,24 @@ impl ScriptExecutor {
     });
   }
 
+  fn attack(target: String, distance: f64, look_at_target: bool) {
+    tokio::spawn(async move {
+      for username in PROFILES.get_all().keys() {
+        BOT_REGISTRY
+          .get_bot(username, async |bot| {
+            if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, &target, distance)) {
+              if look_at_target {
+                look_at_entity(bot, entity, false);
+              }
+
+              bot.attack(entity);
+            }
+          })
+          .await;
+      }
+    });
+  }
+
   pub fn execute(&mut self, script: String) {
     self.active.store(true, Ordering::Relaxed);
 
@@ -389,6 +407,11 @@ impl ScriptExecutor {
       })
       .register_fn("inv_right_click", |slot: i64, lock: bool| {
         Self::inv_right_click(slot as usize, lock);
+      });
+
+    engine
+      .register_fn("attack", |target: &str, distance: f64, look_at_target: bool| {
+        Self::attack(target.to_string(), distance, look_at_target);
       });
 
     match engine.eval::<()>(script.as_str()) {
