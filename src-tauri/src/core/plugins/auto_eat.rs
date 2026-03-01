@@ -172,7 +172,7 @@ impl AutoEatPlugin {
   fn find_food_in_inventory(&self, bot: &Client) -> Vec<Food> {
     let mut food_list = vec![];
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if let Some(food) = self.is_food(slot, item) {
           food_list.push(food);

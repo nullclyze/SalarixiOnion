@@ -9,8 +9,7 @@ use std::sync::Arc;
 use tokio::time::sleep;
 
 use crate::common::{
-  get_average_coordinates_of_bots, get_bot_inventory_menu, go_to, inventory_drop_item,
-  set_bot_velocity_y, take_item, this_is_solid_block,
+  get_average_coordinates_of_bots, go_to, inventory_drop_item, take_item, this_is_solid_block,
 };
 use crate::core::{BOT_REGISTRY, PROFILES, STATES, TASKS};
 use crate::generators::{randfloat, randint, randuint};
@@ -36,11 +35,9 @@ impl QuickTaskManager {
         BOT_REGISTRY
           .get_bot(&nickname, async |bot| match name.as_str() {
             "clear-inventory" => {
-              if let Some(menu) = get_bot_inventory_menu(bot) {
-                for (slot, item) in menu.slots().iter().enumerate() {
-                  if !item.is_empty() {
-                    inventory_drop_item(bot, slot, false);
-                  }
+              if let Some(menu) = bot.get_inventory_menu() {
+                for (slot, _) in menu.slots().iter().enumerate() {
+                  inventory_drop_item(bot, slot, true);
                 }
               }
             }
@@ -77,7 +74,7 @@ impl QuickTaskManager {
             }
             "fly" => {
               for i in 0..randint(3, 5) {
-                set_bot_velocity_y(bot, randfloat(0.022 * i as f64, 0.031 * i as f64));
+                bot.set_velocity_y(randfloat(0.022 * i as f64, 0.031 * i as f64));
                 sleep(Duration::from_millis(50)).await;
               }
             }
@@ -87,7 +84,7 @@ impl QuickTaskManager {
               {
                 let mut block_slot = None;
 
-                if let Some(menu) = get_bot_inventory_menu(bot) {
+                if let Some(menu) = bot.get_inventory_menu() {
                   for (slot, item) in menu.slots().iter().enumerate() {
                     if !item.is_empty() {
                       if this_is_solid_block(item.kind()) {
@@ -194,7 +191,7 @@ impl QuickTaskManager {
               for pos in block_positions {
                 let mut block_slot = None;
 
-                if let Some(menu) = get_bot_inventory_menu(bot) {
+                if let Some(menu) = bot.get_inventory_menu() {
                   for (slot, item) in menu.slots().iter().enumerate() {
                     if !item.is_empty() {
                       if this_is_solid_block(item.kind()) {

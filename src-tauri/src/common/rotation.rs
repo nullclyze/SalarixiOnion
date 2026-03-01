@@ -8,15 +8,14 @@ use tokio::time::sleep;
 
 use crate::generators::randchance;
 use crate::generators::randfloat;
-
-use super::auxiliary::{get_entity_eye_height, get_entity_position};
+use crate::methods::SafeClientMethods;
 
 /// Функция поворота на сущность
 pub fn look_at_entity(bot: &Client, entity: Entity, with_eye_height: bool) {
-  let mut entity_pos = get_entity_position(bot, entity);
+  let mut entity_pos = bot.get_entity_position(entity);
 
   if with_eye_height {
-    entity_pos.y += get_entity_eye_height(bot, entity);
+    entity_pos.y += bot.get_entity_eye_height(entity);
   }
 
   bot.look_at(Vec3 {

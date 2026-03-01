@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::common::{
-  get_bot_inventory_menu, get_entity_position, get_nearest_entity, look_at_entity, take_item,
+  get_nearest_entity, look_at_entity, take_item,
   EntityFilter,
 };
 use crate::core::*;
@@ -104,7 +104,7 @@ impl KillauraModule {
   async fn auto_weapon(&self, bot: &Client, weapon: &String) {
     let mut weapons = vec![];
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if !item.is_empty() {
           match weapon.as_str() {
@@ -268,7 +268,7 @@ impl KillauraModule {
             {
               let eye_pos = bot.eye_pos();
 
-              if eye_pos.distance_to(get_entity_position(bot, entity)) > min_distance_to_target {
+              if eye_pos.distance_to(bot.get_entity_position(entity)) > min_distance_to_target {
                 bot.start_jumping();
                 bot.start_sprinting(SprintDirection::Forward);
 

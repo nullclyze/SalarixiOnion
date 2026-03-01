@@ -9,7 +9,6 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use super::auxiliary::*;
 use crate::core::*;
 use crate::generators::randuint;
 use crate::methods::SafeClientMethods;
@@ -101,16 +100,16 @@ pub fn stop_interacting_with_inventory(bot: &Client) {
 /// Функция, позволяющая боту безопасно переместить предмет в hotbar и взять его
 pub async fn take_item(bot: &Client, source_slot: usize, lock: bool) {
   if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
-    if get_bot_selected_hotbar_slot(bot) != hotbar_slot {
+    if bot.get_selected_hotbar_slot() != hotbar_slot {
       bot.set_selected_hotbar_slot(hotbar_slot);
     }
   } else {
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(empty_slot) = find_empty_slot_in_hotbar(menu) {
         inventory_swap_click(bot, source_slot, empty_slot as usize, lock).await;
 
         if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
-          if get_bot_selected_hotbar_slot(bot) != slot {
+          if bot.get_selected_hotbar_slot() != slot {
             sleep(Duration::from_millis(50)).await;
             bot.set_selected_hotbar_slot(slot);
           }
@@ -126,7 +125,7 @@ pub async fn take_item(bot: &Client, source_slot: usize, lock: bool) {
 
         let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
 
-        if get_bot_selected_hotbar_slot(bot) != hotbar_slot {
+        if bot.get_selected_hotbar_slot() != hotbar_slot {
           bot.set_selected_hotbar_slot(hotbar_slot);
         }
       }
@@ -136,7 +135,7 @@ pub async fn take_item(bot: &Client, source_slot: usize, lock: bool) {
 
 /// Функция безопасного перемещения предмета в offhand
 pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
-  if let Some(menu) = get_bot_inventory_menu(bot) {
+  if let Some(menu) = bot.get_inventory_menu() {
     if let Some(item) = menu.slot(45) {
       if item.kind() == kind {
         return;
@@ -156,7 +155,7 @@ pub fn move_item_to_offhand(bot: &Client, kind: ItemKind) {
 pub fn inventory_shift_click(bot: &Client, slot: usize, lock: bool) {
   let username = bot.username();
 
-  if let Some(inventory) = get_bot_inventory(bot) {
+  if let Some(inventory) = bot.get_current_inventory() {
     if lock {
       if !STATES.get_state(&username, "can_interacting") {
         return;
@@ -177,7 +176,7 @@ pub fn inventory_shift_click(bot: &Client, slot: usize, lock: bool) {
 pub fn inventory_left_click(bot: &Client, slot: usize, lock: bool) {
   let username = bot.username();
 
-  if let Some(inventory) = get_bot_inventory(bot) {
+  if let Some(inventory) = bot.get_current_inventory() {
     if lock {
       if !STATES.get_state(&username, "can_interacting") {
         return;
@@ -198,7 +197,7 @@ pub fn inventory_left_click(bot: &Client, slot: usize, lock: bool) {
 pub fn inventory_right_click(bot: &Client, slot: usize, lock: bool) {
   let username = bot.username();
 
-  if let Some(inventory) = get_bot_inventory(bot) {
+  if let Some(inventory) = bot.get_current_inventory() {
     if lock {
       if !STATES.get_state(&username, "can_interacting") {
         return;
@@ -224,7 +223,7 @@ pub async fn inventory_swap_click(
 ) {
   let username = bot.username();
 
-  if let Some(inventory) = get_bot_inventory(bot) {
+  if let Some(inventory) = bot.get_current_inventory() {
     if lock {
       if !STATES.get_state(&username, "can_interacting") {
         return;
@@ -233,7 +232,7 @@ pub async fn inventory_swap_click(
       start_interacting_with_inventory(bot);
     }
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
           if let Some(empty_slot) = find_empty_slot_in_invenotry(menu) {
@@ -265,7 +264,7 @@ pub async fn inventory_swap_click(
 pub fn inventory_drop_item(bot: &Client, slot: usize, lock: bool) {
   let username = bot.username();
 
-  if let Some(inventory) = get_bot_inventory(bot) {
+  if let Some(inventory) = bot.get_current_inventory() {
     if lock {
       if !STATES.get_state(&username, "can_interacting") {
         return;
@@ -274,7 +273,7 @@ pub fn inventory_drop_item(bot: &Client, slot: usize, lock: bool) {
       start_interacting_with_inventory(bot);
     }
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(slot) {
         if !item.is_empty() {
           inventory.click(ThrowClick::All { slot: slot as u16 });
@@ -296,7 +295,7 @@ pub async fn inventory_move_item(
   target_slot: usize,
   lock: bool,
 ) {
-  if let Some(menu) = get_bot_inventory_menu(bot) {
+  if let Some(menu) = bot.get_inventory_menu() {
     if let Some(item) = menu.slot(target_slot) {
       if item.kind() == kind {
         return;

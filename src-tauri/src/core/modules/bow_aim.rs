@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::common::{
-  get_bot_inventory_menu, get_entity_eye_height, get_entity_position, get_nearest_entity,
+  get_nearest_entity,
   release_use_item, start_use_item, take_item, EntityFilter,
 };
 use crate::core::*;
@@ -32,7 +32,7 @@ impl BowAimModule {
   }
 
   fn find_bow_in_inventory(&self, bot: &Client) -> Option<usize> {
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::Bow {
           return Some(slot);
@@ -58,11 +58,11 @@ impl BowAimModule {
               }
 
               if let Some(entity) = get_nearest_entity(bot, filter.clone()) {
-                let target_pos = get_entity_position(bot, entity);
+                let target_pos = bot.get_entity_position(entity);
 
                 bot.look_at(Vec3::new(
                   target_pos.x,
-                  target_pos.y + get_entity_eye_height(bot, entity),
+                  target_pos.y + bot.get_entity_eye_height(entity),
                   target_pos.z,
                 ));
               }
@@ -95,7 +95,7 @@ impl BowAimModule {
         sleep(Duration::from_millis(randuint(900, 1100))).await;
 
         if let Some(entity) = get_nearest_entity(bot, filter) {
-          let target_pos = get_entity_position(bot, entity);
+          let target_pos = bot.get_entity_position(entity);
 
           let distance = bot.eye_pos().distance_to(target_pos);
 
@@ -110,7 +110,7 @@ impl BowAimModule {
 
             sleep(Duration::from_millis(100)).await;
 
-            let target_pos = get_entity_position(bot, entity);
+            let target_pos = bot.get_entity_position(entity);
 
             let distance = bot.eye_pos().distance_to(target_pos);
 

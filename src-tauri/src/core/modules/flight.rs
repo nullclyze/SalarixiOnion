@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::common::{get_bot_physics, set_bot_on_ground, set_bot_velocity_y};
+use crate::common::{get_bot_physics};
 use crate::core::*;
 use crate::generators::*;
 use crate::methods::SafeClientMethods;
@@ -98,7 +98,7 @@ impl FlightModule {
         break;
       }
 
-      set_bot_velocity_y(bot, 0.0);
+      bot.set_velocity_y(0.0);
 
       sleep(Duration::from_millis(50)).await;
     }
@@ -124,22 +124,22 @@ impl FlightModule {
 
     loop {
       if config.use_ground_spoof {
-        set_bot_on_ground(bot, true);
+        bot.set_on_ground(true);
       }
 
       sleep(Duration::from_millis(randuint(50, 80))).await;
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          set_bot_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
+          bot.set_velocity_y(randfloat(config.min_change_y, config.max_change_y));
           sleep(Duration::from_millis(50)).await;
         }
       } else {
-        set_bot_velocity_y(bot, randfloat(config.min_change_y, config.max_change_y));
+        bot.set_velocity_y(randfloat(config.min_change_y, config.max_change_y));
       }
 
       if config.use_ground_spoof {
-        set_bot_on_ground(bot, false);
+        bot.set_on_ground(false);
       }
 
       sleep(Duration::from_millis(randuint(
@@ -156,7 +156,7 @@ impl FlightModule {
         .await;
 
       if config.use_ground_spoof {
-        set_bot_on_ground(bot, false);
+        bot.set_on_ground(false);
       }
     }
   }
@@ -186,7 +186,7 @@ impl FlightModule {
         counter += 1;
 
         if config.use_ground_spoof {
-          set_bot_on_ground(bot, true);
+          bot.set_on_ground(true);
         }
 
         if counter == 2 {
@@ -233,7 +233,7 @@ impl FlightModule {
           .await;
 
         if config.use_ground_spoof {
-          set_bot_on_ground(bot, false);
+          bot.set_on_ground(false);
         }
       }
     }
@@ -262,7 +262,7 @@ impl FlightModule {
 
       if let Some(physics) = get_bot_physics(bot) {
         if config.use_ground_spoof {
-          set_bot_on_ground(bot, true);
+          bot.set_on_ground(true);
         }
 
         let pos = bot.feet_pos();
@@ -302,7 +302,7 @@ impl FlightModule {
           .await;
 
         if config.use_ground_spoof {
-          set_bot_on_ground(bot, false);
+          bot.set_on_ground(false);
         }
       }
     }
@@ -328,7 +328,7 @@ impl FlightModule {
 
     loop {
       if config.use_ground_spoof {
-        set_bot_on_ground(bot, true);
+        bot.set_on_ground(true);
       }
 
       let pos = bot.feet_pos();
@@ -351,11 +351,11 @@ impl FlightModule {
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
+          bot.set_velocity_y(direction.y.abs() * final_strength * 0.2);
           sleep(Duration::from_millis(50)).await;
         }
       } else {
-        set_bot_velocity_y(bot, direction.y.abs() * final_strength * 0.2);
+        bot.set_velocity_y(direction.y.abs() * final_strength * 0.2);
       }
 
       sleep(Duration::from_millis(randuint(
@@ -372,7 +372,7 @@ impl FlightModule {
         .await;
 
       if config.use_ground_spoof {
-        set_bot_on_ground(bot, false);
+        bot.set_on_ground(false);
       }
     }
   }

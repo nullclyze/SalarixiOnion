@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::common::{
-  get_bot_inventory_menu, get_entity_position, get_nearest_entity, inventory_move_item,
+  get_nearest_entity, inventory_move_item,
   release_use_item, start_use_item, EntityFilter,
 };
 use crate::core::*;
@@ -49,7 +49,7 @@ impl AutoShieldPlugin {
   pub async fn defend(&self, bot: &Client) {
     let nickname = bot.username();
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(45) {
         if item.is_empty() || item.kind() == ItemKind::Shield {
           if !STATES.get_state(&nickname, "is_eating")
@@ -109,13 +109,13 @@ impl AutoShieldPlugin {
 
         sleep(Duration::from_millis(50)).await;
 
-        bot.look_at(get_entity_position(bot, entity));
+        bot.look_at(bot.get_entity_position(entity));
 
         sleep(Duration::from_millis(randuint(50, 100))).await;
 
         for _ in 0..=randint(2, 4) {
           if let Some(e) = self.get_nearest_dangerous_entity(bot) {
-            bot.look_at(get_entity_position(bot, e));
+            bot.look_at(bot.get_entity_position(e));
           }
 
           sleep(Duration::from_millis(randuint(50, 100))).await;

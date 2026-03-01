@@ -4,7 +4,7 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{find_empty_slot_in_invenotry, get_bot_inventory_menu, inventory_shift_click};
+use crate::common::{find_empty_slot_in_invenotry, inventory_shift_click};
 use crate::core::*;
 use crate::methods::SafeClientMethods;
 
@@ -59,7 +59,7 @@ impl AutoArmorPlugin {
   async fn equip_armor(&self, bot: &Client) {
     let mut armors = vec![];
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if slot > 8 {
           if let Some(armor) = self.is_armor(item, slot) {
@@ -97,7 +97,7 @@ impl AutoArmorPlugin {
   }
 
   async fn equip(&self, bot: &Client, armor_slot: usize, target_slot: usize) {
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
           if let Some(_) = find_empty_slot_in_invenotry(menu) {
@@ -347,7 +347,7 @@ impl AutoArmorPlugin {
       _ => return false,
     };
 
-    if let Some(menu) = get_bot_inventory_menu(bot) {
+    if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(target_slot) {
         if let Some(current_armor) = self.is_armor(item, target_slot) {
           if armor.part == current_armor.part {
