@@ -35,7 +35,6 @@ pub enum WebDriverEvent {
     username: Option<String>,
     password: Option<String>,
   },
-  CloseTab,
   StopProcessing,
 }
 
@@ -216,21 +215,6 @@ impl WebCaptchaBypass {
                 let _ = driver.goto(url).await;
 
                 *self.active_tabs_count.write().unwrap() += 1;
-              }
-            }
-          }
-        }
-        WebDriverEvent::CloseTab => {
-          if let Some(driver) = webdriver.as_ref() {
-            let _ = driver.close_window().await;
-
-            *self.active_tabs_count.write().unwrap() -= 1;
-
-            if let Some(main) = main_window.as_ref() {
-              let _ = driver.switch_to_window(main.clone()).await;
-            } else if let Ok(handles) = driver.windows().await {
-              if let Some(first) = handles.first() {
-                let _ = driver.switch_to_window(first.clone()).await;
               }
             }
           }
