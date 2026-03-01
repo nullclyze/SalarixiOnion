@@ -77,9 +77,9 @@ The client has several large sections, they will be presented below in the table
 
 ![](./images/settings.png)
 
-![](./images/proxy.png)
-
 ![](./images/plugins.png)
+
+![](./images/proxy.png)
 
 ![](./images/anti_captcha.png)
 
@@ -87,15 +87,13 @@ The client has several large sections, they will be presented below in the table
 
 ![](./images/monitoring.png)
 
-![](./images/monitoring_chat.png)
-
 ![](./images/radar.png)
 
-![](./images/radar_route.png)
-
-![](./images/journal.png)
+![](./images/ping.png)
 
 ![](./images/interface.png)
+
+![](./images/config.png)
 
 ## 💾 Installation
 
