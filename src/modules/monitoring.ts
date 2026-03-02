@@ -604,11 +604,11 @@ export class MonitoringManager {
         break;
 
       case 'map':
-        const container = document.createElement('div');
-        container.className = 'cover';
-        container.id = `map-captcha-image-${nickname}`;
+        const mapCaptchaWrapper = document.createElement('div');
+        mapCaptchaWrapper.className = 'cover';
+        mapCaptchaWrapper.id = `map-captcha-image-${nickname}`;
 
-        container.innerHTML = `
+        mapCaptchaWrapper.innerHTML = `
           <div class="panel">
             <div class="right">
               <button class="btn min pretty" id="close-map-captcha-image-${nickname}">
@@ -626,7 +626,7 @@ export class MonitoringManager {
           </div>
         `;
 
-        document.getElementById(`bot-card-${nickname}`)?.appendChild(container);
+        this.botWrappersContainer?.appendChild(mapCaptchaWrapper);
 
         this.addTempListener(`map-captcha-image-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`send-captcha-code-${nickname}`) : null);
 
