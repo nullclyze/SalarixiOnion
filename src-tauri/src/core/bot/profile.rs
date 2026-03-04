@@ -20,7 +20,7 @@ pub struct Profile {
   pub registered: bool,
   pub logined: bool,
   pub skin_is_set: bool,
-  pub captcha_caught: bool,
+  pub captcha: ProfileCaptcha,
   pub plugins_loaded: bool,
   pub group: String,
 }
@@ -31,6 +31,14 @@ pub struct ProfileProxy {
   pub proxy: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileCaptcha {
+  pub caught: bool,
+  pub link_to_captcha: Option<String>,
+  pub captcha_image: Option<String>,
+  pub captcha_image_parts: Vec<String>
 }
 
 impl Profile {
@@ -52,7 +60,12 @@ impl Profile {
       registered: false,
       logined: false,
       skin_is_set: false,
-      captcha_caught: false,
+      captcha: ProfileCaptcha {
+        caught: false,
+        link_to_captcha: None,
+        captcha_image: None,
+        captcha_image_parts: Vec::new()
+      },
       plugins_loaded: false,
       group: "global".to_string(),
     }
@@ -95,7 +108,7 @@ impl Profile {
   }
 
   pub fn set_captcha_caught(&mut self, state: bool) {
-    self.captcha_caught = state;
+    self.captcha.caught = state;
   }
 
   pub fn set_plugins_loaded(&mut self, state: bool) {

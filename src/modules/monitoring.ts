@@ -21,7 +21,12 @@ interface BotProfile {
   satiety: number;
   registered: boolean;
   skin_is_set: boolean;
-  captcha_caught: boolean;
+  captcha: {
+    caught: boolean,
+    link_to_captcha: string | null,
+    captcha_image: string | null,
+    captcha_image_parts: Array<String>
+  };
   plugins_loaded: boolean;
   group: string;
 }
@@ -32,8 +37,8 @@ export class MonitoringManager {
   private usernameList: string[] = [];
 
   private statusText: HTMLElement | null = null;
-  private botCardsContainer: HTMLElement | null = null;
-  private botWrappersContainer: HTMLElement | null = null;
+  private cards: HTMLElement | null = null;
+  private wrappers: HTMLElement | null = null;
 
   private chatMessageCounter: Record<string, number> = {};
   private chatHistoryFilters: Record<string, string> = {};
@@ -51,8 +56,8 @@ export class MonitoringManager {
 
   public async init(): Promise<void> {
     this.statusText = document.getElementById('monitoring-status-text');
-    this.botCardsContainer = document.getElementById('bot-cards-container');
-    this.botWrappersContainer = document.getElementById('bot-wrappers-container');
+    this.cards = document.getElementById('bot-cards-container');
+    this.wrappers = document.getElementById('bot-wrappers-container');
 
     this.statusText!.innerText = 'Объекты ботов отсутствуют';
     this.statusText!.style.color = '#646464f7';
@@ -75,17 +80,16 @@ export class MonitoringManager {
 
           if (!chat) return;
 
-          const container = document.createElement('div');
+          const line = document.createElement('div');
+          line.className = 'line';
+          line.setAttribute('monitoring-message', receiver);
 
-          container.className = 'monitoring-line';
-          container.id = `monitoring-message-${receiver}`;
-
-          container.innerHTML = `
-            <div class="monitoring-line-time">${date()}</div>
-            <div class="monitoring-line-content">${String(message).replace('%hb', '<span class="bot-tag">').replace('%sc', '</span>')}</div>
+          line.innerHTML = `
+            <div class="time">${date()}</div>
+            <div class="msg">${String(message).replace('%hb', '<span class="bot-tag">').replace('%sc', '</span>')}</div>
           `;
 
-          chat.appendChild(container);
+          chat.appendChild(line);
 
           chat.scrollTo({
             top: chat.scrollHeight,
@@ -160,8 +164,8 @@ export class MonitoringManager {
     this.statusText!.innerText = 'Ожидание активных ботов...';
     this.statusText!.style.color = '#646464f7';
 
-    this.botCardsContainer!.innerHTML = '';
-    this.botCardsContainer!.style.display = 'grid';
+    this.cards!.innerHTML = '';
+    this.cards!.style.display = 'grid';
   }
 
   public enable(delay: number): void {
@@ -224,7 +228,7 @@ export class MonitoringManager {
 
     this.listeners.clear();
 
-    this.botCardsContainer!.innerHTML = '';
+    this.cards!.innerHTML = '';
     this.chatMessageCounter = {};
     this.chatHistoryFilters = {};
     this.usernameList = [];
@@ -233,8 +237,8 @@ export class MonitoringManager {
     this.statusText!.style.color = '#646464f7';
     this.statusText!.style.display = 'flex';
 
-    this.botCardsContainer!.innerHTML = '';
-    this.botCardsContainer!.style.display = 'none';
+    this.cards!.innerHTML = '';
+    this.cards!.style.display = 'none';
   }
 
   private addTempListener(id: string, event: string, listener: EventListener): void {
@@ -242,7 +246,7 @@ export class MonitoringManager {
     this.listeners.set(id, { event: event, listener: listener });
   }
 
-  private createBotCard(nickname: string, profile: BotProfile, statusColor: string): void {
+  private createBotCard(username: string, profile: BotProfile, statusColor: string): void {
     const steveIconPath = document.getElementById('steve-img') as HTMLImageElement;
 
     const groupNameExamples = [
@@ -256,50 +260,51 @@ export class MonitoringManager {
 
     const card = document.createElement('div');
     card.className = 'bot-card';
-    card.id = `bot-card-${nickname}`;
-
+    card.id = `bot-card-${username}`;
+    
     card.innerHTML = `
-      <div class="bot-card-head">
-        <img src="${steveIconPath.src}" class="image" draggable="false">
-        <div class="text">
-          <div>
-            <div class="bot-nickname" style="user-select: text; -moz-user-select: text;">${nickname}</div>
-            <div class="bot-status"><span id="bot-status-${nickname}" style="color: ${statusColor};">• ${profile.status}</span></div>
+      <div class="head">
+        <div class="top">
+          <img src="${steveIconPath.src}" class="image" draggable="false">
+          <div class="text">
+            <div class="username">${username}</div>
+            <div class="status" id="monitoring-status-${username}">${profile.status}</div>
           </div>
+        </div>
+
+        <div class="bottom">
+          <input type="text" class="bot-group" id="bot-group-${username}" placeholder="Группа, например, ${groupNameExample}">
         </div>
       </div>
 
-      <div class="bot-advanced-info">
-        <p>Версия:<span class="value" id="bot-version-${nickname}">${profile.version}</span></p>
-        <p>Пароль:<span class="value" id="bot-password-${nickname}">${profile.password}</span></p>
-        <p>Прокси:<span class="value" id="bot-proxy-${nickname}">${profile.proxy.ip_address}</span></p>
-        <p id="extended-monitoring-ping-${nickname}" style="display: none;">Пинг:<span class="value" id="bot-ping-${nickname}">${profile.ping} мс</span></p>
-        <p id="extended-monitoring-health-${nickname}" style="display: none;">Здоровье:<span class="value" id="bot-health-${nickname}">${profile.health} / 20</span></p>
-        <p id="extended-monitoring-satiety-${nickname}" style="display: none;">Сытость:<span class="value" id="bot-satiety-${nickname}">${profile.satiety} / 20</span></p>
+      <div class="info">
+        <p class="line">Пинг: <span id="monitoring-ping-${username}">${profile.ping}</span>ms</p>
+        <p class="line">Здоровье: <span id="monitoring-health-${username}">${profile.health}</span> / 20</p>
+        <p class="line">Прокси: <span id="monitoring-proxy-${username}">${profile.proxy.ip_address}</span></p>
+        <p class="line">Пароль: <span>${profile.password}</span></p>
       </div>
 
-      <div class="sep"></div>
-
-      <input type="text" class="group-input" id="bot-group-${nickname}" placeholder="Группа, например: ${groupNameExample}">
-
-      <div class="sep"></div>
-
-      <button class="btn spec" id="open-chat-${nickname}" style="display: none;">Открыть чат</button>
-      <button class="btn spec" id="open-map-${nickname}" style="display: none;">Открыть карту</button>
-      <button class="btn spec" id="solve-captcha-${nickname}" style="display: none;">Решить капчу</button>
-      <button class="btn spec" id="reset-${nickname}">Сбросить</button>
-      <button class="btn spec" id="disconnect-${nickname}" style="margin-bottom: 12px;">Отключить</button>
+      <div class="buttons">
+        <button class="btn min pretty" id="open-chat-${username}">Открыть чат</button>
+        <button class="btn min pretty" id="reset-${username}">Сбросить</button>
+        <button class="btn min pretty" id="disconnect-${username}">Отключить</button>
+      </div>
     `;
 
-    const chatWrapper = document.createElement('div');
-    chatWrapper.className = 'chat-container cover';
-    chatWrapper.id = `chat-${nickname}`;
+    this.cards?.appendChild(card);
+    this.initializeBotCard(username);
+  }
 
-    chatWrapper.innerHTML = `
+  private createChatWrapper(username: string): HTMLDivElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cover';
+    wrapper.id = `chat-${username}`;
+
+    wrapper.innerHTML = `
       <div class="panel">
         <div class="left">
           <div class="custom-select">
-            <select id="select-chat-filter-${nickname}">
+            <select id="select-chat-filter-${username}">
               <option value="all">Все сообщения</option>
               <option value="bans">Блокировки</option>
               <option value="mentions">Упоминания</option>
@@ -308,7 +313,7 @@ export class MonitoringManager {
             </select>
           </div>
 
-          <button class="btn min pretty" id="filter-chat-${nickname}">
+          <button class="btn min pretty" id="filter-chat-${username}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
               <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z"/>
             </svg>
@@ -316,79 +321,76 @@ export class MonitoringManager {
         </div>
 
         <div class="right">
-          <button class="btn min pretty" id="clear-chat-${nickname}">
+          <button class="btn min pretty" id="clear-chat-${username}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
               <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
             </svg>
           </button>
 
-          <button class="btn min pretty" id="close-chat-${nickname}">
+          <button class="btn min pretty" id="close-chat-${username}">
             ⨉
           </button>
         </div>
       </div>
 
-      <div class="chat-content">
-        <div class="monitoring-content" id="monitoring-chat-content-${nickname}"></div>
-      </div>
+      <div class="chat-content" id="monitoring-chat-content-${username}"></div>
 
-      <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
-        <p class="signature">${nickname}:</p>
-
-        <input type="text" control="this" id="this-chat-message-${nickname}" placeholder="Введите сообщение" style="height: 32px; width: 250px;">
+      <div class="pretty-input-wrapper">
+        <p class="signature">${username}</p>
+        <input type="text" id="chat-message-${username}" placeholder="Введите и отправьте сообщение, нажав «Enter»">
       </div>
     `;
 
-    const mapWrapper = document.createElement('div');
-    mapWrapper.className = 'cover';
-    mapWrapper.id = `map-${nickname}`;
+    this.wrappers?.appendChild(wrapper);
 
-    mapWrapper.innerHTML = `
+    return wrapper;
+  }
+
+  private createMapWrapper(username: string): HTMLDivElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cover';
+    wrapper.id = `map-${username}`;
+
+    wrapper.innerHTML = `
       <div class="panel">
         <div class="right">
-          <button class="btn min pretty" id="remove-map-${nickname}">
+          <button class="btn min pretty" id="remove-map-${username}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
               <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
             </svg>
           </button>
 
-          <button class="btn min pretty" id="close-map-${nickname}">
+          <button class="btn min pretty" id="close-map-${username}">
             ⨉
           </button>
         </div>
       </div>
 
-      <div class="bot-map-wrap" id="map-wrap-${nickname}">
-        <div class="bot-map-render-status" id="map-render-status-${nickname}">Генерация карты, пожайлуста, подождите...</div>
-        <div class="bot-map-render-progress" id="map-render-progress-${nickname}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${nickname}">0</span> / 40000</div>
+      <div class="bot-map-wrap" id="map-wrap-${username}">
+        <div class="bot-map-render-status" id="map-render-status-${username}">Генерация карты, пожайлуста, подождите...</div>
+        <div class="bot-map-render-progress" id="map-render-progress-${username}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${username}">0</span> / 40000</div>
 
-        <div id="save-map-wrap-${nickname}" style="display: none; margin-top: 25px; gap: 15px;">
-          <input type="text" id="save-map-path-${nickname}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
+        <div id="save-map-wrap-${username}" style="display: none; margin-top: 25px; gap: 15px;">
+          <input type="text" id="save-map-path-${username}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
           
-          <button class="btn min" id="save-map-${nickname}">Сохранить</button>
+          <button class="btn min" id="save-map-${username}">Сохранить</button>
         </div>  
       </div>
     `;
 
-    this.botCardsContainer?.appendChild(card);
-    this.botWrappersContainer?.appendChild(chatWrapper);
-    this.botWrappersContainer?.appendChild(mapWrapper);
+    this.cards?.appendChild(wrapper);
 
-    this.chatHistoryFilters[nickname] = 'all';
-    this.usernameList.push(nickname);
-
-    this.initializeBotCard(nickname);
+    return wrapper;
   }
 
-  private updateBotCard(nickname: string, profile: BotProfile, statusColor: string): void {
-    const status = document.getElementById(`bot-status-${nickname}`) as HTMLElement;
-    const proxy = document.getElementById(`bot-proxy-${nickname}`) as HTMLElement;
-    const ping = document.getElementById(`bot-ping-${nickname}`) as HTMLElement;
-    const health = document.getElementById(`bot-health-${nickname}`) as HTMLElement;
-    const satiety = document.getElementById(`bot-satiety-${nickname}`) as HTMLElement;
+  private updateBotCard(username: string, profile: BotProfile, statusColor: string): void {
+    const status = document.getElementById(`monitoring-status-${username}`) as HTMLElement;
+    const proxy = document.getElementById(`monitoring-proxy-${username}`) as HTMLElement;
+    const ping = document.getElementById(`monitoring-ping-${username}`) as HTMLElement;
+    const health = document.getElementById(`monitoring-health-${username}`) as HTMLElement;
 
-    if (health.innerText.split('/')[0].replace(' ', '') != profile.health.toString() || satiety.innerText.split('/')[0].replace(' ', '') != profile.satiety.toString()) {
-      const card = document.getElementById(`bot-card-${nickname}`);
+    if (health.innerText.split('/')[0].replace(' ', '') != profile.health.toString()) {
+      const card = document.getElementById(`bot-card-${username}`);
       
       card?.classList.add('glow');
 
@@ -397,120 +399,116 @@ export class MonitoringManager {
       }, 300);
     }
 
-    status.innerHTML = `<span style="color: ${statusColor};">• ${profile.status}</span>`;
+    status.innerText = profile.status;
+    status.style.color = statusColor;
+
     proxy.innerText = profile.proxy.ip_address;
-    ping.innerText = `${profile.ping} мс`
-    health.innerText = `${profile.health} / 20`;
-    satiety.innerText = `${profile.satiety} / 20`;
+    ping.innerText = profile.ping.toString();
+    health.innerText = profile.health.toString();
   }
 
-  private initializeBotCard(nickname: string): void {
-    const chat = document.getElementById(`chat-${nickname}`);
-    const map = document.getElementById(`map-${nickname}`);
+  private initializeBotCard(username: string): void {
+    this.chatHistoryFilters[username] = 'all';
+    this.usernameList.push(username);
 
-    const ping = document.getElementById(`extended-monitoring-ping-${nickname}`);
-    const health = document.getElementById(`extended-monitoring-health-${nickname}`);
-    const satiety = document.getElementById(`extended-monitoring-satiety-${nickname}`);
-
-    if (this.extendedMonitoring) {
-      (ping as HTMLElement).style.display = 'flex';
-      (health as HTMLElement).style.display = 'flex';
-      (satiety as HTMLElement).style.display = 'flex';
-    } else {
-      ping?.remove();
-      health?.remove();
-      satiety?.remove();
-    }
+    const chatWrapper = this.createChatWrapper(username);
+    // const mapWrapper = this.createMapWrapper(username);
 
     if (this.chatMonitoring) {
-      (document.getElementById(`open-chat-${nickname}`) as HTMLButtonElement).style.display = 'flex';
+      (document.getElementById(`open-chat-${username}`) as HTMLButtonElement).style.display = 'flex';
     } else {
-      chat?.remove();
+      chatWrapper.remove();
     }
 
+    /* Временно
+
     if (this.mapMonitoring) {
-      (document.getElementById(`open-map-${nickname}`) as HTMLButtonElement).style.display = 'flex';
+      (document.getElementById(`open-map-${username}`) as HTMLButtonElement).style.display = 'flex';
     } else {
-      map?.remove();
+      mapWrapper.remove();
     }
 
     if (this.antiCaptchaType) {
-      (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).style.display = 'flex';
-    }
+      (document.getElementById(`solve-captcha-${username}`) as HTMLButtonElement).style.display = 'flex';
+    } 
 
-    this.addTempListener(`bot-group-${nickname}`, 'input', async () => {
+    */
+
+    this.addTempListener(`bot-group-${username}`, 'input', async () => {
       try {
-        const group = (document.getElementById(`bot-group-${nickname}`) as HTMLInputElement).value.replace(' ', '');
+        const group = (document.getElementById(`bot-group-${username}`) as HTMLInputElement).value.replace(' ', '');
 
         await invoke('set_group', {
-          nickname: nickname,
+          nickname: username,
           group: group !== '' ? group : 'global'
         });
       } catch (error) {
-        log(`Ошибка изменения группы ${nickname}: ${error}`, 'error');
+        log(`Ошибка изменения группы ${username}: ${error}`, 'error');
       }
     });
 
-    this.addTempListener(`open-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'flex');
-    this.addTempListener(`close-chat-${nickname}`, 'click', () => (chat as HTMLElement).style.display = 'none');
+    this.addTempListener(`open-chat-${username}`, 'click', () => chatWrapper.style.display = 'flex');
+    this.addTempListener(`close-chat-${username}`, 'click', () => chatWrapper.style.display = 'none');
 
-    this.addTempListener(`open-map-${nickname}`, 'click', async () => {
-      (map as HTMLElement).style.display = 'flex';
+    /* Временно
+
+    this.addTempListener(`open-map-${username}`, 'click', async () => {
+      mapWrapper.style.display = 'flex';
 
       try {
-        if (!document.getElementById(`map-image-${nickname}`) && !this.activeMapRenderings.get(nickname)) {
-          this.activeMapRenderings.set(nickname, true);
+        if (!document.getElementById(`map-image-${username}`) && !this.activeMapRenderings.get(username)) {
+          this.activeMapRenderings.set(username, true);
 
-          const old_map = document.getElementById(`map-image-${nickname}`);
+          const old_map = document.getElementById(`map-image-${username}`);
 
           if (old_map) {
             old_map.remove();
           }
 
-          (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'flex';
-          (document.getElementById(`map-render-progress-${nickname}`) as HTMLElement).style.display = 'flex';
+          (document.getElementById(`map-render-status-${username}`) as HTMLElement).style.display = 'flex';
+          (document.getElementById(`map-render-progress-${username}`) as HTMLElement).style.display = 'flex';
           
-          const base64_code = await invoke('render_map', { nickname: nickname }) as string;
+          const base64_code = await invoke('render_map', { nickname: username }) as string;
 
-          this.mapBase64Codes.set(nickname, base64_code);
+          this.mapBase64Codes.set(username, base64_code);
 
-          (document.getElementById(`map-render-status-${nickname}`) as HTMLElement).style.display = 'none';
-          (document.getElementById(`map-render-progress-${nickname}`) as HTMLElement).style.display = 'none';
+          (document.getElementById(`map-render-status-${username}`) as HTMLElement).style.display = 'none';
+          (document.getElementById(`map-render-progress-${username}`) as HTMLElement).style.display = 'none';
 
-          this.activeMapRenderings.delete(nickname);
+          this.activeMapRenderings.delete(username);
 
           const img = document.createElement('img');
           img.className = 'bot-map-image';
-          img.id = `map-image-${nickname}`;
+          img.id = `map-image-${username}`;
           img.src = `data:image/png;base64,${base64_code}`;
           img.draggable = false;
 
-          const wrap = document.getElementById(`map-wrap-${nickname}`);
+          const wrap = document.getElementById(`map-wrap-${username}`);
 
           wrap?.insertBefore(img, wrap.firstChild);
 
-          (document.getElementById(`save-map-wrap-${nickname}`) as HTMLElement).style.display = 'flex';
+          (document.getElementById(`save-map-wrap-${username}`) as HTMLElement).style.display = 'flex';
         }
       } catch (error) {
         log(`Ошибка мониторинга (render-map): ${error}`, 'error');
       }
     });
 
-    this.addTempListener(`remove-map-${nickname}`, 'click', async () => {
-      this.mapBase64Codes.delete(nickname);
-      document.getElementById(`map-image-${nickname}`)?.remove();
-      (document.getElementById(`save-map-wrap-${nickname}`) as HTMLElement).style.display = 'none';
+    this.addTempListener(`remove-map-${username}`, 'click', async () => {
+      this.mapBase64Codes.delete(username);
+      document.getElementById(`map-image-${username}`)?.remove();
+      (document.getElementById(`save-map-wrap-${username}`) as HTMLElement).style.display = 'none';
     });
 
-    this.addTempListener(`save-map-${nickname}`, 'click', async () => {
+    this.addTempListener(`save-map-${username}`, 'click', async () => {
       try {
-        const base64code = this.mapBase64Codes.get(nickname);
+        const base64code = this.mapBase64Codes.get(username);
 
         if (base64code) {
-          const path = document.getElementById(`save-map-path-${nickname}`) as HTMLInputElement;
+          const path = document.getElementById(`save-map-path-${username}`) as HTMLInputElement;
 
           await invoke('save_map', { 
-            nickname: nickname, 
+            nickname: username, 
             path: path.value, 
             base64code: base64code 
           });
@@ -522,44 +520,46 @@ export class MonitoringManager {
       }
     });
 
-    this.addTempListener(`close-map-${nickname}`, 'click', () => (map as HTMLElement).style.display = 'none');
+    this.addTempListener(`close-map-${username}`, 'click', () => mapWrapper.style.display = 'none');
 
-    this.addTempListener(`disconnect-${nickname}`, 'click', async () => {
+    */
+
+    this.addTempListener(`disconnect-${username}`, 'click', async () => {
       try {
         await invoke('send_command', {
           command: 'disconnect_bot',
           options: {
-            username: nickname
+            username: username
           }
         });
       } catch (error) {
-        log(`Ошибка отключения бота ${nickname}: ${error}`, 'error');
+        log(`Ошибка отключения бота ${username}: ${error}`, 'error');
       }
     });
 
-    this.addTempListener(`reset-${nickname}`, 'click', async () => {
+    this.addTempListener(`reset-${username}`, 'click', async () => {
       try {
         await invoke('send_command', {
           command: 'reset_bot',
           options: {
-            username: nickname
+            username: username
           }
         });
       } catch (error) {
-        log(`Ошибка сбрасывания задач и состояний бота ${nickname}: ${error}`, 'error');
+        log(`Ошибка сбрасывания задач и состояний бота ${username}: ${error}`, 'error');
       }
     });
 
-    this.addTempListener(`filter-chat-${nickname}`, 'click', () => {
+    this.addTempListener(`filter-chat-${username}`, 'click', () => {
       try {
-        const content = document.getElementById(`monitoring-chat-content-${nickname}`);
-        const type = document.getElementById(`select-chat-filter-${nickname}`) as HTMLSelectElement;
+        const content = document.getElementById(`monitoring-chat-content-${username}`);
+        const type = document.getElementById(`select-chat-filter-${username}`) as HTMLSelectElement;
 
-        const history = [...document.querySelectorAll(`#monitoring-message-${nickname}`).values()];
+        const history = [...document.querySelectorAll(`[monitoring-message="${username}"]`).values()];
         
         content!.innerHTML = '';
 
-        this.chatHistoryFilters[nickname] = type.value;
+        this.chatHistoryFilters[username] = type.value;
 
         history.forEach(m => this.filterMessage(type.value, m.textContent || '') ? content?.appendChild(m) : null);
       } catch (error) {
@@ -567,19 +567,19 @@ export class MonitoringManager {
       }
     });
 
-    this.addTempListener(`clear-chat-${nickname}`, 'click', () => {
-      const messages = document.querySelectorAll(`#monitoring-message-${nickname}`);
+    this.addTempListener(`clear-chat-${username}`, 'click', () => {
+      const messages = document.querySelectorAll(`[monitoring-message="${username}"]`);
       messages.forEach(msg => msg.remove());
-      this.chatMessageCounter[nickname] = 0;
+      this.chatMessageCounter[username] = 0;
     });
 
-    const sendMsg = async (input_id: string) => {
-      const message = document.getElementById(input_id) as HTMLInputElement;
+    const sendMsg = async (id: string) => {
+      const message = document.getElementById(id) as HTMLInputElement;
 
       await invoke('send_command', { 
         command: 'send_message',
         options: {
-          username: nickname,
+          username: username,
           message: message.value
         }
       });
@@ -587,14 +587,16 @@ export class MonitoringManager {
       message.value = '';
     }
 
-    this.addTempListener(`chat-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`this-chat-message-${nickname}`) : null);
+    this.addTempListener(`chat-${username}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`chat-message-${username}`) : null);
   
+    /* Временно
+
     switch (this.antiCaptchaType) {
       case 'web':
-        document.getElementById(`solve-captcha-${nickname}`)?.setAttribute('captcha-url', 'none');
+        document.getElementById(`solve-captcha-${username}`)?.setAttribute('captcha-url', 'none');
 
-        this.addTempListener(`solve-captcha-${nickname}`, 'click', async () => {
-          const captcha_url = (document.getElementById(`solve-captcha-${nickname}`) as HTMLButtonElement).getAttribute('captcha-url');
+        this.addTempListener(`solve-captcha-${username}`, 'click', async () => {
+          const captcha_url = (document.getElementById(`solve-captcha-${username}`) as HTMLButtonElement).getAttribute('captcha-url');
 
           if (captcha_url && captcha_url !== 'none') {
             await invoke('open_url', { url: captcha_url });
@@ -606,40 +608,41 @@ export class MonitoringManager {
       case 'map':
         const mapCaptchaWrapper = document.createElement('div');
         mapCaptchaWrapper.className = 'cover';
-        mapCaptchaWrapper.id = `map-captcha-image-${nickname}`;
+        mapCaptchaWrapper.id = `map-captcha-image-${username}`;
 
         mapCaptchaWrapper.innerHTML = `
           <div class="panel">
             <div class="right">
-              <button class="btn min pretty" id="close-map-captcha-image-${nickname}">
+              <button class="btn min pretty" id="close-map-captcha-image-${username}">
                 ⨉
               </button>
             </div>
           </div>
 
-          <div id="map-captcha-image-container-${nickname}" style="width: 100%; height: 410px;"></div>
+          <div id="map-captcha-image-container-${username}" style="width: 100%; height: 410px;"></div>
 
-          <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
-            <p class="signature">${nickname}:</p>
-
-            <input type="text" class="glass-input" id="send-captcha-code-${nickname}" placeholder="Введите код с капчи" style="height: 32px; width: 250px;">
+          <div class="pretty-input-wrapper" style="margin-top: 20px;">
+            <p class="signature">${username}</p>
+            <input type="text" id="send-captcha-code-${username}" placeholder="Введите код с капчи" style="height: 32px; width: 250px;">
           </div>
         `;
 
-        this.botWrappersContainer?.appendChild(mapCaptchaWrapper);
+        this.wrappers?.appendChild(mapCaptchaWrapper);
 
-        this.addTempListener(`map-captcha-image-${nickname}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`send-captcha-code-${nickname}`) : null);
+        this.addTempListener(`map-captcha-image-${username}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`send-captcha-code-${username}`) : null);
 
-        this.addTempListener(`solve-captcha-${nickname}`, 'click', () => {
-          (document.getElementById(`map-captcha-image-${nickname}`) as HTMLElement).style.display = 'flex';
+        this.addTempListener(`solve-captcha-${username}`, 'click', () => {
+          (document.getElementById(`map-captcha-image-${username}`) as HTMLElement).style.display = 'flex';
         });
 
-        this.addTempListener(`close-map-captcha-image-${nickname}`, 'click', () => {
-          (document.getElementById(`map-captcha-image-${nickname}`) as HTMLElement).style.display = 'none';
+        this.addTempListener(`close-map-captcha-image-${username}`, 'click', () => {
+          (document.getElementById(`map-captcha-image-${username}`) as HTMLElement).style.display = 'none';
         });
 
         break;
     }
+
+    */
   }
 
   private createTrigrams(word: string): string[] {

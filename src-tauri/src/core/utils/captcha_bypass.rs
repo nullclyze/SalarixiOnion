@@ -497,16 +497,13 @@ impl MapCaptchaBypass {
     }
   }
 
-  pub fn create_png_image(&self, map: &Vec<u8>) -> String {
-    let width = 128;
-    let height = 128;
-
+  pub fn create_png_image(&self, width: u32, height: u32, map: &Vec<u8>) -> String {
     let mut img = ImageBuffer::new(width, height);
 
     for (i, &id) in map.iter().enumerate() {
       let rgb = self.convert_id_to_rgb_color(id);
-      let x = (i % 128) as u32;
-      let y = (i / 128) as u32;
+      let x = i as u32 % width;
+      let y = i as u32 / height;
 
       img.put_pixel(x, y, Rgb([rgb.0, rgb.1, rgb.2]));
     }
