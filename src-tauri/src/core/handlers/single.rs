@@ -229,7 +229,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
               options.captcha_bypass.required_url_part,
             ) {
               if let Some(profile) = PROFILES.get(&nickname) {
-                if !profile.captcha_caught {
+                if !profile.captcha.caught {
                   PROFILES.set_bool(&nickname, "captcha_caught", true);
 
                   if options.basic.use_webhook && options.webhook.send_information {
@@ -307,10 +307,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
             if options.captcha_bypass.captcha_type.as_str() == "map" {
               if let Some(map_patch) = &data.color_patch.0 {
                 if let Some(profile) = PROFILES.get(&nickname) {
-                  if !profile.captcha_caught {
+                  if !profile.captcha.caught {
                     PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(&map_patch.map_colors);
+                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(map_patch.width as u32, map_patch.height as u32, &map_patch.map_colors);
 
                     if options.basic.use_webhook && options.webhook.send_information {
                       send_webhook(

@@ -23,7 +23,7 @@ import { disableParticles, enableParticles } from './particles';
 Chart.register(...registerables);
 
 const client = {
-  version: '1.0.8'
+  version: '1.0.9'
 };
 
 let process: 'active' | 'sleep' = 'sleep';
