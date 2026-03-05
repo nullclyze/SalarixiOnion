@@ -1,6 +1,5 @@
 import { log } from '../logger';
 
-
 interface Options { 
   algorithm: string; 
   protocol: string; 
@@ -19,7 +18,12 @@ const apicServices = {
     'https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc',
     'https://proxylist.geonode.com/api/proxy-list?limit=500&page=2&sort_by=lastChecked&sort_type=desc',
     'https://proxylist.geonode.com/api/proxy-list?limit=500&page=3&sort_by=lastChecked&sort_type=desc',
-  ]
+  ],
+  'json:proxyfreeonly': [
+    'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=1&sortBy=lastChecked&sortType=desc',
+    'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=2&sortBy=lastChecked&sortType=desc',
+    'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=3&sortBy=lastChecked&sortType=desc',
+  ],
 };
 
 const upcServices = {
@@ -27,8 +31,7 @@ const upcServices = {
   'text:gfpcom-proxy-list': [
     'https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/http.txt',
     'https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/socks4.txt',
-    'https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/socks5.txt',
-    'https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/ss.txt'
+    'https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/socks5.txt'
   ],
   'text:fyvri-proxy-list': 'https://raw.githubusercontent.com/fyvri/fresh-proxy-list/archive/storage/classic/socks5.txt',
   'text:r00tee-proxy-list': 'https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt',
@@ -97,7 +100,7 @@ export class ProxyCollectorManager {
         this.proxyFinderStatus!.style.color = '#cc1d1dff';
         this.proxyFinderStatus!.innerText = 'Ошибка поиска';
 
-        log(`Ошибка поиска прокси`, 'error');
+        log('Ошибка поиска прокси', 'error');
       }
     } catch (error) {
       this.proxyFinderStatus!.style.color = '#cc1d1dff';
@@ -151,7 +154,9 @@ export class ProxyCollectorManager {
 
   private async request(name: string, url: string, type: string) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(6000)
+      });
 
       if (res.ok) {
         const data = type === 'json' ? await res.json() : await res.text();
@@ -244,6 +249,7 @@ export class ProxyCollectorManager {
           if (proxy.username == null && proxy.password == null) {
             if (country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase()) {
               if (protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol) {
+                console.log(`monosans: ${proxy.host}`);
                 proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`);
               }
             }
@@ -263,6 +269,17 @@ export class ProxyCollectorManager {
         }
       } else if (name === 'geonode') {
         for (const proxy of data.data ?? []) {
+          if (country === 'any' || proxy.country === country.toUpperCase()) {
+            const protocols = (proxy.protocols ?? []).map((p: string) => p.toLowerCase());
+            if (protocol === 'any') {
+              for (const p of protocols) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
+            } else {
+              for (const p of protocols) if (p === protocol) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
+            }
+          }
+        }
+      } else if (name === 'proxyfreeonly') {
+        for (const proxy of data ?? []) {
           if (country === 'any' || proxy.country === country.toUpperCase()) {
             const protocols = (proxy.protocols ?? []).map((p: string) => p.toLowerCase());
             if (protocol === 'any') {
