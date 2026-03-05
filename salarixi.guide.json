@@ -1,6 +1,16 @@
 {
-  "latest-update": "01.03.2026",
+  "latest-update": "05.03.2026",
   "sections": [
+    {
+      "header": "Примечание",
+      "subsections": [
+        {
+          "paragraphs": [
+            "Данное руководство опирается на последнюю версию Salarixi Onion — 1.0.8"
+          ]
+        }
+      ]
+    },
     {
       "header": "Начало",
       "subsections": [
