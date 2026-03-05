@@ -170,6 +170,7 @@ const LEGIT_PASSWORDS: &[&str] = &[
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LaunchOptions {
   pub basic: BasicOptions,
+  pub accounts: HashMap<String, AccountOptions>,
   pub plugins: PluginOptions,
   pub captcha_bypass: CaptchaBypassOptions,
   pub webhook: WebhookOptions,
@@ -209,10 +210,19 @@ pub struct BasicOptions {
   pub use_webhook: bool,
   pub use_chat_signing: bool,
   pub use_chat_monitoring: bool,
+  pub use_accounts: bool,
   pub skin_type: String,
   pub set_skin_command: Option<String>,
   pub custom_skin_by_nickname: Option<String>,
   pub proxy_list: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AccountOptions {
+  pub password: Option<String>,
+  pub proxy: Option<String>,
+  pub proxy_username: Option<String>,
+  pub proxy_password: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -242,6 +252,12 @@ pub struct WebhookOptions {
   pub send_information: bool,
   pub send_data: bool,
   pub send_actions: bool,
+}
+
+#[derive(Debug)]
+struct CustomAccount {
+  object: Account,
+  options: Option<AccountOptions>
 }
 
 /// Функция генерации никнейма или пароля
@@ -383,8 +399,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
     send_webhook(
       options.webhook.url.clone(),
       format!(
-        "Запуск {} ботов на {}...",
-        options.basic.bots_count, options.basic.address
+        "Запуск ботов на сервер {}...", options.basic.address
       ),
     );
   }
@@ -426,34 +441,105 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
         let mut accounts = Vec::new();
 
-        for _ in 0..options.basic.bots_count {
-          let nickname = generate_username_or_password(
-            "nickname",
-            options.basic.nickname_type.clone(),
-            options.basic.nickname_template.clone(),
-          );
+        if options.basic.use_accounts {
+          for (username, opts) in &options.accounts {
+            accounts.push(CustomAccount {
+              object: Account::offline(username),
+              options: Some(opts.clone())
+            });
 
-          let password = generate_username_or_password(
-            "password",
-            options.basic.password_type.clone(),
-            options.basic.password_template.clone(),
-          );
+            PROFILES.push(username, opts.password.clone());
+          }
+        } else {  
+          for _ in 0..options.basic.bots_count {
+            let username = generate_username_or_password(
+              "nickname",
+              options.basic.nickname_type.clone(),
+              options.basic.nickname_template.clone(),
+            );
 
-          accounts.push(Account::offline(&nickname));
+            let password;
 
-          PROFILES.push(&nickname, password, options.basic.version.clone());
+            if options.basic.password_type.as_str() == "custom" && options.basic.password_template.as_str() == "" { 
+              password = None;
+            } else {
+              password = Some(generate_username_or_password(
+                "password",
+                options.basic.password_type.clone(),
+                options.basic.password_template.clone(),
+              ));
+            }
+
+            accounts.push(CustomAccount {
+              object: Account::offline(&username),
+              options: None
+            });
+
+            PROFILES.push(&username, password);
+          }
         }
 
-        if options.basic.use_proxy {
+        if options.basic.use_proxy || options.basic.use_accounts {
           let mut accounts_with_opts = Vec::new();
 
-          for (i, account) in accounts.into_iter().enumerate() {
-            let opts_clone = options.clone();
+          if options.basic.use_accounts {
+            for account in accounts.into_iter() {
+              let mut join_opts = JoinOpts::new();
 
-            let mut join_opts = JoinOpts::new();
+              if let Some(account_opts) = account.options.clone() {
+                if let Some(proxy) = account_opts.proxy {
+                  let mut profile_proxy = ProfileProxy {
+                    ip_address: "-".to_string(),
+                    proxy: None,
+                    username: None,
+                    password: None,
+                  };
 
-            if opts_clone.basic.use_proxy {
-              if let Some(proxy_list) = &opts_clone.basic.proxy_list {
+                  let clean_proxy_str = proxy
+                    .trim_start_matches("socks5://")
+                    .trim_start_matches("socks4://")
+                    .trim_start_matches("https://")
+                    .trim_start_matches("http://");
+
+                  profile_proxy.proxy = Some(clean_proxy_str.to_string());
+
+                  if let Ok(addr) = clean_proxy_str.parse::<SocketAddr>() {
+                    let mut proxy = Proxy::new(addr, None);
+
+                    if let Some(username) = account_opts.proxy_username {
+                      if let Some(password) = account_opts.proxy_password {
+                        profile_proxy.username = Some(username.clone());
+                        profile_proxy.password = Some(password.clone());
+
+                        proxy.auth = Some(UserKey {
+                          username: username,
+                          password: password,
+                        });
+                      }
+                    }
+
+                    join_opts = join_opts.proxy(proxy);
+
+                    let split_address: Vec<&str> = clean_proxy_str.split(":").collect();
+
+                    let Some(ip_address) = split_address.get(0) else {
+                      continue;
+                    };
+
+                    profile_proxy.ip_address = ip_address.to_string();
+
+                    PROFILES.set_proxy(&account.object.username, profile_proxy);
+                  }
+                };
+              };
+
+              accounts_with_opts.push((account, join_opts));
+            }
+          } else {
+            for (i, account) in accounts.into_iter().enumerate() {
+              let mut join_opts = JoinOpts::new();
+
+              if let Some(proxy_list) = &options.basic.proxy_list {
                 let list: Vec<&str> = proxy_list.split("\n").collect();
 
                 if !list.is_empty() {
@@ -513,20 +599,22 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
                     profile_proxy.ip_address = ip_address.to_string();
 
-                    PROFILES.set_proxy(&account.username, profile_proxy);
+                    PROFILES.set_proxy(&account.object.username, profile_proxy);
                   }
                 }
               }
-            }
 
-            accounts_with_opts.push((account, join_opts));
+              accounts_with_opts.push((account, join_opts));
+            }
           }
 
           for (account, opts) in accounts_with_opts {
-            flow = flow.add_account_with_opts(account, opts);
+            flow = flow.add_account_with_opts(account.object, opts);
           }
         } else {
-          flow = flow.add_accounts(accounts);
+          for account in accounts {
+            flow = flow.add_account(account.object);
+          }
 
           if options.basic.version.as_str() != "1.21.11" {
             flow = flow.add_plugins(ViaVersionPlugin::start(options.basic.version).await);
@@ -549,7 +637,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 pub fn stop_bots_and_destroy_data() -> bool {
   let active_bots = active_bots_count();
 
-  send_message("Система", format!("Остановка {} ботов...", active_bots));
+  send_message("Система", "Остановка ботов...".to_string());
 
   if !process_is_active() {
     send_log(

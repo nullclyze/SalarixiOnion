@@ -15,6 +15,13 @@
       }
     },
     { 
+      "tags": ["panel-btn:accounts", "title:accounts"], 
+      "lang": {
+        "ru": "Аккаунты",
+        "en": "Accounts"
+      }
+    },
+    { 
       "tags": ["panel-btn:plugins", "title:plugins"], 
       "lang": {
         "ru": "Плагины",
@@ -558,6 +565,13 @@
       "lang": {
         "ru": "Мониторинг карты",
         "en": "Map Monitoring"
+      }
+    },
+    { 
+      "tags": ["checkbox:use-accounts"], 
+      "lang": {
+        "ru": "Использовать аккаунты",
+        "en": "Use Accounts"
       }
     },
     { 

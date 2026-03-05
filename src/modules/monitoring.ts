@@ -7,8 +7,7 @@ import { date } from '../helpers/date';
 
 interface BotProfile {
   status: string;
-  nickname: string;
-  version: string;
+  username: string;
   password: string;
   proxy: { 
     ip_address: string;
@@ -45,14 +44,10 @@ export class MonitoringManager {
 
   private listeners: Map<string, any> = new Map();
 
-  private activeMapRenderings: Map<string, boolean> = new Map();
-  private mapBase64Codes: Map<string, string> = new Map();
-
   public extendedMonitoring: boolean = true;
   public chatMonitoring: boolean = true;
   public mapMonitoring: boolean = false;
   public maxChatHistoryLength: number = 0;
-  public antiCaptchaType: string | null = null;
 
   public async init(): Promise<void> {
     this.statusText = document.getElementById('monitoring-status-text');
@@ -112,6 +107,8 @@ export class MonitoringManager {
       }
     });
 
+    /* Временно
+
     await listen('map-render-progress', (event) => {
       if (this.mapMonitoring) {
         try {
@@ -130,34 +127,7 @@ export class MonitoringManager {
       }
     });
 
-    await listen('anti-web-captcha', (event) => {
-      try {
-        const payload = event.payload as { captcha_url: string; nickname: string; };
-        const captcha_url = payload.captcha_url;
-        const nickname = payload.nickname;
-
-        document.getElementById(`solve-captcha-${nickname}`)?.setAttribute('captcha-url', captcha_url);
-      } catch (error) {
-        log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
-      }
-    });
-
-    await listen('anti-map-captcha', (event) => {
-      try {
-        const payload = event.payload as { base64_code: string; nickname: string; };
-        const base64_code = payload.base64_code;
-        const nickname = payload.nickname;
-
-        const img = document.createElement('img');
-        img.className = 'bot-captcha-image';
-        img.src = `data:image/png;base64,${base64_code}`;
-        img.draggable = false;
-
-        document.getElementById(`map-captcha-image-container-${nickname}`)?.appendChild(img);
-      } catch (error) {
-        log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
-      }
-    });
+    */
   }
 
   public wait(): void {
@@ -191,23 +161,10 @@ export class MonitoringManager {
 
             const profile = profiles[nickname];
 
-            let statusColor = '';
-
-            switch (profile.status) {
-              case 'Соединение...':
-                statusColor = '#8f8f8fff'; break;
-              case 'Онлайн':
-                statusColor = '#22ed17ff'; break;
-              case 'Оффлайн':
-                statusColor = '#ed1717ff'; break;
-              case 'Повреждён':
-                statusColor = '#ed1717ff'; break;
-            }
-
             if (this.usernameList.includes(nickname)) {
-              this.updateBotCard(nickname, profile, statusColor)
+              this.updateBotCard(nickname, profile);
             } else {
-              this.createBotCard(nickname, profile, statusColor);
+              this.createBotCard(nickname, profile);
             }
           }
         } catch (error) {
@@ -237,7 +194,6 @@ export class MonitoringManager {
     this.statusText!.style.color = '#646464f7';
     this.statusText!.style.display = 'flex';
 
-    this.cards!.innerHTML = '';
     this.cards!.style.display = 'none';
   }
 
@@ -246,7 +202,7 @@ export class MonitoringManager {
     this.listeners.set(id, { event: event, listener: listener });
   }
 
-  private createBotCard(username: string, profile: BotProfile, statusColor: string): void {
+  private createBotCard(username: string, profile: BotProfile): void {
     const steveIconPath = document.getElementById('steve-img') as HTMLImageElement;
 
     const groupNameExamples = [
@@ -268,7 +224,7 @@ export class MonitoringManager {
           <img src="${steveIconPath.src}" class="image" draggable="false">
           <div class="text">
             <div class="username">${username}</div>
-            <div class="status" id="monitoring-status-${username}">${profile.status}</div>
+            <div class="status" id="monitoring-status-${username}">?</div>
           </div>
         </div>
 
@@ -346,6 +302,8 @@ export class MonitoringManager {
     return wrapper;
   }
 
+  /* Временно
+
   private createMapWrapper(username: string): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'cover';
@@ -383,7 +341,9 @@ export class MonitoringManager {
     return wrapper;
   }
 
-  private updateBotCard(username: string, profile: BotProfile, statusColor: string): void {
+  */
+
+  private updateBotCard(username: string, profile: BotProfile): void {
     const status = document.getElementById(`monitoring-status-${username}`) as HTMLElement;
     const proxy = document.getElementById(`monitoring-proxy-${username}`) as HTMLElement;
     const ping = document.getElementById(`monitoring-ping-${username}`) as HTMLElement;
@@ -397,6 +357,19 @@ export class MonitoringManager {
       setTimeout(() => {
         card?.classList.remove('glow');
       }, 300);
+    }
+
+    let statusColor = '';
+
+    switch (profile.status) {
+      case 'Соединение...':
+        statusColor = '#8f8f8fff'; break;
+      case 'Онлайн':
+        statusColor = '#22ed17ff'; break;
+      case 'Оффлайн':
+        statusColor = '#ed1717ff'; break;
+      case 'Повреждён':
+        statusColor = '#ed1717ff'; break;
     }
 
     status.innerText = profile.status;
@@ -414,9 +387,8 @@ export class MonitoringManager {
     const chatWrapper = this.createChatWrapper(username);
     // const mapWrapper = this.createMapWrapper(username);
 
-    if (this.chatMonitoring) {
-      (document.getElementById(`open-chat-${username}`) as HTMLButtonElement).style.display = 'flex';
-    } else {
+    if (!this.chatMonitoring) {
+      (document.getElementById(`open-chat-${username}`) as HTMLButtonElement).disabled = true;
       chatWrapper.remove();
     }
 
@@ -427,10 +399,6 @@ export class MonitoringManager {
     } else {
       mapWrapper.remove();
     }
-
-    if (this.antiCaptchaType) {
-      (document.getElementById(`solve-captcha-${username}`) as HTMLButtonElement).style.display = 'flex';
-    } 
 
     */
 
@@ -573,76 +541,21 @@ export class MonitoringManager {
       this.chatMessageCounter[username] = 0;
     });
 
-    const sendMsg = async (id: string) => {
-      const message = document.getElementById(id) as HTMLInputElement;
+    this.addTempListener(`chat-${username}`, 'keydown', async (e: Event) => {
+      if ((e as KeyboardEvent).key === 'Enter') {
+        const input = document.getElementById(`chat-message-${username}`) as HTMLInputElement;
 
-      await invoke('send_command', { 
-        command: 'send_message',
-        options: {
-          username: username,
-          message: message.value
-        }
-      });
-
-      message.value = '';
-    }
-
-    this.addTempListener(`chat-${username}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`chat-message-${username}`) : null);
-  
-    /* Временно
-
-    switch (this.antiCaptchaType) {
-      case 'web':
-        document.getElementById(`solve-captcha-${username}`)?.setAttribute('captcha-url', 'none');
-
-        this.addTempListener(`solve-captcha-${username}`, 'click', async () => {
-          const captcha_url = (document.getElementById(`solve-captcha-${username}`) as HTMLButtonElement).getAttribute('captcha-url');
-
-          if (captcha_url && captcha_url !== 'none') {
-            await invoke('open_url', { url: captcha_url });
+        await invoke('send_command', { 
+          command: 'send_message',
+          options: {
+            username: username,
+            message: input.value
           }
         });
 
-        break;
-
-      case 'map':
-        const mapCaptchaWrapper = document.createElement('div');
-        mapCaptchaWrapper.className = 'cover';
-        mapCaptchaWrapper.id = `map-captcha-image-${username}`;
-
-        mapCaptchaWrapper.innerHTML = `
-          <div class="panel">
-            <div class="right">
-              <button class="btn min pretty" id="close-map-captcha-image-${username}">
-                ⨉
-              </button>
-            </div>
-          </div>
-
-          <div id="map-captcha-image-container-${username}" style="width: 100%; height: 410px;"></div>
-
-          <div class="pretty-input-wrapper" style="margin-top: 20px;">
-            <p class="signature">${username}</p>
-            <input type="text" id="send-captcha-code-${username}" placeholder="Введите код с капчи" style="height: 32px; width: 250px;">
-          </div>
-        `;
-
-        this.wrappers?.appendChild(mapCaptchaWrapper);
-
-        this.addTempListener(`map-captcha-image-${username}`, 'keydown', async (e: Event) => (e as KeyboardEvent).key === 'Enter' ? await sendMsg(`send-captcha-code-${username}`) : null);
-
-        this.addTempListener(`solve-captcha-${username}`, 'click', () => {
-          (document.getElementById(`map-captcha-image-${username}`) as HTMLElement).style.display = 'flex';
-        });
-
-        this.addTempListener(`close-map-captcha-image-${username}`, 'click', () => {
-          (document.getElementById(`map-captcha-image-${username}`) as HTMLElement).style.display = 'none';
-        });
-
-        break;
-    }
-
-    */
+        input.value = '';
+      }
+    });
   }
 
   private createTrigrams(word: string): string[] {

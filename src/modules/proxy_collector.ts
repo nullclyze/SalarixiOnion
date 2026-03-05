@@ -36,7 +36,7 @@ const upcServices = {
   'text:iplocate-proxy-list': 'https://raw.githubusercontent.com/iplocate/free-proxy-list/refs/heads/main/protocols/socks5.txt'
 };
 
-export class ProxyManager {
+export class ProxyCollectorManager {
   private proxyList: HTMLTextAreaElement | null = null;
   private proxyCounter: HTMLElement | null = null;
 

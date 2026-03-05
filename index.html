@@ -72,6 +72,13 @@
       <span class="text" translator-tag="panel-btn:settings">Настройки</span>
     </button>
 
+    <button class="panel-btn" id="accounts" path="accounts-container">
+      <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
+        <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
+      </svg>
+      <span class="text" translator-tag="panel-btn:accounts">Аккаунты</span>
+    </button>
+
     <button class="panel-btn" id="plugins" path="plugins-container">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plugin" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
@@ -80,15 +87,8 @@
     </button>
 
     <button class="panel-btn" id="proxy" path="proxy-container">
-      <svg panel-btn-icon="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="2" width="20" height="8" rx="2"/>
-        <rect x="2" y="14" width="20" height="8" rx="2"/>
-        <line x1="6" y1="10" x2="6" y2="14"/>
-        <line x1="12" y1="10" x2="12" y2="14"/>
-        <line x1="18" y1="10" x2="18" y2="14"/>
-        <circle cx="6" cy="6" r="1"/>
-        <circle cx="12" cy="6" r="1"/>
-        <circle cx="18" cy="6" r="1"/>
+      <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe-americas" viewBox="0 0 16 16">
+        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484q-.121.12-.242.234c-.416.396-.787.749-.758 1.266.035.634.618.824 1.214 1.017.577.188 1.168.38 1.286.983.082.417-.075.988-.22 1.52-.215.782-.406 1.48.22 1.48 1.5-.5 3.798-3.186 4-5 .138-1.243-2-2-3.5-2.5-.478-.16-.755.081-.99.284-.172.15-.322.279-.51.216-.445-.148-2.5-2-1.5-2.5.78-.39.952-.171 1.227.182.078.099.163.208.273.318.609.304.662-.132.723-.633.039-.322.081-.671.277-.867.434-.434 1.265-.791 2.028-1.12.712-.306 1.365-.587 1.579-.88A7 7 0 1 1 2.04 4.327Z"/>
       </svg>
       <span class="text" translator-tag="panel-btn:proxy">Прокси</span>
     </button>
@@ -528,14 +528,6 @@
             <label class="checkbox-container">
               <input type="checkbox" disabled>
               <span class="checkmark"></span>
-              <span translator-tag="checkbox:error-corrector">Корректор ошибок</span>
-            </label>
-
-            <div class="simple-sep"></div>
-
-            <label class="checkbox-container">
-              <input type="checkbox" disabled>
-              <span class="checkmark"></span>
               <span translator-tag="checkbox:garbage-collector">Сборщик мусора</span>
             </label>
 
@@ -558,9 +550,48 @@
               <span class="checkmark"></span>
               <span translator-tag="checkbox:map-monitoring">Мониторинг карты</span>
             </label>
+
+            <div class="simple-sep"></div>
+
+            <label class="checkbox-container">
+              <input type="checkbox" id="settings_chbx_use-accounts" keep="true" key="use_accounts" trigger launch-option checked>
+              <span class="checkmark"></span>
+              <span translator-tag="checkbox:use-accounts">Использовать аккаунты</span>
+            </label>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="form-container" id="accounts-container" style="display: none;" global="true">
+      <h1 class="title" translator-tag="title:accounts">Аккаунты</h1>
+
+      <div class="accounts-panel">
+        <input type="text" id="account-username" placeholder="myBot_12345" style="width: 140px;">
+
+        <div class="sep"></div>
+
+        <button class="btn min pretty ub" id="add-account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+            <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+            <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+          </svg>
+        </button>
+
+        <div class="sep"></div>
+
+        <div style="display: flex; width: 100%; justify-content: right;">
+          <button class="btn min pretty ub" id="remove-all-accounts">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+              <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="account-list" id="account-list"></div>
+
+      <div id="account-wrappers"></div>
     </div>
 
     <div class="form-container" id="plugins-container" style="display: none;" global="true">
@@ -689,7 +720,7 @@
     <div class="form-container" id="anti-captcha-container" style="display: none;" global="true">
       <h1 class="title" translator-tag="title:anti-captcha">Анти-Капча</h1>
 
-      <div class="anti-captcha-wrap">
+      <div class="anti-captcha-wrap" id="anti-captcha-settings">
         <div class="column-wrap" style="gap: 6px; width: max-content;">
           <div class="custom-select between">
             <label translator-tag="label:captcha-type">Тип капчи: </label>
@@ -738,6 +769,10 @@
           </div>
         </div>
       </div>
+
+      <div class="anti-captcha-wrap" id="anti-captcha-cards" style="display: none;"></div>
+
+      <div id="anti-captcha-wrappers"></div>
     </div>
 
     <div class="form-container" id="webhook-container" style="display: none;" global="true">
