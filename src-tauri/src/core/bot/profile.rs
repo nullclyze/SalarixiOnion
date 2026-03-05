@@ -10,9 +10,8 @@ pub static PROFILES: Lazy<Arc<ProfileManager>> = Lazy::new(|| Arc::new(ProfileMa
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Profile {
   pub status: String,
-  pub nickname: String,
-  pub version: String,
-  pub password: String,
+  pub username: String,
+  pub password: Option<String>,
   pub proxy: ProfileProxy,
   pub ping: u32,
   pub health: u32,
@@ -42,12 +41,11 @@ pub struct ProfileCaptcha {
 }
 
 impl Profile {
-  pub fn new(nickname: &String, password: &String, version: &String) -> Self {
+  pub fn new(username: &String, password: Option<String>) -> Self {
     Self {
       status: "Соединение...".to_string(),
-      nickname: nickname.to_string(),
-      version: version.to_string(),
-      password: password.to_string(),
+      username: username.to_string(),
+      password: password,
       proxy: ProfileProxy {
         ip_address: "-".to_string(),
         proxy: None,
@@ -76,7 +74,7 @@ impl Profile {
   }
 
   pub fn set_password(&mut self, password: &str) {
-    self.password = password.to_string();
+    self.password = Some(password.to_string());
   }
 
   pub fn set_proxy(&mut self, proxy: ProfileProxy) {
@@ -131,8 +129,8 @@ impl ProfileManager {
     }
   }
 
-  pub fn push(&self, username: &String, password: String, version: String) {
-    let arc = Arc::new(RwLock::new(Profile::new(username, &password, &version)));
+  pub fn push(&self, username: &String, password: Option<String>) {
+    let arc = Arc::new(RwLock::new(Profile::new(username, password)));
     let mut profiles = self.map.write().unwrap();
     profiles.insert(username.clone(), arc.clone());
   }

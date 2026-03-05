@@ -8,10 +8,12 @@ import { Chart, registerables } from 'chart.js';
 import { plugins } from './common/structs';
 import { log, changeLogsVisibility, eraseLogs } from './logger';
 import { initConfig, uploadConfig, shareConfig } from './modules/config';
-import { ProxyManager } from './modules/proxy';
+import { AccountManager } from './modules/accounts';
+import { ProxyCollectorManager } from './modules/proxy_collector';
 import { ChartManager } from './modules/chart';
 import { ScriptManager } from './modules/script';
 import { MonitoringManager } from './modules/monitoring';
+import { CaptchaBypassManager } from './modules/captcha_bypass';
 import { RadarManager } from './modules/radar';
 import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
@@ -28,10 +30,12 @@ const client = {
 
 let process: 'active' | 'sleep' = 'sleep';
 
-const proxyManager = new ProxyManager();
+const accountManager = new AccountManager();
+const proxyCollectorManager = new ProxyCollectorManager();
 const chartManager = new ChartManager();
 const scriptManager = new ScriptManager();
 const monitoringManager = new MonitoringManager();
+const captchaBypassManager = new CaptchaBypassManager();
 const radarManager = new RadarManager();
 const pingManager = new PingManager();
 
@@ -326,11 +330,13 @@ async function startBots(): Promise<void> {
   try {
     const options: {
       basic: any;
+      accounts: any;
       plugins: any;
       captcha_bypass: any;
       webhook: any;
     } = {
       basic: {},
+      accounts: {},
       plugins: {},
       captcha_bypass: {},
       webhook: {}
@@ -365,11 +371,13 @@ async function startBots(): Promise<void> {
       }
     });
 
+    options.accounts = accountManager.getAccounts();
+
     for (const name in plugins) {
       options.plugins[name.replaceAll('-', '_')] = plugins[name].enable;
     }
 
-    const text = `Запуск ${options.basic.bots_count} ботов с версией ${options.basic.version} на сервер ${options.basic.address}...`;
+    const text = `Запуск ботов на сервер ${options.basic.address}...`;
 
     log(text, 'info');
     message('Cистема', text);
@@ -385,10 +393,13 @@ async function startBots(): Promise<void> {
       monitoringManager.chatMonitoring = (document.getElementById('settings_chbx_use-chat-monitoring') as HTMLInputElement).checked;
       monitoringManager.mapMonitoring = (document.getElementById('settings_chbx_use-map-monitoring') as HTMLInputElement).checked;
       monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('monitoring_option_chat-history-length') as HTMLInputElement).value || '50');
-      monitoringManager.antiCaptchaType = (document.getElementById('settings_chbx_use-anti-captcha') as HTMLInputElement).checked ? (document.getElementById('captcha-bypass_select_captcha-type') as HTMLSelectElement).value : null;
 
       monitoringManager.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
       monitoringManager.wait();
+
+      if (options.basic.use_anti_captcha) {
+        captchaBypassManager.enable(options.captcha_bypass.solve_mode);
+      }
 
       radarManager.enable();
     }
@@ -410,6 +421,7 @@ async function stopBots(): Promise<void> {
 
       chartManager.disable();
       monitoringManager.disable();
+      captchaBypassManager.disable();
       radarManager.disable();
 
       log('Мониторинг выключен', 'system');
@@ -779,6 +791,40 @@ function registerAllTriggerFunctions() {
       container.style.display = 'flex';
     } else {
       container.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('settings_chbx_use-accounts', 'checkbox', (current: HTMLInputElement) => {
+    const openAccountsSectionBtn = document.getElementById('accounts') as HTMLButtonElement;
+    const openProxySectionBtn = document.getElementById('proxy') as HTMLButtonElement;
+
+    const useProxyChbx = document.getElementById('settings_chbx_use-proxy') as HTMLInputElement;
+    const botsCountInput = document.getElementById('settings_option_bots-count') as HTMLInputElement;
+    const selectNicknameType = document.getElementById('settings_select_nickname-type') as HTMLSelectElement;
+    const selectPasswordType = document.getElementById('settings_select_password-type') as HTMLSelectElement;
+    const nicknameTemplateInput = document.getElementById('settings_option_nickname-template') as HTMLInputElement;
+    const passwordTemplateInput = document.getElementById('settings_option_password-template') as HTMLInputElement;
+
+    if (current.checked) {
+      openProxySectionBtn.style.display = 'none';
+      openAccountsSectionBtn.style.display = 'flex';
+
+      useProxyChbx.disabled = true;
+      botsCountInput.disabled = true;
+      selectNicknameType.disabled = true;
+      selectPasswordType.disabled = true;
+      nicknameTemplateInput.disabled = true;
+      passwordTemplateInput.disabled = true;
+    } else {
+      openProxySectionBtn.style.display = 'flex';
+      openAccountsSectionBtn.style.display = 'none';
+
+      useProxyChbx.disabled = false;
+      botsCountInput.disabled = false;
+      selectNicknameType.disabled = false;
+      selectPasswordType.disabled = false;
+      nicknameTemplateInput.disabled = false;
+      passwordTemplateInput.disabled = false;
     }
   });
 
@@ -1284,7 +1330,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initConfig();
 
-    proxyManager.init();
+    accountManager.init();
+    proxyCollectorManager.init();
     chartManager.init();
     radarManager.init();
 
@@ -1307,6 +1354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     await monitoringManager.init();
+    await captchaBypassManager.init();
     
     await initFunctions();
 

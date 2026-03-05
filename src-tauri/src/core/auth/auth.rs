@@ -40,12 +40,16 @@ pub async fn default_authorize(bot: &Client) {
       }
 
       if c.as_str() != "!NONE" {
+        let Some(password) = profile.password else {
+          return;
+        };
+
         sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
 
         let cmd = template
           .clone()
           .replace("@cmd", &c)
-          .replace("@pass", &profile.password);
+          .replace("@pass", &password);
 
         bot.chat(&cmd);
 
@@ -99,10 +103,14 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
       }
 
       if c.as_str() != "!NONE" {
+        let Some(password) = profile.password else {
+          return;
+        };
+
         let cmd = template
           .clone()
           .replace("@cmd", &c)
-          .replace("@pass", &profile.password);
+          .replace("@pass", &password);
 
         bot.chat(&cmd);
 

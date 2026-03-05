@@ -1,9 +1,10 @@
 import { writeFile } from '@tauri-apps/plugin-fs';
+import { path } from '@tauri-apps/api';
+
 import { plugins } from '../common/structs';
 import { log } from '../logger';
 import { invokeElementFunction, updatePluginState } from '../main';
 import { message } from '../message';
-import { path } from '@tauri-apps/api';
 
 type ConfigValue = string | number | boolean | null;
 
@@ -41,7 +42,7 @@ function setValue(id: string, value: ConfigValue): void {
 }
 
 export function initConfig(): void {
-  const current_config = localStorage.getItem('salarixionion:config');
+  const current_config = localStorage.getItem('salarixionion:storage:config');
 
   if (current_config) {
     log('Загрузка конфига...', 'system');
@@ -59,12 +60,10 @@ export function initConfig(): void {
 
     log('Конфиг успешно загружен', 'system');
   } else {
-    localStorage.setItem('salarixionion:config', JSON.stringify({}, null, 2));
+    localStorage.setItem('salarixionion:storage:config', JSON.stringify({}, null, 2));
   }
 
-  let latest: any = null;
-
-  setInterval(async () => {
+  setInterval(() => {
     const elements = document.querySelectorAll<HTMLElement>('[keep="true"]');
     const config: Record<string, ConfigValue> = {};
 
@@ -86,12 +85,8 @@ export function initConfig(): void {
         config[id] = el.selectedIndex;
       }
     }
-
-    if (JSON.stringify(config) === JSON.stringify(latest)) return;
-
-    localStorage.setItem('salarixionion:config', JSON.stringify(config, null, 2))
-
-    latest = config;
+    
+    localStorage.setItem('salarixionion:storage:config', JSON.stringify(config, null, 2))
   }, 1500);
 }
 
@@ -116,7 +111,7 @@ export function uploadConfig(config: any): void {
 
 export async function shareConfig(directory: string): Promise<void> {
   try {
-    const config = localStorage.getItem('salarixionion:config');
+    const config = localStorage.getItem('salarixionion:storage:config');
 
     if (config) {
       const clean_config: Record<string, ConfigValue> = {};
