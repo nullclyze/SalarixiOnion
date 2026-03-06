@@ -138,15 +138,13 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Other
 .venv
 .myenv
 .pyc
 *.spec
-
 build
-out
-
 node_modules
-dist
 dist-ssr
 *.local
+.vscode
