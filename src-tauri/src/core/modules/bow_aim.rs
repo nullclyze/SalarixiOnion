@@ -6,13 +6,11 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{
-  get_nearest_entity,
-  release_use_item, start_use_item, take_item, EntityFilter,
-};
+use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
+use crate::extensions::BotInteractExt;
+use crate::extensions::{BotDefaultExt, BotInventoryExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BowAimModule;
@@ -46,7 +44,7 @@ impl BowAimModule {
   fn aiming(&self, username: String, filter: EntityFilter) {
     tokio::spawn(async move {
       BOT_REGISTRY
-        .get_bot(&username, async |bot| {
+        .async_get_bot(&username, async |bot| {
           let nickname = bot.username();
 
           if STATES.get_state(&nickname, "can_looking") {
@@ -86,11 +84,11 @@ impl BowAimModule {
       if let Some(slot) = self.find_bow_in_inventory(bot) {
         STATES.set_mutual_states(&nickname, "interacting", true);
 
-        take_item(bot, slot, true).await;
+        bot.take_item(slot, true).await;
 
         sleep(Duration::from_millis(50)).await;
 
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_held_item(InteractionHand::MainHand);
 
         sleep(Duration::from_millis(randuint(900, 1100))).await;
 
@@ -124,7 +122,7 @@ impl BowAimModule {
           sleep(Duration::from_millis(50)).await;
         }
 
-        release_use_item(bot);
+        bot.release_use_held_item();
 
         STATES.set_mutual_states(&nickname, "interacting", false);
       }
@@ -162,7 +160,7 @@ impl BowAimModule {
 
   pub async fn enable(&self, username: &str, options: &BowAimOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         self.shooting(bot, options).await;
       })
       .await;
@@ -171,11 +169,9 @@ impl BowAimModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "bow-aim");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        release_use_item(bot);
-      })
-      .await;
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.release_use_held_item();
+    }
 
     STATES.set_mutual_states(username, "looking", false);
     STATES.set_mutual_states(username, "interacting", false);

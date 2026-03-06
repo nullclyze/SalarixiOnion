@@ -8,8 +8,8 @@ use tokio::time::sleep;
 
 use crate::core::*;
 use crate::emit::*;
+use crate::extensions::BotDefaultExt;
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 use crate::webhook::*;
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -31,9 +31,7 @@ const ACCOUNTS_WITH_SKINS: &[&str] = &[
 
 pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyhow::Result<()> {
   match event {
-    Event::Login => {
-      let username = bot.username();
-
+    Event::Init => {
       if let Some(opts) = current_options() {
         bot.set_client_information(ClientInformation {
           view_distance: opts.basic.view_distance,
@@ -56,13 +54,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           ..Default::default()
         });
       }
-
+    }
+    Event::Login => {
+      let username = bot.name();
       send_log(format!("Бот {} подключается...", username), "system");
-
-      PROFILES.set_str(&username, "status", "Соединение...");
+      PROFILES.set_status(&username, ProfileStatus::Connecting);
     }
     Event::Spawn => {
-      let username = bot.username();
+      let username = bot.name();
 
       BOT_REGISTRY.register_bot(&username, bot.clone());
 
@@ -73,7 +72,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       TASKS.push(&username);
       STATES.push(&username);
 
-      PROFILES.set_str(&username, "status", "Онлайн");
+      PROFILES.set_status(&username, ProfileStatus::Online);
 
       if let Some(options) = current_options() {
         let pos = bot.feet_pos();
@@ -165,19 +164,19 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       }
     }
     Event::Disconnect(packet) => {
-      let username = bot.username();
+      let username = bot.name();
 
       TASKS.reset(&username);
       PLUGIN_MANAGER.destroy_all_tasks(&username);
 
-      BOT_REGISTRY.remove_bot(&username);
+      BOT_REGISTRY.take_bot(&username).await;
 
       PROFILES.set_bool(&username, "logined", false);
       PROFILES.set_bool(&username, "captcha_caught", false);
       STATES.reset(&username);
       TASKS.remove(&username);
 
-      PROFILES.set_str(&username, "status", "Оффлайн");
+      PROFILES.set_status(&username, ProfileStatus::Offline);
 
       if let Some(text) = packet {
         if let Some(options) = current_options() {
@@ -200,24 +199,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       }
     }
     Event::Chat(packet) => {
-      let nickname = bot.username();
+      let nickname = bot.name();
 
       if let Some(options) = current_options() {
         if options.basic.use_chat_monitoring {
-          let sender = packet.sender().unwrap_or("unknown".to_string());
-
-          let mut message = packet.message().to_html();
-
-          for (username, _) in PROFILES.get_all() {
-            if username == sender {
-              message = format!("%hbБот%sc ~ {}", message);
-              break;
-            }
-          }
-
           send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
             receiver: nickname.clone(),
-            message: message,
+            message: packet.message().to_html(),
           }));
         }
 
@@ -229,7 +217,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
               options.captcha_bypass.required_url_part,
             ) {
               if let Some(profile) = PROFILES.get(&nickname) {
-                if !profile.captcha.caught {
+                if !profile.captcha_caught {
                   PROFILES.set_bool(&nickname, "captcha_caught", true);
 
                   if options.basic.use_webhook && options.webhook.send_information {
@@ -269,48 +257,36 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       trigger_authorize(&bot, packet.message().to_string()).await;
     }
     Event::Tick => {
-      let nickname = bot.username();
+      let nickname = bot.name();
 
       if let Some(profile) = PROFILES.get(&nickname) {
-        if profile.status.as_str() == "Онлайн" {
+        if profile.status == ProfileStatus::Online {
           if !bot.workable() {
             return Ok(());
           }
 
-          let ping = if let Some(tab) = bot.get_players() {
-            let mut result = 0;
-
-            for (_, info) in tab.iter() {
-              if info.profile.name == nickname {
-                result = info.latency as u32;
-                break;
-              }
-            }
-
-            result
-          } else {
-            0
-          };
-
-          PROFILES.set_num(&nickname, "ping", ping);
+          PROFILES.set_num(&nickname, "ping", bot.ping());
           PROFILES.set_num(&nickname, "health", bot.get_health() as u32);
-          PROFILES.set_num(&nickname, "satiety", bot.get_satiety());
         }
       }
     }
     Event::Packet(packet) => match &*packet {
       ClientboundGamePacket::MapItemData(data) => {
-        let nickname = bot.username();
+        let nickname = bot.name();
 
         if let Some(options) = current_options() {
           if options.basic.use_anti_captcha {
             if options.captcha_bypass.captcha_type.as_str() == "map" {
               if let Some(map_patch) = &data.color_patch.0 {
                 if let Some(profile) = PROFILES.get(&nickname) {
-                  if !profile.captcha.caught {
+                  if !profile.captcha_caught {
                     PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(map_patch.width as u32, map_patch.height as u32, &map_patch.map_colors);
+                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(
+                      map_patch.width as u32,
+                      map_patch.height as u32,
+                      &map_patch.map_colors,
+                    );
 
                     if options.basic.use_webhook && options.webhook.send_information {
                       send_webhook(

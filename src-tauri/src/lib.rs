@@ -5,8 +5,8 @@ use std::thread;
 mod common;
 mod core;
 mod emit;
+mod extensions;
 mod generators;
-mod methods;
 mod quick;
 mod rpc;
 mod script;
@@ -196,7 +196,7 @@ async fn stop_script() {
 #[tauri::command]
 async fn render_map(nickname: String) -> Option<String> {
   let base64_code = BOT_REGISTRY
-    .get_bot(&nickname, async |bot| MAP_RENDERER.render(bot))
+    .async_get_bot(&nickname, async |bot| MAP_RENDERER.render(bot))
     .await;
 
   base64_code

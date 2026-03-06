@@ -5,10 +5,9 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::*;
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt, BotMovementExt};
 use crate::generators::randchance;
-use crate::methods::SafeClientMethods;
 
 #[derive(Clone, Copy)]
 struct Food {
@@ -33,7 +32,7 @@ impl AutoEatPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -53,7 +52,7 @@ impl AutoEatPlugin {
     let satiety = bot.get_satiety();
     let health = bot.get_health();
 
-    let nickname = bot.username();
+    let nickname = bot.name();
 
     if satiety < 20 || health < 15.0 {
       let food_list = self.find_food_in_inventory(bot);
@@ -74,7 +73,7 @@ impl AutoEatPlugin {
             STATES.set_state(&nickname, "can_interacting", false);
             STATES.set_mutual_states(&nickname, "eating", true);
 
-            take_item(bot, best_food.slot, false).await;
+            bot.take_item(best_food.slot, false).await;
             sleep(Duration::from_millis(50)).await;
             self.start_eating(bot).await;
             sleep(Duration::from_millis(50)).await;
@@ -92,7 +91,7 @@ impl AutoEatPlugin {
 
   async fn start_eating(&self, bot: &Client) {
     bot.freeze_move();
-    start_use_item(bot, InteractionHand::MainHand);
+    bot.start_use_held_item(InteractionHand::MainHand);
     sleep(Duration::from_millis(1800)).await;
     bot.unfreeze_move();
   }

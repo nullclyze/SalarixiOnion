@@ -2,7 +2,7 @@ use azalea::block::BlockState;
 use azalea::core::position::BlockPos;
 use azalea::ecs::query::{With, Without};
 use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
-use azalea::entity::{Dead, LocalEntity, Physics, Position};
+use azalea::entity::{Dead, LocalEntity, Position};
 use azalea::player::GameProfileComponent;
 use azalea::prelude::*;
 use azalea::world::MinecraftEntityId;
@@ -10,16 +10,7 @@ use azalea::Vec3;
 use bevy_ecs::entity::Entity;
 
 use crate::core::*;
-use crate::methods::SafeClientMethods;
-
-/// Функция получения физики бота
-pub fn get_bot_physics(bot: &Client) -> Option<Physics> {
-  if let Some(physics) = bot.get_component::<Physics>() {
-    return Some(physics);
-  }
-
-  None
-}
+use crate::extensions::BotDefaultExt;
 
 /// Функция получения состояния блока
 pub fn get_block_state(bot: &Client, block_pos: BlockPos) -> Option<BlockState> {
@@ -69,7 +60,7 @@ pub fn get_average_coordinates_of_bots(positions: &Vec<Vec3>) -> (f64, f64, f64)
 pub async fn get_player_uuid(nickname: String) -> Option<String> {
   for username in PROFILES.get_all().keys() {
     let uuid = BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         let Some(tab_list) = bot.get_players() else {
           return None;
         };
@@ -90,6 +81,38 @@ pub async fn get_player_uuid(nickname: String) -> Option<String> {
   }
 
   None
+}
+
+/// Функция конвертации индекса inventory-слота в индекс hotbar-слота
+pub fn convert_inventory_slot_to_hotbar_slot(slot: usize) -> Option<u8> {
+  match slot {
+    36 => Some(0),
+    37 => Some(1),
+    38 => Some(2),
+    39 => Some(3),
+    40 => Some(4),
+    41 => Some(5),
+    42 => Some(6),
+    43 => Some(7),
+    44 => Some(8),
+    _ => None,
+  }
+}
+
+/// Функция конвертации индекса hotbar-слота в индекс inventory-слота
+pub fn convert_hotbar_slot_to_inventory_slot(slot: u8) -> usize {
+  match slot {
+    0 => 36,
+    1 => 37,
+    2 => 38,
+    3 => 39,
+    4 => 40,
+    5 => 41,
+    6 => 42,
+    7 => 43,
+    8 => 44,
+    _ => 36,
+  }
 }
 
 /// Структура EntityFilter

@@ -8,8 +8,8 @@ use tokio::time::sleep;
 
 use crate::common::get_block_state;
 use crate::core::*;
+use crate::extensions::BotMovementExt;
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StealerModule;
@@ -151,7 +151,7 @@ impl StealerModule {
 
   pub async fn enable(&self, username: &str, options: &StealerOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         self.stealing(bot, options).await;
       })
       .await;

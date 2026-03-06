@@ -10,12 +10,10 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::common::{
-  get_block_state, get_bot_physics, take_item,
-};
+use crate::common::get_block_state;
 use crate::core::*;
+use crate::extensions::{BotInventoryExt, BotPhysicsExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiFallModule;
@@ -82,7 +80,7 @@ impl AntiFallModule {
     for (slot, item) in menu.slots().iter().enumerate() {
       if !item.is_empty() {
         if item.kind() == ItemKind::WaterBucket {
-          take_item(bot, slot, true).await;
+          bot.take_item(slot, true).await;
           return true;
         }
       }
@@ -93,7 +91,7 @@ impl AntiFallModule {
 
   async fn hovering_anti_fall(&self, bot: &Client, options: &AntiFallOptions) {
     loop {
-      let velocity_y = if let Some(physics) = get_bot_physics(bot) {
+      let velocity_y = if let Some(physics) = bot.get_physics() {
         physics.velocity.y
       } else {
         0.0
@@ -124,7 +122,7 @@ impl AntiFallModule {
 
   async fn teleport_anti_fall(&self, bot: &Client, options: &AntiFallOptions) {
     loop {
-      if let Some(physics) = get_bot_physics(bot) {
+      if let Some(physics) = bot.get_physics() {
         let velocity_y = physics.velocity.y;
 
         if velocity_y < options.fall_velocity.unwrap_or(-0.5) {
@@ -151,7 +149,7 @@ impl AntiFallModule {
     let distance_to_ground = options.distance_to_ground.unwrap_or(4);
 
     loop {
-      let velocity_y = if let Some(physics) = get_bot_physics(bot) {
+      let velocity_y = if let Some(physics) = bot.get_physics() {
         physics.velocity.y
       } else {
         0.0
@@ -199,7 +197,7 @@ impl AntiFallModule {
 
   pub async fn enable(&self, username: &str, options: &AntiFallOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "hovering" => {
           self.hovering_anti_fall(bot, options).await;
         }

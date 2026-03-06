@@ -222,7 +222,7 @@ pub struct AccountOptions {
   pub password: Option<String>,
   pub proxy: Option<String>,
   pub proxy_username: Option<String>,
-  pub proxy_password: Option<String>
+  pub proxy_password: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -257,7 +257,7 @@ pub struct WebhookOptions {
 #[derive(Debug)]
 struct CustomAccount {
   object: Account,
-  options: Option<AccountOptions>
+  options: Option<AccountOptions>,
 }
 
 /// Функция генерации никнейма или пароля
@@ -338,7 +338,7 @@ pub fn active_bots_count() -> i32 {
   let mut count = 0;
 
   for (_, profile) in PROFILES.get_all() {
-    if profile.status.to_lowercase().as_str() == "онлайн" {
+    if profile.status == ProfileStatus::Online {
       count += 1;
     }
   }
@@ -398,9 +398,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
   if options.basic.use_webhook {
     send_webhook(
       options.webhook.url.clone(),
-      format!(
-        "Запуск ботов на сервер {}...", options.basic.address
-      ),
+      format!("Запуск ботов на сервер {}...", options.basic.address),
     );
   }
 
@@ -445,12 +443,12 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
           for (username, opts) in &options.accounts {
             accounts.push(CustomAccount {
               object: Account::offline(username),
-              options: Some(opts.clone())
+              options: Some(opts.clone()),
             });
 
             PROFILES.push(username, opts.password.clone());
           }
-        } else {  
+        } else {
           for _ in 0..options.basic.bots_count {
             let username = generate_username_or_password(
               "nickname",
@@ -460,7 +458,9 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
             let password;
 
-            if options.basic.password_type.as_str() == "custom" && options.basic.password_template.as_str() == "" { 
+            if options.basic.password_type.as_str() == "custom"
+              && options.basic.password_template.as_str() == ""
+            {
               password = None;
             } else {
               password = Some(generate_username_or_password(
@@ -472,7 +472,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
             accounts.push(CustomAccount {
               object: Account::offline(&username),
-              options: None
+              options: None,
             });
 
             PROFILES.push(&username, password);
@@ -821,7 +821,7 @@ impl ModuleManager {
             .map_err(|e| format!("Ошибка парсинга опций: {}", e))
             .unwrap();
 
-          self.stalker.stop(&username).await;
+          self.stalker.stop(&username);
 
           if options.state {
             let nickname = username.clone();
@@ -832,7 +832,7 @@ impl ModuleManager {
 
             run_task(&username, "stalker", task);
           } else {
-            self.stalker.stop(&username).await;
+            self.stalker.stop(&username);
           }
         }
         "flight" => {

@@ -3,9 +3,8 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{inventory_move_item};
 use crate::core::*;
-use crate::methods::SafeClientMethods;
+use crate::extensions::{BotDefaultExt, BotInventoryExt};
 
 pub struct AutoTotemPlugin;
 
@@ -24,7 +23,7 @@ impl AutoTotemPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -51,7 +50,9 @@ impl AutoTotemPlugin {
       for (slot, item) in menu.slots().iter().enumerate() {
         if slot != 45 {
           if item.kind() == ItemKind::TotemOfUndying {
-            inventory_move_item(bot, ItemKind::TotemOfUndying, slot, 45, true).await;
+            bot
+              .inventory_move_item(ItemKind::TotemOfUndying, slot, 45, true)
+              .await;
           }
         }
       }

@@ -4,37 +4,34 @@ use crate::emit::*;
 
 /// Вспомогательная функция отправки сообщения в чат от бота
 pub fn send_message_from_bot(username: String, message: String) {
-  tokio::spawn(async move {
-    BOT_REGISTRY
-      .get_bot(&username, async |bot| {
-        bot.chat(message);
-      })
-      .await;
-  });
+  let Some(bot) = BOT_REGISTRY.get_bot(&username) else {
+    return;
+  };
+
+  bot.chat(message);
 }
 
 /// Вспомогательная функция, позволяющая сбросить все задачи и состояния бота
 pub fn reset_bot(username: String) {
-  tokio::spawn(async move {
-    BOT_REGISTRY
-      .get_bot(&username, async |bot| {
-        TASKS.reset(&username);
-        STATES.reset(&username);
+  let Some(bot) = BOT_REGISTRY.get_bot(&username) else {
+    return;
+  };
 
-        bot.set_crouching(false);
-        bot.set_jumping(false);
+  TASKS.reset(&username);
+  STATES.reset(&username);
 
-        send_log(
-          format!("Все задачи и состояния бота {} сброшены", username),
-          "info",
-        );
-        send_message(
-          "Система",
-          format!("Все задачи и состояния бота {} сброшены", username),
-        );
-      })
-      .await;
-  });
+  bot.set_crouching(false);
+  bot.set_jumping(false);
+
+  send_log(
+    format!("Все задачи и состояния бота {} сброшены", username),
+    "info",
+  );
+
+  send_message(
+    "Система",
+    format!("Все задачи и состояния бота {} сброшены", username),
+  );
 }
 
 /// Вспомогательная функция отключения бота

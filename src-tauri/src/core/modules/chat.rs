@@ -250,7 +250,7 @@ impl ChatModule {
 
   pub async fn enable(&self, username: &str, options: &ChatOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "message" => {
           self.message(bot, &options).await;
         }

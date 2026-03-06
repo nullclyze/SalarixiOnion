@@ -4,8 +4,8 @@ use tokio::time::sleep;
 
 use crate::common::*;
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotRotationExt};
 use crate::generators::randuint;
-use crate::methods::SafeClientMethods;
 
 pub struct AutoLookPlugin;
 
@@ -24,7 +24,7 @@ impl AutoLookPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -41,9 +41,9 @@ impl AutoLookPlugin {
   }
 
   async fn look(&self, bot: &Client) {
-    if STATES.get_state(&bot.username(), "can_looking") && bot.is_goto_target_reached() {
+    if STATES.get_state(&bot.name(), "can_looking") && bot.is_goto_target_reached() {
       if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, "any", 14.0)) {
-        look_at_entity(bot, entity, true);
+        bot.look_at_entity(entity, true);
         sleep(Duration::from_millis(randuint(50, 100))).await;
       }
     }

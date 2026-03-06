@@ -8,12 +8,10 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 use tokio::time::sleep;
 
-use crate::common::{
-  get_average_coordinates_of_bots, go_to, inventory_drop_item, take_item, this_is_solid_block,
-};
+use crate::common::{get_average_coordinates_of_bots, this_is_solid_block};
 use crate::core::{BOT_REGISTRY, PROFILES, STATES, TASKS};
+use crate::extensions::{go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt};
 use crate::generators::{randfloat, randint, randuint};
-use crate::methods::SafeClientMethods;
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> =
   Lazy::new(|| Arc::new(QuickTaskManager::new()));
@@ -33,11 +31,11 @@ impl QuickTaskManager {
 
       tokio::spawn(async move {
         BOT_REGISTRY
-          .get_bot(&nickname, async |bot| match name.as_str() {
+          .async_get_bot(&nickname, async |bot| match name.as_str() {
             "clear-inventory" => {
               if let Some(menu) = bot.get_inventory_menu() {
                 for (slot, _) in menu.slots().iter().enumerate() {
-                  inventory_drop_item(bot, slot, true);
+                  bot.inventory_drop_item(slot, true);
                 }
               }
             }
@@ -99,7 +97,7 @@ impl QuickTaskManager {
                   STATES.set_mutual_states(&nickname, "looking", true);
                   STATES.set_mutual_states(&nickname, "interacting", true);
 
-                  take_item(bot, slot, true).await;
+                  bot.take_item(slot, true).await;
 
                   let original_direction_1 = bot.direction();
 
@@ -209,7 +207,7 @@ impl QuickTaskManager {
                     STATES.set_mutual_states(&nickname, "looking", true);
                     STATES.set_mutual_states(&nickname, "interacting", true);
 
-                    take_item(bot, slot, true).await;
+                    bot.take_item(slot, true).await;
 
                     count = count + 1;
 
@@ -247,11 +245,11 @@ impl QuickTaskManager {
               let mut positions = vec![];
 
               for username in PROFILES.get_all().keys() {
-                BOT_REGISTRY
-                  .get_bot(username, async |b| {
-                    positions.push(b.feet_pos());
-                  })
-                  .await;
+                let Some(b) = BOT_REGISTRY.get_bot(username) else {
+                  continue;
+                };
+
+                positions.push(b.feet_pos());
               }
 
               let average_cords = get_average_coordinates_of_bots(&positions);
@@ -273,11 +271,11 @@ impl QuickTaskManager {
               let mut positions = vec![];
 
               for username in PROFILES.get_all().keys() {
-                BOT_REGISTRY
-                  .get_bot(username, async |b| {
-                    positions.push(b.feet_pos());
-                  })
-                  .await;
+                let Some(b) = BOT_REGISTRY.get_bot(username) else {
+                  continue;
+                };
+
+                positions.push(b.feet_pos());
               }
 
               let average_cords = get_average_coordinates_of_bots(&positions);
@@ -292,11 +290,11 @@ impl QuickTaskManager {
               let mut positions = vec![];
 
               for username in PROFILES.get_all().keys() {
-                BOT_REGISTRY
-                  .get_bot(username, async |b| {
-                    positions.push(b.feet_pos());
-                  })
-                  .await;
+                let Some(b) = BOT_REGISTRY.get_bot(username) else {
+                  continue;
+                };
+
+                positions.push(b.feet_pos());
               }
 
               let average_cords = get_average_coordinates_of_bots(&positions);

@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::{
-  inventory_drop_item, inventory_left_click, inventory_right_click, inventory_swap_click,
-};
 use crate::core::BOT_REGISTRY;
 use crate::emit::*;
+use crate::extensions::BotInventoryExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InventoryModule;
@@ -23,7 +21,7 @@ impl InventoryModule {
 
   pub async fn interact(&self, username: &str, options: &InventoryOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         if let Some(s) = options.slot {
           if options.state.as_str() == "select" {
             if s <= 8 {
@@ -40,26 +38,26 @@ impl InventoryModule {
           } else {
             match options.state.as_str() {
               "drop" => {
-                inventory_drop_item(bot, s, true);
+                bot.inventory_drop_item(s, true);
               }
               "left-click" => {
-                inventory_left_click(bot, s, true);
+                bot.inventory_left_click(s, true);
               }
               "right-click" => {
-                inventory_right_click(bot, s, true);
+                bot.inventory_right_click(s, true);
               }
               "swap" => {
-                inventory_swap_click(
-                  bot,
-                  s,
-                  if let Some(t) = options.target_slot {
-                    t
-                  } else {
-                    0
-                  },
-                  true,
-                )
-                .await;
+                bot
+                  .inventory_swap_click(
+                    s,
+                    if let Some(t) = options.target_slot {
+                      t
+                    } else {
+                      0
+                    },
+                    true,
+                  )
+                  .await;
               }
               _ => {}
             }

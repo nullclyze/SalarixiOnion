@@ -9,8 +9,8 @@ use tokio::time::sleep;
 
 use crate::common::get_block_state;
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinerModule;
@@ -285,7 +285,7 @@ impl MinerModule {
 
   pub async fn enable(&self, username: &str, options: &MinerOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "default" => {
           self.default_mine(bot, options).await;
         }
@@ -300,16 +300,13 @@ impl MinerModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "miner");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.left_click_mine(false);
-        bot.set_crouching(false);
-        bot.walk(WalkDirection::None);
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.left_click_mine(false);
+      bot.set_crouching(false);
+      bot.stop_move();
+    }
 
-        STATES.set_mutual_states(username, "interacting", false);
-        STATES.set_mutual_states(username, "walking", false);
-        STATES.set_mutual_states(username, "looking", false);
-      })
-      .await;
+    STATES.set_mutual_states(username, "interacting", false);
+    STATES.set_mutual_states(username, "looking", false);
   }
 }

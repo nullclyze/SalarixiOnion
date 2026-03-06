@@ -3,12 +3,13 @@ import { listen } from '@tauri-apps/api/event';
 
 import { log } from '../logger';
 import { date } from '../helpers/date';
+import { process } from '../main';
 
 
 interface BotProfile {
-  status: string;
+  status: any;
   username: string;
-  password: string;
+  password: string | null;
   proxy: { 
     ip_address: string;
     proxy: string | null;
@@ -17,22 +18,13 @@ interface BotProfile {
   };
   ping: number;
   health: number;
-  satiety: number;
   registered: boolean;
   skin_is_set: boolean;
-  captcha: {
-    caught: boolean,
-    link_to_captcha: string | null,
-    captcha_image: string | null,
-    captcha_image_parts: Array<String>
-  };
-  plugins_loaded: boolean;
+  captcha_caught: boolean;
   group: string;
 }
 
 export class MonitoringManager {
-  private active: boolean = false;
-
   private usernameList: string[] = [];
 
   private statusText: HTMLElement | null = null;
@@ -69,7 +61,7 @@ export class MonitoringManager {
             this.chatHistoryFilters[receiver] = 'all';
           }
 
-          if (!this.filterMessage(this.chatHistoryFilters[receiver], String(message))) return;
+          if (!this.filterMessage(this.chatHistoryFilters[receiver], message)) return;
 
           const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
 
@@ -81,7 +73,7 @@ export class MonitoringManager {
 
           line.innerHTML = `
             <div class="time">${date()}</div>
-            <div class="msg">${String(message).replace('%hb', '<span class="bot-tag">').replace('%sc', '</span>')}</div>
+            <div class="msg">${message}</div>
           `;
 
           chat.appendChild(line);
@@ -135,17 +127,15 @@ export class MonitoringManager {
     this.statusText!.style.color = '#646464f7';
 
     this.cards!.innerHTML = '';
-    this.cards!.style.display = 'grid';
+    this.cards!.style.display = 'flex';
   }
 
   public enable(delay: number): void {
     try {
-      this.active = true;
-
       let isFirst = true;
 
       const interval = setInterval(async () => {
-        if (!this.active) {
+        if (process === 'sleep') {
           clearInterval(interval);
           return;
         }
@@ -177,8 +167,6 @@ export class MonitoringManager {
   }
 
   public disable(): void {
-    this.active = false;
-    
     for (const [id, data] of this.listeners) {
       document.getElementById(id)?.removeEventListener(data.event, data.listener);
     }
@@ -209,7 +197,9 @@ export class MonitoringManager {
       'killaura', 'bow_aim', 'AutoFarm', 
       'AFK', 'Travelers', 'miner', 
       'Stealer', 'Farmer', 'Spamming', 
-      'PvE', 'PvP', 'afk_group'
+      'PvE', 'PvP', 'afk_group',
+      'MyGroup', 'Group', 'group1',
+      'GroupOne', 'Stalkers', 'my_group'
     ];
     
     const groupNameExample = groupNameExamples[Math.floor(Math.random() * groupNameExamples.length)];
@@ -224,7 +214,7 @@ export class MonitoringManager {
           <img src="${steveIconPath.src}" class="image" draggable="false">
           <div class="text">
             <div class="username">${username}</div>
-            <div class="status" id="monitoring-status-${username}">?</div>
+            <div class="status" id="monitoring-status-${username}">Preparation</div>
           </div>
         </div>
 
@@ -237,7 +227,7 @@ export class MonitoringManager {
         <p class="line">Пинг: <span id="monitoring-ping-${username}">${profile.ping}</span>ms</p>
         <p class="line">Здоровье: <span id="monitoring-health-${username}">${profile.health}</span> / 20</p>
         <p class="line">Прокси: <span id="monitoring-proxy-${username}">${profile.proxy.ip_address}</span></p>
-        <p class="line">Пароль: <span>${profile.password}</span></p>
+        <p class="line">Пароль: <span>${profile.password ?? 'No password'}</span></p>
       </div>
 
       <div class="buttons">
@@ -362,13 +352,11 @@ export class MonitoringManager {
     let statusColor = '';
 
     switch (profile.status) {
-      case 'Соединение...':
+      case 'Connecting':
         statusColor = '#8f8f8fff'; break;
-      case 'Онлайн':
+      case 'Online':
         statusColor = '#22ed17ff'; break;
-      case 'Оффлайн':
-        statusColor = '#ed1717ff'; break;
-      case 'Повреждён':
+      case 'Offline':
         statusColor = '#ed1717ff'; break;
     }
 

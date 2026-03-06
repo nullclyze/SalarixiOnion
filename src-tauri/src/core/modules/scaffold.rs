@@ -6,12 +6,11 @@ use tokio::time::sleep;
 
 use crate::common::{
   convert_hotbar_slot_to_inventory_slot, convert_inventory_slot_to_hotbar_slot, get_block_state,
-  get_bot_physics, take_item,
   this_is_solid_block,
 };
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScaffoldModule;
@@ -68,7 +67,7 @@ impl ScaffoldModule {
       }
 
       if let Some(slot) = block_slot {
-        take_item(bot, slot, true).await;
+        bot.take_item(slot, true).await;
         return true;
       }
     }
@@ -101,11 +100,9 @@ impl ScaffoldModule {
           break;
         }
 
-        BOT_REGISTRY
-          .get_bot(&username, async |bot| {
-            bot.start_walking(WalkDirection::Backward);
-          })
-          .await;
+        if let Some(bot) = BOT_REGISTRY.get_bot(&username) {
+          bot.start_walking(WalkDirection::Backward);
+        }
 
         sleep(Duration::from_millis(50)).await;
       }
@@ -229,7 +226,7 @@ impl ScaffoldModule {
         self.direct_gaze(bot, options.min_gaze_degree_x, options.max_gaze_degree_x);
 
         let position = bot.position();
-        let velocity = if let Some(physics) = get_bot_physics(bot) {
+        let velocity = if let Some(physics) = bot.get_physics() {
           physics.velocity
         } else {
           Vec3::ZERO
@@ -269,7 +266,7 @@ impl ScaffoldModule {
 
   pub async fn enable(&self, username: &str, options: &ScaffoldOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         self.go_back(bot.username());
 
         match options.mode.as_str() {
@@ -294,15 +291,12 @@ impl ScaffoldModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "scaffold");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.set_crouching(false);
-        bot.walk(WalkDirection::None);
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.set_crouching(false);
+      bot.stop_move();
+    }
 
-        STATES.set_mutual_states(username, "walking", false);
-        STATES.set_mutual_states(username, "looking", false);
-        STATES.set_mutual_states(username, "interacting", false);
-      })
-      .await;
+    STATES.set_mutual_states(username, "looking", false);
+    STATES.set_mutual_states(username, "interacting", false);
   }
 }

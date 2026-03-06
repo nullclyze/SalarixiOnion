@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_nearest_entity, go_to, EntityFilter};
+use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
-use crate::methods::SafeClientMethods;
+use crate::extensions::{go_to, BotDefaultExt, BotMovementExt};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StalkerModule;
@@ -108,21 +108,19 @@ impl StalkerModule {
 
   pub async fn enable(&self, username: &str, options: &StalkerOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         self.stalking(bot, options).await;
       })
       .await;
   }
 
-  pub async fn stop(&self, username: &str) {
+  pub fn stop(&self, username: &str) {
     kill_task(username, "stalker");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.stop_move();
-        bot.stop_jumping();
-      })
-      .await;
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.stop_move();
+      bot.stop_jumping();
+    }
 
     STATES.set_mutual_states(&username, "looking", false);
   }

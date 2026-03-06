@@ -16,7 +16,7 @@ pub static BOT_REGISTRY: Lazy<Arc<BotRegistry>> = Lazy::new(|| Arc::new(BotRegis
 /// Так же данный реестр содержит в себе канал, по которому передаются все основные события для ботов (загрузить плагины, выполнить быструю задачу и так далее).
 pub struct BotRegistry {
   pub swarm: Arc<RwLock<Option<Swarm>>>,
-  pub bots: Arc<DashMap<String, Arc<RwLock<Option<Client>>>>>,
+  pub bots: Arc<DashMap<String, Arc<Client>>>,
   pub events: broadcast::Sender<RegistryEvent>,
 }
 
@@ -60,29 +60,28 @@ impl BotRegistry {
   }
 
   pub fn register_bot(&self, username: &str, bot: Client) {
-    self
-      .bots
-      .insert(username.to_string(), Arc::new(RwLock::new(Some(bot))));
+    self.bots.insert(username.to_string(), Arc::new(bot));
   }
 
   pub async fn take_bot(&self, username: &str) -> Option<Client> {
     let (_, cell) = self.bots.remove(username)?;
-    let mut guard = cell.write().await;
-    guard.take()
+    Some((*cell).clone())
   }
 
   pub fn remove_bot(&self, username: &str) {
     self.bots.remove(username);
   }
 
-  pub async fn get_bot<F, T>(&self, username: &str, f: F) -> Option<T>
+  pub fn get_bot(&self, username: &str) -> Option<Arc<Client>> {
+    self.bots.get(username).map(|cell| cell.clone())
+  }
+
+  pub async fn async_get_bot<F, T>(&self, username: &str, f: F) -> Option<T>
   where
     F: AsyncFnOnce(&Client) -> T,
   {
     if let Some(reference) = self.bots.get(username) {
-      if let Some(bot) = reference.read().await.as_ref() {
-        return Some(f(bot).await);
-      }
+      return Some(f(reference.as_ref()).await);
     }
 
     None
@@ -109,11 +108,7 @@ pub async fn registry_event_loop() {
     match event {
       RegistryEvent::LoadPlugins { username } => {
         if let Some(opts) = current_options() {
-          let _ = BOT_REGISTRY
-            .get_bot(&username, async |_| {
-              PLUGIN_MANAGER.load(&username, &opts.plugins);
-            })
-            .await;
+          PLUGIN_MANAGER.load(&username, &opts.plugins);
         }
       }
       RegistryEvent::ControlModules {
