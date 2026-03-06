@@ -28,7 +28,7 @@ const client = {
   version: '1.0.9'
 };
 
-let process: 'active' | 'sleep' = 'sleep';
+export let process: 'active' | 'sleep' = 'sleep';
 
 const accountManager = new AccountManager();
 const proxyCollectorManager = new ProxyCollectorManager();
@@ -398,7 +398,7 @@ async function startBots(): Promise<void> {
       monitoringManager.wait();
 
       if (options.basic.use_anti_captcha) {
-        captchaBypassManager.enable(options.captcha_bypass.solve_mode);
+        captchaBypassManager.enable(options.captcha_bypass.captcha_type, options.captcha_bypass.solve_mode);
       }
 
       radarManager.enable();

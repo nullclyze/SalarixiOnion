@@ -9,19 +9,25 @@ pub static PROFILES: Lazy<Arc<ProfileManager>> = Lazy::new(|| Arc::new(ProfileMa
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Profile {
-  pub status: String,
+  pub status: ProfileStatus,
   pub username: String,
   pub password: Option<String>,
   pub proxy: ProfileProxy,
   pub ping: u32,
   pub health: u32,
-  pub satiety: u32,
   pub registered: bool,
   pub logined: bool,
   pub skin_is_set: bool,
-  pub captcha: ProfileCaptcha,
-  pub plugins_loaded: bool,
+  pub captcha_caught: bool,
   pub group: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ProfileStatus {
+  Preparation,
+  Connecting,
+  Online,
+  Offline,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,18 +38,10 @@ pub struct ProfileProxy {
   pub password: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProfileCaptcha {
-  pub caught: bool,
-  pub link_to_captcha: Option<String>,
-  pub captcha_image: Option<String>,
-  pub captcha_image_parts: Vec<String>
-}
-
 impl Profile {
   pub fn new(username: &String, password: Option<String>) -> Self {
     Self {
-      status: "Соединение...".to_string(),
+      status: ProfileStatus::Preparation,
       username: username.to_string(),
       password: password,
       proxy: ProfileProxy {
@@ -54,23 +52,16 @@ impl Profile {
       },
       ping: 0,
       health: 0,
-      satiety: 0,
       registered: false,
       logined: false,
       skin_is_set: false,
-      captcha: ProfileCaptcha {
-        caught: false,
-        link_to_captcha: None,
-        captcha_image: None,
-        captcha_image_parts: Vec::new()
-      },
-      plugins_loaded: false,
+      captcha_caught: false,
       group: "global".to_string(),
     }
   }
 
-  pub fn set_status(&mut self, status: &str) {
-    self.status = status.to_string();
+  pub fn set_status(&mut self, status: ProfileStatus) {
+    self.status = status;
   }
 
   pub fn set_password(&mut self, password: &str) {
@@ -89,10 +80,6 @@ impl Profile {
     self.health = health;
   }
 
-  pub fn set_satiety(&mut self, satiety: u32) {
-    self.satiety = satiety;
-  }
-
   pub fn set_registered(&mut self, state: bool) {
     self.registered = state;
   }
@@ -106,11 +93,7 @@ impl Profile {
   }
 
   pub fn set_captcha_caught(&mut self, state: bool) {
-    self.captcha.caught = state;
-  }
-
-  pub fn set_plugins_loaded(&mut self, state: bool) {
-    self.plugins_loaded = state;
+    self.captcha_caught = state;
   }
 
   pub fn set_group(&mut self, group: &str) {
@@ -142,12 +125,18 @@ impl ProfileManager {
     send_log(format!("Профили ботов очищены"), "extended");
   }
 
+  pub fn set_status(&self, username: &str, status: ProfileStatus) {
+    self.map.read().unwrap().get(username).map(|arc| {
+      let mut profile = arc.write().unwrap();
+      profile.set_status(status);
+    });
+  }
+
   pub fn set_str(&self, username: &str, field: &str, value: &str) {
     self.map.read().unwrap().get(username).map(|arc| {
       let mut profile = arc.write().unwrap();
 
       match field {
-        "status" => profile.set_status(value),
         "password" => profile.set_password(value),
         "group" => profile.set_group(value),
         _ => {}
@@ -162,7 +151,6 @@ impl ProfileManager {
       match field {
         "ping" => profile.set_ping(value),
         "health" => profile.set_health(value),
-        "satiety" => profile.set_satiety(value),
         _ => {}
       }
     });
@@ -177,7 +165,6 @@ impl ProfileManager {
         "logined" => profile.set_logined(value),
         "skin_is_set" => profile.set_skin_is_set(value),
         "captcha_caught" => profile.set_captcha_caught(value),
-        "plugins_loaded" => profile.set_plugins_loaded(value),
         _ => {}
       }
     });

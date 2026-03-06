@@ -9,13 +9,10 @@ pub enum Classes {
   Special,
 }
 
-pub fn randchar(s: &str) -> Option<char> {
+pub fn randchar(s: &str) -> char {
   let v: Vec<char> = s.chars().collect();
-  if v.is_empty() {
-    return None;
-  }
   let idx = thread_rng().gen_range(0..v.len());
-  Some(v[idx])
+  v[idx]
 }
 
 pub fn randstr(class: Classes, length: i32) -> String {
@@ -31,7 +28,7 @@ pub fn randstr(class: Classes, length: i32) -> String {
   let mut result = String::new();
 
   for _ in 0..length {
-    result.push(randchar(chars).unwrap());
+    result.push(randchar(chars));
   }
 
   result

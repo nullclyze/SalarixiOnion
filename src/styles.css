@@ -1178,6 +1178,7 @@ p {
   -ms-overflow-style: none;
   contain: strict; 
   will-change: transform;
+  text-rendering: optimizeSpeed;
 }
 
 .log-content::-webkit-scrollbar {
@@ -1231,7 +1232,6 @@ p {
   font-family: var(--global-font-family);
   font-size: 15px;
   margin-left: 5px;
-  text-rendering: optimizeLegibility;
   -webkit-user-select: text; 
   -moz-user-select: text;
   -ms-user-select: text;
@@ -1545,8 +1545,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto; 
-  max-height: 100%;
+  overflow-y: auto;
   width: 96%;
   padding: 0;
   scrollbar-width: none;
@@ -1564,7 +1563,7 @@ p {
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: 84px;
+  min-height: 110px;
   background-color: var(--common-bg);
   border: 1px solid var(--common-border);
   border-radius: 12px;
@@ -1614,6 +1613,7 @@ p {
   text-align: left;
   margin-left: 10px;
   gap: 2px;
+  text-rendering: optimizeSpeed;
 }
 
 .monitoring-wrapper .cards .bot-card .head .top .text .username {
@@ -1669,6 +1669,7 @@ p {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+  text-rendering: optimizeSpeed;
 }
 
 .monitoring-wrapper .cards .bot-card .info .line {
@@ -1693,6 +1694,7 @@ p {
   width: 150px;
   height: 28px;
   transition: none;
+  border-radius: 4px;
 }
 
 .monitoring-wrapper .cards .bot-card .group-input {
@@ -1745,7 +1747,7 @@ p {
   border-radius: 6px;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizeSpeed;
   margin-bottom: 25px;
 }
 
@@ -1792,14 +1794,6 @@ p {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-}
-
-.chat-content .line .msg .bot-tag {
-  color: var(--spec-color); 
-  font-weight: bold;
-  border: 1px solid #2e2e2e;
-  border-radius: 4px;
-  padding: 1px 10px;
 }
 
 .bot-captcha-image {

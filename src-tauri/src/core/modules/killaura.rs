@@ -5,13 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{
-  get_nearest_entity, look_at_entity, take_item,
-  EntityFilter,
-};
+use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotRotationExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug)]
 struct Weapon {
@@ -216,7 +213,7 @@ impl KillauraModule {
     }
 
     if let Some(slot) = best_weapon.slot {
-      take_item(bot, slot, true).await;
+      bot.take_item(slot, true).await;
     }
   }
 
@@ -224,7 +221,7 @@ impl KillauraModule {
     tokio::spawn(async move {
       loop {
         let bot_available = BOT_REGISTRY
-          .get_bot(&username, async |bot| {
+          .async_get_bot(&username, async |bot| {
             if !TASKS.get_task_activity(&username, "killaura") {
               bot.stop_crouching();
               return;
@@ -256,30 +253,21 @@ impl KillauraModule {
   ) {
     tokio::spawn(async move {
       loop {
-        let bot_available = BOT_REGISTRY
-          .get_bot(&username, async |bot| {
-            if !TASKS.get_task_activity(&username, "killaura") {
-              bot.stop_move();
-              return;
-            }
+        if let Some(bot) = BOT_REGISTRY.get_bot(&username) {
+          if !TASKS.get_task_activity(&username, "killaura") {
+            bot.stop_move();
+            return;
+          }
 
-            if let Some(entity) =
-              Self::find_nearest_entity(bot, &target, &target_nickname, distance)
-            {
-              let eye_pos = bot.eye_pos();
+          if let Some(entity) = Self::find_nearest_entity(&bot, &target, &target_nickname, distance)
+          {
+            let eye_pos = bot.eye_pos();
 
-              if eye_pos.distance_to(bot.get_entity_position(entity)) > min_distance_to_target {
-                bot.start_jumping();
-                bot.start_sprinting(SprintDirection::Forward);
+            if eye_pos.distance_to(bot.get_entity_position(entity)) > min_distance_to_target {
+              bot.start_jumping();
+              bot.start_sprinting(SprintDirection::Forward);
 
-                look_at_entity(bot, entity, true);
-              } else {
-                bot.stop_jumping();
-
-                if STATES.get_state(&username, "is_sprinting") {
-                  bot.stop_move();
-                }
-              }
+              bot.look_at_entity(entity, true);
             } else {
               bot.stop_jumping();
 
@@ -287,11 +275,16 @@ impl KillauraModule {
                 bot.stop_move();
               }
             }
-          })
-          .await
-          .is_some();
+          } else {
+            bot.stop_jumping();
 
-        if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
+            if STATES.get_state(&username, "is_sprinting") {
+              bot.stop_move();
+            }
+          }
+        }
+
+        if !TASKS.get_task_activity(&username, "killaura") {
           break;
         }
 
@@ -311,23 +304,19 @@ impl KillauraModule {
       STATES.set_mutual_states(&username, "looking", true);
 
       loop {
-        let bot_available = BOT_REGISTRY
-          .get_bot(&username, async |bot| {
-            if !TASKS.get_task_activity(&username, "killaura") {
-              STATES.set_mutual_states(&username, "looking", false);
-              return;
-            }
+        if let Some(bot) = BOT_REGISTRY.get_bot(&username) {
+          if !TASKS.get_task_activity(&username, "killaura") {
+            STATES.set_mutual_states(&username, "looking", false);
+            return;
+          }
 
-            if let Some(entity) =
-              Self::find_nearest_entity(bot, &target, &target_nickname, distance)
-            {
-              look_at_entity(bot, entity, false);
-            }
-          })
-          .await
-          .is_some();
+          if let Some(entity) = Self::find_nearest_entity(&bot, &target, &target_nickname, distance)
+          {
+            bot.look_at_entity(entity, false);
+          }
+        }
 
-        if !bot_available || !TASKS.get_task_activity(&username, "killaura") {
+        if !TASKS.get_task_activity(&username, "killaura") {
           STATES.set_mutual_states(&username, "looking", false);
           break;
         }
@@ -489,7 +478,7 @@ impl KillauraModule {
 
   pub async fn enable(&self, username: &str, options: &KillauraOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.behavior.as_str() {
+      .async_get_bot(username, async |bot| match options.behavior.as_str() {
         "moderate" => {
           self.moderate_killaura(bot, options).await;
         }
@@ -504,13 +493,11 @@ impl KillauraModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "killaura");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.stop_move();
-        bot.stop_crouching();
-        bot.stop_jumping();
-      })
-      .await;
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.stop_move();
+      bot.stop_crouching();
+      bot.stop_jumping();
+    }
 
     STATES.set_mutual_states(username, "looking", false);
     STATES.set_mutual_states(username, "attacking", false);

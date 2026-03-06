@@ -7,10 +7,9 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-use crate::common::{get_bot_physics};
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotPhysicsExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlightModule;
@@ -182,7 +181,7 @@ impl FlightModule {
     let mut counter = 0;
 
     loop {
-      if let Some(physics) = get_bot_physics(bot) {
+      if let Some(physics) = bot.get_physics() {
         counter += 1;
 
         if config.use_ground_spoof {
@@ -260,7 +259,7 @@ impl FlightModule {
     loop {
       sleep(Duration::from_millis(randuint(50, 100))).await;
 
-      if let Some(physics) = get_bot_physics(bot) {
+      if let Some(physics) = bot.get_physics() {
         if config.use_ground_spoof {
           bot.set_on_ground(true);
         }
@@ -379,7 +378,7 @@ impl FlightModule {
 
   pub async fn enable(&self, username: &str, options: &FlightOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "vanilla" => {
           self.vanilla_flight(bot, options).await;
         }

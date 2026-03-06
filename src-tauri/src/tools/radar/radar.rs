@@ -7,7 +7,7 @@ use std::io::Write;
 use std::sync::Arc;
 
 use crate::core::{BOT_REGISTRY, PROFILES};
-use crate::methods::SafeClientMethods;
+use crate::extensions::BotDefaultExt;
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
 
@@ -39,45 +39,39 @@ impl RadarManager {
 
   pub async fn find_target(&self, target: String) -> Option<RadarInfo> {
     for username in PROFILES.get_all().keys() {
-      let info = BOT_REGISTRY
-        .get_bot(username, async |bot| {
-          let Some(tab_list) = bot.get_players() else {
-            return None;
-          };
+      let Some(bot) = BOT_REGISTRY.get_bot(username) else {
+        continue;
+      };
 
-          for uuid in tab_list.keys() {
-            let Some(entity) = bot.entity_by_uuid(*uuid) else {
-              continue;
-            };
+      let Some(tab_list) = bot.get_players() else {
+        continue;
+      };
 
-            let Some(profile) = bot.get_entity_component::<GameProfileComponent>(entity) else {
-              continue;
-            };
+      for uuid in tab_list.keys() {
+        let Some(entity) = bot.entity_by_uuid(*uuid) else {
+          continue;
+        };
 
-            if profile.0.name == target {
-              let player_pos = bot.get_entity_position(entity);
-              let client_pos = bot.feet_pos();
+        let Some(profile) = bot.get_entity_component::<GameProfileComponent>(entity) else {
+          continue;
+        };
 
-              return Some(RadarInfo {
-                status: "Найден".to_string(),
-                uuid: uuid.to_string(),
-                x: player_pos.x,
-                y: player_pos.y,
-                z: player_pos.z,
-                observer: RadarObserver {
-                  x: client_pos.x,
-                  z: client_pos.z,
-                },
-              });
-            }
-          }
+        if profile.0.name == target {
+          let player_pos = bot.get_entity_position(entity);
+          let client_pos = bot.feet_pos();
 
-          None
-        })
-        .await;
-
-      if let Some(radar_info) = info {
-        return radar_info;
+          return Some(RadarInfo {
+            status: "Найден".to_string(),
+            uuid: uuid.to_string(),
+            x: player_pos.x,
+            y: player_pos.y,
+            z: player_pos.z,
+            observer: RadarObserver {
+              x: client_pos.x,
+              z: client_pos.z,
+            },
+          });
+        }
       }
     }
 

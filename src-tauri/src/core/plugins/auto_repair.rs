@@ -6,10 +6,9 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{move_item_to_offhand, start_use_item, take_item};
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Clone, Debug)]
 struct BrokenItem {
@@ -34,7 +33,7 @@ impl AutoRepairPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -53,7 +52,7 @@ impl AutoRepairPlugin {
   async fn repair_items(&self, bot: &Client) {
     let broken_items = self.find_broken_items(bot);
 
-    let nickname = bot.username();
+    let nickname = bot.name();
 
     for broken_item in broken_items {
       if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
@@ -66,7 +65,7 @@ impl AutoRepairPlugin {
     if let Some(menu) = bot.get_inventory_menu() {
       for (slot, item) in menu.slots().iter().enumerate() {
         if item.kind() == ItemKind::ExperienceBottle {
-          take_item(bot, slot, true).await;
+          bot.take_item(slot, true).await;
           return Some(item.count());
         }
       }
@@ -77,7 +76,7 @@ impl AutoRepairPlugin {
 
   async fn repair_item(&self, bot: &Client, broken_item: BrokenItem) {
     if let Some(count) = self.take_experience_bottles(bot).await {
-      let nickname = bot.username();
+      let nickname = bot.name();
 
       for _ in 0..=count {
         if STATES.get_state(&nickname, "can_interacting")
@@ -87,9 +86,9 @@ impl AutoRepairPlugin {
           STATES.set_mutual_states(&nickname, "looking", true);
 
           if broken_item.slot != 45 && broken_item.slot > 8 {
-            take_item(bot, broken_item.slot, false).await;
+            bot.take_item(broken_item.slot, false).await;
             sleep(Duration::from_millis(50)).await;
-            move_item_to_offhand(bot, broken_item.kind);
+            bot.move_item_to_offhand(broken_item.kind);
             sleep(Duration::from_millis(randuint(50, 150))).await;
           }
 
@@ -112,7 +111,7 @@ impl AutoRepairPlugin {
                   sleep(Duration::from_millis(randuint(150, 200))).await;
                 }
 
-                start_use_item(bot, InteractionHand::MainHand);
+                bot.start_use_held_item(InteractionHand::MainHand);
 
                 sleep(Duration::from_millis(randuint(200, 250))).await;
               } else {

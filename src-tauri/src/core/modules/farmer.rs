@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_block_state, look_at_block, take_item};
+use crate::common::get_block_state;
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotRotationExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug)]
 struct Tool {
@@ -98,7 +98,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = best_tool.slot {
-      take_item(bot, slot, true).await;
+      bot.take_item(slot, true).await;
     }
   }
 
@@ -150,7 +150,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = ferilizer_slot {
-      take_item(bot, slot, true).await;
+      bot.take_item(slot, true).await;
 
       for _ in 0..=4 {
         sleep(Duration::from_millis(self.generate_delay(mode))).await;
@@ -177,7 +177,7 @@ impl FarmerModule {
     }
 
     if let Some(slot) = plant_slot {
-      take_item(bot, slot, true).await;
+      bot.take_item(slot, true).await;
       return true;
     }
 
@@ -242,7 +242,7 @@ impl FarmerModule {
         let kind = BlockKind::from(state);
 
         if self.this_is_farmland_without_plant(bot, kind, block_pos) {
-          look_at_block(bot, block_pos, true).await;
+          bot.look_at_block(block_pos, true).await;
 
           if options.mode.as_str() != "ultra" {
             sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
@@ -255,7 +255,7 @@ impl FarmerModule {
           }
         } else {
           if self.this_is_plant(kind) {
-            look_at_block(bot, block_pos, true).await;
+            bot.look_at_block(block_pos, true).await;
 
             sleep(Duration::from_millis(self.generate_delay(&options.mode))).await;
 
@@ -284,7 +284,7 @@ impl FarmerModule {
             }
           } else {
             if self.block_can_plowed(bot, kind, block_pos) {
-              look_at_block(bot, block_pos, true).await;
+              bot.look_at_block(block_pos, true).await;
               self.plow_block(bot, block_pos, &options.mode).await;
             }
           }
@@ -335,7 +335,7 @@ impl FarmerModule {
 
   pub async fn enable(&self, username: &str, options: &FarmerOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| {
+      .async_get_bot(username, async |bot| {
         self.farmer(bot, options).await;
       })
       .await;

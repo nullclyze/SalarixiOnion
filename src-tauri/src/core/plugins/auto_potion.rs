@@ -8,10 +8,11 @@ use azalea::registry::builtin::Potion as PotionKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::*;
 use crate::core::*;
+use crate::extensions::{
+  BotDefaultExt, BotInteractExt, BotInventoryExt, BotMovementExt, BotPhysicsExt,
+};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Clone)]
 struct Potion {
@@ -37,7 +38,7 @@ impl AutoPotionPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -56,7 +57,7 @@ impl AutoPotionPlugin {
   async fn drink(&self, bot: &Client) {
     let health = bot.get_health();
 
-    let nickname = bot.username();
+    let nickname = bot.name();
 
     if health < 20.0 {
       let potions = self.find_potion_in_inventory(bot);
@@ -85,7 +86,7 @@ impl AutoPotionPlugin {
               STATES.set_state(&nickname, "can_interacting", false);
               STATES.set_mutual_states(&nickname, "drinking", true);
 
-              take_item(bot, potion.slot, false).await;
+              bot.take_item(potion.slot, false).await;
               sleep(Duration::from_millis(50)).await;
               self.use_potion(bot, potion.kind).await;
               sleep(Duration::from_millis(50)).await;
@@ -105,7 +106,7 @@ impl AutoPotionPlugin {
     match kind.as_str() {
       "default" => {
         bot.freeze_move();
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_held_item(InteractionHand::MainHand);
         sleep(Duration::from_millis(2600)).await;
         bot.unfreeze_move();
       }
@@ -118,7 +119,7 @@ impl AutoPotionPlugin {
         );
 
         sleep(Duration::from_millis(randuint(400, 600))).await;
-        start_use_item(bot, InteractionHand::MainHand);
+        bot.start_use_held_item(InteractionHand::MainHand);
         sleep(Duration::from_millis(randuint(300, 500))).await;
 
         bot.set_direction(
@@ -137,7 +138,7 @@ impl AutoPotionPlugin {
       return None;
     };
 
-    if let Some(physics) = get_bot_physics(bot) {
+    if let Some(physics) = bot.get_physics() {
       let is_in_lava = physics.is_in_lava();
       let is_burning = physics.remaining_fire_ticks > 0;
       let is_in_water = physics.is_in_water();

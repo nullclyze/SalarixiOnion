@@ -4,10 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::go_to;
 use crate::core::*;
+use crate::extensions::{go_to, BotMovementExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MovementModule;
@@ -92,7 +91,7 @@ impl MovementModule {
 
   pub async fn enable(&self, username: &str, options: &MovementOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "default" => {
           self.default_move(bot, options).await;
         }
@@ -107,11 +106,9 @@ impl MovementModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "movement");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.stop_pathfinding();
-        bot.stop_move();
-      })
-      .await;
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.stop_pathfinding();
+      bot.stop_move();
+    }
   }
 }

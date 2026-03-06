@@ -5,13 +5,10 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{
-  get_nearest_entity, inventory_move_item,
-  release_use_item, start_use_item, EntityFilter,
-};
+use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 pub struct AutoShieldPlugin;
 
@@ -30,7 +27,7 @@ impl AutoShieldPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -47,7 +44,7 @@ impl AutoShieldPlugin {
   }
 
   pub async fn defend(&self, bot: &Client) {
-    let nickname = bot.username();
+    let nickname = bot.name();
 
     if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(45) {
@@ -61,7 +58,9 @@ impl AutoShieldPlugin {
               for (slot, item) in menu.slots().iter().enumerate() {
                 if slot != 45 {
                   if item.kind() == ItemKind::Shield {
-                    inventory_move_item(bot, ItemKind::Shield, slot, 45, true).await;
+                    bot
+                      .inventory_move_item(ItemKind::Shield, slot, 45, true)
+                      .await;
                     shield_equipped = true;
                     break;
                   }
@@ -97,7 +96,7 @@ impl AutoShieldPlugin {
 
   async fn start_defending(&self, bot: &Client) {
     if let Some(entity) = self.get_nearest_dangerous_entity(bot) {
-      let nickname = bot.username();
+      let nickname = bot.name();
 
       if STATES.get_state(&nickname, "can_looking")
         && STATES.get_state(&nickname, "can_interacting")
@@ -105,7 +104,7 @@ impl AutoShieldPlugin {
         STATES.set_mutual_states(&nickname, "looking", true);
         STATES.set_mutual_states(&nickname, "interacting", true);
 
-        start_use_item(bot, InteractionHand::OffHand);
+        bot.start_use_held_item(InteractionHand::OffHand);
 
         sleep(Duration::from_millis(50)).await;
 
@@ -121,7 +120,7 @@ impl AutoShieldPlugin {
           sleep(Duration::from_millis(randuint(50, 100))).await;
         }
 
-        release_use_item(bot);
+        bot.release_use_held_item();
 
         STATES.set_mutual_states(&nickname, "looking", false);
         STATES.set_mutual_states(&nickname, "interacting", false);

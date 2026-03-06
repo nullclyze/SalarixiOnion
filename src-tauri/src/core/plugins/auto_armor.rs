@@ -4,9 +4,8 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{find_empty_slot_in_invenotry, inventory_shift_click};
 use crate::core::*;
-use crate::methods::SafeClientMethods;
+use crate::extensions::{BotDefaultExt, BotInventoryExt};
 
 #[derive(Debug, Clone)]
 struct Armor {
@@ -40,7 +39,7 @@ impl AutoArmorPlugin {
         }
 
         let _ = BOT_REGISTRY
-          .get_bot(&nickname, async |bot| {
+          .async_get_bot(&nickname, async |bot| {
             if !bot.workable() {
               return;
             }
@@ -100,8 +99,8 @@ impl AutoArmorPlugin {
     if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(target_slot) {
         if !item.is_empty() {
-          if let Some(_) = find_empty_slot_in_invenotry(menu) {
-            inventory_shift_click(bot, target_slot, true);
+          if let Some(_) = bot.find_empty_slot_in_invenotry() {
+            bot.inventory_shift_click(target_slot, true);
             sleep(Duration::from_millis(50)).await;
           } else {
             return;
@@ -110,7 +109,7 @@ impl AutoArmorPlugin {
       }
     }
 
-    inventory_shift_click(bot, armor_slot, true);
+    bot.inventory_shift_click(armor_slot, true);
   }
 
   fn is_armor(&self, item: &ItemStack, slot: usize) -> Option<Armor> {

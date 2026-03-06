@@ -5,8 +5,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
+use crate::extensions::{BotDefaultExt, BotMovementExt};
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AntiAfkModule;
@@ -94,19 +94,16 @@ impl AntiAfkModule {
 
     tokio::spawn(async move {
       loop {
-        let ok = BOT_REGISTRY
-          .get_bot(&username, async |bot| {
-            let direction = bot.direction();
+        if let Some(bot) = BOT_REGISTRY.get_bot(&username) {
+          let direction = bot.direction();
 
-            bot.set_direction(
-              direction.0 + randfloat(-35.0, 35.0) as f32,
-              direction.1 + randfloat(-10.0, 10.0) as f32,
-            );
-          })
-          .await
-          .is_some();
+          bot.set_direction(
+            direction.0 + randfloat(-35.0, 35.0) as f32,
+            direction.1 + randfloat(-10.0, 10.0) as f32,
+          );
+        }
 
-        if !ok || !TASKS.get_task_activity(&username, "anti-afk") {
+        if !TASKS.get_task_activity(&username, "anti-afk") {
           STATES.set_mutual_states(&username, "looking", false);
           break;
         }
@@ -145,7 +142,7 @@ impl AntiAfkModule {
     STATES.set_mutual_states(username, "looking", true);
 
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.mode.as_str() {
+      .async_get_bot(username, async |bot| match options.mode.as_str() {
         "minimal" => {
           self.minimal(bot, options).await;
         }
@@ -163,12 +160,10 @@ impl AntiAfkModule {
   pub async fn stop(&self, username: &str) {
     kill_task(username, "anti-afk");
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| {
-        bot.stop_move();
-        bot.stop_crouching();
-      })
-      .await;
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      bot.stop_move();
+      bot.stop_crouching();
+    }
 
     STATES.set_mutual_states(&username, "looking", false);
   }

@@ -4,8 +4,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
+use crate::extensions::BotDefaultExt;
 use crate::generators::*;
-use crate::methods::SafeClientMethods;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActionModule;
@@ -90,7 +90,7 @@ impl ActionModule {
 
   pub async fn enable(&self, username: &str, options: &ActionOptions) {
     BOT_REGISTRY
-      .get_bot(username, async |bot| match options.action.as_str() {
+      .async_get_bot(username, async |bot| match options.action.as_str() {
         "jumping" => {
           self.jumping(bot, &options).await;
         }
@@ -108,8 +108,8 @@ impl ActionModule {
   pub async fn stop(&self, username: &str, action: &str) {
     kill_task(username, action);
 
-    BOT_REGISTRY
-      .get_bot(username, async |bot| match action {
+    if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+      match action {
         "jumping" => {
           bot.set_jumping(false);
         }
@@ -117,7 +117,7 @@ impl ActionModule {
           bot.set_crouching(false);
         }
         _ => {}
-      })
-      .await;
+      }
+    }
   }
 }
