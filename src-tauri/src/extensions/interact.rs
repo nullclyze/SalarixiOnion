@@ -1,11 +1,6 @@
-use azalea::{
-  core::direction::Direction,
-  protocol::packets::game::{
-    s_interact::InteractionHand, s_player_action::Action, ServerboundPlayerAction,
-    ServerboundUseItem,
-  },
-  BlockPos, Client,
-};
+use azalea::{BlockPos, Client};
+use azalea::core::direction::Direction;
+use azalea::protocol::packets::game::{s_interact::InteractionHand, s_player_action::Action, ServerboundPlayerAction, ServerboundUseItem};
 
 pub trait BotInteractExt {
   fn start_use_held_item(&self, hand: InteractionHand);

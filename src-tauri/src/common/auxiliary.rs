@@ -1,13 +1,7 @@
 use azalea::block::BlockState;
 use azalea::core::position::BlockPos;
-use azalea::ecs::query::{With, Without};
-use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
-use azalea::entity::{Dead, LocalEntity, Position};
-use azalea::player::GameProfileComponent;
 use azalea::prelude::*;
-use azalea::world::MinecraftEntityId;
 use azalea::Vec3;
-use bevy_ecs::entity::Entity;
 
 use crate::core::*;
 use crate::extensions::BotDefaultExt;
@@ -112,66 +106,5 @@ pub fn convert_hotbar_slot_to_inventory_slot(slot: u8) -> usize {
     7 => 43,
     8 => 44,
     _ => 36,
-  }
-}
-
-/// Структура EntityFilter
-#[derive(Clone)]
-pub struct EntityFilter {
-  target: String,
-  distance: f64,
-  excluded_name: String,
-  excluded_id: MinecraftEntityId,
-}
-
-impl EntityFilter {
-  pub fn new(bot: &Client, target: &str, distance: f64) -> Self {
-    Self {
-      target: target.to_string(),
-      distance: distance,
-      excluded_name: bot.username(),
-      excluded_id: bot.id(),
-    }
-  }
-}
-
-/// Функция получения ближайшей сущности
-pub fn get_nearest_entity(bot: &Client, filter: EntityFilter) -> Option<Entity> {
-  let eye_pos = bot.eye_pos();
-
-  match filter.target.as_str() {
-    "player" => {
-      return bot.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
-        *data.0.0.name != filter.excluded_name && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id
-      });
-    }
-    "monster" => {
-      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-      });
-    }
-    "animal" => {
-      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-      });
-    }
-    "vehicle" => {
-      return bot.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractVehicle>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
-        eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-      });
-    }
-    "any" => {
-      return bot
-				.nearest_entity_by::<(&Position, &MinecraftEntityId), (Without<LocalEntity>, Without<Dead>)>(
-					|data: (&Position, &MinecraftEntityId)| {
-						eye_pos.distance_to(**data.0) <= filter.distance && *data.1 != filter.excluded_id
-					},
-				);
-    }
-    _ => {
-      return bot.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
-        data.0.0.name == filter.target && eye_pos.distance_to(**data.1) <= filter.distance && *data.2 != filter.excluded_id
-      });
-    }
   }
 }

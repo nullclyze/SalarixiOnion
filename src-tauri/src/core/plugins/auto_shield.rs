@@ -5,10 +5,9 @@ use azalea::registry::builtin::ItemKind;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt};
 use crate::generators::*;
+use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt, EntityType};
 
 pub struct AutoShieldPlugin;
 
@@ -82,10 +81,10 @@ impl AutoShieldPlugin {
   fn get_nearest_dangerous_entity(&self, bot: &Client) -> Option<Entity> {
     let mut nearest_entity = None;
 
-    if let Some(nearest_player) = get_nearest_entity(bot, EntityFilter::new(bot, "player", 8.0)) {
+    if let Some(nearest_player) = bot.find_nearest_entity(EntityType::Player, 8.0) {
       nearest_entity = Some(nearest_player);
     } else {
-      if let Some(nearest_monster) = get_nearest_entity(bot, EntityFilter::new(bot, "monster", 8.0))
+      if let Some(nearest_monster) = bot.find_nearest_entity(EntityType::Monster, 8.0)
       {
         nearest_entity = Some(nearest_monster);
       }

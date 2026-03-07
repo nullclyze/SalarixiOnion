@@ -29,6 +29,7 @@ const client = {
 };
 
 export let process: 'active' | 'sleep' = 'sleep';
+export let quickTasksAllowed: boolean = true;
 
 const accountManager = new AccountManager();
 const proxyCollectorManager = new ProxyCollectorManager();
@@ -65,6 +66,10 @@ let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
 let controlContainers: Array<{ id: string; el: HTMLElement }> = [];
 let latestControlContainer: HTMLElement | null = null;
 let triggerFunctions: Record<string, Function> = {};
+
+export function setQuickTasksAllowed(value: boolean): void {
+  quickTasksAllowed = value;
+}
 
 async function initUserGuide(): Promise<void> {
   try {
@@ -550,7 +555,7 @@ async function initFunctions(): Promise<void> {
   document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
 
   document.addEventListener('keydown', async (e) => {
-    if (process === 'active') {
+    if (process === 'active' && quickTasksAllowed) {
       const key = e.key.toLowerCase();
   
       for (const k in pressedKeys) {
@@ -1334,6 +1339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     proxyCollectorManager.init();
     chartManager.init();
     radarManager.init();
+    scriptManager.init();
 
     await listen('log', (event) => {
       try {

@@ -97,7 +97,7 @@ impl FlightModule {
         break;
       }
 
-      bot.set_velocity_y(0.0);
+      bot.set_velocity("y", 0.0);
 
       sleep(Duration::from_millis(50)).await;
     }
@@ -130,11 +130,11 @@ impl FlightModule {
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          bot.set_velocity_y(randfloat(config.min_change_y, config.max_change_y));
+          bot.set_velocity("y", randfloat(config.min_change_y, config.max_change_y));
           sleep(Duration::from_millis(50)).await;
         }
       } else {
-        bot.set_velocity_y(randfloat(config.min_change_y, config.max_change_y));
+        bot.set_velocity("y", randfloat(config.min_change_y, config.max_change_y));
       }
 
       if config.use_ground_spoof {
@@ -350,11 +350,11 @@ impl FlightModule {
 
       if config.use_jitter {
         for _ in 0..randint(4, 6) {
-          bot.set_velocity_y(direction.y.abs() * final_strength * 0.2);
+          bot.set_velocity("y", direction.y.abs() * final_strength * 0.2);
           sleep(Duration::from_millis(50)).await;
         }
       } else {
-        bot.set_velocity_y(direction.y.abs() * final_strength * 0.2);
+        bot.set_velocity("y", direction.y.abs() * final_strength * 0.2);
       }
 
       sleep(Duration::from_millis(randuint(

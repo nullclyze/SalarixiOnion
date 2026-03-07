@@ -8,13 +8,13 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::common::{convert_hotbar_slot_to_inventory_slot, get_nearest_entity, EntityFilter};
+use crate::common::convert_hotbar_slot_to_inventory_slot;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
-use crate::extensions::{
-  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, BotRotationExt,
-};
 use crate::webhook::*;
+use crate::extensions::{
+  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, BotRotationExt, entity_type_from
+};
 
 pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
   Lazy::new(|| Arc::new(RwLock::new(ScriptExecutor::new())));
@@ -27,6 +27,20 @@ impl ScriptExecutor {
   pub fn new() -> Self {
     Self {
       active: Arc::new(AtomicBool::new(false)),
+    }
+  }
+
+  fn chat(username: &str, message: String) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
+          bot.chat(&message);
+        }
+      });
+    } else {
+      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+        bot.chat(&message);
+      }
     }
   }
 
@@ -86,16 +100,16 @@ impl ScriptExecutor {
     }
   }
 
-  fn set_velocity_y(username: &str, velocity_y: f64) {
+  fn set_velocity(username: &str, axis: &str, velocity: f64) {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.set_velocity_y(velocity_y);
+          bot.set_velocity(axis, velocity);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.set_velocity_y(velocity_y);
+        bot.set_velocity(axis, velocity);
       }
     }
   }
@@ -114,16 +128,58 @@ impl ScriptExecutor {
     }
   }
 
-  fn chat(username: &str, message: String) {
+  fn set_old_position(username: &str, x: f64, y: f64, z: f64) {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.chat(&message);
+          bot.set_old_position(x, y, z);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.chat(&message);
+        bot.set_old_position(x, y, z);
+      }
+    }
+  }
+
+  fn set_no_jump_delay(username: &str, delay: u32) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
+          bot.set_no_jump_delay(delay);
+        }
+      });
+    } else {
+      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+        bot.set_no_jump_delay(delay);
+      }
+    }
+  }
+
+  fn set_was_touching_water(username: &str, state: bool) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
+          bot.set_was_touching_water(state);
+        }
+      });
+    } else {
+      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+        bot.set_was_touching_water(state);
+      }
+    }
+  }
+
+  fn set_has_impulse(username: &str, state: bool) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
+          bot.set_has_impulse(state);
+        }
+      });
+    } else {
+      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+        bot.set_has_impulse(state);
       }
     }
   }
@@ -353,7 +409,7 @@ impl ScriptExecutor {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
+          if let Some(entity) = bot.find_nearest_entity(entity_type_from(target.clone()), distance) {
             if look_at_target {
               bot.look_at_entity(entity, false);
             }
@@ -364,7 +420,7 @@ impl ScriptExecutor {
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        if let Some(entity) = get_nearest_entity(&bot, EntityFilter::new(&bot, &target, distance)) {
+        if let Some(entity) = bot.find_nearest_entity(entity_type_from(target), distance) {
           if look_at_target {
             bot.look_at_entity(entity, false);
           }
@@ -449,11 +505,23 @@ impl ScriptExecutor {
       .register_fn("set_crouching", |username: &str, state: bool| {
         Self::set_crouching(username, state)
       })
-      .register_fn("set_velocity_y", |username: &str, velocity_y: f64| {
-        Self::set_velocity_y(username, velocity_y)
+      .register_fn("set_velocity", |username: &str, axis: &str, velocity: f64| {
+        Self::set_velocity(username, axis, velocity)
       })
       .register_fn("set_on_ground", |username: &str, on_ground: bool| {
         Self::set_on_ground(username, on_ground)
+      })
+      .register_fn("set_old_position", |username: &str, x: f64, y: f64, z: f64| {
+        Self::set_old_position(username, x, y, z)
+      })
+      .register_fn("set_no_jump_delay", |username: &str, delay: i64| {
+        Self::set_no_jump_delay(username, delay as u32)
+      })
+      .register_fn("set_was_touching_water", |username: &str, state: bool| {
+        Self::set_was_touching_water(username, state)
+      })
+      .register_fn("set_has_impulse", |username: &str, state: bool| {
+        Self::set_has_impulse(username, state)
       })
       .register_fn("start_walking", |username: &str, direction: &str| {
         Self::start_walking(username, direction.to_string())

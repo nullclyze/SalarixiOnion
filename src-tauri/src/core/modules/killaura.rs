@@ -5,10 +5,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotRotationExt};
 use crate::generators::*;
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotRotationExt, entity_type_from};
 
 #[derive(Debug)]
 struct Weapon {
@@ -77,25 +76,21 @@ impl KillauraModule {
 
   fn find_nearest_entity(
     bot: &Client,
-    target: &String,
-    target_nickname: &Option<String>,
+    target: String,
+    target_nickname: Option<String>,
     max_distance: f64,
   ) -> Option<Entity> {
-    let mut entity_filter = None;
-
-    if target.as_str() == "custom" {
-      if let Some(nickname) = target_nickname {
-        entity_filter = Some(EntityFilter::new(bot, nickname, max_distance));
-      }
+    let target = if target == "custom" {
+      target_nickname
     } else {
-      entity_filter = Some(EntityFilter::new(bot, target, max_distance));
-    }
+      Some(target)
+    };
 
-    if let Some(filter) = entity_filter {
-      return get_nearest_entity(bot, filter);
-    }
+    let Some(target) = target else {
+      return None;
+    };
 
-    None
+    bot.find_nearest_entity(entity_type_from(target), max_distance)
   }
 
   async fn auto_weapon(&self, bot: &Client, weapon: &String) {
@@ -259,7 +254,7 @@ impl KillauraModule {
             return;
           }
 
-          if let Some(entity) = Self::find_nearest_entity(&bot, &target, &target_nickname, distance)
+          if let Some(entity) = Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
           {
             let eye_pos = bot.eye_pos();
 
@@ -310,7 +305,7 @@ impl KillauraModule {
             return;
           }
 
-          if let Some(entity) = Self::find_nearest_entity(&bot, &target, &target_nickname, distance)
+          if let Some(entity) = Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
           {
             bot.look_at_entity(entity, false);
           }
@@ -360,8 +355,8 @@ impl KillauraModule {
       {
         if let Some(entity) = Self::find_nearest_entity(
           bot,
-          &options.target,
-          &options.target_nickname,
+          options.target.clone(),
+          options.target_nickname.clone(),
           config.attack_distance,
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
@@ -387,8 +382,8 @@ impl KillauraModule {
 
             if let Some(e) = Self::find_nearest_entity(
               bot,
-              &options.target,
-              &options.target_nickname,
+              options.target.clone(),
+              options.target_nickname.clone(),
               config.attack_distance,
             ) {
               bot.attack(e);
@@ -432,8 +427,8 @@ impl KillauraModule {
       {
         if let Some(entity) = Self::find_nearest_entity(
           bot,
-          &options.target,
-          &options.target_nickname,
+          options.target.clone(),
+          options.target_nickname.clone(),
           config.attack_distance,
         ) {
           STATES.set_mutual_states(&nickname, "attacking", true);
@@ -458,8 +453,8 @@ impl KillauraModule {
 
             if let Some(e) = Self::find_nearest_entity(
               bot,
-              &options.target,
-              &options.target_nickname,
+              options.target.clone(),
+              options.target_nickname.clone(),
               config.attack_distance,
             ) {
               bot.attack(e);
