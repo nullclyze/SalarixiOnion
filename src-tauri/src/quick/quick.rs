@@ -72,7 +72,7 @@ impl QuickTaskManager {
             }
             "fly" => {
               for i in 0..randint(3, 5) {
-                bot.set_velocity_y(randfloat(0.022 * i as f64, 0.031 * i as f64));
+                bot.set_velocity("y", randfloat(0.022 * i as f64, 0.031 * i as f64));
                 sleep(Duration::from_millis(50)).await;
               }
             }

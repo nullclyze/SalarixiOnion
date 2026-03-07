@@ -106,7 +106,7 @@ impl AntiFallModule {
               break;
             }
 
-            bot.set_velocity_y(0.001);
+            bot.set_velocity("y", 0.0);
             bot.set_on_ground(true);
 
             sleep(Duration::from_millis(50)).await;

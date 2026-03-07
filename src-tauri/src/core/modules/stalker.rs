@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::{get_nearest_entity, EntityFilter};
 use crate::core::*;
-use crate::extensions::{go_to, BotDefaultExt, BotMovementExt};
+use crate::extensions::{BotDefaultExt, BotMovementExt, EntityType, go_to};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StalkerModule;
@@ -28,14 +27,11 @@ impl StalkerModule {
     let username = bot.username();
 
     loop {
-      let Some(target_nickname) = &options.target_nickname else {
+      let Some(target_nickname) = options.target_nickname.clone() else {
         return;
       };
 
-      if let Some(target) = get_nearest_entity(
-        bot,
-        EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(100.0)),
-      ) {
+      if let Some(target) = bot.find_nearest_entity(EntityType::Custom(target_nickname), options.max_distance.unwrap_or(100.0)) {
         let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 
@@ -63,15 +59,12 @@ impl StalkerModule {
   }
 
   async fn advanced_stalking(&self, bot: &Client, options: &StalkerOptions) {
-    loop {
-      let Some(target_nickname) = &options.target_nickname else {
-        return;
-      };
+    let Some(target_nickname) = options.target_nickname.clone() else {
+      return;
+    };
 
-      if let Some(target) = get_nearest_entity(
-        bot,
-        EntityFilter::new(bot, target_nickname, options.max_distance.unwrap_or(100.0)),
-      ) {
+    loop {
+      if let Some(target) = bot.find_nearest_entity(EntityType::Custom(target_nickname.clone()), options.max_distance.unwrap_or(100.0)) {
         let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 

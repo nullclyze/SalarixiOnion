@@ -2,10 +2,9 @@ use azalea::prelude::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::common::*;
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotRotationExt};
 use crate::generators::randuint;
+use crate::extensions::{BotDefaultExt, BotRotationExt, EntityType};
 
 pub struct AutoLookPlugin;
 
@@ -41,8 +40,10 @@ impl AutoLookPlugin {
   }
 
   async fn look(&self, bot: &Client) {
-    if STATES.get_state(&bot.name(), "can_looking") && bot.is_goto_target_reached() {
-      if let Some(entity) = get_nearest_entity(bot, EntityFilter::new(bot, "any", 14.0)) {
+    let username = bot.name();
+
+    if STATES.get_state(&username, "can_looking") && bot.is_goto_target_reached() {
+      if let Some(entity) = bot.find_nearest_entity(EntityType::Any, 14.0) {
         bot.look_at_entity(entity, true);
         sleep(Duration::from_millis(randuint(50, 100))).await;
       }

@@ -1083,6 +1083,110 @@ p {
   color: #b6b6b6;
 }
 
+.scripting-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.script-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  gap: 12px;
+}
+
+.script-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.editor-title {
+  display: flex;
+  position: relative;
+  font-family: var(--global-font-family);
+  font-size: 16px;
+  font-weight: bold;
+  color: #e2e2e2;
+  padding: 4px 12px;
+  margin-left: 4px;
+}
+
+.editor-title::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 3px;
+  height: auto;
+  background-color: var(--spec-color);
+  box-shadow: 0 0 10px var(--spec-color);
+  border-radius: 50px;
+}
+
+.editor-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.script-editor-container {
+  display: flex;
+  width: 100%;
+  height: 430px;
+  margin-top: 10px;
+  background-color: var(--common-bg);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid var(--common-border);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.line-counter {
+  display: flex;
+  flex-direction: column;
+  width: 35px;
+  min-width: 35px;
+  height: 100%;
+  color: var(--text-secondary);
+  font-family: var(--s-font-family);
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: right;
+  padding: 0 12px;
+  border-right: 1px solid var(--common-border);
+  user-select: none;
+  overflow: hidden;
+}
+
+.script-editor {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  color: #d6d6d6;
+  font-family: var(--s-font-family);
+  font-size: 14px;
+  line-height: 1.6;
+  border: none;
+  outline: none;
+  padding: 0 16px;
+  resize: none;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-y: auto;
+}
+
+.script-editor::-webkit-scrollbar {
+  display: none;
+}
+
 .anti-captcha-wrap {
   display: flex;
   flex-direction: column;
@@ -1563,7 +1667,7 @@ p {
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: 110px;
+  min-height: 115px;
   background-color: var(--common-bg);
   border: 1px solid var(--common-border);
   border-radius: 12px;

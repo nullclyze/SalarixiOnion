@@ -1,4 +1,7 @@
 use azalea::ecs::entity::Entity;
+use azalea::ecs::query::{With, Without};
+use azalea::entity::{Dead, LocalEntity};
+use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
 use azalea::local_player::{Hunger, TabList};
 use azalea::player::GameProfileComponent;
 use azalea::protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing};
@@ -7,6 +10,26 @@ use azalea::{Client, InGameState, Vec3};
 use azalea::entity::{
   dimensions::EntityDimensions, metadata::Health, Crouching, Jumping, LookDirection, Position,
 };
+
+pub enum EntityType {
+  Player,
+  Monster,
+  Animal,
+  Vehicle,
+  Any,
+  Custom(String)
+}
+
+pub fn entity_type_from(value: String) -> EntityType {
+  match value.as_str() {
+    "player" => EntityType::Player,
+    "monster" => EntityType::Monster,
+    "animal" => EntityType::Animal,
+    "vehicle" => EntityType::Vehicle,
+    "any" => EntityType::Any,
+    _ => EntityType::Custom(value)
+  }
+}
 
 pub trait BotDefaultExt {
   fn workable(&self) -> bool;
@@ -25,6 +48,7 @@ pub trait BotDefaultExt {
   fn stop_crouching(&self);
   fn get_entity_eye_height(&self, entity: Entity) -> f64;
   fn get_entity_position(&self, entity: Entity) -> Vec3;
+  fn find_nearest_entity(&self, entity_type: EntityType, distance: f64) -> Option<Entity>;
 }
 
 impl BotDefaultExt for Client {
@@ -168,5 +192,47 @@ impl BotDefaultExt for Client {
     }
 
     0.0
+  }
+
+  fn find_nearest_entity(&self, entity_type: EntityType, distance: f64) -> Option<Entity> {
+    let excluded_name = self.name();
+    let excluded_id = self.id();
+    let eye_pos = self.eye_pos();
+
+    match entity_type {
+      EntityType::Player => {
+        return self.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
+          *data.0.0.name != excluded_name && eye_pos.distance_to(**data.1) <= distance && *data.2 != excluded_id
+        });
+      }
+      EntityType::Monster => {
+        return self.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractMonster>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+          eye_pos.distance_to(**data.0) <= distance && *data.1 != excluded_id
+        });
+      }
+      EntityType::Animal => {
+        return self.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractAnimal>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+          eye_pos.distance_to(**data.0) <= distance && *data.1 != excluded_id
+        });
+      }
+      EntityType::Vehicle => {
+        return self.nearest_entity_by::<(&Position, &MinecraftEntityId), (With<AbstractVehicle>, Without<LocalEntity>, Without<Dead>)>(|data: (&Position, &MinecraftEntityId)| {
+          eye_pos.distance_to(**data.0) <= distance && *data.1 != excluded_id
+        });
+      }
+      EntityType::Any => {
+        return self
+          .nearest_entity_by::<(&Position, &MinecraftEntityId), (Without<LocalEntity>, Without<Dead>)>(
+            |data: (&Position, &MinecraftEntityId)| {
+              eye_pos.distance_to(**data.0) <= distance && *data.1 != excluded_id
+            },
+          );
+      }
+      EntityType::Custom(username) => {
+        return self.nearest_entity_by::<(&GameProfileComponent, &Position, &MinecraftEntityId), (With<Player>, Without<LocalEntity>, Without<Dead>)>(|data: (&GameProfileComponent, &Position, &MinecraftEntityId)| {
+          data.0.0.name == username && eye_pos.distance_to(**data.1) <= distance && *data.2 != excluded_id
+        });
+      }
+    }
   }
 }
