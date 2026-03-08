@@ -1,5 +1,5 @@
 use azalea::{
-  bot::BotClientExt, prelude::PathfinderClientExt, BlockPos, SprintDirection, Vec3, WalkDirection,
+  BlockPos, SprintDirection, Vec3, WalkDirection, bot::BotClientExt, prelude::PathfinderClientExt, protocol::packets::game::s_interact::InteractionHand
 };
 use once_cell::sync::Lazy;
 use rhai::Engine;
@@ -8,12 +8,12 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::common::convert_hotbar_slot_to_inventory_slot;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
 use crate::webhook::*;
+use crate::common::convert_hotbar_slot_to_inventory_slot;
 use crate::extensions::{
-  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, BotRotationExt, entity_type_from
+  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, BotInteractExt, BotRotationExt, entity_type_from
 };
 
 pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
@@ -431,6 +431,40 @@ impl ScriptExecutor {
     }
   }
 
+  fn start_use_item(username: &str, hand: &str) {
+    let interaction_hand = if hand == "offhand" {
+      InteractionHand::OffHand
+    } else {
+      InteractionHand::MainHand
+    };
+
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        BOT_REGISTRY.get_bot(name).map(|bot| {
+          bot.start_use_held_item(interaction_hand);
+        });
+      });
+    } else {
+      BOT_REGISTRY.get_bot(username).map(|bot| {
+        bot.start_use_held_item(interaction_hand);
+      });
+    }
+  }
+
+  fn release_use_item(username: &str) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        BOT_REGISTRY.get_bot(name).map(|bot| {
+          bot.release_use_held_item();
+        });
+      });
+    } else {
+      BOT_REGISTRY.get_bot(username).map(|bot| {
+        bot.release_use_held_item();
+      });
+    }
+  }
+
   pub fn execute(&mut self, script: String) {
     self.active.store(true, Ordering::Relaxed);
 
@@ -574,12 +608,19 @@ impl ScriptExecutor {
         },
       );
 
-    engine.register_fn(
-      "attack",
-      |username: &str, target: &str, distance: f64, look_at_target: bool| {
-        Self::attack(username, target.to_string(), distance, look_at_target);
-      },
-    );
+    engine
+      .register_fn(
+        "attack",
+        |username: &str, target: &str, distance: f64, look_at_target: bool| {
+          Self::attack(username, target.to_string(), distance, look_at_target);
+        },
+      )
+      .register_fn("start_use_item", |username: &str, hand: &str| {
+        Self::start_use_item(username, hand)
+      })
+      .register_fn("release_use_item", |username: &str| {
+        Self::release_use_item(username)
+      });
 
     match engine.eval::<()>(script.as_str()) {
       Ok(_) => {
