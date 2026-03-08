@@ -6,6 +6,7 @@ use tokio::time::sleep;
 
 use crate::common::get_player_uuid;
 use crate::core::*;
+use crate::extensions::BotDefaultExt;
 use crate::generators::mutate_text;
 use crate::generators::randchance;
 use crate::generators::randelem;
@@ -124,12 +125,10 @@ impl ChatModule {
     }
   }
 
-  async fn process_extra_tags(&self, text: String) -> String {
+  async fn process_extra_tags(&self, username: &str, text: String) -> String {
     let mut result = text.clone();
 
-    let radar_re = Regex::new(r"\#radar\[\w+]").unwrap();
-
-    for teg in radar_re.find_iter(&text.clone()) {
+    for teg in Regex::new(r"#radar\[\w+]").unwrap().find_iter(&text) {
       if !teg.is_empty() {
         let split_target: Vec<&str> = teg.as_str().split("[").collect();
 
@@ -153,9 +152,7 @@ impl ChatModule {
       }
     }
 
-    let uuid_re = Regex::new(r"\#uuid\[\w+]").unwrap();
-
-    for teg in uuid_re.find_iter(&text.clone()) {
+    for teg in Regex::new(r"#uuid\[\w+]").unwrap().find_iter(&text) {
       if !teg.is_empty() {
         let split_target: Vec<&str> = teg.as_str().split("[").collect();
 
@@ -164,10 +161,47 @@ impl ChatModule {
 
           if let Some(uuid) = get_player_uuid(target_nickname.clone()).await {
             let msg = format!("{} > UUID: {}", target_nickname, uuid);
-
             result = text.replace(teg.as_str(), msg.as_str());
           } else {
             result = text.replace(teg.as_str(), "");
+          }
+        }
+      }
+    }
+
+    for teg in Regex::new(r"#pass").unwrap().find_iter(&text) {
+      if !teg.is_empty() {
+        if let Some(profile) = PROFILES.get(username) {
+          result = text.replace(teg.as_str(), profile.password.unwrap_or("".to_string()).as_str());
+        }
+      }
+    }
+
+    for teg in Regex::new(r"#name").unwrap().find_iter(&text) {
+      if !teg.is_empty() {
+        result = text.replace(teg.as_str(), username);
+      }
+    }
+
+    for teg in Regex::new(r"#health").unwrap().find_iter(&text) {
+      if !teg.is_empty() {
+        if let Some(profile) = PROFILES.get(username) {
+          result = text.replace(teg.as_str(), profile.health.to_string().as_str());
+        }
+      }
+    }
+
+    for teg in Regex::new(r"#player").unwrap().find_iter(&text) {
+      if !teg.is_empty() {
+        if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+          if let Some(players) = bot.get_players() {
+            let mut usernames = Vec::new();
+
+            for info in players.values() {
+              usernames.push(info.profile.name.as_str());
+            }
+
+            result = text.replace(teg.as_str(), randelem(&usernames).unwrap());
           }
         }
       }
@@ -180,8 +214,8 @@ impl ChatModule {
     let mut text = options.message.clone();
 
     if options.use_text_mutation {
+      text = self.process_extra_tags(&bot.name(), text).await;
       text = mutate_text(text);
-      text = self.process_extra_tags(text).await;
     }
 
     if !options.use_sync {
@@ -206,8 +240,8 @@ impl ChatModule {
       let mut text = options.message.clone();
 
       if options.use_text_mutation {
+        text = self.process_extra_tags(&bot.name(), text).await;
         text = mutate_text(text);
-        text = self.process_extra_tags(text).await;
       }
 
       if options.use_sync {
