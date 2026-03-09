@@ -835,14 +835,19 @@ function registerAllTriggerFunctions() {
 
   registerTriggerFunction('captcha-bypass_select_captcha-type', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
+    const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
     const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
+    const antiMapCaptchaSelectsContainer = document.getElementById('anti-map-captha-selects-container') as HTMLElement;
 
     if (current.value === 'web') {
       antiWebCaptchaOptionsContainer.style.display = 'flex';
       antiWebCaptchaSelectsContainer.style.display = 'flex';
+      antiMapCaptchaOptionsContainer.style.display = 'none';
+      antiMapCaptchaSelectsContainer.style.display = 'none';
     } else if (current.value === 'map') {
       antiWebCaptchaOptionsContainer.style.display = 'none';
       antiWebCaptchaSelectsContainer.style.display = 'none';
+      antiMapCaptchaSelectsContainer.style.display = 'flex';
     }
   });
 
@@ -856,6 +861,16 @@ function registerAllTriggerFunctions() {
     } else {
       antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
       antiWebCaptchaSelectBrowserContainer.style.display = 'none';
+    }
+  });
+
+  registerTriggerFunction('captcha-bypass_select_captcha-subtype', 'select', (current: HTMLSelectElement) => {
+    const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
+
+    if (current.value === 'inventory') {
+      antiMapCaptchaOptionsContainer.style.display = 'none';
+    } else if (current.value === 'frame') {
+      antiMapCaptchaOptionsContainer.style.display = 'flex';
     }
   });
 

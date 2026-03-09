@@ -672,6 +672,13 @@
         "en": "Captcha Type:"
       }
     },
+    { 
+      "tags": ["label:captcha-subtype"], 
+      "lang": {
+        "ru": "Подтип капчи:",
+        "en": "Captcha Subtype:"
+      }
+    },
     {
       "tags": ["label:captcha-solve-mode"], 
       "lang": {
@@ -698,6 +705,13 @@
       "lang": {
         "ru": "Адрес сервера для WebDriver",
         "en": "Server address for WebDriver"
+      }
+    },
+    { 
+      "tags": ["label:number-of-frames"], 
+      "lang": {
+        "ru": "Количество рамок",
+        "en": "Number of Frames"
       }
     },
     { 

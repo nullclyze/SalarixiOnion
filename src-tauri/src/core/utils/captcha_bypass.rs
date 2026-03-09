@@ -2,12 +2,13 @@ use base64::encode;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use tokio::sync::broadcast;
 use thirtyfour::{
   common::capabilities::firefox::FirefoxPreferences, error::WebDriverError, CapabilitiesHelper,
   ChromiumLikeCapabilities, DesiredCapabilities, WebDriver,
 };
-use tokio::sync::broadcast;
 
 use crate::{core::current_options, emit::send_log, generators::randint};
 
@@ -15,6 +16,8 @@ pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> =
   Lazy::new(|| Arc::new(WebCaptchaBypass::new()));
 pub static MAP_CAPTCHA_BYPASS: Lazy<Arc<MapCaptchaBypass>> =
   Lazy::new(|| Arc::new(MapCaptchaBypass::new()));
+pub static MAP_ACCUMULATOR: Lazy<Arc<MapAccumulator>> =
+  Lazy::new(|| Arc::new(MapAccumulator::new()));
 
 /// Обход web-капчи
 pub struct WebCaptchaBypass {
@@ -503,7 +506,7 @@ impl MapCaptchaBypass {
     for (i, &id) in map.iter().enumerate() {
       let rgb = self.convert_id_to_rgb_color(id);
       let x = i as u32 % width;
-      let y = i as u32 / height;
+      let y = i as u32 / width;
 
       img.put_pixel(x, y, Rgb([rgb.0, rgb.1, rgb.2]));
     }
@@ -516,5 +519,124 @@ impl MapCaptchaBypass {
     let base64_code = encode(&bytes);
 
     base64_code
+  }
+
+  pub fn create_combined_png_image(
+    &self,
+    maps: Vec<(u32, u32, Vec<u8>)>,
+    cols: u32,
+    rows: u32,
+  ) -> String {
+    if maps.is_empty() {
+      return String::new();
+    }
+
+    let map_width = maps.get(0).map(|(w, _, _)| *w).unwrap_or(128);
+    let map_height = maps.get(0).map(|(_, h, _)| *h).unwrap_or(128);
+
+    let total_width = map_width * cols;
+    let total_height = map_height * rows;
+
+    let mut combined_img = ImageBuffer::new(total_width, total_height);
+
+    for (idx, (width, height, map_data)) in maps.iter().enumerate() {
+      if idx >= (cols * rows) as usize {
+        break;
+      }
+
+      let col = (idx as u32) % cols;
+      let row = (idx as u32) / cols;
+
+      let x_offset = col * map_width;
+      let y_offset = row * map_height;
+
+      for (i, &id) in map_data.iter().enumerate() {
+        let rgb = self.convert_id_to_rgb_color(id);
+        let local_x = (i as u32) % width;
+        let local_y = (i as u32) / width;
+
+        if local_x < *width && local_y < *height {
+          let final_x = x_offset + local_x;
+          let final_y = y_offset + local_y;
+
+          if final_x < total_width && final_y < total_height {
+            combined_img.put_pixel(final_x, final_y, Rgb([rgb.0, rgb.1, rgb.2]));
+          }
+        }
+      }
+    }
+
+    let mut bytes = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut bytes);
+
+    let _ = combined_img.write_to(&mut cursor, ImageFormat::Png);
+
+    encode(&bytes)
+  }
+}
+
+#[derive(Clone)]
+pub struct MapData {
+  pub width: u32,
+  pub height: u32,
+  pub colors: Vec<u8>,
+}
+
+pub struct MapAccumulator {
+  maps: RwLock<HashMap<String, Vec<MapData>>>,
+}
+
+impl MapAccumulator {
+  pub fn new() -> Self {
+    Self {
+      maps: RwLock::new(HashMap::new()),
+    }
+  }
+
+  pub fn add_map(&self, username: &str, width: u32, height: u32, colors: Vec<u8>) {
+    let mut maps = self.maps.write().unwrap();
+    let user_maps = maps.entry(username.to_string()).or_insert_with(Vec::new);
+    
+    user_maps.push(MapData {
+      width,
+      height,
+      colors,
+    });
+  }
+
+  pub fn get_maps(&self, username: &str) -> Option<Vec<MapData>> {
+    let maps = self.maps.read().unwrap();
+    maps.get(username).cloned()
+  }
+
+  pub fn clear_maps(&self, username: &str) {
+    let mut maps = self.maps.write().unwrap();
+    maps.remove(username);
+  }
+
+  pub fn combine_and_render(
+    &self,
+    username: &str
+  ) -> Option<String> {
+    let map_data = self.get_maps(username)?;
+
+    let Some(opts) = current_options() else {
+      return None;
+    };
+
+    if map_data.is_empty() || map_data.len() < opts.captcha_bypass.number_of_frames {
+      return None;
+    }
+
+    let mut maps = Vec::new();
+
+    for map in map_data.iter().take(opts.captcha_bypass.number_of_frames) {
+      maps.push((map.width, map.height, map.colors.clone()));
+    }
+
+    let cols = 4u32;
+    let rows = 3u32;
+
+    Some(MAP_CAPTCHA_BYPASS.create_combined_png_image(maps, cols, rows))
   }
 }

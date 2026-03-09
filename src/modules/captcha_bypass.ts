@@ -79,6 +79,8 @@ export class CaptchaBypassManager {
     this.cards!.innerHTML = '';
     this.cards!.style.display = 'none';
 
+    this.wrappers!.innerHTML = '';
+
     this.settings!.style.display = 'flex';
   }
 
@@ -88,6 +90,13 @@ export class CaptchaBypassManager {
   }
 
   private createCaptchaCard(username: string, captcha: Captcha): void {
+    const oldCard = document.getElementById(`bot-captcha-${username}`);
+
+    if (oldCard) {
+      oldCard.remove();
+      document.getElementById(`captcha-wrapper-${username}`)?.remove();
+    }
+
     const card = document.createElement('div');
     card.className = 'bot-captcha';
     card.id = `bot-captcha-${username}`;
@@ -135,8 +144,8 @@ export class CaptchaBypassManager {
           </div>
         </div>
 
-        <div style="width: 100%; height: 400px; display: flex; justify-content: center; align-items: center;">
-          <img src="data:image/png;base64,${captcha.data.base64}" draggable="false" style="width: 350px; height: 300px;">
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; overflow-y: auto; height: 100%;">
+          <img id="captcha-img-${username}" src="data:image/png;base64,${captcha.data.base64}" draggable="false" style="max-width: 100%; height: auto; image-rendering: pixelated;">
         </div>
 
         <div class="pretty-input-wrapper" style="margin-top: 20px;">
@@ -146,6 +155,13 @@ export class CaptchaBypassManager {
       `;
 
       this.wrappers?.appendChild(wrapper);
+
+      const img = document.getElementById(`captcha-img-${username}`) as HTMLImageElement;
+      img.onload = () => {
+        const scale = Math.min(2, 800 / img.naturalWidth);
+        img.style.width = (img.naturalWidth * scale) + 'px';
+        img.style.height = (img.naturalHeight * scale) + 'px';
+      };
 
       this.addTempListener(`solve-captcha-${username}`, 'click', () => wrapper.style.display = 'flex');
       this.addTempListener(`close-captcha-wrapper-${username}`, 'click', () => wrapper.style.display = 'none');
@@ -169,6 +185,7 @@ export class CaptchaBypassManager {
 
     this.addTempListener(`remove-captcha-${username}`, 'click', async () => {
       document.getElementById(`bot-captcha-${username}`)?.remove();
+      document.getElementById(`captcha-wrapper-${username}`)?.remove();
     });
   }
 }   
