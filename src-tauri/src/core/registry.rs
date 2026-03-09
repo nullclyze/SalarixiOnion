@@ -108,7 +108,7 @@ pub async fn registry_event_loop() {
     match event {
       RegistryEvent::LoadPlugins { username } => {
         if let Some(opts) = current_options() {
-          PLUGIN_MANAGER.load(&username, &opts.plugins);
+          let _ = PLUGIN_MANAGER.activate_for(username, opts.plugins);
         }
       }
       RegistryEvent::ControlModules {

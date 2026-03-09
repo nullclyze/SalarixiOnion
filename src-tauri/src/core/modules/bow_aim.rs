@@ -45,8 +45,8 @@ impl BowAimModule {
         .async_get_bot(&username, async |bot| {
           let nickname = bot.name();
 
-          if STATES.get_state(&nickname, "can_looking") {
-            STATES.set_mutual_states(&nickname, "looking", true);
+          if get_state(&nickname, "can_looking") {
+            set_mutual_states(&nickname, "looking", true);
 
             loop {
               if !TASKS.get_task_activity(&nickname, "bow-aim") {
@@ -74,13 +74,13 @@ impl BowAimModule {
   async fn shoot(&self, bot: &Client, target: String, distance: f64) {
     let nickname = bot.name();
 
-    if STATES.get_state(&nickname, "can_interacting")
-      && !STATES.get_state(&nickname, "is_eating")
-      && !STATES.get_state(&nickname, "is_drinking")
-      && !STATES.get_state(&nickname, "is_attacking")
+    if get_state(&nickname, "can_interacting")
+      && !get_state(&nickname, "is_eating")
+      && !get_state(&nickname, "is_drinking")
+      && !get_state(&nickname, "is_attacking")
     {
       if let Some(slot) = self.find_bow_in_inventory(bot) {
-        STATES.set_mutual_states(&nickname, "interacting", true);
+        set_mutual_states(&nickname, "interacting", true);
 
         bot.take_item(slot, true).await;
 
@@ -122,7 +122,7 @@ impl BowAimModule {
 
         bot.release_use_held_item();
 
-        STATES.set_mutual_states(&nickname, "interacting", false);
+        set_mutual_states(&nickname, "interacting", false);
       }
     }
   }
@@ -161,7 +161,7 @@ impl BowAimModule {
       bot.release_use_held_item();
     }
 
-    STATES.set_mutual_states(username, "looking", false);
-    STATES.set_mutual_states(username, "interacting", false);
+    set_mutual_states(username, "looking", false);
+    set_mutual_states(username, "interacting", false);
   }
 }

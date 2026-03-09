@@ -1,6 +1,7 @@
 use azalea::inventory::ItemStack;
 use azalea::prelude::*;
 use azalea::registry::builtin::ItemKind;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -25,36 +26,6 @@ struct ArmorSet {
 pub struct AutoArmorPlugin;
 
 impl AutoArmorPlugin {
-  pub fn new() -> Self {
-    Self
-  }
-
-  pub fn enable(&'static self, username: String) {
-    let nickname = username.clone();
-
-    let task = tokio::spawn(async move {
-      loop {
-        if !process_is_active() {
-          break;
-        }
-
-        let _ = BOT_REGISTRY
-          .async_get_bot(&nickname, async |bot| {
-            if !bot.workable() {
-              return;
-            }
-
-            self.equip_armor(bot).await;
-          })
-          .await;
-
-        sleep(Duration::from_millis(50)).await;
-      }
-    });
-
-    PLUGIN_MANAGER.push_task(&username, "auto-armor", task);
-  }
-
   async fn equip_armor(&self, bot: &Client) {
     let mut armors = vec![];
 
@@ -359,5 +330,39 @@ impl AutoArmorPlugin {
     }
 
     false
+  }
+}
+
+impl SalarixiPlugin for AutoArmorPlugin {
+  fn new() -> Self {
+    Self
+  }
+
+  fn activate(&'static self, username: String) -> io::Result<()> {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
+      loop {
+        if !process_is_active() {
+          break;
+        }
+
+        let _ = BOT_REGISTRY
+          .async_get_bot(&nickname, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
+            self.equip_armor(bot).await;
+          })
+          .await;
+
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-armor", task);
+
+    Ok(())
   }
 }

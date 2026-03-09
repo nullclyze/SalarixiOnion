@@ -3,6 +3,7 @@ use azalea::inventory::ItemStack;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -19,43 +20,13 @@ struct BrokenItem {
 pub struct AutoRepairPlugin;
 
 impl AutoRepairPlugin {
-  pub fn new() -> Self {
-    Self
-  }
-
-  pub fn enable(&'static self, username: String) {
-    let nickname = username.clone();
-
-    let task = tokio::spawn(async move {
-      loop {
-        if !process_is_active() {
-          break;
-        }
-
-        let _ = BOT_REGISTRY
-          .async_get_bot(&nickname, async |bot| {
-            if !bot.workable() {
-              return;
-            }
-
-            self.repair_items(&bot).await;
-          })
-          .await;
-
-        sleep(Duration::from_millis(50)).await;
-      }
-    });
-
-    PLUGIN_MANAGER.push_task(&username, "auto-repair", task);
-  }
-
   async fn repair_items(&self, bot: &Client) {
     let broken_items = self.find_broken_items(bot);
 
     let nickname = bot.name();
 
     for broken_item in broken_items {
-      if !STATES.get_state(&nickname, "is_eating") && !STATES.get_state(&nickname, "is_drinking") {
+      if !get_state(&nickname, "is_eating") && !get_state(&nickname, "is_drinking") {
         self.repair_item(bot, broken_item).await;
       }
     }
@@ -79,11 +50,11 @@ impl AutoRepairPlugin {
       let nickname = bot.name();
 
       for _ in 0..=count {
-        if STATES.get_state(&nickname, "can_interacting")
-          && STATES.get_state(&nickname, "can_looking")
+        if get_state(&nickname, "can_interacting")
+          && get_state(&nickname, "can_looking")
         {
-          STATES.set_mutual_states(&nickname, "interacting", true);
-          STATES.set_mutual_states(&nickname, "looking", true);
+          set_mutual_states(&nickname, "interacting", true);
+          set_mutual_states(&nickname, "looking", true);
 
           if broken_item.slot != 45 && broken_item.slot > 8 {
             bot.take_item(broken_item.slot, false).await;
@@ -120,8 +91,8 @@ impl AutoRepairPlugin {
             }
           }
 
-          STATES.set_mutual_states(&nickname, "interacting", false);
-          STATES.set_mutual_states(&nickname, "looking", false);
+          set_mutual_states(&nickname, "interacting", false);
+          set_mutual_states(&nickname, "looking", false);
         }
 
         sleep(Duration::from_millis(50)).await;
@@ -181,5 +152,39 @@ impl AutoRepairPlugin {
     }
 
     broken_items
+  }
+}
+
+impl SalarixiPlugin for AutoRepairPlugin {
+  fn new() -> Self {
+    Self
+  }
+
+  fn activate(&'static self, username: String) -> io::Result<()> {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
+      loop {
+        if !process_is_active() {
+          break;
+        }
+
+        let _ = BOT_REGISTRY
+          .async_get_bot(&nickname, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
+            self.repair_items(bot).await;
+          })
+          .await;
+
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-repair", task);
+
+    Ok(())
   }
 }

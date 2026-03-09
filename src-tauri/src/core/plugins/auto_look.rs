@@ -1,4 +1,5 @@
 use azalea::prelude::*;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -9,11 +10,24 @@ use crate::extensions::{BotDefaultExt, BotRotationExt, EntityType};
 pub struct AutoLookPlugin;
 
 impl AutoLookPlugin {
-  pub fn new() -> Self {
+  async fn look(&self, bot: &Client) {
+    let username = bot.name();
+
+    if get_state(&username, "can_looking") && bot.is_goto_target_reached() {
+      if let Some(entity) = bot.find_nearest_entity(EntityType::Any, 14.0) {
+        bot.look_at_entity(entity, true);
+        sleep(Duration::from_millis(randuint(50, 100))).await;
+      }
+    }
+  }
+}
+
+impl SalarixiPlugin for AutoLookPlugin {
+  fn new() -> Self {
     Self
   }
 
-  pub fn enable(&'static self, username: String) {
+  fn activate(&'static self, username: String) -> io::Result<()> {
     let nickname = username.clone();
 
     let task = tokio::spawn(async move {
@@ -28,7 +42,7 @@ impl AutoLookPlugin {
               return;
             }
 
-            self.look(&bot).await;
+            self.look(bot).await;
           })
           .await;
 
@@ -37,16 +51,7 @@ impl AutoLookPlugin {
     });
 
     PLUGIN_MANAGER.push_task(&username, "auto-look", task);
-  }
 
-  async fn look(&self, bot: &Client) {
-    let username = bot.name();
-
-    if STATES.get_state(&username, "can_looking") && bot.is_goto_target_reached() {
-      if let Some(entity) = bot.find_nearest_entity(EntityType::Any, 14.0) {
-        bot.look_at_entity(entity, true);
-        sleep(Duration::from_millis(randuint(50, 100))).await;
-      }
-    }
+    Ok(())
   }
 }

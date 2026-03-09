@@ -9,6 +9,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
 use std::collections::HashMap;
+use std::io;
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -1027,7 +1028,7 @@ impl PluginManager {
     }
   }
 
-  pub fn load(&'static self, username: &String, plugins: &PluginOptions) {
+  pub fn activate_for(&'static self, username: String, plugins: PluginOptions) -> io::Result<()> {
     self
       .tasks
       .write()
@@ -1035,32 +1036,34 @@ impl PluginManager {
       .insert(username.clone(), HashMap::new());
 
     if plugins.auto_armor {
-      self.plugins.auto_armor.enable(username.clone());
+      self.plugins.auto_armor.activate(username.clone())?;
     }
 
     if plugins.auto_totem {
-      self.plugins.auto_totem.enable(username.clone());
+      self.plugins.auto_totem.activate(username.clone())?;
     }
 
     if plugins.auto_eat {
-      self.plugins.auto_eat.enable(username.clone());
+      self.plugins.auto_eat.activate(username.clone())?;
     }
 
     if plugins.auto_potion {
-      self.plugins.auto_potion.enable(username.clone());
+      self.plugins.auto_potion.activate(username.clone())?;
     }
 
     if plugins.auto_look {
-      self.plugins.auto_look.enable(username.clone());
+      self.plugins.auto_look.activate(username.clone())?;
     }
 
     if plugins.auto_shield {
-      self.plugins.auto_shield.enable(username.clone());
+      self.plugins.auto_shield.activate(username.clone())?;
     }
 
     if plugins.auto_repair {
-      self.plugins.auto_repair.enable(username.clone());
+      self.plugins.auto_repair.activate(username.clone())?;
     }
+
+    Ok(())
   }
 
   pub fn push_task(&self, username: &str, plugin: &str, task: JoinHandle<()>) {

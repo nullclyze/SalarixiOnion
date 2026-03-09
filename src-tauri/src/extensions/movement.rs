@@ -20,34 +20,34 @@ impl BotMovementExt for Client {
   fn start_walking(&self, direction: WalkDirection) {
     let username = self.name();
 
-    if STATES.get_state(&username, "can_walking")
-      && !STATES.get_state(&username, "is_eating")
-      && !STATES.get_state(&username, "is_drinking")
-      && !STATES.get_state(&username, "is_interacting")
+    if get_state(&username, "can_walking")
+      && !get_state(&username, "is_eating")
+      && !get_state(&username, "is_drinking")
+      && !get_state(&username, "is_interacting")
     {
       self.ecs.lock().write_message(StartWalkEvent {
         entity: self.entity,
         direction: direction,
       });
 
-      STATES.set_mutual_states(&username, "walking", true);
+      set_mutual_states(&username, "walking", true);
     }
   }
 
   fn start_sprinting(&self, direction: SprintDirection) {
     let username = self.name();
 
-    if STATES.get_state(&username, "can_sprinting")
-      && !STATES.get_state(&username, "is_eating")
-      && !STATES.get_state(&username, "is_drinking")
-      && !STATES.get_state(&username, "is_interacting")
+    if get_state(&username, "can_sprinting")
+      && !get_state(&username, "is_eating")
+      && !get_state(&username, "is_drinking")
+      && !get_state(&username, "is_interacting")
     {
       self.ecs.lock().write_message(StartSprintEvent {
         entity: self.entity,
         direction: direction,
       });
 
-      STATES.set_mutual_states(&username, "sprinting", true);
+      set_mutual_states(&username, "sprinting", true);
     }
   }
 
@@ -59,8 +59,8 @@ impl BotMovementExt for Client {
 
     let username = self.name();
 
-    STATES.set_mutual_states(&username, "walking", false);
-    STATES.set_mutual_states(&username, "sprinting", false);
+    set_mutual_states(&username, "walking", false);
+    set_mutual_states(&username, "sprinting", false);
   }
 
   fn freeze_move(&self) {
@@ -71,29 +71,29 @@ impl BotMovementExt for Client {
 
     let username = self.name();
 
-    STATES.set_state(&username, "is_walking", false);
-    STATES.set_state(&username, "is_walking", false);
-    STATES.set_state(&username, "can_walking", false);
-    STATES.set_state(&username, "can_sprinting", false);
+    set_state(&username, "is_walking", false);
+    set_state(&username, "is_walking", false);
+    set_state(&username, "can_walking", false);
+    set_state(&username, "can_sprinting", false);
   }
 
   fn unfreeze_move(&self) {
     let username = self.name();
 
-    STATES.set_state(&username, "can_walking", true);
-    STATES.set_state(&username, "can_sprinting", true);
+    set_state(&username, "can_walking", true);
+    set_state(&username, "can_sprinting", true);
   }
 }
 
 /// Функция безопасного задания координат по X и Z для бота
 pub fn go_to(username: String, x: i32, z: i32) {
-  if STATES.get_state(&username, "can_walking") && STATES.get_state(&username, "can_sprinting") {
+  if get_state(&username, "can_walking") && get_state(&username, "can_sprinting") {
     tokio::spawn(async move {
       BOT_REGISTRY
         .async_get_bot(&username, async |bot| {
-          STATES.set_mutual_states(&username, "looking", true);
-          STATES.set_mutual_states(&username, "sprinting", true);
-          STATES.set_mutual_states(&username, "walking", true);
+          set_mutual_states(&username, "looking", true);
+          set_mutual_states(&username, "sprinting", true);
+          set_mutual_states(&username, "walking", true);
 
           let goal = XZGoal { x: x, z: z };
           let opts = PathfinderOpts::new()
@@ -104,9 +104,9 @@ pub fn go_to(username: String, x: i32, z: i32) {
 
           bot.goto_with_opts(goal, opts).await;
 
-          STATES.set_mutual_states(&username, "looking", false);
-          STATES.set_mutual_states(&username, "sprinting", false);
-          STATES.set_mutual_states(&username, "walking", false);
+          set_mutual_states(&username, "looking", false);
+          set_mutual_states(&username, "sprinting", false);
+          set_mutual_states(&username, "walking", false);
         })
         .await;
     });

@@ -145,7 +145,7 @@ impl States {
 }
 
 pub struct StateManager {
-  pub map: RwLock<HashMap<String, Arc<RwLock<States>>>>,
+  pub map: RwLock<HashMap<String, States>>,
 }
 
 impl StateManager {
@@ -158,7 +158,7 @@ impl StateManager {
   pub fn push(&self, username: &str) {
     let mut states = self.map.write().unwrap();
     if !states.contains_key(username) {
-      states.insert(username.to_string(), Arc::new(RwLock::new(States::new())));
+      states.insert(username.to_string(), States::new());
     }
   }
 
@@ -170,8 +170,7 @@ impl StateManager {
   }
 
   pub fn reset(&self, username: &str) {
-    if let Some(arc) = self.map.write().unwrap().get(username) {
-      let mut states = arc.write().unwrap();
+    if let Some(states) = self.map.write().unwrap().get_mut(username) {
       states.can_walking = true;
       states.can_sprinting = true;
       states.can_eating = true;
@@ -188,29 +187,30 @@ impl StateManager {
       states.is_interacting = false;
     }
   }
+}
 
-  pub fn set_state(&self, username: &str, field: &str, value: bool) {
-    if let Some(arc) = self.map.write().unwrap().get(username) {
-      let mut states = arc.write().unwrap();
-      states.set(field, value);
-    }
+/// Вспомогательная функция получения состояния
+pub fn get_state(username: &str, field: &str) -> bool {
+  let map = STATES.map.read().unwrap();
+
+  if let Some(states) = map.get(username) {
+    return states.get(field);
   }
 
-  pub fn set_mutual_states(&self, username: &str, name: &str, current_value: bool) {
-    if let Some(arc) = self.map.write().unwrap().get(username) {
-      let mut states = arc.write().unwrap();
-      states.set(format!("is_{}", name).as_str(), current_value);
-      states.set(format!("can_{}", name).as_str(), !current_value);
-    }
+  false
+}
+
+/// Вспомогательная функция установки значения для состояния
+pub fn set_state(username: &str, field: &str, value: bool) {
+  if let Some(states) = STATES.map.write().unwrap().get_mut(username) {
+    states.set(field, value);
   }
+}
 
-  pub fn get_state(&self, username: &str, field: &str) -> bool {
-    let map = self.map.read().unwrap();
-
-    if let Some(states) = map.get(username) {
-      return states.read().unwrap().get(field);
-    }
-
-    false
+/// Вспомогательная функция взаимной установки значений для ```can``` и ```is``` состояний
+pub fn set_mutual_states(username: &str, name: &str, current_value: bool) {
+  if let Some(states) = STATES.map.write().unwrap().get_mut(username) {
+    states.set(format!("is_{}", name).as_str(), current_value);
+    states.set(format!("can_{}", name).as_str(), !current_value);
   }
 }

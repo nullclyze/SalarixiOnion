@@ -8,8 +8,8 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 use tokio::time::sleep;
 
+use crate::core::*;
 use crate::common::{get_average_coordinates_of_bots, this_is_solid_block};
-use crate::core::{BOT_REGISTRY, PROFILES, STATES, TASKS};
 use crate::extensions::{go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt};
 use crate::generators::{randfloat, randint, randuint};
 
@@ -77,8 +77,8 @@ impl QuickTaskManager {
               }
             }
             "rise" => {
-              if STATES.get_state(&nickname, "can_looking")
-                && STATES.get_state(&nickname, "can_interacting")
+              if get_state(&nickname, "can_looking")
+                && get_state(&nickname, "can_interacting")
               {
                 let mut block_slot = None;
 
@@ -94,8 +94,8 @@ impl QuickTaskManager {
                 }
 
                 if let Some(slot) = block_slot {
-                  STATES.set_mutual_states(&nickname, "looking", true);
-                  STATES.set_mutual_states(&nickname, "interacting", true);
+                  set_mutual_states(&nickname, "looking", true);
+                  set_mutual_states(&nickname, "interacting", true);
 
                   bot.take_item(slot, true).await;
 
@@ -123,8 +123,8 @@ impl QuickTaskManager {
 
                   bot.set_direction(original_direction_1.0, original_direction_1.1);
 
-                  STATES.set_mutual_states(&nickname, "looking", false);
-                  STATES.set_mutual_states(&nickname, "interacting", false);
+                  set_mutual_states(&nickname, "looking", false);
+                  set_mutual_states(&nickname, "interacting", false);
                 }
               }
             }
@@ -201,11 +201,11 @@ impl QuickTaskManager {
                 }
 
                 if let Some(slot) = block_slot {
-                  if STATES.get_state(&nickname, "can_looking")
-                    && STATES.get_state(&nickname, "can_interacting")
+                  if get_state(&nickname, "can_looking")
+                    && get_state(&nickname, "can_interacting")
                   {
-                    STATES.set_mutual_states(&nickname, "looking", true);
-                    STATES.set_mutual_states(&nickname, "interacting", true);
+                    set_mutual_states(&nickname, "looking", true);
+                    set_mutual_states(&nickname, "interacting", true);
 
                     bot.take_item(slot, true).await;
 
@@ -233,8 +233,8 @@ impl QuickTaskManager {
                       bot.set_crouching(false);
                     }
 
-                    STATES.set_mutual_states(&nickname, "looking", false);
-                    STATES.set_mutual_states(&nickname, "interacting", false);
+                    set_mutual_states(&nickname, "looking", false);
+                    set_mutual_states(&nickname, "interacting", false);
 
                     sleep(Duration::from_millis(randuint(100, 150))).await;
                   }

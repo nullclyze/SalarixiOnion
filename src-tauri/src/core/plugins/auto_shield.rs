@@ -2,6 +2,7 @@ use azalea::ecs::entity::Entity;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -12,44 +13,14 @@ use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt, EntityTy
 pub struct AutoShieldPlugin;
 
 impl AutoShieldPlugin {
-  pub fn new() -> Self {
-    Self
-  }
-
-  pub fn enable(&'static self, username: String) {
-    let nickname = username.clone();
-
-    let task = tokio::spawn(async move {
-      loop {
-        if !process_is_active() {
-          break;
-        }
-
-        let _ = BOT_REGISTRY
-          .async_get_bot(&nickname, async |bot| {
-            if !bot.workable() {
-              return;
-            }
-
-            self.defend(&bot).await;
-          })
-          .await;
-
-        sleep(Duration::from_millis(50)).await;
-      }
-    });
-
-    PLUGIN_MANAGER.push_task(&username, "auto-shield", task);
-  }
-
-  pub async fn defend(&self, bot: &Client) {
+  async fn defend(&self, bot: &Client) {
     let nickname = bot.name();
 
     if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(45) {
         if item.is_empty() || item.kind() == ItemKind::Shield {
-          if !STATES.get_state(&nickname, "is_eating")
-            && !STATES.get_state(&nickname, "is_drinking")
+          if !get_state(&nickname, "is_eating")
+            && !get_state(&nickname, "is_drinking")
           {
             let mut shield_equipped = false;
 
@@ -97,11 +68,11 @@ impl AutoShieldPlugin {
     if let Some(entity) = self.get_nearest_dangerous_entity(bot) {
       let nickname = bot.name();
 
-      if STATES.get_state(&nickname, "can_looking")
-        && STATES.get_state(&nickname, "can_interacting")
+      if get_state(&nickname, "can_looking")
+        && get_state(&nickname, "can_interacting")
       {
-        STATES.set_mutual_states(&nickname, "looking", true);
-        STATES.set_mutual_states(&nickname, "interacting", true);
+        set_mutual_states(&nickname, "looking", true);
+        set_mutual_states(&nickname, "interacting", true);
 
         bot.start_use_held_item(InteractionHand::OffHand);
 
@@ -121,9 +92,43 @@ impl AutoShieldPlugin {
 
         bot.release_use_held_item();
 
-        STATES.set_mutual_states(&nickname, "looking", false);
-        STATES.set_mutual_states(&nickname, "interacting", false);
+        set_mutual_states(&nickname, "looking", false);
+        set_mutual_states(&nickname, "interacting", false);
       }
     }
+  }
+}
+
+impl SalarixiPlugin for AutoShieldPlugin {
+  fn new() -> Self {
+    Self
+  }
+
+  fn activate(&'static self, username: String) -> io::Result<()> {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
+      loop {
+        if !process_is_active() {
+          break;
+        }
+
+        let _ = BOT_REGISTRY
+          .async_get_bot(&nickname, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
+            self.defend(bot).await;
+          })
+          .await;
+
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-shield", task);
+
+    Ok(())
   }
 }
