@@ -7,6 +7,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
+use crate::core::utils::MAP_ACCUMULATOR;
 use crate::emit::*;
 use crate::extensions::BotDefaultExt;
 use crate::generators::*;
@@ -109,57 +110,61 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         default_authorize(&bot).await;
       }
 
-      if let Some(profile) = PROFILES.get(&username) {
-        if !profile.skin_is_set {
-          if let Some(opts) = current_options() {
-            match opts.basic.skin_type.as_str() {
-              "random" => {
-                let command = format!(
-                  "{} {}",
-                  opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
-                  randelem(ACCOUNTS_WITH_SKINS).unwrap()
-                );
+      let Some(profile) = PROFILES.get(&username) else {
+        return Ok(());
+      };
 
-                bot.chat(&command);
+      let Some(opts) = current_options() else {
+        return Ok(())
+      };
 
-                sleep(Duration::from_millis(3000)).await;
+      if !profile.skin_is_set {
+        match opts.basic.skin_type.as_str() {
+          "random" => {
+            let command = format!(
+              "{} {}",
+              opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
+              randelem(ACCOUNTS_WITH_SKINS).unwrap()
+            );
 
-                send_log(
-                  format!("Бот {} успешно установил скин: {}", username, command),
-                  "system",
-                );
+            bot.chat(&command);
 
-                bot.disconnect();
+            sleep(Duration::from_millis(3000)).await;
 
-                BOT_REGISTRY.remove_bot(&username);
-                PROFILES.set_bool(&username, "skin_is_set", true);
-              }
-              "custom" => {
-                if let Some(n) = opts.basic.custom_skin_by_nickname {
-                  let command = format!(
-                    "{} {}",
-                    opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
-                    n
-                  );
+            send_log(
+              format!("Бот {} успешно установил скин: {}", username, command),
+              "system",
+            );
 
-                  bot.chat(&command);
+            bot.disconnect();
 
-                  sleep(Duration::from_millis(3000)).await;
+            BOT_REGISTRY.remove_bot(&username);
+            PROFILES.set_bool(&username, "skin_is_set", true);
+          }
+          "custom" => {
+            if let Some(n) = opts.basic.custom_skin_by_nickname {
+              let command = format!(
+                "{} {}",
+                opts.basic.set_skin_command.unwrap_or("/skin".to_string()),
+                n
+              );
 
-                  send_log(
-                    format!("Бот {} успешно установил скин: {}", username, command),
-                    "system",
-                  );
+              bot.chat(&command);
 
-                  bot.disconnect();
+              sleep(Duration::from_millis(3000)).await;
 
-                  BOT_REGISTRY.remove_bot(&username);
-                  PROFILES.set_bool(&username, "skin_is_set", true);
-                }
-              }
-              _ => {}
+              send_log(
+                format!("Бот {} успешно установил скин: {}", username, command),
+                "system",
+              );
+
+              bot.disconnect();
+
+              BOT_REGISTRY.remove_bot(&username);
+              PROFILES.set_bool(&username, "skin_is_set", true);
             }
           }
+          _ => {}
         }
       }
     }
@@ -201,54 +206,56 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Chat(packet) => {
       let nickname = bot.name();
 
-      if let Some(options) = current_options() {
-        if options.basic.use_chat_monitoring {
-          send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
-            receiver: nickname.clone(),
-            message: packet.message().to_html(),
-          }));
-        }
+      let Some(options) = current_options() else {
+        return Ok(());
+      };
 
-        if options.basic.use_anti_captcha {
-          if options.captcha_bypass.captcha_type.as_str() == "web" {
-            if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
-              packet.message().to_string(),
-              options.captcha_bypass.regex.as_str(),
-              options.captcha_bypass.required_url_part,
-            ) {
-              if let Some(profile) = PROFILES.get(&nickname) {
-                if !profile.captcha_caught {
-                  PROFILES.set_bool(&nickname, "captcha_caught", true);
+      if options.basic.use_chat_monitoring {
+        send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
+          receiver: nickname.clone(),
+          message: packet.message().to_html(),
+        }));
+      }
 
-                  if options.basic.use_webhook && options.webhook.send_information {
-                    send_webhook(
-                      options.webhook.url,
-                      format!("Бот {} получил ссылку на капчу: {}", nickname, url),
-                    );
-                  }
+      if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "web" {
+        if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(
+          packet.message().to_string(),
+          options.captcha_bypass.regex.as_str(),
+          options.captcha_bypass.required_url_part,
+        ) {
+          let Some(profile) = PROFILES.get(&nickname) else { 
+            return Ok(());
+          };
 
-                  send_log(
-                    format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", nickname),
-                    "info",
-                  );
+          if !profile.captcha_caught {
+            PROFILES.set_bool(&nickname, "captcha_caught", true);
 
-                  if options.captcha_bypass.solve_mode.as_str() == "auto" {
-                    WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::OpenUrl {
-                      url: url.clone(),
-                      proxy: profile.proxy.proxy,
-                      username: profile.proxy.username,
-                      password: profile.proxy.password,
-                    });
-                  } else {
-                    send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
-                      AntiWebCaptchaEventPayload {
-                        captcha_url: url,
-                        nickname: nickname,
-                      },
-                    ));
-                  }
-                }
-              }
+            if options.basic.use_webhook && options.webhook.send_information {
+              send_webhook(
+                options.webhook.url,
+                format!("Бот {} получил ссылку на капчу: {}", nickname, url),
+              );
+            }
+
+            send_log(
+              format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", nickname),
+              "info",
+            );
+
+            if options.captcha_bypass.solve_mode.as_str() == "auto" {
+              WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::OpenUrl {
+                url: url.clone(),
+                proxy: profile.proxy.proxy,
+                username: profile.proxy.username,
+                password: profile.proxy.password,
+              });
+            } else {
+              send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
+                AntiWebCaptchaEventPayload {
+                  captcha_url: url,
+                  nickname: nickname,
+                },
+              ));
             }
           }
         }
@@ -259,15 +266,17 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
     Event::Tick => {
       let nickname = bot.name();
 
-      if let Some(profile) = PROFILES.get(&nickname) {
-        if profile.status == ProfileStatus::Online {
-          if !bot.workable() {
-            return Ok(());
-          }
+      let Some(profile) = PROFILES.get(&nickname) else {
+        return Ok(());
+      };
 
-          PROFILES.set_num(&nickname, "ping", bot.ping());
-          PROFILES.set_num(&nickname, "health", bot.get_health() as u32);
+      if profile.status == ProfileStatus::Online {
+        if !bot.workable() {
+          return Ok(());
         }
+
+        PROFILES.set_num(&nickname, "ping", bot.ping());
+        PROFILES.set_num(&nickname, "health", bot.get_health() as u32);
       }
     }
     Event::Packet(packet) => match &*packet {
@@ -275,38 +284,63 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         let nickname = bot.name();
 
         if let Some(options) = current_options() {
-          if options.basic.use_anti_captcha {
-            if options.captcha_bypass.captcha_type.as_str() == "map" {
-              if let Some(map_patch) = &data.color_patch.0 {
-                if let Some(profile) = PROFILES.get(&nickname) {
-                  if !profile.captcha_caught {
-                    PROFILES.set_bool(&nickname, "captcha_caught", true);
+          if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "map" {
+            let Some(map_patch) = &data.color_patch.0 else {
+              return Ok(());
+            };
 
-                    let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(
-                      map_patch.width as u32,
-                      map_patch.height as u32,
-                      &map_patch.map_colors,
-                    );
+            let Some(profile) = PROFILES.get(&nickname) else {
+              return Ok(());
+            };
 
-                    if options.basic.use_webhook && options.webhook.send_information {
-                      send_webhook(
-                        options.webhook.url,
-                        format!("Бот {} получил капчу с карты: {}", nickname, base64_code),
-                      );
-                    }
+            if !profile.captcha_caught {
+              let is_frame = options.captcha_bypass.captcha_subtype.as_str() == "frame";
 
-                    send_log(
-                      format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
-                      "info",
-                    );
+              if is_frame {
+                MAP_ACCUMULATOR.add_map(
+                  &nickname,
+                  map_patch.width as u32,
+                  map_patch.height as u32,
+                  map_patch.map_colors.clone(),
+                );
+              }
 
-                    send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
-                      AntiMapCaptchaEventPayload {
-                        base64_code: base64_code,
-                        nickname: nickname.to_string(),
-                      },
-                    ));
-                  }
+              let base64_code;
+
+              if is_frame {
+                base64_code = MAP_ACCUMULATOR.combine_and_render(&nickname);
+              } else {
+                base64_code = Some(MAP_CAPTCHA_BYPASS.create_png_image(
+                  map_patch.width as u32, 
+                  map_patch.height as u32, 
+                  &map_patch.map_colors
+                ));
+              }
+
+              if let Some(code) = base64_code {
+                PROFILES.set_bool(&nickname, "captcha_caught", true);
+
+                if options.basic.use_webhook && options.webhook.send_information {
+                  send_webhook(
+                    options.webhook.url,
+                    format!("Бот {} получил капчу с карты: {}", nickname, code),
+                  );
+                }
+
+                send_log(
+                  format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
+                  "info",
+                );
+
+                send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
+                  AntiMapCaptchaEventPayload {
+                    base64_code: code,
+                    nickname: nickname.to_string(),
+                  },
+                ));
+
+                if is_frame {
+                  MAP_ACCUMULATOR.clear_maps(&nickname);
                 }
               }
             }

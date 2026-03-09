@@ -240,11 +240,13 @@ pub struct PluginOptions {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CaptchaBypassOptions {
   pub captcha_type: String,
+  pub captcha_subtype: String,
   pub solve_mode: String,
   pub browser: String,
   pub regex: String,
   pub required_url_part: Option<String>,
   pub webdriver_server_url: Option<String>,
+  pub number_of_frames: usize
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
