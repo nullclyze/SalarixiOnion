@@ -232,12 +232,12 @@ impl FarmerModule {
   async fn interact_with_block(&self, bot: &Client, block_pos: BlockPos, options: &FarmerOptions) {
     let nickname = bot.username();
 
-    if !STATES.get_state(&nickname, "is_eating")
-      && !STATES.get_state(&nickname, "is_drinking")
-      && STATES.get_state(&nickname, "can_interacting")
+    if !get_state(&nickname, "is_eating")
+      && !get_state(&nickname, "is_drinking")
+      && get_state(&nickname, "can_interacting")
     {
       if let Some(state) = get_block_state(bot, block_pos) {
-        STATES.set_mutual_states(&nickname, "interacting", true);
+        set_mutual_states(&nickname, "interacting", true);
 
         let kind = BlockKind::from(state);
 
@@ -290,7 +290,7 @@ impl FarmerModule {
           }
         }
 
-        STATES.set_mutual_states(&nickname, "interacting", false);
+        set_mutual_states(&nickname, "interacting", false);
       }
     }
   }
@@ -299,7 +299,7 @@ impl FarmerModule {
     let username = bot.username();
 
     loop {
-      STATES.set_mutual_states(&username, "looking", true);
+      set_mutual_states(&username, "looking", true);
 
       for y in -1..=1 {
         let pos = bot.feet_pos();
@@ -329,7 +329,7 @@ impl FarmerModule {
 
       sleep(Duration::from_millis(options.delay.unwrap_or(100))).await;
 
-      STATES.set_mutual_states(&username, "looking", false);
+      set_mutual_states(&username, "looking", false);
     }
   }
 
@@ -344,7 +344,7 @@ impl FarmerModule {
   pub fn stop(&self, username: &str) {
     kill_task(username, "farmer");
 
-    STATES.set_mutual_states(username, "looking", false);
-    STATES.set_mutual_states(username, "interacting", false);
+    set_mutual_states(username, "looking", false);
+    set_mutual_states(username, "interacting", false);
   }
 }

@@ -84,10 +84,10 @@ impl StealerModule {
 
       let username = bot.username();
 
-      STATES.set_state(&username, "can_attacking", false);
-      STATES.set_state(&username, "can_interacting", false);
-      STATES.set_state(&username, "can_eating", false);
-      STATES.set_state(&username, "can_drinking", false);
+      set_state(&username, "can_attacking", false);
+      set_state(&username, "can_interacting", false);
+      set_state(&username, "can_eating", false);
+      set_state(&username, "can_drinking", false);
 
       for slot in 0..=26 {
         if let Some(item) = menu.slot(slot) {
@@ -99,10 +99,10 @@ impl StealerModule {
 
       bot.unfreeze_move();
 
-      STATES.set_state(&username, "can_attacking", true);
-      STATES.set_state(&username, "can_interacting", true);
-      STATES.set_state(&username, "can_eating", true);
-      STATES.set_state(&username, "can_drinking", true);
+      set_state(&username, "can_attacking", true);
+      set_state(&username, "can_interacting", true);
+      set_state(&username, "can_eating", true);
+      set_state(&username, "can_drinking", true);
     }
   }
 
@@ -117,11 +117,11 @@ impl StealerModule {
         self.find_nearest_targets(bot, position, &options.target, options.radius.unwrap_or(5));
 
       for pos in target_positions {
-        if STATES.get_state(&nickname, "can_looking")
-          && STATES.get_state(&nickname, "can_interacting")
+        if get_state(&nickname, "can_looking")
+          && get_state(&nickname, "can_interacting")
         {
-          STATES.set_mutual_states(&nickname, "looking", true);
-          STATES.set_mutual_states(&nickname, "interacting", true);
+          set_mutual_states(&nickname, "looking", true);
+          set_mutual_states(&nickname, "interacting", true);
 
           bot.look_at(pos.center());
 
@@ -133,12 +133,12 @@ impl StealerModule {
             sleep(Duration::from_millis(randuint(200, 350))).await;
           }
 
-          STATES.set_mutual_states(&nickname, "looking", false);
-          STATES.set_mutual_states(&nickname, "interacting", false);
+          set_mutual_states(&nickname, "looking", false);
+          set_mutual_states(&nickname, "interacting", false);
         }
       }
 
-      if STATES.get_state(&nickname, "can_looking") {
+      if get_state(&nickname, "can_looking") {
         bot.set_direction(
           direction.0 + randfloat(-2.5, 2.5) as f32,
           direction.1 + randfloat(-2.5, 2.5) as f32,

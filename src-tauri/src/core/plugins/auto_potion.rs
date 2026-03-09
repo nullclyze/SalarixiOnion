@@ -5,6 +5,7 @@ use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
 use azalea::registry::builtin::Potion as PotionKind;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -24,36 +25,6 @@ struct Potion {
 pub struct AutoPotionPlugin;
 
 impl AutoPotionPlugin {
-  pub fn new() -> Self {
-    Self
-  }
-
-  pub fn enable(&'static self, username: String) {
-    let nickname = username.clone();
-
-    let task = tokio::spawn(async move {
-      loop {
-        if !process_is_active() {
-          break;
-        }
-
-        let _ = BOT_REGISTRY
-          .async_get_bot(&nickname, async |bot| {
-            if !bot.workable() {
-              return;
-            }
-
-            self.drink(&bot).await;
-          })
-          .await;
-
-        sleep(Duration::from_millis(50)).await;
-      }
-    });
-
-    PLUGIN_MANAGER.push_task(&username, "auto-potion", task);
-  }
-
   async fn drink(&self, bot: &Client) {
     let health = bot.get_health();
 
@@ -64,37 +35,37 @@ impl AutoPotionPlugin {
 
       if potions.len() > 0 {
         if let Some(potion) = self.get_best_potion(bot, potions) {
-          if health < 10.0 && !STATES.get_state(&nickname, "is_eating") {
-            STATES.set_state(&nickname, "can_eating", false);
+          if health < 10.0 && !get_state(&nickname, "is_eating") {
+            set_state(&nickname, "can_eating", false);
           } else {
-            STATES.set_state(&nickname, "can_eating", true);
+            set_state(&nickname, "can_eating", true);
           }
 
-          if STATES.get_state(&nickname, "can_drinking")
-            && !STATES.get_state(&nickname, "is_eating")
-            && !STATES.get_state(&nickname, "is_interacting")
+          if get_state(&nickname, "can_drinking")
+            && !get_state(&nickname, "is_eating")
+            && !get_state(&nickname, "is_interacting")
           {
             let mut should_drink = true;
 
-            if STATES.get_state(&nickname, "is_attacking") {
+            if get_state(&nickname, "is_attacking") {
               should_drink = !randchance(health as f64 / 20.0);
             }
 
             if should_drink {
-              STATES.set_state(&nickname, "can_eating", false);
-              STATES.set_state(&nickname, "can_attacking", false);
-              STATES.set_state(&nickname, "can_interacting", false);
-              STATES.set_mutual_states(&nickname, "drinking", true);
+              set_state(&nickname, "can_eating", false);
+              set_state(&nickname, "can_attacking", false);
+              set_state(&nickname, "can_interacting", false);
+              set_mutual_states(&nickname, "drinking", true);
 
               bot.take_item(potion.slot, false).await;
               sleep(Duration::from_millis(50)).await;
               self.use_potion(bot, potion.kind).await;
               sleep(Duration::from_millis(50)).await;
 
-              STATES.set_state(&nickname, "can_eating", true);
-              STATES.set_state(&nickname, "can_interacting", true);
-              STATES.set_state(&nickname, "can_attacking", true);
-              STATES.set_mutual_states(&nickname, "drinking", false);
+              set_state(&nickname, "can_eating", true);
+              set_state(&nickname, "can_interacting", true);
+              set_state(&nickname, "can_attacking", true);
+              set_mutual_states(&nickname, "drinking", false);
             }
           }
         }
@@ -290,5 +261,39 @@ impl AutoPotionPlugin {
     }
 
     None
+  }
+}
+
+impl SalarixiPlugin for AutoPotionPlugin {
+  fn new() -> Self {
+    Self
+  }
+
+  fn activate(&'static self, username: String) -> io::Result<()> {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
+      loop {
+        if !process_is_active() {
+          break;
+        }
+
+        let _ = BOT_REGISTRY
+          .async_get_bot(&nickname, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
+            self.drink(bot).await;
+          })
+          .await;
+
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-potion", task);
+
+    Ok(())
   }
 }

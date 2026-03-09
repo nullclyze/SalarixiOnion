@@ -85,11 +85,11 @@ impl BotInventoryExt for Client {
 
     self.freeze_move();
 
-    STATES.set_state(&username, "can_eating", false);
-    STATES.set_state(&username, "can_drinking", false);
-    STATES.set_state(&username, "can_attacking", false);
+    set_state(&username, "can_eating", false);
+    set_state(&username, "can_drinking", false);
+    set_state(&username, "can_attacking", false);
 
-    STATES.set_mutual_states(&username, "interacting", true);
+    set_mutual_states(&username, "interacting", true);
   }
 
   fn stop_interacting_with_inventory(&self) {
@@ -97,11 +97,11 @@ impl BotInventoryExt for Client {
 
     self.unfreeze_move();
 
-    STATES.set_state(&username, "can_eating", true);
-    STATES.set_state(&username, "can_drinking", true);
-    STATES.set_state(&username, "can_attacking", true);
+    set_state(&username, "can_eating", true);
+    set_state(&username, "can_drinking", true);
+    set_state(&username, "can_attacking", true);
 
-    STATES.set_mutual_states(&username, "interacting", false);
+    set_mutual_states(&username, "interacting", false);
   }
 
   async fn take_item(&self, source_slot: usize, lock: bool) {
@@ -163,7 +163,7 @@ impl BotInventoryExt for Client {
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
-        if !STATES.get_state(&username, "can_interacting") {
+        if !get_state(&username, "can_interacting") {
           return;
         }
 
@@ -183,7 +183,7 @@ impl BotInventoryExt for Client {
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
-        if !STATES.get_state(&username, "can_interacting") {
+        if !get_state(&username, "can_interacting") {
           return;
         }
 
@@ -203,7 +203,7 @@ impl BotInventoryExt for Client {
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
-        if !STATES.get_state(&username, "can_interacting") {
+        if !get_state(&username, "can_interacting") {
           return;
         }
 
@@ -223,7 +223,7 @@ impl BotInventoryExt for Client {
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
-        if !STATES.get_state(&username, "can_interacting") {
+        if !get_state(&username, "can_interacting") {
           return;
         }
 
@@ -263,7 +263,7 @@ impl BotInventoryExt for Client {
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
-        if !STATES.get_state(&username, "can_interacting") {
+        if !get_state(&username, "can_interacting") {
           return;
         }
 

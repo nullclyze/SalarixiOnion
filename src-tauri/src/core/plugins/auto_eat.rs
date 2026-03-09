@@ -2,6 +2,7 @@ use azalea::inventory::ItemStack;
 use azalea::prelude::*;
 use azalea::protocol::packets::game::s_interact::InteractionHand;
 use azalea::registry::builtin::ItemKind;
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -18,36 +19,6 @@ struct Food {
 pub struct AutoEatPlugin;
 
 impl AutoEatPlugin {
-  pub fn new() -> Self {
-    Self
-  }
-
-  pub fn enable(&'static self, username: String) {
-    let nickname = username.clone();
-
-    let task = tokio::spawn(async move {
-      loop {
-        if !process_is_active() {
-          break;
-        }
-
-        let _ = BOT_REGISTRY
-          .async_get_bot(&nickname, async |bot| {
-            if !bot.workable() {
-              return;
-            }
-
-            self.eat(&bot).await;
-          })
-          .await;
-
-        sleep(Duration::from_millis(50)).await;
-      }
-    });
-
-    PLUGIN_MANAGER.push_task(&username, "auto-eat", task);
-  }
-
   async fn eat(&self, bot: &Client) {
     let satiety = bot.get_satiety();
     let health = bot.get_health();
@@ -58,29 +29,29 @@ impl AutoEatPlugin {
       let food_list = self.find_food_in_inventory(bot);
 
       if let Some(best_food) = self.get_best_food(bot, &food_list) {
-        if STATES.get_state(&nickname, "can_eating")
-          && !STATES.get_state(&nickname, "is_drinking")
-          && !STATES.get_state(&nickname, "is_interacting")
+        if get_state(&nickname, "can_eating")
+          && !get_state(&nickname, "is_drinking")
+          && !get_state(&nickname, "is_interacting")
         {
           let mut should_eat = true;
 
-          if STATES.get_state(&nickname, "is_attacking") {
+          if get_state(&nickname, "is_attacking") {
             should_eat = !(randchance(satiety as f64 / 20.0) && randchance(health as f64 / 20.0));
           }
 
           if should_eat {
-            STATES.set_state(&nickname, "can_drinking", false);
-            STATES.set_state(&nickname, "can_interacting", false);
-            STATES.set_mutual_states(&nickname, "eating", true);
+            set_state(&nickname, "can_drinking", false);
+            set_state(&nickname, "can_interacting", false);
+            set_mutual_states(&nickname, "eating", true);
 
             bot.take_item(best_food.slot, false).await;
             sleep(Duration::from_millis(50)).await;
             self.start_eating(bot).await;
             sleep(Duration::from_millis(50)).await;
 
-            STATES.set_state(&nickname, "can_drinking", true);
-            STATES.set_state(&nickname, "can_interacting", true);
-            STATES.set_mutual_states(&nickname, "eating", false);
+            set_state(&nickname, "can_drinking", true);
+            set_state(&nickname, "can_interacting", true);
+            set_mutual_states(&nickname, "eating", false);
           } else {
             sleep(Duration::from_millis(1800)).await;
           }
@@ -326,5 +297,39 @@ impl AutoEatPlugin {
 
       _ => return None,
     });
+  }
+}
+
+impl SalarixiPlugin for AutoEatPlugin {
+  fn new() -> Self {
+    Self
+  }
+
+  fn activate(&'static self, username: String) -> io::Result<()> {
+    let nickname = username.clone();
+
+    let task = tokio::spawn(async move {
+      loop {
+        if !process_is_active() {
+          break;
+        }
+
+        let _ = BOT_REGISTRY
+          .async_get_bot(&nickname, async |bot| {
+            if !bot.workable() {
+              return;
+            }
+
+            self.eat(bot).await;
+          })
+          .await;
+
+        sleep(Duration::from_millis(50)).await;
+      }
+    });
+
+    PLUGIN_MANAGER.push_task(&username, "auto-eat", task);
+
+    Ok(())
   }
 }

@@ -296,7 +296,7 @@ impl ScaffoldModule {
       bot.stop_move();
     }
 
-    STATES.set_mutual_states(username, "looking", false);
-    STATES.set_mutual_states(username, "interacting", false);
+    set_mutual_states(username, "looking", false);
+    set_mutual_states(username, "interacting", false);
   }
 }

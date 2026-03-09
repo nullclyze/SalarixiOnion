@@ -42,14 +42,14 @@ impl StalkerModule {
         } else {
           bot.stop_jumping();
 
-          if STATES.get_state(&username, "is_sprinting") {
+          if get_state(&username, "is_sprinting") {
             bot.stop_move();
           }
         }
       } else {
         bot.stop_jumping();
 
-        if STATES.get_state(&username, "is_sprinting") {
+        if get_state(&username, "is_sprinting") {
           bot.stop_move();
         }
       }
@@ -86,7 +86,7 @@ impl StalkerModule {
   async fn stalking(&self, bot: &Client, options: &StalkerOptions) {
     let username = bot.username();
 
-    STATES.set_mutual_states(&username, "looking", true);
+    set_mutual_states(&username, "looking", true);
 
     match options.mode.as_str() {
       "default" => {
@@ -115,6 +115,6 @@ impl StalkerModule {
       bot.stop_jumping();
     }
 
-    STATES.set_mutual_states(&username, "looking", false);
+    set_mutual_states(&username, "looking", false);
   }
 }

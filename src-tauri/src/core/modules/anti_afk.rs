@@ -104,7 +104,7 @@ impl AntiAfkModule {
         }
 
         if !TASKS.get_task_activity(&username, "anti-afk") {
-          STATES.set_mutual_states(&username, "looking", false);
+          set_mutual_states(&username, "looking", false);
           break;
         }
 
@@ -139,7 +139,7 @@ impl AntiAfkModule {
   }
 
   pub async fn enable(&self, username: &str, options: &AntiAfkOptions) {
-    STATES.set_mutual_states(username, "looking", true);
+    set_mutual_states(username, "looking", true);
 
     BOT_REGISTRY
       .async_get_bot(username, async |bot| match options.mode.as_str() {
@@ -165,6 +165,6 @@ impl AntiAfkModule {
       bot.stop_crouching();
     }
 
-    STATES.set_mutual_states(&username, "looking", false);
+    set_mutual_states(&username, "looking", false);
   }
 }

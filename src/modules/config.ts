@@ -75,7 +75,7 @@ export function initConfig(): void {
         if (el.type === 'checkbox') {
           config[id] = el.checked;
         } else {
-          config[id] = el.type === 'number' ? parseInt(el.value) : el.value;
+          config[id] = el.type === 'number' ? el.value.includes('.') || el.value.includes(',') ? parseFloat(el.value) : parseInt(el.value) : el.value;
         }
       } else if (element.tagName.toLocaleLowerCase() === 'textarea') {
         const el = element as HTMLTextAreaElement;
