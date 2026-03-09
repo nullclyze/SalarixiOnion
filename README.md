@@ -46,15 +46,23 @@ The client has several large sections, they will be presented below in the table
 |------|-------------------------------------------------------|
 | Main / Главная |  Starting and stopping bots, basic settings           |
 | Settings / Настройки     |      Various bot settings       |
+| Plugins / Плагины     |      Plugins for bots      |
+| Proxy / Прокси    | Setting up a proxy for bots            |
+| Anti-Captcha / Анти-Капча    | Anti-Captcha settings        |
+| Webhook / Вебхук    | Webhook settings   |
 | Proxy / Прокси    | Setting up a proxy for bots            |
 | Control / Управление     |  Real-time bot management           |
-| Scripting / Скриптинг     |  Temporarily unavailable          |
+| Scripting / Скриптинг     |  Writing scripts for bots         |
 | Monitoring / Мониторинг     |  Real-time bot monitoring           |
 | Graphic / График     |  Data in the form of graphs          |
 | Analysis / Анализ     |  In development         |
 | Spy / Шпион     |  In development          |
 | Radar / Радар     |  Detection of players and their positions          |
-| Log / Журнал     |  Event logging         |
+| Ping / Пинг     |  Pinging servers  |
+| Journal / Журнал     |  Event logging         |
+| Interface / Интерфейс     |  Interface settings         |
+| Config / Конфиг     |  Client configuration         |
+| Guide / Руководство     |  Client usage guide        |
 | About / О проекте     |  Just a section about the project         |
 
 ## 💥 Features
@@ -126,10 +134,8 @@ The client has several large sections, they will be presented below in the table
 
 ## 📜 Additional Information
 
-- **Documentation:** [Docs](./docs/DOCS.md)
-- **FAQ:** [FAQ](./docs/FAQ.md)
-- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.8-release)
 - **License:** [License](./LICENSE)
+- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.8-release)
 
 ## 💸 Donate
 
