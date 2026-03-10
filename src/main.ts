@@ -1041,50 +1041,15 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface_select_style', 'select', (current: HTMLSelectElement) => {
+  registerTriggerFunction('interface_select_particles', 'select', (current: HTMLSelectElement) => {
     try {
-      const root = document.documentElement;
-
-      switch (current.value) {
-        case 'cosmic': 
-          enableParticles();
-
-          root.style.setProperty('--global-bg', 'rgb(5, 5, 5)');
-          root.style.setProperty('--cover-bg', 'rgba(10, 10, 10, 0.9)');
-          root.style.setProperty('--common-bg', 'rgba(14, 14, 14, 0.5)');
-          root.style.setProperty('--common-border', 'rgb(36, 36, 36)');
-          root.style.setProperty('--card-bg', 'rgba(14, 14, 14, 0.6)');
-          root.style.setProperty('--input-bg', 'rgba(15, 15, 15, 0.7)');
-          root.style.setProperty('--input-border', 'rgb(39, 39, 39)');
-
-          break;
-        case 'null': 
-          disableParticles();
-
-          root.style.setProperty('--global-bg', 'rgb(5, 5, 5)');
-          root.style.setProperty('--cover-bg', 'rgba(10, 10, 10, 0.9)');
-          root.style.setProperty('--common-bg', 'rgba(14, 14, 14, 0.5)');
-          root.style.setProperty('--common-border', 'rgb(36, 36, 36)');
-          root.style.setProperty('--card-bg', 'rgba(14, 14, 14, 0.6)');
-          root.style.setProperty('--input-bg', 'rgba(15, 15, 15, 0.7)');
-          root.style.setProperty('--input-border', 'rgb(39, 39, 39)');
-
-          break;
-        case 'salarixi-old': 
-          disableParticles();
-
-          root.style.setProperty('--global-bg', 'rgb(15, 15, 15)');
-          root.style.setProperty('--cover-bg', 'rgba(17, 17, 17, 0.9)');
-          root.style.setProperty('--common-bg', 'rgba(19, 19, 19, 0.5)');
-          root.style.setProperty('--common-border', 'rgb(37, 37, 37)');
-          root.style.setProperty('--card-bg', 'rgba(19, 19, 19, 0.6)');
-          root.style.setProperty('--input-bg', 'rgba(20, 20, 20, 0.7)');
-          root.style.setProperty('--input-border', 'rgb(41, 41, 41)');
-
-          break;
+      if (current.value === 'enable') {
+        enableParticles();
+      } else {
+        disableParticles();
       }
     } catch (error) {
-      log(`Ошибка изменения стиля: ${error}`, 'error');
+      log(`Ошибка изменения состояния партиклов: ${error}`, 'error');
     }
   });
 
