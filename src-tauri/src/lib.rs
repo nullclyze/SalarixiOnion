@@ -192,22 +192,6 @@ async fn stop_script() {
   SCRIPT_EXECUTOR.write().unwrap().stop();
 }
 
-/// Функция рендеринга карты
-#[tauri::command]
-async fn render_map(nickname: String) -> Option<String> {
-  let base64_code = BOT_REGISTRY
-    .async_get_bot(&nickname, async |bot| MAP_RENDERER.render(bot))
-    .await;
-
-  base64_code
-}
-
-/// Функция сохранения карты
-#[tauri::command]
-async fn save_map(nickname: String, path: Option<String>, base64code: String) {
-  MAP_RENDERER.save_map(nickname, path, base64code);
-}
-
 /// Функция пингования сервера
 #[tauri::command]
 async fn get_server_info(address: String) -> ServerInformation {
@@ -269,8 +253,6 @@ pub fn run() {
       quick_task,
       execute_script,
       stop_script,
-      render_map,
-      save_map,
       get_server_info,
       open_url,
       set_discord_rpc

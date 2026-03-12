@@ -78,7 +78,7 @@ async function initUserGuide(): Promise<void> {
     if (content) {
       (document.getElementById('guide-latest-update') as HTMLElement).innerText = content['latest-update'];
 
-      const guide = document.getElementById('guide-wrap') as HTMLElement; 
+      const guide = document.getElementById('guide-wrapper') as HTMLElement; 
 
       const sections = content['sections'];
 
@@ -394,9 +394,6 @@ async function startBots(): Promise<void> {
 
       chartManager.enable();
 
-      monitoringManager.extendedMonitoring = (document.getElementById('settings_chbx_use-extended-monitoring') as HTMLInputElement).checked;
-      monitoringManager.chatMonitoring = (document.getElementById('settings_chbx_use-chat-monitoring') as HTMLInputElement).checked;
-      monitoringManager.mapMonitoring = (document.getElementById('settings_chbx_use-map-monitoring') as HTMLInputElement).checked;
       monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('monitoring_option_chat-history-length') as HTMLInputElement).value || '50');
 
       monitoringManager.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
@@ -499,15 +496,15 @@ async function initFunctions(): Promise<void> {
   const setRandomValuesBtn =  document.getElementById('random') as HTMLButtonElement;
   const clearInputValuesBtn = document.getElementById('clear') as HTMLButtonElement;
 
-  const panelBtns = document.querySelectorAll<HTMLButtonElement>('.panel-btn');
+  const dashboardBtns = document.querySelectorAll<HTMLButtonElement>('.dashboard .pretty-btn');
   const controlBtns = document.querySelectorAll<HTMLButtonElement>('.control-btn');
   
-  panelBtns.forEach(btn => {
+  dashboardBtns.forEach(btn => {
     if (btn.id === 'main') btn.classList.add('selected');
 
     btn.addEventListener('click', () => {
       showGlobalContainer(btn.getAttribute('path') || '');
-      panelBtns.forEach(b => b.classList.remove('selected'));
+      dashboardBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
   });
@@ -704,16 +701,6 @@ function showControlContainer(id: string): void {
 }
 
 function registerAllTriggerFunctions() {
-  registerTriggerFunction('settings_chbx_use-chat-monitoring', 'checkbox', (current: HTMLInputElement) => {
-    const input = document.getElementById('chat-history-length-container') as HTMLElement;
-
-    if (current.checked) {
-      input.style.display = 'flex';
-    } else {
-      input.style.display = 'none';
-    }
-  });
-
   registerTriggerFunction('settings_chbx_use-proxy', 'checkbox', (current: HTMLInputElement) => {
     const version = document.getElementById('settings_option_version') as HTMLInputElement;
 
@@ -1120,6 +1107,13 @@ function registerAllTriggerFunctions() {
           root.style.setProperty('--dull-spec-color', '#d14d25');
           root.style.setProperty('--chbx-spec-color', '#ee4c01');
           root.style.setProperty('--chbx-dull-spec-color', '#d64a1f');
+          break;
+        case 'ocean': 
+          root.style.setProperty('--title-color', '#0051ff');
+          root.style.setProperty('--spec-color', '#0044ff');
+          root.style.setProperty('--dull-spec-color', '#254dd1');
+          root.style.setProperty('--chbx-spec-color', '#0140ee');
+          root.style.setProperty('--chbx-dull-spec-color', '#1f41d6');
           break;
       }
     } catch (error) {

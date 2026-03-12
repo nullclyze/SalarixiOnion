@@ -25,12 +25,6 @@ pub struct ChatEventPayload {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MapRenderProgressEventPayload {
-  pub nickname: String,
-  pub progress: i32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiWebCaptchaEventPayload {
   pub captcha_url: String,
   pub nickname: String,
@@ -56,7 +50,6 @@ pub enum EmitEvent {
 #[derive(Clone)]
 pub enum OptionalEmitEvent {
   Chat(ChatEventPayload),
-  MapRenderProgress(MapRenderProgressEventPayload),
   AntiWebCaptcha(AntiWebCaptchaEventPayload),
   AntiMapCaptcha(AntiMapCaptchaEventPayload),
 }
@@ -95,11 +88,6 @@ pub fn send_optional_event(event: OptionalEmitEvent) {
     OptionalEmitEvent::Chat(payload) => {
       EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::Chat(payload)));
     }
-    OptionalEmitEvent::MapRenderProgress(payload) => {
-      EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::MapRenderProgress(
-        payload,
-      )));
-    }
     OptionalEmitEvent::AntiWebCaptcha(payload) => {
       EMIT_MANAGER.send_event(EmitEvent::Optional(OptionalEmitEvent::AntiWebCaptcha(
         payload,
@@ -127,9 +115,6 @@ pub async fn emit_event_loop(handle: AppHandle) {
       EmitEvent::Optional(optional_event) => match optional_event {
         OptionalEmitEvent::Chat(payload) => {
           let _ = handle.emit("chat-message", payload);
-        }
-        OptionalEmitEvent::MapRenderProgress(payload) => {
-          let _ = handle.emit("map-render-progress", payload);
         }
         OptionalEmitEvent::AntiWebCaptcha(payload) => {
           let _ = handle.emit("anti-web-captcha", payload);

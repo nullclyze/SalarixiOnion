@@ -1,4 +1,5 @@
-use base64::encode;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -516,7 +517,7 @@ impl MapCaptchaBypass {
 
     let _ = img.write_to(&mut cursor, ImageFormat::Png);
 
-    let base64_code = encode(&bytes);
+    let base64_code = BASE64_STANDARD.encode(&bytes);
 
     base64_code
   }
@@ -571,7 +572,7 @@ impl MapCaptchaBypass {
 
     let _ = combined_img.write_to(&mut cursor, ImageFormat::Png);
 
-    encode(&bytes)
+    BASE64_STANDARD.encode(&bytes)
   }
 }
 
