@@ -102,7 +102,7 @@ export class ChartManager {
     const initialLabels: string[] = [];
     const initialData: number[] = [];
     
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < 28; i++) {
       initialLabels.push(date());
       initialData.push(0);
     }
@@ -192,7 +192,7 @@ export class ChartManager {
     this.chartActiveBots.data.labels?.push(date());
     this.chartActiveBots.data.datasets[0].data.push(activeBotsQuantity);
 
-    if (this.chartActiveBots.data.labels && this.chartActiveBots.data.labels.length > 31) {
+    if (this.chartActiveBots.data.labels && this.chartActiveBots.data.labels.length > 28) {
       this.chartActiveBots.data.labels.shift();
       this.chartActiveBots.data.datasets[0].data.shift();
     }
@@ -206,7 +206,7 @@ export class ChartManager {
     this.chartMemoryUsage.data.labels?.push(date());
     this.chartMemoryUsage.data.datasets[0].data.push(memoryUsage);
 
-    if (this.chartMemoryUsage.data.labels && this.chartMemoryUsage.data.labels.length > 31) {
+    if (this.chartMemoryUsage.data.labels && this.chartMemoryUsage.data.labels.length > 28) {
       this.chartMemoryUsage.data.labels.shift();
       this.chartMemoryUsage.data.datasets[0].data.shift();
     }

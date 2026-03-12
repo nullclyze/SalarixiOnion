@@ -210,12 +210,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         return Ok(());
       };
 
-      if options.basic.use_chat_monitoring {
-        send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
-          receiver: nickname.clone(),
-          message: packet.message().to_html(),
-        }));
-      }
+      send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
+        receiver: nickname.clone(),
+        message: packet.message().to_html(),
+      }));
 
       if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "web" {
         if let Some(url) = WEB_CAPTCHA_BYPASS.catch_url_from_message(

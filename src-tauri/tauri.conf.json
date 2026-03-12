@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "Salarixi Onion",
-        "width": 1060,
-        "height": 680,
+        "width": 1000,
+        "height": 600,
         "decorations": false,
         "resizable": false,
         "center": true,

@@ -210,7 +210,6 @@ pub struct BasicOptions {
   pub use_anti_captcha: bool,
   pub use_webhook: bool,
   pub use_chat_signing: bool,
-  pub use_chat_monitoring: bool,
   pub use_accounts: bool,
   pub skin_type: String,
   pub set_skin_command: Option<String>,

@@ -36,9 +36,6 @@ export class MonitoringManager {
 
   private listeners: Map<string, any> = new Map();
 
-  public extendedMonitoring: boolean = true;
-  public chatMonitoring: boolean = true;
-  public mapMonitoring: boolean = false;
   public maxChatHistoryLength: number = 0;
 
   public async init(): Promise<void> {
@@ -51,75 +48,51 @@ export class MonitoringManager {
     this.statusText!.style.display = 'flex';
 
     await listen('chat-message', (event) => {
-      if (this.chatMonitoring) {
-        try {
-          const payload = event.payload as { receiver: string; message: string; };
-          const receiver = payload.receiver;
-          const message = payload.message;
+      try {
+        const payload = event.payload as { receiver: string; message: string; };
+        const receiver = payload.receiver;
+        const message = payload.message;
 
-          if (!this.chatHistoryFilters[receiver]) {
-            this.chatHistoryFilters[receiver] = 'all';
-          }
-
-          if (!this.filterMessage(this.chatHistoryFilters[receiver], message)) return;
-
-          const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
-
-          if (!chat) return;
-
-          const line = document.createElement('div');
-          line.className = 'line';
-          line.setAttribute('monitoring-message', receiver);
-
-          line.innerHTML = `
-            <div class="time">${date()}</div>
-            <div class="msg">${message}</div>
-          `;
-
-          chat.appendChild(line);
-
-          chat.scrollTo({
-            top: chat.scrollHeight,
-            behavior: 'smooth'
-          });
-
-          if (!this.chatMessageCounter[receiver]) {
-            this.chatMessageCounter[receiver] = 1;
-          } else {
-            this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] + 1;
-
-            if (this.chatMessageCounter[receiver] > this.maxChatHistoryLength) {
-              this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] - 1;
-              chat.firstChild?.remove();
-            }
-          }
-        } catch (error) {
-          log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
+        if (!this.chatHistoryFilters[receiver]) {
+          this.chatHistoryFilters[receiver] = 'all';
         }
+
+        if (!this.filterMessage(this.chatHistoryFilters[receiver], message)) return;
+
+        const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
+
+        if (!chat) return;
+
+        const line = document.createElement('div');
+        line.className = 'line';
+        line.setAttribute('monitoring-message', receiver);
+
+        line.innerHTML = `
+          <div class="time">${date()}</div>
+          <div class="msg">${message}</div>
+        `;
+
+        chat.appendChild(line);
+
+        chat.scrollTo({
+          top: chat.scrollHeight,
+          behavior: 'smooth'
+        });
+
+        if (!this.chatMessageCounter[receiver]) {
+          this.chatMessageCounter[receiver] = 1;
+        } else {
+          this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] + 1;
+
+          if (this.chatMessageCounter[receiver] > this.maxChatHistoryLength) {
+            this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] - 1;
+            chat.firstChild?.remove();
+          }
+        }
+      } catch (error) {
+        log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
       }
     });
-
-    /* Временно
-
-    await listen('map-render-progress', (event) => {
-      if (this.mapMonitoring) {
-        try {
-          const payload = event.payload as { nickname: string; progress: number; };
-          const nickname = payload.nickname;
-          const progress = payload.progress;
-
-          const doc = document.getElementById(`map-render-progress-count-${nickname}`);
-
-          if (doc) {
-            doc.innerText = progress.toString();
-          }
-        } catch (error) {
-          log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
-        }
-      }
-    });
-
-    */
   }
 
   public wait(): void {
@@ -292,47 +265,6 @@ export class MonitoringManager {
     return wrapper;
   }
 
-  /* Временно
-
-  private createMapWrapper(username: string): HTMLDivElement {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'cover';
-    wrapper.id = `map-${username}`;
-
-    wrapper.innerHTML = `
-      <div class="panel">
-        <div class="right">
-          <button class="btn min pretty" id="remove-map-${username}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-              <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-            </svg>
-          </button>
-
-          <button class="btn min pretty" id="close-map-${username}">
-            ⨉
-          </button>
-        </div>
-      </div>
-
-      <div class="bot-map-wrap" id="map-wrap-${username}">
-        <div class="bot-map-render-status" id="map-render-status-${username}">Генерация карты, пожайлуста, подождите...</div>
-        <div class="bot-map-render-progress" id="map-render-progress-${username}">Прогресс (блоков): <span class="bot-map-render-progress-count" id="map-render-progress-count-${username}">0</span> / 40000</div>
-
-        <div id="save-map-wrap-${username}" style="display: none; margin-top: 25px; gap: 15px;">
-          <input type="text" id="save-map-path-${username}" placeholder="/home/User/MinecraftMaps/" style="height: 32px; width: 250px;">
-          
-          <button class="btn min" id="save-map-${username}">Сохранить</button>
-        </div>  
-      </div>
-    `;
-
-    this.cards?.appendChild(wrapper);
-
-    return wrapper;
-  }
-
-  */
-
   private updateBotCard(username: string, profile: BotProfile): void {
     const status = document.getElementById(`monitoring-status-${username}`) as HTMLElement;
     const proxy = document.getElementById(`monitoring-proxy-${username}`) as HTMLElement;
@@ -373,22 +305,6 @@ export class MonitoringManager {
     this.usernameList.push(username);
 
     const chatWrapper = this.createChatWrapper(username);
-    // const mapWrapper = this.createMapWrapper(username);
-
-    if (!this.chatMonitoring) {
-      (document.getElementById(`open-chat-${username}`) as HTMLButtonElement).disabled = true;
-      chatWrapper.remove();
-    }
-
-    /* Временно
-
-    if (this.mapMonitoring) {
-      (document.getElementById(`open-map-${username}`) as HTMLButtonElement).style.display = 'flex';
-    } else {
-      mapWrapper.remove();
-    }
-
-    */
 
     this.addTempListener(`bot-group-${username}`, 'input', async () => {
       try {
@@ -405,80 +321,6 @@ export class MonitoringManager {
 
     this.addTempListener(`open-chat-${username}`, 'click', () => chatWrapper.style.display = 'flex');
     this.addTempListener(`close-chat-${username}`, 'click', () => chatWrapper.style.display = 'none');
-
-    /* Временно
-
-    this.addTempListener(`open-map-${username}`, 'click', async () => {
-      mapWrapper.style.display = 'flex';
-
-      try {
-        if (!document.getElementById(`map-image-${username}`) && !this.activeMapRenderings.get(username)) {
-          this.activeMapRenderings.set(username, true);
-
-          const old_map = document.getElementById(`map-image-${username}`);
-
-          if (old_map) {
-            old_map.remove();
-          }
-
-          (document.getElementById(`map-render-status-${username}`) as HTMLElement).style.display = 'flex';
-          (document.getElementById(`map-render-progress-${username}`) as HTMLElement).style.display = 'flex';
-          
-          const base64_code = await invoke('render_map', { nickname: username }) as string;
-
-          this.mapBase64Codes.set(username, base64_code);
-
-          (document.getElementById(`map-render-status-${username}`) as HTMLElement).style.display = 'none';
-          (document.getElementById(`map-render-progress-${username}`) as HTMLElement).style.display = 'none';
-
-          this.activeMapRenderings.delete(username);
-
-          const img = document.createElement('img');
-          img.className = 'bot-map-image';
-          img.id = `map-image-${username}`;
-          img.src = `data:image/png;base64,${base64_code}`;
-          img.draggable = false;
-
-          const wrap = document.getElementById(`map-wrap-${username}`);
-
-          wrap?.insertBefore(img, wrap.firstChild);
-
-          (document.getElementById(`save-map-wrap-${username}`) as HTMLElement).style.display = 'flex';
-        }
-      } catch (error) {
-        log(`Ошибка мониторинга (render-map): ${error}`, 'error');
-      }
-    });
-
-    this.addTempListener(`remove-map-${username}`, 'click', async () => {
-      this.mapBase64Codes.delete(username);
-      document.getElementById(`map-image-${username}`)?.remove();
-      (document.getElementById(`save-map-wrap-${username}`) as HTMLElement).style.display = 'none';
-    });
-
-    this.addTempListener(`save-map-${username}`, 'click', async () => {
-      try {
-        const base64code = this.mapBase64Codes.get(username);
-
-        if (base64code) {
-          const path = document.getElementById(`save-map-path-${username}`) as HTMLInputElement;
-
-          await invoke('save_map', { 
-            nickname: username, 
-            path: path.value, 
-            base64code: base64code 
-          });
-        } else {
-          log('Ошибка мониторинга (save-map): Image not found', 'error');
-        }
-      } catch (error) {
-        log(`Ошибка мониторинга (save-map): ${error}`, 'error');
-      }
-    });
-
-    this.addTempListener(`close-map-${username}`, 'click', () => mapWrapper.style.display = 'none');
-
-    */
 
     this.addTempListener(`disconnect-${username}`, 'click', async () => {
       try {
