@@ -8,7 +8,7 @@
   --s-font-family: 'JetBrains Mono', 'Fira Code', monospace;
   --o-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
-  --global-bg: rgb(7, 7, 7);
+  --global-bg: rgb(9, 9, 9);
   --global-border: rgb(56, 56, 56);
 
   --global-font-family: 'Inter', sans-serif;
@@ -140,7 +140,9 @@ body {
   z-index: 1000;
   border-radius: 12px;
   padding: 20px;
-  background-color: var(--cover-bg);
+  background-color: rgba(12, 12, 12, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--common-border);
   flex-direction: column;
   justify-content: flex-start;
@@ -476,14 +478,12 @@ body {
   align-items: center;
   gap: 0;
   width: 100%;
-  max-width: 250px;
+  max-width: 270px;
   margin-top: 20px;
 }
 
 .columns .wrap.right {
-  background-color: var(--common-bg);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background-color: var(--card-bg);
   border: 1px solid var(--common-border);
   border-radius: 8px;
   max-width: 240px;
@@ -1173,8 +1173,6 @@ p {
   background-color: var(--common-bg);
   border: 1px solid var(--common-border);
   border-radius: 12px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 .anti-captcha-wrapper .bot-captcha .head {
@@ -1328,8 +1326,9 @@ p {
 }
 
 .about-wrapper .description {
+  width: 94%;
   font-family: var(--global-font-family);
-  font-size: 16px;
+  font-size: 15px;
   text-align: center;
   color: #d1d1d1;
   border: 1px solid var(--common-border);

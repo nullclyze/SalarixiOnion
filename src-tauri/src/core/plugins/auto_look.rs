@@ -4,8 +4,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
-use crate::generators::randuint;
 use crate::extensions::{BotDefaultExt, BotRotationExt, EntityType};
+use crate::generators::randuint;
 
 pub struct AutoLookPlugin;
 

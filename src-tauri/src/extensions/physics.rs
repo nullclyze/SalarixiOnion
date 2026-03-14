@@ -27,13 +27,13 @@ impl BotPhysicsExt for Client {
       match axis {
         "x" => {
           physics.velocity.x = velocity;
-        },
+        }
         "y" => {
           physics.velocity.y = velocity;
-        },
+        }
         "z" => {
           physics.velocity.z = velocity;
-        },
+        }
         _ => {}
       }
     }

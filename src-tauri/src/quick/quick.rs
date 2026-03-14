@@ -8,8 +8,8 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 use tokio::time::sleep;
 
-use crate::core::*;
 use crate::common::{get_average_coordinates_of_bots, this_is_solid_block};
+use crate::core::*;
 use crate::extensions::{go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt};
 use crate::generators::{randfloat, randint, randuint};
 
@@ -77,9 +77,7 @@ impl QuickTaskManager {
               }
             }
             "rise" => {
-              if get_state(&nickname, "can_looking")
-                && get_state(&nickname, "can_interacting")
-              {
+              if get_state(&nickname, "can_looking") && get_state(&nickname, "can_interacting") {
                 let mut block_slot = None;
 
                 if let Some(menu) = bot.get_inventory_menu() {
@@ -201,8 +199,7 @@ impl QuickTaskManager {
                 }
 
                 if let Some(slot) = block_slot {
-                  if get_state(&nickname, "can_looking")
-                    && get_state(&nickname, "can_interacting")
+                  if get_state(&nickname, "can_looking") && get_state(&nickname, "can_interacting")
                   {
                     set_mutual_states(&nickname, "looking", true);
                     set_mutual_states(&nickname, "interacting", true);

@@ -1,5 +1,7 @@
 use azalea::{
-  BlockPos, SprintDirection, Vec3, WalkDirection, bot::BotClientExt, prelude::PathfinderClientExt, protocol::packets::game::s_interact::InteractionHand
+  bot::BotClientExt, prelude::PathfinderClientExt,
+  protocol::packets::game::s_interact::InteractionHand, BlockPos, SprintDirection, Vec3,
+  WalkDirection,
 };
 use once_cell::sync::Lazy;
 use rhai::Engine;
@@ -8,13 +10,14 @@ use std::sync::{
   Arc, RwLock,
 };
 
+use crate::common::convert_hotbar_slot_to_inventory_slot;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
-use crate::webhook::*;
-use crate::common::convert_hotbar_slot_to_inventory_slot;
 use crate::extensions::{
-  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, BotInteractExt, BotRotationExt, entity_type_from
+  entity_type_from, go_to, BotDefaultExt, BotInteractExt, BotInventoryExt, BotMovementExt,
+  BotPhysicsExt, BotRotationExt,
 };
+use crate::webhook::*;
 
 pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
   Lazy::new(|| Arc::new(RwLock::new(ScriptExecutor::new())));
@@ -409,7 +412,8 @@ impl ScriptExecutor {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          if let Some(entity) = bot.find_nearest_entity(entity_type_from(target.clone()), distance) {
+          if let Some(entity) = bot.find_nearest_entity(entity_type_from(target.clone()), distance)
+          {
             if look_at_target {
               bot.look_at_entity(entity, false);
             }
@@ -539,15 +543,17 @@ impl ScriptExecutor {
       .register_fn("set_crouching", |username: &str, state: bool| {
         Self::set_crouching(username, state)
       })
-      .register_fn("set_velocity", |username: &str, axis: &str, velocity: f64| {
-        Self::set_velocity(username, axis, velocity)
-      })
+      .register_fn(
+        "set_velocity",
+        |username: &str, axis: &str, velocity: f64| Self::set_velocity(username, axis, velocity),
+      )
       .register_fn("set_on_ground", |username: &str, on_ground: bool| {
         Self::set_on_ground(username, on_ground)
       })
-      .register_fn("set_old_position", |username: &str, x: f64, y: f64, z: f64| {
-        Self::set_old_position(username, x, y, z)
-      })
+      .register_fn(
+        "set_old_position",
+        |username: &str, x: f64, y: f64, z: f64| Self::set_old_position(username, x, y, z),
+      )
       .register_fn("set_no_jump_delay", |username: &str, delay: i64| {
         Self::set_no_jump_delay(username, delay as u32)
       })
