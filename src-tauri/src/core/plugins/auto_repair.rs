@@ -50,9 +50,7 @@ impl AutoRepairPlugin {
       let nickname = bot.name();
 
       for _ in 0..=count {
-        if get_state(&nickname, "can_interacting")
-          && get_state(&nickname, "can_looking")
-        {
+        if get_state(&nickname, "can_interacting") && get_state(&nickname, "can_looking") {
           set_mutual_states(&nickname, "interacting", true);
           set_mutual_states(&nickname, "looking", true);
 

@@ -3,11 +3,12 @@ use azalea::prelude::*;
 use azalea::protocol::common::client_information::ParticleStatus;
 use azalea::protocol::packets::game::ClientboundGamePacket;
 use azalea::{ClientInformation, NoState};
+use std::io;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::core::*;
 use crate::core::utils::MAP_ACCUMULATOR;
+use crate::core::*;
 use crate::emit::*;
 use crate::extensions::BotDefaultExt;
 use crate::generators::*;
@@ -30,7 +31,7 @@ const ACCOUNTS_WITH_SKINS: &[&str] = &[
   "_Malrand_",
 ];
 
-pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyhow::Result<()> {
+pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::Result<()> {
   match event {
     Event::Init => {
       if let Some(opts) = current_options() {
@@ -115,7 +116,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
       };
 
       let Some(opts) = current_options() else {
-        return Ok(())
+        return Ok(());
       };
 
       if !profile.skin_is_set {
@@ -221,7 +222,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
           options.captcha_bypass.regex.as_str(),
           options.captcha_bypass.required_url_part,
         ) {
-          let Some(profile) = PROFILES.get(&nickname) else { 
+          let Some(profile) = PROFILES.get(&nickname) else {
             return Ok(());
           };
 
@@ -282,7 +283,8 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
         let nickname = bot.name();
 
         if let Some(options) = current_options() {
-          if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "map" {
+          if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "map"
+          {
             let Some(map_patch) = &data.color_patch.0 else {
               return Ok(());
             };
@@ -309,9 +311,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> anyho
                 base64_code = MAP_ACCUMULATOR.combine_and_render(&nickname);
               } else {
                 base64_code = Some(MAP_CAPTCHA_BYPASS.create_png_image(
-                  map_patch.width as u32, 
-                  map_patch.height as u32, 
-                  &map_patch.map_colors
+                  map_patch.width as u32,
+                  map_patch.height as u32,
+                  &map_patch.map_colors,
                 ));
               }
 

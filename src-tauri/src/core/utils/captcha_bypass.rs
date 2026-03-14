@@ -5,11 +5,11 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use tokio::sync::broadcast;
 use thirtyfour::{
   common::capabilities::firefox::FirefoxPreferences, error::WebDriverError, CapabilitiesHelper,
   ChromiumLikeCapabilities, DesiredCapabilities, WebDriver,
 };
+use tokio::sync::broadcast;
 
 use crate::{core::current_options, emit::send_log, generators::randint};
 
@@ -597,7 +597,7 @@ impl MapAccumulator {
   pub fn add_map(&self, username: &str, width: u32, height: u32, colors: Vec<u8>) {
     let mut maps = self.maps.write().unwrap();
     let user_maps = maps.entry(username.to_string()).or_insert_with(Vec::new);
-    
+
     user_maps.push(MapData {
       width,
       height,
@@ -615,10 +615,7 @@ impl MapAccumulator {
     maps.remove(username);
   }
 
-  pub fn combine_and_render(
-    &self,
-    username: &str
-  ) -> Option<String> {
+  pub fn combine_and_render(&self, username: &str) -> Option<String> {
     let map_data = self.get_maps(username)?;
 
     let Some(opts) = current_options() else {

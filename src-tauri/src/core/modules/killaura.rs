@@ -6,8 +6,10 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
+use crate::extensions::{
+  entity_type_from, BotDefaultExt, BotInventoryExt, BotMovementExt, BotRotationExt,
+};
 use crate::generators::*;
-use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotRotationExt, entity_type_from};
 
 #[derive(Debug)]
 struct Weapon {
@@ -254,7 +256,8 @@ impl KillauraModule {
             return;
           }
 
-          if let Some(entity) = Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
+          if let Some(entity) =
+            Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
           {
             let eye_pos = bot.eye_pos();
 
@@ -305,7 +308,8 @@ impl KillauraModule {
             return;
           }
 
-          if let Some(entity) = Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
+          if let Some(entity) =
+            Self::find_nearest_entity(&bot, target.clone(), target_nickname.clone(), distance)
           {
             bot.look_at_entity(entity, false);
           }

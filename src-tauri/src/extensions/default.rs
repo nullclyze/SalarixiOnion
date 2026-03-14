@@ -1,15 +1,15 @@
 use azalea::ecs::entity::Entity;
 use azalea::ecs::query::{With, Without};
-use azalea::entity::{Dead, LocalEntity};
 use azalea::entity::metadata::{AbstractAnimal, AbstractMonster, AbstractVehicle, Player};
+use azalea::entity::{
+  dimensions::EntityDimensions, metadata::Health, Crouching, Jumping, LookDirection, Position,
+};
+use azalea::entity::{Dead, LocalEntity};
 use azalea::local_player::{Hunger, TabList};
 use azalea::player::GameProfileComponent;
 use azalea::protocol::packets::game::{s_interact::InteractionHand, ServerboundSwing};
 use azalea::world::MinecraftEntityId;
 use azalea::{Client, InGameState, Vec3};
-use azalea::entity::{
-  dimensions::EntityDimensions, metadata::Health, Crouching, Jumping, LookDirection, Position,
-};
 
 pub enum EntityType {
   Player,
@@ -17,7 +17,7 @@ pub enum EntityType {
   Animal,
   Vehicle,
   Any,
-  Custom(String)
+  Custom(String),
 }
 
 pub fn entity_type_from(value: String) -> EntityType {
@@ -27,7 +27,7 @@ pub fn entity_type_from(value: String) -> EntityType {
     "animal" => EntityType::Animal,
     "vehicle" => EntityType::Vehicle,
     "any" => EntityType::Any,
-    _ => EntityType::Custom(value)
+    _ => EntityType::Custom(value),
   }
 }
 

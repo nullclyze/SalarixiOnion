@@ -7,8 +7,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
-use crate::generators::*;
 use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt, EntityType};
+use crate::generators::*;
 
 pub struct AutoShieldPlugin;
 
@@ -19,9 +19,7 @@ impl AutoShieldPlugin {
     if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(45) {
         if item.is_empty() || item.kind() == ItemKind::Shield {
-          if !get_state(&nickname, "is_eating")
-            && !get_state(&nickname, "is_drinking")
-          {
+          if !get_state(&nickname, "is_eating") && !get_state(&nickname, "is_drinking") {
             let mut shield_equipped = false;
 
             if item.kind() != ItemKind::Shield {
@@ -55,8 +53,7 @@ impl AutoShieldPlugin {
     if let Some(nearest_player) = bot.find_nearest_entity(EntityType::Player, 8.0) {
       nearest_entity = Some(nearest_player);
     } else {
-      if let Some(nearest_monster) = bot.find_nearest_entity(EntityType::Monster, 8.0)
-      {
+      if let Some(nearest_monster) = bot.find_nearest_entity(EntityType::Monster, 8.0) {
         nearest_entity = Some(nearest_monster);
       }
     }
@@ -68,9 +65,7 @@ impl AutoShieldPlugin {
     if let Some(entity) = self.get_nearest_dangerous_entity(bot) {
       let nickname = bot.name();
 
-      if get_state(&nickname, "can_looking")
-        && get_state(&nickname, "can_interacting")
-      {
+      if get_state(&nickname, "can_looking") && get_state(&nickname, "can_interacting") {
         set_mutual_states(&nickname, "looking", true);
         set_mutual_states(&nickname, "interacting", true);
 

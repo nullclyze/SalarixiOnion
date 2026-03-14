@@ -117,9 +117,7 @@ impl StealerModule {
         self.find_nearest_targets(bot, position, &options.target, options.radius.unwrap_or(5));
 
       for pos in target_positions {
-        if get_state(&nickname, "can_looking")
-          && get_state(&nickname, "can_interacting")
-        {
+        if get_state(&nickname, "can_looking") && get_state(&nickname, "can_interacting") {
           set_mutual_states(&nickname, "looking", true);
           set_mutual_states(&nickname, "interacting", true);
 

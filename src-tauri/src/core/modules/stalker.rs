@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotMovementExt, EntityType, go_to};
+use crate::extensions::{go_to, BotDefaultExt, BotMovementExt, EntityType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StalkerModule;
@@ -31,7 +31,10 @@ impl StalkerModule {
         return;
       };
 
-      if let Some(target) = bot.find_nearest_entity(EntityType::Custom(target_nickname), options.max_distance.unwrap_or(100.0)) {
+      if let Some(target) = bot.find_nearest_entity(
+        EntityType::Custom(target_nickname),
+        options.max_distance.unwrap_or(100.0),
+      ) {
         let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 
@@ -64,7 +67,10 @@ impl StalkerModule {
     };
 
     loop {
-      if let Some(target) = bot.find_nearest_entity(EntityType::Custom(target_nickname.clone()), options.max_distance.unwrap_or(100.0)) {
+      if let Some(target) = bot.find_nearest_entity(
+        EntityType::Custom(target_nickname.clone()),
+        options.max_distance.unwrap_or(100.0),
+      ) {
         let target_pos = bot.get_entity_position(target);
         let min_distance = options.min_distance.unwrap_or(6.0);
 

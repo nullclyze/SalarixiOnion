@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotInteractExt, BotInventoryExt, entity_type_from};
+use crate::extensions::{entity_type_from, BotDefaultExt, BotInteractExt, BotInventoryExt};
 use crate::generators::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,7 +53,9 @@ impl BowAimModule {
                 break;
               }
 
-              if let Some(entity) = bot.find_nearest_entity(entity_type_from(target.clone()), distance) {
+              if let Some(entity) =
+                bot.find_nearest_entity(entity_type_from(target.clone()), distance)
+              {
                 let target_pos = bot.get_entity_position(entity);
 
                 bot.look_at(Vec3::new(
@@ -138,10 +140,16 @@ impl BowAimModule {
       return;
     };
 
-    self.aiming(bot.name(), target.clone(), options.max_distance.unwrap_or(70.0));
+    self.aiming(
+      bot.name(),
+      target.clone(),
+      options.max_distance.unwrap_or(70.0),
+    );
 
     loop {
-      self.shoot(bot, target.clone(), options.max_distance.unwrap_or(70.0)).await;
+      self
+        .shoot(bot, target.clone(), options.max_distance.unwrap_or(70.0))
+        .await;
       sleep(Duration::from_millis(options.delay.unwrap_or(50))).await;
     }
   }

@@ -172,7 +172,10 @@ impl ChatModule {
     for teg in Regex::new(r"#pass").unwrap().find_iter(&text) {
       if !teg.is_empty() {
         if let Some(profile) = PROFILES.get(username) {
-          result = text.replace(teg.as_str(), profile.password.unwrap_or("".to_string()).as_str());
+          result = text.replace(
+            teg.as_str(),
+            profile.password.unwrap_or("".to_string()).as_str(),
+          );
         }
       }
     }
