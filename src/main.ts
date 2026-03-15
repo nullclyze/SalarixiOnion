@@ -1,13 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { readFile } from '@tauri-apps/plugin-fs';
-import { open } from '@tauri-apps/plugin-dialog';
 import { Chart, registerables } from 'chart.js';
 
 import { plugins } from './common/structs';
 import { log, changeLogsVisibility, eraseLogs } from './logger';
-import { initConfig, uploadConfig, shareConfig } from './modules/config';
+import { initConfig } from './modules/config';
 import { AccountManager } from './modules/accounts';
 import { ProxyCollectorManager } from './modules/proxy_collector';
 import { ChartManager } from './modules/chart';
@@ -648,34 +646,6 @@ async function initFunctions(): Promise<void> {
     (document.getElementById('settings_option_join-delay') as HTMLInputElement).value = '';
   });
 
-  document.getElementById('upload-config')?.addEventListener('click', async () => {
-    const path = await open({
-      directory: false,
-      multiple: false
-    });
-
-    if (path) {
-      const data = await readFile(path);
-
-      if (data) {
-        const decoder = new TextDecoder();
-        const config = JSON.parse(decoder.decode(data));
-        uploadConfig(config);
-      }
-    }
-  });
-
-  document.getElementById('share-config')?.addEventListener('click', async () => {
-    const directory = await open({
-      directory: true,
-      multiple: false
-    });
-
-    if (directory) {
-      await shareConfig(directory);
-    }
-  });
-
   document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language));
   await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language);
 
@@ -1244,6 +1214,7 @@ function addOpeningUrlTo(id: string, event: string, url: string): void {
   }
 }
 
+/*
 async function checkUpdate(): Promise<void> {
   try {
     document.getElementById('close-notice-btn')?.addEventListener('click', () => {
@@ -1282,6 +1253,7 @@ async function checkUpdate(): Promise<void> {
     log(`Ошибка проверки обновлений: ${error}`, 'error');
   }
 }
+*/
 
 document.addEventListener('DOMContentLoaded', async () => {
   log('Клиент запущен', 'info');
