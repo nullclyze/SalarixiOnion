@@ -32,7 +32,7 @@ impl ScaffoldModule {
   async fn take_block(&self, bot: &Client) -> bool {
     if let Some(menu) = bot.get_inventory_menu() {
       if let Some(item) = menu.slot(convert_hotbar_slot_to_inventory_slot(
-        bot.get_selected_hotbar_slot(),
+        bot.get_selected_slot(),
       )) {
         if this_is_solid_block(item.kind()) {
           return true;
@@ -47,7 +47,7 @@ impl ScaffoldModule {
             if let Some(i) = menu.slot(s) {
               if this_is_solid_block(i.kind()) {
                 if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(s) {
-                  if bot.get_selected_hotbar_slot() == hotbar_slot {
+                  if bot.get_selected_slot() == hotbar_slot {
                     return true;
                   }
                 }
@@ -56,7 +56,7 @@ impl ScaffoldModule {
           }
 
           if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(slot) {
-            if bot.get_selected_hotbar_slot() == hotbar_slot {
+            if bot.get_selected_slot() == hotbar_slot {
               return true;
             }
           }
