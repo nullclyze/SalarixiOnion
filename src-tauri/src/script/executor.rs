@@ -318,13 +318,13 @@ impl ScriptExecutor {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_hotbar_slot());
+          let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
           bot.inventory_drop_item(selected_slot, lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_hotbar_slot());
+        let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
         bot.inventory_drop_item(selected_slot, lock);
       }
     }
@@ -404,6 +404,20 @@ impl ScriptExecutor {
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
         bot.inventory_right_click(slot, lock);
+      }
+    }
+  }
+
+  fn set_selected_slot(username: &str, slot: u8) {
+    if username == "*" {
+      PROFILES.get_all().keys().for_each(|name| {
+        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
+          bot.set_selected_hotbar_slot(slot);
+        }
+      });
+    } else {
+      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
+        bot.set_selected_hotbar_slot(slot);
       }
     }
   }
@@ -611,6 +625,12 @@ impl ScriptExecutor {
         "inv_right_click",
         |username: &str, slot: i64, lock: bool| {
           Self::inv_right_click(username, slot as usize, lock)
+        },
+      )
+      .register_fn(
+        "set_selected_slot",
+        |username: &str, slot: i64| {
+          Self::set_selected_slot(username, slot as u8)
         },
       );
 

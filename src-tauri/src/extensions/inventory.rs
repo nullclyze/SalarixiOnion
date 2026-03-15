@@ -17,7 +17,7 @@ use crate::extensions::BotMovementExt;
 use crate::generators::randint;
 
 pub trait BotInventoryExt {
-  fn get_selected_hotbar_slot(&self) -> u8;
+  fn get_selected_slot(&self) -> u8;
   fn get_current_inventory(&self) -> Option<ContainerHandleRef>;
   fn get_inventory_menu(&self) -> Option<Menu>;
   fn find_empty_slot_in_invenotry(&self) -> Option<usize>;
@@ -48,7 +48,7 @@ impl BotInventoryExt for Client {
     None
   }
 
-  fn get_selected_hotbar_slot(&self) -> u8 {
+  fn get_selected_slot(&self) -> u8 {
     if let Some(inventory) = self.get_component::<Inventory>() {
       return inventory.selected_hotbar_slot;
     }
@@ -106,7 +106,7 @@ impl BotInventoryExt for Client {
 
   async fn take_item(&self, source_slot: usize, lock: bool) {
     if let Some(hotbar_slot) = convert_inventory_slot_to_hotbar_slot(source_slot) {
-      if self.get_selected_hotbar_slot() != hotbar_slot {
+      if self.get_selected_slot() != hotbar_slot {
         self.set_selected_hotbar_slot(hotbar_slot);
       }
     } else {
@@ -116,7 +116,7 @@ impl BotInventoryExt for Client {
           .await;
 
         if let Some(slot) = convert_inventory_slot_to_hotbar_slot(empty_slot as usize) {
-          if self.get_selected_hotbar_slot() != slot {
+          if self.get_selected_slot() != slot {
             sleep(Duration::from_millis(50)).await;
             self.set_selected_hotbar_slot(slot);
           }
@@ -134,7 +134,7 @@ impl BotInventoryExt for Client {
 
         let hotbar_slot = convert_inventory_slot_to_hotbar_slot(random_slot).unwrap_or(0);
 
-        if self.get_selected_hotbar_slot() != hotbar_slot {
+        if self.get_selected_slot() != hotbar_slot {
           self.set_selected_hotbar_slot(hotbar_slot);
         }
       }
