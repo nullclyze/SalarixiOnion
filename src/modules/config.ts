@@ -113,7 +113,7 @@ async function uploadConfig(): Promise<void> {
 
     const buffer = await readFile(path);
 
-    if (buffer) return;
+    if (!buffer) return;
 
     const decoder = new TextDecoder();
     const config = JSON.parse(decoder.decode(buffer));
