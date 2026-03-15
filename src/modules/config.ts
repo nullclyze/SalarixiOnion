@@ -1,10 +1,11 @@
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { readFile, writeFile } from '@tauri-apps/plugin-fs';
 import { path } from '@tauri-apps/api';
 
 import { plugins } from '../common/structs';
 import { log } from '../logger';
 import { invokeElementFunction, updatePluginState } from '../main';
 import { message } from '../message';
+import { open } from '@tauri-apps/plugin-dialog';
 
 type ConfigValue = string | number | boolean | null;
 
@@ -12,7 +13,9 @@ function setValue(id: string, value: ConfigValue): void {
   if (id === '') return;
 
   try {
-    const doc = document.getElementById(id.replaceAll('.', '_')) as HTMLElement;
+    const doc = document.getElementById(id.replaceAll('.', '_'));
+
+    if (!doc) return;
 
     if (doc.tagName.toLocaleLowerCase() === 'input') {
       const input = doc as HTMLInputElement;
@@ -63,6 +66,9 @@ export function initConfig(): void {
     localStorage.setItem('salarixionion:storage:config', JSON.stringify({}, null, 2));
   }
 
+  document.getElementById('upload-config')?.addEventListener('click', async () => await uploadConfig());
+  document.getElementById('share-config')?.addEventListener('click', async () => await shareConfig());
+
   setInterval(() => {
     const elements = document.querySelectorAll<HTMLElement>('[keep="true"]');
     const config: Record<string, ConfigValue> = {};
@@ -90,46 +96,71 @@ export function initConfig(): void {
   }, 1500);
 }
 
-export function uploadConfig(config: any): void {
-  log('Загрузка конфига...', 'system');
-
+async function uploadConfig(): Promise<void> {
   try {
+    const path = await open({
+      directory: false,
+      multiple: false,
+      filters: [
+        {
+          name: 'Config',
+          extensions: ['json']
+        }
+      ]
+    });
+
+    if (!path) return;
+
+    const buffer = await readFile(path);
+
+    if (buffer) return;
+
+    const decoder = new TextDecoder();
+    const config = JSON.parse(decoder.decode(buffer));
+
     for (const [id, value] of Object.entries<ConfigValue>(config)) {
       if (!value && value !== 0) continue;
       setValue(id, value);
     }
 
-    message('Система', 'Конфиг успешно загружен');
-
     document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
 
-    log('Конфиг успешно загружен', 'system');
+    message('Конфиг', `Конфиг успешно загружен из ${path}`);
   } catch (error) {
-    log(`Ошибка загрузки конфига: ${error}`, 'error');
+    log(`Не удалось загрузить конфиг: ${error}`, 'error');
   }
 }
 
-export async function shareConfig(directory: string): Promise<void> {
+async function shareConfig(): Promise<void> {
   try {
+    const directory = await open({
+      directory: true,
+      multiple: false
+    });
+
+    if (!directory) return;
+
     const config = localStorage.getItem('salarixionion:storage:config');
 
-    if (config) {
-      const clean_config: Record<string, ConfigValue> = {};
+    if (!config) return;
 
-      for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
-        const el = document.getElementById(id.replaceAll('.', '_'));
+    const clean_config: Record<string, ConfigValue> = {};
 
-        if (el && !el.getAttribute('ignore-config')) {
-          clean_config[id] = value;
-        }
+    for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
+      const el = document.getElementById(id.replaceAll('.', '_'));
+
+      if (el && !el.getAttribute('ignore-config')) {
+        clean_config[id] = value;
       }
-
-      let encoder = new TextEncoder();
-      let data = encoder.encode(JSON.stringify(clean_config, null, 2));
-
-      await writeFile(await path.join(directory, 'salarixi.conf.json'), data);
     }
+
+    let encoder = new TextEncoder();
+    let buffer = encoder.encode(JSON.stringify(clean_config, null, 2));
+
+    await writeFile(await path.join(directory, 'salarixi.config.json'), buffer);
+
+    message('Конфиг', `Публичный конфиг успешно создан в ${directory}`);
   } catch (error) {
-    log(`Ошибка создания конфига: ${error}`, 'error');
+    log(`Не удалось поделиться конфигом: ${error}`, 'error');
   }
 }

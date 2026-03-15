@@ -59,6 +59,12 @@ export class AccountManager {
         const path = await open({
           directory: false,
           multiple: false,
+          filters: [
+            {
+              name: 'Accounts',
+              extensions: ['json']
+            }
+          ]
         });
 
         if (path) {
@@ -67,7 +73,7 @@ export class AccountManager {
           const buffer = await readFile(path);
 
           const decoder = new TextDecoder();
-          const accounts: any = JSON.parse(decoder.decode(buffer));
+          const accounts = JSON.parse(decoder.decode(buffer));
 
           for (const username in accounts) {
             const data = accounts[username];
