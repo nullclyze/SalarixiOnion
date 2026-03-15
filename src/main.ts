@@ -1016,10 +1016,10 @@ function registerAllTriggerFunctions() {
 
       switch (current.value) {
         case 'onion': 
-          root.style.setProperty('--title-color', '#814bff');
-          root.style.setProperty('--spec-color', '#6523ff');
-          root.style.setProperty('--dull-spec-color', '#6a39dd');
-          root.style.setProperty('--chbx-spec-color', '#6a3fce');
+          root.style.setProperty('--title-color', '#7e47ff');
+          root.style.setProperty('--spec-color', '#7946f0');
+          root.style.setProperty('--dull-spec-color', '#5426be');
+          root.style.setProperty('--chbx-spec-color', '#7946f0');
           root.style.setProperty('--chbx-dull-spec-color', '#5426be');
           break;
         case 'toxic': 
@@ -1214,7 +1214,6 @@ function addOpeningUrlTo(id: string, event: string, url: string): void {
   }
 }
 
-/*
 async function checkUpdate(): Promise<void> {
   try {
     document.getElementById('close-notice-btn')?.addEventListener('click', () => {
@@ -1253,7 +1252,6 @@ async function checkUpdate(): Promise<void> {
     log(`Ошибка проверки обновлений: ${error}`, 'error');
   }
 }
-*/
 
 document.addEventListener('DOMContentLoaded', async () => {
   log('Клиент запущен', 'info');
