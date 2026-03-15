@@ -25,9 +25,9 @@
   --panel-btn-gap: 6px;
 
   --cover-bg: rgb(8, 8, 8);
-  --common-bg: rgb(8, 8, 8);
+  --common-bg: rgb(10, 10, 10);
   --common-border: rgb(36, 36, 36);
-  --card-bg: rgba(14, 14, 14, 0.6);
+  --card-bg: rgba(12, 12, 12, 0.7);
   --input-bg: rgba(15, 15, 15, 0.7);
   --input-border: rgb(39, 39, 39);
   --text-secondary: #a0a0a0;
@@ -60,8 +60,6 @@ body {
   width: 100%;
   -webkit-app-region: drag; 
   background-color: rgb(9, 9, 9);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px); 
   height: 35px; 
   display: flex;
   align-items: center;
@@ -141,8 +139,8 @@ body {
   border-radius: 12px;
   padding: 20px;
   background-color: rgba(12, 12, 12, 0.8);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   border: 1px solid var(--common-border);
   flex-direction: column;
   justify-content: flex-start;
@@ -1364,15 +1362,12 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
-  padding: 8px 18px;
-  border: 1px solid rgb(39, 39, 39);
-  background-color: rgb(19, 19, 19);
-  border-radius: 12px;
+  gap: 15px;
   width: max-content;
 }
 
 .about-panel .social-card .btn-social {
+  display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
@@ -1381,55 +1376,64 @@ p {
 .about-panel .social-card .btn-social svg {
   cursor: pointer;
   color: #87878a;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   margin-top: 6px;
-  transition: all 0.2s ease;
+  background-color: transparent;
+  transition: color 0.1s ease;
 }
-
 .about-panel .social-card .btn-social svg:hover {
-  transform: scale(1.1);
   color: var(--spec-color);
 }
 
 .features-title {
   margin-top: 45px;
-  margin-bottom: 10px;
+  margin-bottom: 2%;
   color: var(--spec-color);
   font-weight: bold;
   font-size: 1rem;
   text-align: center;
 }
 
-.feature-lists-container {
+.feature-cards-container {
   display: flex;
   justify-content: center;
-  gap: 14px;
+  align-items: center;
+  gap: 20px;
 }
 
-.feature-list {
+.feature-card {
   display: flex;
   flex-direction: column;
-  list-style-type: none;
+  justify-content: center;
+  align-items: center;
   width: 200px;
-  padding: 15px;
-  margin: 0;
-  margin-top: 10px;
-  gap: 6px;
+  height: 160px;
+  gap: 30px;
+  padding: 0;
   background-color: var(--card-bg);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  border-radius: 12px;
   border: 1px solid var(--common-border);
-  font-family: var(--global-font-family);
-  font-size: 14px;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
+  border-radius: 12px;
 }
 
-.feature-list:hover {
-  border-bottom-color: var(--spec-color);
-  transform: translateY(-4px);
+.feature-card svg {
+  width: 60px;
+  height: 60px;
+  color: var(--text-secondary);
+  transition: color 0.1s ease;
+}
+
+.feature-card .text {
+  font-family: var(--global-font-family);
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-secondary);
+  transition: color 0.1s ease;
+}
+
+.feature-card:hover .text,
+.feature-card:hover svg {
+  color: var(--spec-color);
 }
 
 .highlight {
@@ -1606,10 +1610,8 @@ p {
   background-color: var(--common-bg);
   border: 1px solid var(--common-border);
   border-radius: 12px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   overflow: hidden; 
-  transition: border 0.2s ease;
+  transition: border 0.1s ease;
 }
 
 .monitoring-wrapper .bot-card.glow {
@@ -1755,7 +1757,7 @@ p {
   justify-content: center; 
   align-items: center; 
   gap: 10px;
-  background-color: rgb(10, 10, 10);
+  background-color: var(--card-bg);
   border: 1px solid var(--common-border);
   border-radius: 6px;
   width: 100%;
@@ -1784,7 +1786,7 @@ p {
 
 .chat-content {
   margin-top: 20px;
-  background-color: rgb(10, 10, 10);
+  background-color: var(--card-bg);
   max-height: 390px;
   height: 390px;
   overflow-y: auto;
@@ -2165,8 +2167,8 @@ p {
   width: 730px;
   gap: 6px;
   background-color: var(--common-bg);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border-radius: 8px;
   border: 1px solid var(--common-border);
   justify-content: center;
@@ -2424,8 +2426,8 @@ p {
 }
 
 .plugin-list .plugin-card .controls .button {
-  border: 1px solid rgb(31, 31, 31);
-  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgb(31, 30, 30);
+  background-color: rgb(15, 15, 15);
   border-radius: 6px;
   padding: 6px 12px;
   height: 32px;
@@ -2434,17 +2436,17 @@ p {
   font-family: var(--global-font-family);
   font-size: 14px;
   font-weight: bold;
-  transition: all 0.12s ease;
+  transition: all 0.08s ease;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .plugin-list .plugin-card .controls .button:hover {
-  border-color: rgb(51, 51, 51);
+  border-color: rgb(41, 41, 41);
 }
 
 .plugin-list .plugin-card .controls .button:active {
-  border-color: rgb(51, 51, 51);
+  border-color: rgb(41, 41, 41);
   transform: scale(0.96);
 }
 
