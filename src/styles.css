@@ -28,9 +28,9 @@
   --common-bg: rgb(10, 10, 10);
   --common-border: rgb(36, 36, 36);
   --card-bg: rgba(12, 12, 12, 0.7);
-  --input-bg: rgba(15, 15, 15, 0.7);
+  --input-bg: rgb(13, 13, 13);
   --input-border: rgb(39, 39, 39);
-  --text-secondary: #a0a0a0;
+  --text-secondary: rgb(160, 160, 160);
 }
 
 body {
@@ -525,33 +525,52 @@ body {
   font-family: var(--global-font-family);
 }
 
-.accounts-panel {
+.accounts-top-panel {
   display: flex;
   margin: 10px 0 20px 0;
   padding: 4px;
   width: 92%;
   gap: 6px;
   background-color: var(--common-bg);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   border-radius: 8px;
   border: 1px solid var(--common-border);
   justify-content: center;
   align-items: center;
 }
 
-.accounts-panel .sep {
+.accounts-top-panel .sep {
   display: flex;
   border-left: 2px solid var(--common-border);
   height: 30px;
   margin: 0 4px;
 }
 
-.accounts-panel input {
+.accounts-top-panel input {
   height: 32px; 
   max-width: 140px;
   border: none;
   background-color: transparent;
+}
+
+.accounts-bottom-panel {
+  display: flex;
+  margin-top: 30px;
+  width: 92%;
+  height: 38px;
+  gap: 6px;
+  border-top: 1px solid var(--common-border);
+  justify-content: start;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.accounts-bottom-panel .account-counter {
+  font-family: var(--global-font-family);
+  font-size: 15px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  margin-left: 12px;
+  width: 100%;
 }
 
 .account-list {
@@ -559,23 +578,37 @@ body {
   flex-direction: column;
   justify-content: start;
   align-items: center;
-  width: 100%;
+  width: 720px;
   height: 100%;
   margin-top: 10px;
-  max-height: 390px;
+  max-height: 330px;
   gap: 8px;
   overflow-y: auto;
 }
 
 .account-list .account {
   display: flex;
-  width: 88%;
+  width: 96%;
   background-color: var(--card-bg);
   border: 1px solid var(--common-border);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-radius: 12px;
   gap: 12px;
   padding: 8px;
   align-items: center;
+  animation: show-account 0.2s ease;
+}
+
+@keyframes show-account {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .account-list .account .icon {
@@ -591,14 +624,33 @@ body {
   color: var(--spec-color);
 }
 
-.account-list .account .username {
+.account-list .account .text {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
   height: 100%;
   width: 100%;
-  justify-content: start;
-  align-items: center;
-  color: #fff;
   margin-left: 10px;
+  gap: 4px;
+  -webkit-user-select: text; 
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.account-list .account .text .username {
+  font-family: var(--global-font-family);
+  font-size: 17px;
+  font-weight: normal;
+  color: #fff;
+}
+
+.account-list .account .text .creation-date {
+  font-family: var(--global-font-family);
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--text-secondary);
 }
 
 .account-list .account .btn-group {
@@ -1382,6 +1434,7 @@ p {
   background-color: transparent;
   transition: color 0.1s ease;
 }
+
 .about-panel .social-card .btn-social svg:hover {
   color: var(--spec-color);
 }
@@ -1420,7 +1473,6 @@ p {
   width: 60px;
   height: 60px;
   color: var(--text-secondary);
-  transition: color 0.1s ease;
 }
 
 .feature-card .text {
@@ -1428,7 +1480,6 @@ p {
   font-size: 16px;
   font-weight: bold;
   color: var(--text-secondary);
-  transition: color 0.1s ease;
 }
 
 .feature-card:hover .text,
@@ -1757,8 +1808,8 @@ p {
   justify-content: center; 
   align-items: center; 
   gap: 10px;
-  background-color: var(--card-bg);
-  border: 1px solid var(--common-border);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   width: 100%;
 }
@@ -1781,7 +1832,7 @@ p {
   border: none;
   border-radius: 0;
   background-color: transparent;
-  border-left: 1px solid var(--common-border);
+  border-left: 1px solid var(--input-border);
 }
 
 .chat-content {
@@ -2326,6 +2377,8 @@ p {
   width: 95%;
   background-color: var(--card-bg);
   border: 1px solid var(--common-border);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-radius: 12px;
   padding: 2px 8px;
 }
