@@ -1,6 +1,13 @@
+import { open } from '@tauri-apps/plugin-dialog';
+
+import { date } from '../helpers/date';
 import { log } from '../logger';
+import { readFile, writeFile } from '@tauri-apps/plugin-fs';
+import { path } from '@tauri-apps/api';
+import { message } from '../message';
 
 type AccountFields = {
+  creation_date: string;
   password: string | null;
   proxy: string | null;
   proxy_username: string | null;
@@ -9,18 +16,22 @@ type AccountFields = {
 
 export class AccountManager {
   private accountList: HTMLDivElement | null = null;
+  private accountCounter: HTMLSpanElement | null = null;
   private wrappers: HTMLDivElement | null = null;
 
   private accounts: Record<string, AccountFields | null> = {};
 
   public init(): void {
     this.accountList = document.getElementById('account-list') as HTMLDivElement;
+    this.accountCounter = document.getElementById('account-counter') as HTMLSpanElement;
     this.wrappers = document.getElementById('account-wrappers') as HTMLDivElement;
 
     this.loadSavedAccounts();
 
     const addAccountBtn = document.getElementById('add-account') as HTMLButtonElement;
-    const removeAllAccountsBtn = document.getElementById('remove-all-accounts') as HTMLElement;
+    const removeAllAccountsBtn = document.getElementById('remove-all-accounts') as HTMLButtonElement;
+    const importAccounts = document.getElementById('import-accounts') as HTMLButtonElement;
+    const exportAccounts = document.getElementById('export-accounts') as HTMLButtonElement;
 
     addAccountBtn.addEventListener('click', () => {
       const usernameInput = document.getElementById('account-username') as HTMLInputElement;
@@ -31,24 +42,87 @@ export class AccountManager {
       usernameInput.value = '';
 
       this.createAccountCard(username, {
+        creation_date: date('exact'),
         password: null,
         proxy: null,
         proxy_username: null,
         proxy_password: null
       });
+
+      this.updateAccountCounter();
     });
 
-    removeAllAccountsBtn.addEventListener('click', () => {
-      document.querySelectorAll('[account-editor="true"]').forEach(e => e.remove());
+    removeAllAccountsBtn.addEventListener('click', () => this.clearAccounts());
 
-      for (const username in this.accounts) {
-        const card = document.getElementById(`account-${username}`) as HTMLDivElement;
-        card.remove();
+    importAccounts.addEventListener('click', async () => {
+      try {
+        const path = await open({
+          directory: false,
+          multiple: false,
+        });
+
+        if (path) {
+          this.clearAccounts();
+
+          const buffer = await readFile(path);
+
+          const decoder = new TextDecoder();
+          const accounts: any = JSON.parse(decoder.decode(buffer));
+
+          for (const username in accounts) {
+            const data = accounts[username];
+            if (!data) continue;
+
+            this.createAccountCard(username, {
+              creation_date: date('exact'),
+              password: data.password,
+              proxy: data.proxy,
+              proxy_username: data.proxy_username,
+              proxy_password: data.proxy_password
+            });
+          } 
+          
+          this.updateAccountCounter();
+
+          message('Импорт аккаунтов', `Аккаунты успешно импортированы`);
+        }
+      } catch (error) {
+        log(`Ошибка импорта аккаунтов: ${error}`, 'error');
       }
+    });
 
-      this.accounts = {};
+    exportAccounts.addEventListener('click', async () => {
+      try {
+        const directory = await open({
+          directory: true,
+          multiple: false
+        });
 
-      localStorage.removeItem('salarixionion:storage:accounts');
+        if (directory) {
+          const accounts: any = {};
+
+          for (const username in this.accounts) {
+            const data = this.accounts[username];
+            if (!data) continue;
+
+            accounts[username] = {
+              password: data.password,
+              proxy: data.proxy,
+              proxy_username: data.proxy_username,
+              proxy_password: data.proxy_password
+            };
+          }
+
+          let encoder = new TextEncoder();
+          let data = encoder.encode(JSON.stringify(accounts, null, 2));
+
+          await writeFile(await path.join(directory, 'salarixi.accounts.json'), data);
+
+          message('Экспорт аккаунтов', `Аккаунты успешно экспортированы`);
+        }
+      } catch (error) {
+        log(`Ошибка экспорта аккаунтов: ${error}`, 'error');
+      }
     });
 
     setInterval(() => {
@@ -58,6 +132,33 @@ export class AccountManager {
 
   public getAccounts(): Record<string, AccountFields | null> {
     return this.accounts;
+  }
+
+  private updateAccountCounter(): void {
+    let count = 0;
+
+    for (const _ in this.accounts) {
+      count++;
+    }
+
+    if (this.accountCounter) {
+      this.accountCounter.innerText = count.toString();
+    }
+  }
+
+  private clearAccounts(): void {
+    document.querySelectorAll('[account-editor="true"]').forEach(e => e.remove());
+
+    for (const username in this.accounts) {
+      const card = document.getElementById(`account-${username}`) as HTMLDivElement;
+      card.remove();
+    }
+
+    this.accounts = {};
+
+    localStorage.removeItem('salarixionion:storage:accounts');
+
+    this.updateAccountCounter();
   }
 
   private loadSavedAccounts(): void {
@@ -71,11 +172,14 @@ export class AccountManager {
           this.createAccountCard(username, fields);
         }
       }
+
+      this.updateAccountCounter();
     }
   }
 
   private createAccountCard(username: string, fields: AccountFields): void {
     this.accounts[username] = {
+      creation_date: fields.creation_date,
       password: fields.password,
       proxy: fields.proxy,
       proxy_username: fields.proxy_username,
@@ -91,7 +195,10 @@ export class AccountManager {
         <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
       </svg>
 
-      <div class="username">${username}</div>
+      <div class="text">
+        <p class="username">${username}</p>
+        <p class="creation-date">Создан: ${fields.creation_date}</p>
+      </div>
 
       <div class="btn-group">
         <button class="btn min pretty" id="edit-account-${username}">
@@ -177,6 +284,8 @@ export class AccountManager {
         card.remove();
         editorWrapper.remove();
         delete this.accounts[username];
+
+        this.updateAccountCounter();
       });
 
       const account = this.accounts[username];
