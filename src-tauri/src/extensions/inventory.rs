@@ -2,6 +2,7 @@ use azalea::container::ContainerHandleRef;
 use azalea::core::direction::Direction;
 use azalea::core::position::BlockPos;
 use azalea::entity::inventory::Inventory;
+use azalea::inventory::components::ItemName;
 use azalea::inventory::operations::ThrowClick;
 use azalea::inventory::Menu;
 use azalea::prelude::*;
@@ -13,7 +14,7 @@ use tokio::time::sleep;
 
 use crate::common::convert_inventory_slot_to_hotbar_slot;
 use crate::core::*;
-use crate::extensions::BotMovementExt;
+use crate::extensions::{BotDefaultExt, BotMovementExt};
 use crate::generators::randint;
 
 pub trait BotInventoryExt {
@@ -24,10 +25,8 @@ pub trait BotInventoryExt {
   fn start_interacting_with_inventory(&self);
   fn stop_interacting_with_inventory(&self);
   fn move_item_to_offhand(&self, kind: ItemKind);
-  fn inventory_shift_click(&self, slot: usize, lock: bool);
-  fn inventory_left_click(&self, slot: usize, lock: bool);
-  fn inventory_right_click(&self, slot: usize, lock: bool);
-  fn inventory_drop_item(&self, slot: usize, lock: bool);
+  fn inventory_click(&self, slot: usize, mode: ClickMode, lock: bool);
+  fn inventory_click_on(&self, name: &str, mode: ClickMode, lock: bool);
   async fn take_item(&self, source_slot: usize, lock: bool);
   async fn inventory_swap_click(&self, source_slot: usize, target_slot: usize, lock: bool);
   async fn inventory_move_item(
@@ -37,6 +36,15 @@ pub trait BotInventoryExt {
     target_slot: usize,
     lock: bool,
   );
+}
+
+#[derive(Debug, Clone)]
+pub enum ClickMode {
+  Left,
+  Right,
+  Shift,
+  Drop,
+  DropAll
 }
 
 impl BotInventoryExt for Client {
@@ -81,7 +89,7 @@ impl BotInventoryExt for Client {
   }
 
   fn start_interacting_with_inventory(&self) {
-    let username = self.username();
+    let username = self.name();
 
     self.freeze_move();
 
@@ -93,7 +101,7 @@ impl BotInventoryExt for Client {
   }
 
   fn stop_interacting_with_inventory(&self) {
-    let username = self.username();
+    let username = self.name();
 
     self.unfreeze_move();
 
@@ -124,7 +132,7 @@ impl BotInventoryExt for Client {
       } else {
         let random_slot = randint(36, 44) as usize;
 
-        self.inventory_shift_click(random_slot, lock);
+        self.inventory_click(random_slot, ClickMode::Shift, lock);
         sleep(Duration::from_millis(50)).await;
         self
           .inventory_swap_click(source_slot, random_slot, lock)
@@ -158,68 +166,8 @@ impl BotInventoryExt for Client {
     });
   }
 
-  fn inventory_shift_click(&self, slot: usize, lock: bool) {
-    let username = self.username();
-
-    if let Some(inventory) = self.get_current_inventory() {
-      if lock {
-        if !get_state(&username, "can_interacting") {
-          return;
-        }
-
-        self.start_interacting_with_inventory();
-      }
-
-      inventory.shift_click(slot);
-
-      if lock {
-        self.stop_interacting_with_inventory();
-      }
-    }
-  }
-
-  fn inventory_left_click(&self, slot: usize, lock: bool) {
-    let username = self.username();
-
-    if let Some(inventory) = self.get_current_inventory() {
-      if lock {
-        if !get_state(&username, "can_interacting") {
-          return;
-        }
-
-        self.start_interacting_with_inventory();
-      }
-
-      inventory.left_click(slot);
-
-      if lock {
-        self.stop_interacting_with_inventory();
-      }
-    }
-  }
-
-  fn inventory_right_click(&self, slot: usize, lock: bool) {
-    let username = self.username();
-
-    if let Some(inventory) = self.get_current_inventory() {
-      if lock {
-        if !get_state(&username, "can_interacting") {
-          return;
-        }
-
-        self.start_interacting_with_inventory();
-      }
-
-      inventory.right_click(slot);
-
-      if lock {
-        self.stop_interacting_with_inventory();
-      }
-    }
-  }
-
   async fn inventory_swap_click(&self, source_slot: usize, target_slot: usize, lock: bool) {
-    let username = self.username();
+    let username = self.name();
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
@@ -238,7 +186,7 @@ impl BotInventoryExt for Client {
               sleep(Duration::from_millis(100)).await;
               inventory.left_click(empty_slot);
             } else {
-              self.inventory_drop_item(target_slot, false);
+              self.inventory_click(target_slot, ClickMode::DropAll, false);
             }
 
             sleep(Duration::from_millis(100)).await;
@@ -258,8 +206,8 @@ impl BotInventoryExt for Client {
     }
   }
 
-  fn inventory_drop_item(&self, slot: usize, lock: bool) {
-    let username = self.username();
+  fn inventory_click(&self, slot: usize, mode: ClickMode, lock: bool) {
+    let username = self.name();
 
     if let Some(inventory) = self.get_current_inventory() {
       if lock {
@@ -270,16 +218,43 @@ impl BotInventoryExt for Client {
         self.start_interacting_with_inventory();
       }
 
-      if let Some(menu) = self.get_inventory_menu() {
-        if let Some(item) = menu.slot(slot) {
-          if !item.is_empty() {
-            inventory.click(ThrowClick::All { slot: slot as u16 });
-          }
+      match mode {
+        ClickMode::Left => {
+          inventory.left_click(slot);
+        }
+        ClickMode::Right => {
+          inventory.right_click(slot);
+        }
+        ClickMode::Shift => {
+          inventory.shift_click(slot);
+        }
+        ClickMode::Drop => {
+          inventory.click(ThrowClick::Single { slot: slot as u16 });
+        }
+        ClickMode::DropAll => {
+          inventory.click(ThrowClick::All { slot: slot as u16 });
         }
       }
 
       if lock {
         self.stop_interacting_with_inventory();
+      }
+    }
+  }
+  
+  fn inventory_click_on(&self, name: &str, mode: ClickMode, lock: bool) {
+    let string_name = name.to_string();
+
+    if let Some(menu) = self.get_inventory_menu() {
+      for (slot, item) in menu.slots().iter().enumerate() {
+        let Some(item_name) = item.get_component::<ItemName>() else {
+          continue;
+        }; 
+        
+        if item_name.name.to_string() == string_name {
+          self.inventory_click(slot, mode, lock);
+          break;
+        }
       }
     }
   }

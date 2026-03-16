@@ -10,7 +10,7 @@ use tokio::time::sleep;
 
 use crate::common::{get_average_coordinates_of_bots, this_is_solid_block};
 use crate::core::*;
-use crate::extensions::{go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt};
+use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, ClickMode, go_to};
 use crate::generators::{randfloat, randint, randuint};
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> =
@@ -35,7 +35,7 @@ impl QuickTaskManager {
             "clear-inventory" => {
               if let Some(menu) = bot.get_inventory_menu() {
                 for (slot, _) in menu.slots().iter().enumerate() {
-                  bot.inventory_drop_item(slot, true);
+                  bot.inventory_click(slot, ClickMode::DropAll, true);
                 }
               }
             }
