@@ -10,7 +10,7 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::common::convert_hotbar_slot_to_inventory_slot;
+use crate::{common::convert_hotbar_slot_to_inventory_slot, extensions::ClickMode};
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
 use crate::extensions::{
@@ -319,13 +319,13 @@ impl ScriptExecutor {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
           let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
-          bot.inventory_drop_item(selected_slot, lock);
+          bot.inventory_click(selected_slot, ClickMode::DropAll, lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
         let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
-        bot.inventory_drop_item(selected_slot, lock);
+        bot.inventory_click(selected_slot, ClickMode::DropAll, lock);
       }
     }
   }
@@ -336,7 +336,7 @@ impl ScriptExecutor {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
           if let Some(menu) = bot.get_inventory_menu() {
             for (slot, _) in menu.slots().iter().enumerate() {
-              bot.inventory_drop_item(slot, lock);
+              bot.inventory_click(slot, ClickMode::DropAll, lock);
             }
           }
         }
@@ -345,65 +345,55 @@ impl ScriptExecutor {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
         if let Some(menu) = bot.get_inventory_menu() {
           for (slot, _) in menu.slots().iter().enumerate() {
-            bot.inventory_drop_item(slot, lock);
+            bot.inventory_click(slot, ClickMode::DropAll, lock);
           }
         }
       }
     }
   }
 
-  fn inv_drop_click(username: &str, slot: usize, lock: bool) {
+  fn inv_click(username: &str, slot: usize, mode: u8, lock: bool) {
+    let click_mode = match mode {
+      0 => ClickMode::Left,
+      1 => ClickMode::Right,
+      2 => ClickMode::Shift,
+      3 => ClickMode::Drop,
+      4 => ClickMode::DropAll,
+      _ => return
+    };
+
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_drop_item(slot, lock);
+          bot.inventory_click(slot, click_mode.clone(), lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_drop_item(slot, lock);
+        bot.inventory_click(slot, click_mode, lock);
       }
     }
   }
 
-  fn inv_shift_click(username: &str, slot: usize, lock: bool) {
-    if username == "*" {
-      PROFILES.get_all().keys().for_each(|name| {
-        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_shift_click(slot, lock);
-        }
-      });
-    } else {
-      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_shift_click(slot, lock);
-      }
-    }
-  }
+  fn inv_click_on(username: &str, name: &str, mode: u8, lock: bool) {
+    let click_mode = match mode {
+      0 => ClickMode::Left,
+      1 => ClickMode::Right,
+      2 => ClickMode::Shift,
+      3 => ClickMode::Drop,
+      4 => ClickMode::DropAll,
+      _ => return
+    };
 
-  fn inv_left_click(username: &str, slot: usize, lock: bool) {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_left_click(slot, lock);
+          bot.inventory_click_on(name, click_mode.clone(), lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_left_click(slot, lock);
-      }
-    }
-  }
-
-  fn inv_right_click(username: &str, slot: usize, lock: bool) {
-    if username == "*" {
-      PROFILES.get_all().keys().for_each(|name| {
-        if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_right_click(slot, lock);
-        }
-      });
-    } else {
-      if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_right_click(slot, lock);
+        bot.inventory_click_on(name, click_mode, lock);
       }
     }
   }
@@ -609,24 +599,12 @@ impl ScriptExecutor {
       .register_fn("drop_all_items", |username: &str, lock: bool| {
         Self::drop_all_items(username, lock)
       })
-      .register_fn("inv_drop_click", |username: &str, slot: i64, lock: bool| {
-        Self::inv_drop_click(username, slot as usize, lock)
+      .register_fn("inv_click", |username: &str, slot: i64, mode: i64, lock: bool| {
+        Self::inv_click(username, slot as usize, mode as u8, lock)
       })
-      .register_fn(
-        "inv_shift_click",
-        |username: &str, slot: i64, lock: bool| {
-          Self::inv_shift_click(username, slot as usize, lock)
-        },
-      )
-      .register_fn("inv_left_click", |username: &str, slot: i64, lock: bool| {
-        Self::inv_left_click(username, slot as usize, lock)
+      .register_fn("inv_click_on", |username: &str, name: &str, mode: i64, lock: bool| {
+        Self::inv_click_on(username, name, mode as u8, lock)
       })
-      .register_fn(
-        "inv_right_click",
-        |username: &str, slot: i64, lock: bool| {
-          Self::inv_right_click(username, slot as usize, lock)
-        },
-      )
       .register_fn(
         "set_selected_slot",
         |username: &str, slot: i64| {

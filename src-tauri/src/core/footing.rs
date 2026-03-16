@@ -552,7 +552,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
                     password: None,
                   };
 
-                  let proxy_str = &list[i % list.len()].to_string();
+                  let proxy_str = list[i % list.len()];
 
                   let clean_proxy_str = proxy_str
                     .trim_start_matches("socks5://")

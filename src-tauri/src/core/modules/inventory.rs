@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::BOT_REGISTRY;
 use crate::emit::*;
-use crate::extensions::BotInventoryExt;
+use crate::extensions::{BotInventoryExt, ClickMode};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InventoryModule;
@@ -38,13 +38,13 @@ impl InventoryModule {
           } else {
             match options.state.as_str() {
               "drop" => {
-                bot.inventory_drop_item(s, true);
+                bot.inventory_click(s, ClickMode::DropAll, true);
               }
               "left-click" => {
-                bot.inventory_left_click(s, true);
+                bot.inventory_click(s, ClickMode::Left, true);
               }
               "right-click" => {
-                bot.inventory_right_click(s, true);
+                bot.inventory_click(s, ClickMode::Right, true);
               }
               "swap" => {
                 bot
