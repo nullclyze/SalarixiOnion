@@ -4,7 +4,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Chart, registerables } from 'chart.js';
 
 import { plugins } from './common/structs';
-import { log, changeLogsVisibility, eraseLogs } from './logger';
+import { logger } from './utils/logger';
 import { initConfig } from './modules/config';
 import { AccountManager } from './modules/accounts';
 import { ProxyCollectorManager } from './modules/proxy_collector';
@@ -15,9 +15,11 @@ import { CaptchaBypassManager } from './modules/captcha_bypass';
 import { RadarManager } from './modules/radar';
 import { PingManager } from './modules/ping';
 import { translate, Language } from './modules/translator';
-import { changeMessagesVisibility, message } from './message';
+import { messages } from './utils/message';
 import { downloadJsonContent } from './downloader/downloader';
 import { disableParticles, enableParticles } from './particles';
+import { switchControlWrapper, switchGlobalWrapper } from './utils/switchers';
+import { triggerRegistry } from './modules/trigger_registry';
 
 
 Chart.register(...registerables);
@@ -60,10 +62,9 @@ const pressedKeys: { [x: string]: boolean } = {
   z: false
 };
 
-let globalContainers: Array<{ id: string; el: HTMLElement }> = [];
-let controlContainers: Array<{ id: string; el: HTMLElement }> = [];
-let latestControlContainer: HTMLElement | null = null;
-let triggerFunctions: Record<string, Function> = {};
+export let globalWrappers: Array<{ id: string; el: HTMLElement }> = [];
+export let controlWrappers: Array<{ id: string; el: HTMLElement }> = [];
+export let latestControlWrapper: HTMLElement | null = null;
 
 export function setQuickTasksAllowed(value: boolean): void {
   quickTasksAllowed = value;
@@ -132,7 +133,7 @@ async function initUserGuide(): Promise<void> {
       }
     }
   } catch (error) {
-    log(`Ошибка загрузки руководства: ${error}`, 'error');
+    logger.log(`Ошибка загрузки руководства: ${error}`, 'error');
   }
 }
 
@@ -159,7 +160,7 @@ export function updatePluginState(name: string, state: boolean) {
       toggler.innerText = 'Выключен';
     }
   } else {
-    log(`Не удалось изменить состояние плагина ${name}: Plugin states can only be changed before startup`, 'warning');
+    logger.log(`Не удалось изменить состояние плагина ${name}: Plugin states can only be changed before startup`, 'warning');
   }
 }
 
@@ -243,7 +244,7 @@ function initPlugins(): void {
       }
     })); 
   } catch (error) {
-    log(`Ошибка инициализации плагинов: ${error}`, 'error');
+    logger.log(`Ошибка инициализации плагинов: ${error}`, 'error');
   }
 }
 
@@ -302,7 +303,7 @@ async function initPluginDescriptions(): Promise<void> {
       }
     }
   } catch (error) {
-    log(`Ошибка загрузки информации о плагинах: ${error}`, 'error');
+    logger.log(`Ошибка загрузки информации о плагинах: ${error}`, 'error');
   }
 }
 
@@ -325,7 +326,7 @@ async function initDownloadCount(): Promise<void> {
       (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCount.toString();
     }
   } catch (error) {
-    log(`Ошибка загрузки количества скачиваний: ${error}`, 'error');
+    logger.log(`Ошибка загрузки количества скачиваний: ${error}`, 'error');
   }
 }
 
@@ -382,8 +383,8 @@ async function startBots(): Promise<void> {
 
     const text = `Запуск ботов на сервер ${options.basic.address}...`;
 
-    log(text, 'info');
-    message('Cистема', text);
+    logger.log(text, 'info');
+    messages.message('Cистема', text);
 
     const success = await invoke('launch_bots', { options: options }) as boolean;
 
@@ -404,12 +405,12 @@ async function startBots(): Promise<void> {
       radarManager.enable();
     }
   } catch (error) {
-    log(`Ошибка (start-bots-process): ${error}`, 'error');
+    logger.log(`Ошибка (start-bots-process): ${error}`, 'error');
   }
 }
 
 async function stopBots(): Promise<void> {
-  log('Остановка ботов...', 'info');
+  logger.log('Остановка ботов...', 'info');
 
   try {
     const success = await invoke('stop_bots') as boolean;
@@ -417,17 +418,17 @@ async function stopBots(): Promise<void> {
     if (success) {
       process = 'sleep';
 
-      log('Выключение мониторинга...', 'system');
+      logger.log('Выключение мониторинга...', 'system');
 
       chartManager.disable();
       monitoringManager.disable();
       captchaBypassManager.disable();
       radarManager.disable();
 
-      log('Мониторинг выключен', 'system');
+      logger.log('Мониторинг выключен', 'system');
     }
   } catch (error) {
-    log(`Ошибка (stop-bots-process): ${error}`, 'error');
+    logger.log(`Ошибка (stop-bots-process): ${error}`, 'error');
   }
 }
 
@@ -460,31 +461,7 @@ async function controlBots(name: string, state: boolean | string): Promise<void>
       group: group !== '' ? group : 'global'
     });
   } catch (error) {
-    log(`Ошибка управления (${name}): ${error}`, 'error');
-  }
-}
-
-export function invokeElementFunction(id: string) {
-  for (const triggerId in triggerFunctions) {
-    if (triggerId === id) {
-      const el = document.getElementById(id);
-
-      if (el) {
-        triggerFunctions[triggerId](el);
-      }
-    }
-  } 
-}
-
-function registerTriggerFunction(id: string, type: 'checkbox' | 'select', func: Function) {
-  if (type === 'checkbox') {
-    const el = document.getElementById(id) as HTMLInputElement;
-    triggerFunctions[id] = func;
-    el.addEventListener('input', () => func(el));
-  } else {
-    const el = document.getElementById(id) as HTMLSelectElement;
-    triggerFunctions[id] = func;
-    el.addEventListener('change', () => func(el));
+    logger.log(`Ошибка управления (${name}): ${error}`, 'error');
   }
 }
 
@@ -499,9 +476,10 @@ async function initFunctions(): Promise<void> {
   
   dashboardBtns.forEach(btn => {
     if (btn.id === 'main') btn.classList.add('selected');
-
     btn.addEventListener('click', () => {
-      showGlobalContainer(btn.getAttribute('path') || '');
+      const path = btn.getAttribute('path');
+      if (!path) return;
+      switchGlobalWrapper(path);
       dashboardBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
@@ -509,14 +487,13 @@ async function initFunctions(): Promise<void> {
   
   controlBtns.forEach(btn => {
     if (btn.id === 'control-chat') btn.classList.add('selected');
-
     btn.addEventListener('click', () => {
-      if (btn.getAttribute('path')) {
-        showControlContainer(btn.getAttribute('path') || '');
-        controlBtns.forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        latestControlContainer = document.getElementById(btn.getAttribute('path') || '');
-      }
+      const path = btn.getAttribute('path');
+      if (!path) return;
+      switchControlWrapper(path);
+      controlBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      latestControlWrapper = document.getElementById(path);
     });
   });
 
@@ -547,62 +524,51 @@ async function initFunctions(): Promise<void> {
 
   document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
 
-  document.getElementById('clear-journal')?.addEventListener('click', () => eraseLogs());
-
   document.addEventListener('keydown', async (e) => {
-    if (process === 'active' && quickTasksAllowed) {
-      const key = e.key.toLowerCase();
-  
-      for (const k in pressedKeys) {
-        key === k ? pressedKeys[key] = true : null;
-      }
-    
-      if (pressedKeys.shift && pressedKeys.i && pressedKeys.c) {
-        await invoke('quick_task', { name: 'clear-inventory' });
-      } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.c) {
-        await invoke('quick_task', { name: 'form-circle' });
-      } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.l) {
-        await invoke('quick_task', { name: 'form-line' });
-      } else if (pressedKeys.shift && pressedKeys.p && pressedKeys.s) {
-        await invoke('quick_task', { name: 'pathfinder-stop' });
-      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.f) {
-        await invoke('quick_task', { name: 'fly' });
-      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.r) {
-        await invoke('quick_task', { name: 'rise' });
-      } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.c) {
-        await invoke('quick_task', { name: 'capsule' });
-      } else if (pressedKeys.alt && pressedKeys.shift && pressedKeys.q) {
-        await invoke('quick_task', { name: 'quit' });
-      } else if (pressedKeys.shift && pressedKeys.w) {
-        await invoke('quick_task', { name: 'move-forward' });
-      } else if (pressedKeys.shift && pressedKeys.s) {
-        await invoke('quick_task', { name: 'move-backward' });
-      } else if (pressedKeys.shift && pressedKeys.a) {
-        await invoke('quick_task', { name: 'move-left' });
-      } else if (pressedKeys.shift && pressedKeys.d) {
-        await invoke('quick_task', { name: 'move-right' });
-      } else if (pressedKeys.shift && pressedKeys.j) {
-        await invoke('quick_task', { name: 'jump' });
-      } else if (pressedKeys.shift && pressedKeys.c) {
-        await invoke('quick_task', { name: 'shift' });
-      } else if (pressedKeys.shift && pressedKeys.u) {
-        await invoke('quick_task', { name: 'unite' });
-      } else if (pressedKeys.shift && pressedKeys.t) {
-        await invoke('quick_task', { name: 'turn' });
-      } else if (pressedKeys.shift && pressedKeys.z) {
-        await invoke('quick_task', { name: 'zero' });
-      }
+    if (process === 'sleep' || !quickTasksAllowed) return;
+    const key = e.key.toLowerCase();
+    for (const k in pressedKeys) key === k ? pressedKeys[key] = true : null;
+    if (pressedKeys.shift && pressedKeys.i && pressedKeys.c) {
+      await invoke('quick_task', { name: 'clear-inventory' });
+    } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.c) {
+      await invoke('quick_task', { name: 'form-circle' });
+    } else if (pressedKeys.shift && pressedKeys.f && pressedKeys.l) {
+      await invoke('quick_task', { name: 'form-line' });
+    } else if (pressedKeys.shift && pressedKeys.p && pressedKeys.s) {
+      await invoke('quick_task', { name: 'pathfinder-stop' });
+    } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.f) {
+      await invoke('quick_task', { name: 'fly' });
+    } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.r) {
+      await invoke('quick_task', { name: 'rise' });
+    } else if (pressedKeys.shift && pressedKeys.g && pressedKeys.c) {
+      await invoke('quick_task', { name: 'capsule' });
+    } else if (pressedKeys.alt && pressedKeys.shift && pressedKeys.q) {
+      await invoke('quick_task', { name: 'quit' });
+    } else if (pressedKeys.shift && pressedKeys.w) {
+      await invoke('quick_task', { name: 'move-forward' });
+    } else if (pressedKeys.shift && pressedKeys.s) {
+      await invoke('quick_task', { name: 'move-backward' });
+    } else if (pressedKeys.shift && pressedKeys.a) {
+      await invoke('quick_task', { name: 'move-left' });
+    } else if (pressedKeys.shift && pressedKeys.d) {
+      await invoke('quick_task', { name: 'move-right' });
+    } else if (pressedKeys.shift && pressedKeys.j) {
+      await invoke('quick_task', { name: 'jump' });
+    } else if (pressedKeys.shift && pressedKeys.c) {
+      await invoke('quick_task', { name: 'shift' });
+    } else if (pressedKeys.shift && pressedKeys.u) {
+      await invoke('quick_task', { name: 'unite' });
+    } else if (pressedKeys.shift && pressedKeys.t) {
+      await invoke('quick_task', { name: 'turn' });
+    } else if (pressedKeys.shift && pressedKeys.z) {
+      await invoke('quick_task', { name: 'zero' });
     }
   });
 
   document.addEventListener('keyup', (e) => {
-    if (process === 'active') {
-      const key = e.key.toLowerCase();
-  
-      for (const k in pressedKeys) {
-        key === k ? pressedKeys[key] = false : null;
-      }
-    }
+    if (process === 'sleep') return;
+    const key = e.key.toLowerCase();
+    for (const k in pressedKeys) key === k ? pressedKeys[key] = false : null;
   }); 
 
   startBotsProcessBtn.addEventListener('click', async () => await startBots());
@@ -618,9 +584,8 @@ async function initFunctions(): Promise<void> {
       '1.21.10', '1.21.11', '1.21.8'
     ];
 
-    const setRandomValue = (e: string) => {
+    const gen = (e: string): void => {
       let current = document.getElementById(e) as HTMLInputElement; 
-
       switch (e) {
         case 'settings_option_version':
           const randomVersion = String(versions[Math.floor(Math.random() * versions.length)]);
@@ -634,9 +599,9 @@ async function initFunctions(): Promise<void> {
       }
     }
 
-    setRandomValue('settings_option_version');
-    setRandomValue('settings_option_bots-count');
-    setRandomValue('settings_option_join-delay');
+    gen('settings_option_version');
+    gen('settings_option_bots-count');
+    gen('settings_option_join-delay');
   });
 
   clearInputValuesBtn.addEventListener('click', () => {
@@ -657,21 +622,9 @@ async function initFunctions(): Promise<void> {
   await initDownloadCount();
 } 
 
-function showGlobalContainer(id: string): void {
-  globalContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
-  controlContainers.forEach(c => c.el.style.display = 'none');
-
-  if (id === 'control-container') {
-    latestControlContainer ? latestControlContainer.style.display = 'flex' : (document.getElementById('control-chat-container') as HTMLElement).style.display = 'flex';
-  }
-}
-
-function showControlContainer(id: string): void {
-  controlContainers.forEach(c => c && c.id === id ? c.el.style.display = 'flex' : c.el.style.display = 'none');
-}
-
-function registerAllTriggerFunctions() {
-  registerTriggerFunction('settings_chbx_use-proxy', 'checkbox', (current: HTMLInputElement) => {
+/** Обёрточная функция для пополнения реестра триггеров. */
+export function replenishTriggerRegistry(): void {
+  triggerRegistry.register('settings_chbx_use-proxy', 'checkbox', (current: HTMLInputElement) => {
     const version = document.getElementById('settings_option_version') as HTMLInputElement;
 
     if (current.checked) {
@@ -682,7 +635,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_select_nickname-type', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('settings_select_nickname-type', 'select', (current: HTMLSelectElement) => {
     const container = document.getElementById('custom-nickname-template-container') as HTMLInputElement;
 
     if (current.value === 'custom') {
@@ -692,7 +645,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_select_password-type', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('settings_select_password-type', 'select', (current: HTMLSelectElement) => {
     const container = document.getElementById('custom-password-template-container') as HTMLInputElement;
 
     if (current.value === 'custom') {
@@ -702,7 +655,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_select_register-mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('settings_select_register-mode', 'select', (current: HTMLSelectElement) => {
     if (current.value === 'default') {
       (document.getElementById('register-min-delay-container') as HTMLInputElement).style.display = 'flex';
       (document.getElementById('register-max-delay-container') as HTMLInputElement).style.display = 'flex';
@@ -714,7 +667,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_select_login-mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('settings_select_login-mode', 'select', (current: HTMLSelectElement) => {
     if (current.value === 'default') {
       (document.getElementById('login-min-delay-container') as HTMLInputElement).style.display = 'flex';
       (document.getElementById('login-max-delay-container') as HTMLInputElement).style.display = 'flex';
@@ -726,7 +679,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_chbx_use-auto-register', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('settings_chbx_use-auto-register', 'checkbox', (current: HTMLInputElement) => {
     const container = document.getElementById('auto-register-input-container') as HTMLElement;
 
     if (current.checked) {
@@ -736,7 +689,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_chbx_use-auto-login', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('settings_chbx_use-auto-login', 'checkbox', (current: HTMLInputElement) => {
     const container = document.getElementById('auto-login-input-container') as HTMLElement;
 
     if (current.checked) {
@@ -746,7 +699,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_chbx_use-auto-rejoin', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('settings_chbx_use-auto-rejoin', 'checkbox', (current: HTMLInputElement) => {
     const container = document.getElementById('auto-rejoin-input-container') as HTMLElement;
 
     if (current.checked) {
@@ -756,7 +709,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_chbx_use-accounts', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('settings_chbx_use-accounts', 'checkbox', (current: HTMLInputElement) => {
     const openAccountsSectionBtn = document.getElementById('accounts') as HTMLButtonElement;
     const openProxySectionBtn = document.getElementById('proxy') as HTMLButtonElement;
 
@@ -790,7 +743,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('captcha-bypass_select_captcha-type', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('captcha-bypass_select_captcha-type', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
     const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
     const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
@@ -808,7 +761,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('captcha-bypass_select_solve-mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('captcha-bypass_select_solve-mode', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
     const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
 
@@ -821,7 +774,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('captcha-bypass_select_captcha-subtype', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('captcha-bypass_select_captcha-subtype', 'select', (current: HTMLSelectElement) => {
     const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
 
     if (current.value === 'inventory') {
@@ -831,7 +784,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_chat_select_mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_chat_select_mode', 'select', (current: HTMLSelectElement) => {
     const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;
     const chatSpammingInputContainer = document.getElementById('chat-spamming-input-container') as HTMLElement;
           
@@ -853,7 +806,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_inventory_select_mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_inventory_select_mode', 'select', (current: HTMLSelectElement) => {
     const basicBtnContainer = document.getElementById('inventory-basic-btn-container') as HTMLElement;
     const swapInputContainer = document.getElementById('inventory-swap-input-container') as HTMLElement;
     const swapBtnContainer = document.getElementById('inventory-swap-btn-container') as HTMLElement;
@@ -869,7 +822,7 @@ function registerAllTriggerFunctions() {
     } 
   });
 
-  registerTriggerFunction('module_movement_select_mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_movement_select_mode', 'select', (current: HTMLSelectElement) => {
     const selectMovementDirectionContainer = document.getElementById('select-movement-direction-container') as HTMLElement;
     const movementPathfinderInputContainer = document.getElementById('movement-pathfinder-input-container') as HTMLElement;
     const movementImpulsivenessContainer = document.getElementById('movement-impulsiveness-container') as HTMLElement;
@@ -885,7 +838,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_flight_select_settings', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_flight_select_settings', 'select', (current: HTMLSelectElement) => {
     const manualSettingsContainer = document.getElementById('flight-manual-settings-container') as HTMLElement;
     const selectAntiCheatContainer = document.getElementById('flight-select-anti-cheat-container') as HTMLElement;
 
@@ -898,7 +851,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_killaura_select_target', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_killaura_select_target', 'select', (current: HTMLSelectElement) => {
     const customGoalInputContainer = document.getElementById('killaura-custom-goal-input-container') as HTMLElement;
 
     if (current.value === 'custom') {
@@ -908,7 +861,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_killaura_select_settings', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_killaura_select_settings', 'select', (current: HTMLSelectElement) => {
     const manualSettingsContainer = document.getElementById('killaura-manual-settings-container') as HTMLElement;
 
     if (current.value === 'adaptive') {
@@ -918,7 +871,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_killaura_chbx_use-auto-weapon', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('module_killaura_chbx_use-auto-weapon', 'checkbox', (current: HTMLInputElement) => {
     const selectWeaponContainer = document.getElementById('select-killaura-weapon-container') as HTMLElement;
     const weaponSlotContainer = document.getElementById('killaura-weapon-slot-container') as HTMLElement;
 
@@ -931,7 +884,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_killaura_chbx_use-chase', 'checkbox', (current: HTMLInputElement) => {
+  triggerRegistry.register('module_killaura_chbx_use-chase', 'checkbox', (current: HTMLInputElement) => {
     const chaseSettingsContainer = document.getElementById('killaura-chase-settings-container') as HTMLElement;
 
     if (current.checked) {
@@ -941,7 +894,7 @@ function registerAllTriggerFunctions() {
     }
   });
   
-  registerTriggerFunction('module_bow-aim_select_target', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_bow-aim_select_target', 'select', (current: HTMLSelectElement) => {
     const customGoalInputContainer = document.getElementById('bow-aim-custom-goal-input-container') as HTMLElement;
 
     if (current.value === 'custom') {
@@ -951,7 +904,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('module_miner_select_mode', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('module_miner_select_mode', 'select', (current: HTMLSelectElement) => {
     const tunnelSelectContainer = document.getElementById('miner-tunnel-select-container') as HTMLElement;
     const lookSelectContainer = document.getElementById('miner-look-select-container') as HTMLElement;
 
@@ -964,7 +917,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('settings_select_skin-type', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('settings_select_skin-type', 'select', (current: HTMLSelectElement) => {
     const setSkinCommandContainer = document.getElementById('set-skin-command-container') as HTMLElement;
     const customSkinContainer = document.getElementById('custom-skin-container') as HTMLElement;
 
@@ -980,15 +933,10 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('journal_chbx_show-system-logs', 'checkbox', (current: HTMLInputElement) => {
-    changeLogsVisibility('system', current.checked);
-  });
+  triggerRegistry.register('journal_chbx_show-system-logs', 'checkbox', (current: HTMLInputElement) => logger.setVisibility('system', current.checked));
+  triggerRegistry.register('journal_chbx_show-extended-logs', 'checkbox', (current: HTMLInputElement) => logger.setVisibility('extended', current.checked));
 
-  registerTriggerFunction('journal_chbx_show-extended-logs', 'checkbox', (current: HTMLInputElement) => {
-    changeLogsVisibility('extended', current.checked);
-  });
-
-  registerTriggerFunction('proxy-finder_select_algorithm', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('proxy-finder_select_algorithm', 'select', (current: HTMLSelectElement) => {
     const selectProxyFinderCountry = document.getElementById('proxy-finder_select_country') as HTMLSelectElement;
 
     if (current.value === 'apic') {
@@ -998,7 +946,7 @@ function registerAllTriggerFunctions() {
     }
   });
 
-  registerTriggerFunction('interface_select_particles', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_particles', 'select', (current: HTMLSelectElement) => {
     try {
       if (current.value === 'enable') {
         enableParticles();
@@ -1006,11 +954,11 @@ function registerAllTriggerFunctions() {
         disableParticles();
       }
     } catch (error) {
-      log(`Ошибка изменения состояния партиклов: ${error}`, 'error');
+      logger.log(`Ошибка изменения состояния партиклов: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_theme', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_theme', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -1087,11 +1035,11 @@ function registerAllTriggerFunctions() {
           break;
       }
     } catch (error) {
-      log(`Ошибка изменения темы: ${error}`, 'error');
+      logger.log(`Ошибка изменения темы: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_global-font-family', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_global-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -1107,13 +1055,13 @@ function registerAllTriggerFunctions() {
           break;
       }
     } catch (error) {
-      log(`Ошибка изменения шрифта: ${error}`, 'error');
+      logger.log(`Ошибка изменения шрифта: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_show-messages', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_show-messages', 'select', (current: HTMLSelectElement) => {
     try {
-      changeMessagesVisibility(current.value);
+      messages.visibility(current.value);
 
       document.querySelectorAll<HTMLElement>('.message').forEach(m => {
         if (current.value === 'hide') {
@@ -1123,11 +1071,11 @@ function registerAllTriggerFunctions() {
         }
       });
     } catch (error) {
-      log(`Ошибка изменения состояния сообщений: ${error}`, 'error');
+      logger.log(`Ошибка изменения состояния сообщений: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_show-panel-icons', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_show-panel-icons', 'select', (current: HTMLSelectElement) => {
     try {
       document.querySelectorAll<SVGElement>('[panel-btn-icon="true"]').forEach(i => {
         if (current.value === 'hide') {
@@ -1137,11 +1085,11 @@ function registerAllTriggerFunctions() {
         }
       });
     } catch (error) {
-      log(`Ошибка изменения состояния иконок на панели: ${error}`, 'error');
+      logger.log(`Ошибка изменения состояния иконок на панели: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_panel-font-family', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_panel-font-family', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
 
@@ -1168,66 +1116,58 @@ function registerAllTriggerFunctions() {
           break;
       }
     } catch (error) {
-      log(`Ошибка изменения шрифта панели: ${error}`, 'error');
+      logger.log(`Ошибка изменения шрифта панели: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_panel-font-size', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_panel-font-size', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-font-size', current.value);
     } catch (error) {
-      log(`Ошибка изменения размера шрифта панели: ${error}`, 'error');
+      logger.log(`Ошибка изменения размера шрифта панели: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-btn-gap', current.value);
     } catch (error) {
-      log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
+      logger.log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
     }
   });
 
-  registerTriggerFunction('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
+  triggerRegistry.register('interface_select_panel-internal-gap', 'select', (current: HTMLSelectElement) => {
     try {
       const root = document.documentElement;
       root.style.setProperty('--panel-btn-gap', current.value);
     } catch (error) {
-      log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
+      logger.log(`Ошибка изменения внутреннего отступа кнопок панели: ${error}`, 'error');
     }
   });
 }
 
 function addOpeningUrlTo(id: string, event: string, url: string): void {
   const el = document.getElementById(id);
-
-  if (el) {
-    el.addEventListener(event, async () => {
-      try {
-        await invoke('open_url', { url: url });
-      } catch (error) {
-        log(`Ошибка открытия URL: ${error}`, 'error');
-      }
-    });
-  }
+  if (!el) return;
+  el.addEventListener(event, async () => {
+    try {
+      await invoke('open_url', { url: url });
+    } catch (error) {
+      logger.log(`Ошибка открытия URL: ${error}`, 'error');
+    }
+  });
 }
 
 async function checkUpdate(): Promise<void> {
   try {
-    document.getElementById('close-notice-btn')?.addEventListener('click', () => {
-      const notice = document.getElementById('notice');
-
-      if (notice) {
-        notice.style.display = 'none';
-      }
-    });
-
     const notice = document.getElementById('notice') as HTMLElement;
     const newVersion = document.getElementById('new-client-version') as HTMLElement;
     const newTag = document.getElementById('new-client-tag') as HTMLElement;
     const newReleaseDate = document.getElementById('new-client-release-date') as HTMLElement;
+
+    document.getElementById('close-notice-btn')?.addEventListener('click', () => notice.style.display = 'none');
 
     const response = await fetch('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.version.json', { method: 'GET' });
 
@@ -1244,40 +1184,64 @@ async function checkUpdate(): Promise<void> {
       
       addOpeningUrlTo('open-client-release', 'click', `https://github.com/nullclyze/SalarixiOnion/releases/tag/${tag}`); 
       
-      setTimeout(() => {
-        notice.style.display = 'flex';
-      }, 4000);
+      setTimeout(() => notice.style.display = 'flex', 4000);
     }
   } catch (error) {
-    log(`Ошибка проверки обновлений: ${error}`, 'error');
+    logger.log(`Ошибка проверки обновлений: ${error}`, 'error');
   }
 }
 
+function initTitleBar(): void {
+  (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
+  (document.getElementById('window-minimize') as HTMLButtonElement).addEventListener('click', async () => await getCurrentWindow().minimize());
+  (document.getElementById('window-close') as HTMLButtonElement).addEventListener('click', async () => await invoke('exit'));
+}
+
+async function listenEvents(): Promise<void> {
+  await listen('log', (event) => {
+    try {
+      const payload = event.payload as { text: string; class: string; };
+      logger.log(payload.text, payload.class);
+    } catch (error) {
+      logger.log(`Ошибка принятие log-события: ${error}`, 'error');
+    }
+  });
+
+  await listen('message', (event) => {
+    try {
+      const payload = event.payload as { name: string; content: string; };
+      messages.message(payload.name, payload.content);
+    } catch (error) {
+      logger.log(`Ошибка принятие message-события: ${error}`, 'error');
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  log('Клиент запущен', 'info');
+  logger.init();
+  logger.log('Клиент запущен', 'info');
+
+  messages.init();
 
   try {
-    log('Инициализация, пожайлуста, подождите...', 'extended');
+    logger.log('Инициализация, пожайлуста, подождите...', 'extended');
 
-    (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
+    initTitleBar();
+    
+    replenishTriggerRegistry();
 
-    (document.getElementById('window-minimize') as HTMLButtonElement).addEventListener('click', async () => await getCurrentWindow().minimize());
-    (document.getElementById('window-close') as HTMLButtonElement).addEventListener('click', async () => await invoke('exit'));
-
-    document.querySelectorAll('[global="true"]').forEach(c => globalContainers.push({ id: c.id, el: c as HTMLElement }));
-    document.querySelectorAll('[sector="true"]').forEach(c => controlContainers.push({ id: c.id, el: c as HTMLElement }));
+    document.querySelectorAll('[global="true"]').forEach(c => globalWrappers.push({ id: c.id, el: c as HTMLDivElement }));
+    document.querySelectorAll('[sector="true"]').forEach(c => controlWrappers.push({ id: c.id, el: c as HTMLDivElement }));
 
     enableParticles();
 
-    registerAllTriggerFunctions();
     initPlugins();
+    initConfig();
 
     addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
     addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
     addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
     addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
-
-    initConfig();
 
     accountManager.init();
     proxyCollectorManager.init();
@@ -1285,33 +1249,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     radarManager.init();
     scriptManager.init();
 
-    await listen('log', (event) => {
-      try {
-        const payload = event.payload as { text: string; class: string; };
-        log(payload.text, payload.class);
-      } catch (error) {
-        log(`Ошибка принятие log-события: ${error}`, 'error');
-      }
-    });
-
-    await listen('message', (event) => {
-      try {
-        const payload = event.payload as { name: string; content: string; };
-        message(payload.name, payload.content);
-      } catch (error) {
-        log(`Ошибка принятие message-события: ${error}`, 'error');
-      }
-    });
+    await listenEvents();
 
     await monitoringManager.init();
     await captchaBypassManager.init();
     
     await initFunctions();
 
-    log('Инициализация прошла успешно', 'extended');
+    logger.log('Инициализация прошла успешно', 'extended');
 
-    //await checkUpdate();
+    // await checkUpdate();
   } catch (error) {
-    log(`Ошибка инициализации: ${error}`, 'error');
+    logger.log(`Ошибка инициализации: ${error}`, 'error');
   }
 });

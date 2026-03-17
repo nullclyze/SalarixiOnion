@@ -8,7 +8,7 @@
   --s-font-family: 'JetBrains Mono', 'Fira Code', monospace;
   --o-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
-  --global-bg: rgb(9, 9, 9);
+  --global-bg: rgb(12, 12, 12);
   --global-border: rgb(56, 56, 56);
 
   --global-font-family: 'Inter', sans-serif;
@@ -24,12 +24,12 @@
   --panel-font-size: 15px;
   --panel-btn-gap: 6px;
 
-  --cover-bg: rgb(8, 8, 8);
+  --cover-bg: rgba(14, 14, 14, 0.8);
   --common-bg: rgb(12, 12, 12);
-  --common-border: rgb(36, 36, 36);
+  --common-border: rgb(34, 34, 34);
   --card-bg: rgba(12, 12, 12, 0.7);
-  --input-bg: rgb(13, 13, 13);
-  --input-border: rgb(39, 39, 39);
+  --input-bg: rgb(14, 14, 14);
+  --input-border: rgb(37, 37, 37);
   --text-secondary: rgb(160, 160, 160);
 }
 
@@ -71,24 +71,20 @@ body {
 .title-bar .title {
   display: flex;
   width: 200px;
+  height: 100%;
   box-sizing: border-box;
   justify-content: center;
   align-items: center;
   text-align: center;
-  letter-spacing: 0.5px;
   font-size: 16px;
-  font-weight: normal;
+  font-weight: bold;
   font-family: 'Inter', sans-serif;
   border-right: 1px solid var(--global-border);
-}
-
-.title-bar .title .name {
-  color: var(--title-color);
-}
-
-.title-bar .title .version {
-  margin-left: 6px;
-  color: var(--title-color);
+  background: linear-gradient(to right, rgb(185, 184, 184) 7%, var(--title-color), var(--spec-color), var(--title-color));
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  gap: 6px;
 }
 
 .title-bar .controls {
@@ -102,7 +98,7 @@ body {
   align-items: center;
   justify-content: center;
   -webkit-app-region: no-drag; 
-  background: none; 
+  background-color: transparent; 
   border: none; 
   border-radius: 6px;
   color: #dbd7d7; 
@@ -140,7 +136,7 @@ body {
   z-index: 1000;
   border-radius: 12px;
   padding: 20px;
-  background-color: rgba(12, 12, 12, 0.8);
+  background-color: var(--cover-bg);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   border: 1px solid var(--common-border);
@@ -224,15 +220,14 @@ body {
   text-align: center;
   padding-left: 12px;
   gap: var(--panel-btn-gap);
-  height: 24px;
-  width: 160px;
+  height: 26px;
+  width: 170px;
   background-color: transparent;
   border-radius: 4px;
   border: none;
   cursor: pointer;
   color: #cac7c7;
   outline: none;
-  transition: background 0.1s ease;
 }
 
 .dashboard .pretty-btn::before {
@@ -253,11 +248,11 @@ body {
 }
 
 .dashboard .pretty-btn.selected {
-  color: #fff;
+  color: rgb(255, 255, 255);
 }
 
 .dashboard .pretty-btn.selected svg {
-  color: #fff;
+  color: rgb(255, 255, 255);
 }
 
 .dashboard .pretty-btn.selected::before {
@@ -295,7 +290,7 @@ body {
   box-sizing: border-box;
 }
 
-.control-container {
+.control-wrapper {
   position: fixed;
   top: 35px;
   right: 0;
@@ -313,7 +308,7 @@ body {
 }
 
 .main-wrapper .title,
-.control-container .header {
+.control-wrapper .header {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -332,7 +327,7 @@ body {
   width: auto;
 }
 
-.control-container .header {
+.control-wrapper .header {
   margin-top: 10px;
 }
 
@@ -857,7 +852,6 @@ p {
   outline: none;
   font-weight: normal;
   position: relative;
-  transition: background 0.1s ease;
 }
 
 .control-btn::before {
@@ -1589,7 +1583,7 @@ p {
   -moz-appearance: none;
   -ms-progress-appearance: none;
 	width: 180px;
-  height: 30px;
+  height: 32px;
   font-family: var(--global-font-family);
 	font-size: 14px;
   font-weight: normal;
@@ -2644,7 +2638,7 @@ p {
   color: #999999;
 }
 
-.messages-wrap {
+.messages-wrapper {
   position: absolute;
   right: 20px;
   bottom: 20px;
@@ -2772,7 +2766,7 @@ p {
   overflow-y: auto;
   border: 1px solid var(--common-border);
   border-radius: 12px;
-  background-color: rgb(10, 10, 10);
+  background-color: rgb(14, 13, 13);
   gap: 30px;
   font-family: var(--global-font-family);
   font-size: 14px;

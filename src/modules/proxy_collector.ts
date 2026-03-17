@@ -1,4 +1,4 @@
-import { log } from '../logger';
+import { logger } from '../utils/logger';
 
 interface Options { 
   algorithm: string; 
@@ -100,13 +100,13 @@ export class ProxyCollectorManager {
         this.proxyFinderStatus!.style.color = '#cc1d1dff';
         this.proxyFinderStatus!.innerText = 'Ошибка поиска';
 
-        log('Ошибка поиска прокси', 'error');
+        logger.log('Ошибка поиска прокси', 'error');
       }
     } catch (error) {
       this.proxyFinderStatus!.style.color = '#cc1d1dff';
       this.proxyFinderStatus!.innerText = 'Ошибка поиска';
 
-      log(`Ошибка поиска прокси: ${error}`, 'error');
+      logger.log(`Ошибка поиска прокси: ${error}`, 'error');
     } finally {
       this.updateCount();
       setTimeout(() => {
@@ -249,7 +249,6 @@ export class ProxyCollectorManager {
           if (proxy.username == null && proxy.password == null) {
             if (country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase()) {
               if (protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol) {
-                console.log(`monosans: ${proxy.host}`);
                 proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`);
               }
             }

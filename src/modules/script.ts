@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { log } from '../logger';
+import { logger } from '../utils/logger';
 import { setQuickTasksAllowed } from '../main';
 
 export class ScriptManager {
@@ -67,7 +67,7 @@ export class ScriptManager {
 				script: script
 			});
 		} catch (error) {
-			log(`Ошибка выполнения скрипта: ${error}`, 'error');
+			logger.log(`Ошибка выполнения скрипта: ${error}`, 'error');
 		}
 	}
 
@@ -75,7 +75,7 @@ export class ScriptManager {
 		try {
 			await invoke('stop_script');
 		} catch (error) {
-			log(`Ошибка остановки скрипта: ${error}`, 'error');
+			logger.log(`Ошибка остановки скрипта: ${error}`, 'error');
 		}
 	}
 }

@@ -2,10 +2,11 @@ import { readFile, writeFile } from '@tauri-apps/plugin-fs';
 import { path } from '@tauri-apps/api';
 
 import { plugins } from '../common/structs';
-import { log } from '../logger';
-import { invokeElementFunction, updatePluginState } from '../main';
-import { message } from '../message';
+import { logger } from '../utils/logger';
+import { updatePluginState } from '../main';
+import { messages } from '../utils/message';
 import { open } from '@tauri-apps/plugin-dialog';
+import { triggerRegistry } from './trigger_registry';
 
 type ConfigValue = string | number | boolean | null;
 
@@ -40,7 +41,7 @@ function setValue(id: string, value: ConfigValue): void {
       }
     }
   } catch (error) {
-    log(`Ошибка установки значения для ${id}: ${error}`, 'error');
+    logger.log(`Ошибка установки значения для ${id}: ${error}`, 'error');
   }
 }
 
@@ -48,7 +49,7 @@ export function initConfig(): void {
   const current_config = localStorage.getItem('salarixionion:storage:config');
 
   if (current_config) {
-    log('Загрузка конфига...', 'system');
+    logger.log('Загрузка конфига...', 'system');
 
     for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(current_config))) {
       setValue(id, value);
@@ -59,9 +60,9 @@ export function initConfig(): void {
       updatePluginState(name, state);
     }
 
-    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
+    triggerRegistry.triggerAll();
 
-    log('Конфиг успешно загружен', 'system');
+    logger.log('Конфиг успешно загружен', 'system');
   } else {
     localStorage.setItem('salarixionion:storage:config', JSON.stringify({}, null, 2));
   }
@@ -123,11 +124,11 @@ async function uploadConfig(): Promise<void> {
       setValue(id, value);
     }
 
-    document.querySelectorAll<HTMLElement>('[trigger]').forEach(e => invokeElementFunction(e.id));
+    triggerRegistry.triggerAll();
 
-    message('Конфиг', `Конфиг успешно загружен из ${path}`);
+    messages.message('Конфиг', `Конфиг успешно загружен из ${path}`);
   } catch (error) {
-    log(`Не удалось загрузить конфиг: ${error}`, 'error');
+    logger.log(`Не удалось загрузить конфиг: ${error}`, 'error');
   }
 }
 
@@ -159,8 +160,8 @@ async function shareConfig(): Promise<void> {
 
     await writeFile(await path.join(directory, 'salarixi.config.json'), buffer);
 
-    message('Конфиг', `Публичный конфиг успешно создан в ${directory}`);
+    messages.message('Конфиг', `Публичный конфиг успешно создан в ${directory}`);
   } catch (error) {
-    log(`Не удалось поделиться конфигом: ${error}`, 'error');
+    logger.log(`Не удалось поделиться конфигом: ${error}`, 'error');
   }
 }
