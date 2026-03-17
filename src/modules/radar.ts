@@ -2,8 +2,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { isAbsolute } from '@tauri-apps/api/path';
 import { Chart } from 'chart.js';
 
-import { log } from '../logger';
-import { message } from '../message';
+import { logger } from '../utils/logger';
+import { messages } from '../utils/message';
 
 
 interface RadarInfo {
@@ -216,9 +216,9 @@ UUID: ${uuid}
 
           await navigator.clipboard.writeText(text);
 
-          message('Радар', `Данные игрока ${nickname} успешно скопированы в буфер обмена`);
+          messages.message('Радар', `Данные игрока ${nickname} успешно скопированы в буфер обмена`);
         } catch (error) {
-          log(`Ошибка копирования radar-данных: ${error}`, 'error');
+          logger.log(`Ошибка копирования radar-данных: ${error}`, 'error');
         }
       });
 
@@ -227,7 +227,7 @@ UUID: ${uuid}
       this.createTargetChart(nickname);
       this.setTargetUpdateInterval(nickname, this.updateFrequency);
     } catch (error) {
-      log(`Ошибка инициализации radar-цели: ${error}`, 'error');
+      logger.log(`Ошибка инициализации radar-цели: ${error}`, 'error');
     }
   }
 
@@ -294,7 +294,7 @@ UUID: ${uuid}
             }
           }
         } catch (error) {
-          log(`Ошибка обновления radar-цели ${nickname}: ${error}`, 'error');
+          logger.log(`Ошибка обновления radar-цели ${nickname}: ${error}`, 'error');
         }
       }, frequency);
     }

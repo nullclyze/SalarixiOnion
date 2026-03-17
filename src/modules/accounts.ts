@@ -1,10 +1,10 @@
 import { open } from '@tauri-apps/plugin-dialog';
 
-import { date } from '../helpers/date';
-import { log } from '../logger';
+import { date } from '../utils/date';
+import { logger } from '../utils/logger';
 import { readFile, writeFile } from '@tauri-apps/plugin-fs';
 import { path } from '@tauri-apps/api';
-import { message } from '../message';
+import { messages } from '../utils/message';
 
 type AccountFields = {
   creation_date: string;
@@ -90,10 +90,10 @@ export class AccountManager {
           
           this.updateAccountCounter();
 
-          message('Импорт аккаунтов', `Аккаунты успешно импортированы`);
+          messages.message('Импорт аккаунтов', `Аккаунты успешно импортированы`);
         }
       } catch (error) {
-        log(`Ошибка импорта аккаунтов: ${error}`, 'error');
+        logger.log(`Ошибка импорта аккаунтов: ${error}`, 'error');
       }
     });
 
@@ -124,10 +124,10 @@ export class AccountManager {
 
           await writeFile(await path.join(directory, 'salarixi.accounts.json'), data);
 
-          message('Экспорт аккаунтов', `Аккаунты успешно экспортированы`);
+          messages.message('Экспорт аккаунтов', `Аккаунты успешно экспортированы`);
         }
       } catch (error) {
-        log(`Ошибка экспорта аккаунтов: ${error}`, 'error');
+        logger.log(`Ошибка экспорта аккаунтов: ${error}`, 'error');
       }
     });
 
@@ -313,7 +313,7 @@ export class AccountManager {
       proxyUsernameInput.addEventListener('input', () => account.proxy_username = proxyUsernameInput.value);
       proxyPasswordInput.addEventListener('input', () => account.proxy_password = proxyPasswordInput.value);
     } catch (error) {
-      log(`Ошибка инициализации аккаунта ${username}: ${error}`, 'error');
+      logger.log(`Ошибка инициализации аккаунта ${username}: ${error}`, 'error');
     }
   }
 }

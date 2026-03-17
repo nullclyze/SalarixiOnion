@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { log } from '../logger';
-import { generateId } from '../helpers/generate';
+import { logger } from '../utils/logger';
+import { generateId } from '../utils/generator';
 
 
 interface ServerInformation {
@@ -117,7 +117,7 @@ export class PingManager {
 
       pingInfo.style.display = 'flex';
 		} catch (error) {
-			log(`Ошибка пингования сервера: ${error}`, 'error');
+			logger.log(`Ошибка пингования сервера: ${error}`, 'error');
 		}
 	}
 }

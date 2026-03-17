@@ -1,5 +1,5 @@
 import { downloadJsonContent } from '../downloader/downloader';
-import { log } from '../logger';
+import { logger } from '../utils/logger';
 
 export type Language = 'ru' | 'en';
 
@@ -15,7 +15,7 @@ export async function translate(lang: Language) {
       if (content) {
         map = content['map'];
       } else {
-        log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
+        logger.log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
       }
     } else {
       map = cache_map;
@@ -35,6 +35,6 @@ export async function translate(lang: Language) {
       });
     }
   } catch (error) {
-    log(`Ошибка перевода: ${error}`, 'error');
+    logger.log(`Ошибка перевода: ${error}`, 'error');
   }
 }

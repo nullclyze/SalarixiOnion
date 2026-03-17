@@ -1,4 +1,4 @@
-import { log } from '../logger';
+import { logger } from '../utils/logger';
 
 export async function downloadJsonContent(url: string): Promise<any> {
   try {
@@ -10,6 +10,6 @@ export async function downloadJsonContent(url: string): Promise<any> {
 
     return data;
   } catch (error) {
-    log(`Ошибка загрузки JSON-контента: ${error}`, 'error');
+    logger.log(`Ошибка загрузки JSON-контента: ${error}`, 'error');
   }
 }

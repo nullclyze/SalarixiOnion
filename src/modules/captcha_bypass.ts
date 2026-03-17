@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
-import { log } from '../logger';
+import { logger } from '../utils/logger';
 
 interface Captcha {
   type: 'web' | 'map';
@@ -37,7 +37,7 @@ export class CaptchaBypassManager {
           }
         });
       } catch (error) {
-        log(`Ошибка receive-payload: ${error}`, 'error');
+        logger.log(`Ошибка receive-payload: ${error}`, 'error');
       }
     });
 
@@ -55,7 +55,7 @@ export class CaptchaBypassManager {
           }
         });
       } catch (error) {
-        log(`Ошибка receive-payload: ${error}`, 'error');
+        logger.log(`Ошибка receive-payload: ${error}`, 'error');
       }
     });
   }

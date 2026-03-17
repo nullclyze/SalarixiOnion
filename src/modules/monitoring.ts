@@ -1,8 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
-import { log } from '../logger';
-import { date } from '../helpers/date';
+import { logger } from '../utils/logger';
+import { date } from '../utils/date';
 import { process } from '../main';
 
 
@@ -90,7 +90,7 @@ export class MonitoringManager {
           }
         }
       } catch (error) {
-        log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
+        logger.log(`Ошибка мониторинга (receive-payload): ${error}`, 'error');
       }
     });
   }
@@ -131,11 +131,11 @@ export class MonitoringManager {
             }
           }
         } catch (error) {
-          log(`Ошибка мониторинга профилей: ${error}`, 'error');
+          logger.log(`Ошибка мониторинга профилей: ${error}`, 'error');
         }
       }, delay);
     } catch (error) {
-      log(`Ошибка инициализации мониторинга: ${error}`, 'error');
+      logger.log(`Ошибка инициализации мониторинга: ${error}`, 'error');
     }
   }
 
@@ -315,7 +315,7 @@ export class MonitoringManager {
           group: group !== '' ? group : 'global'
         });
       } catch (error) {
-        log(`Ошибка изменения группы ${username}: ${error}`, 'error');
+        logger.log(`Ошибка изменения группы ${username}: ${error}`, 'error');
       }
     });
 
@@ -331,7 +331,7 @@ export class MonitoringManager {
           }
         });
       } catch (error) {
-        log(`Ошибка отключения бота ${username}: ${error}`, 'error');
+        logger.log(`Ошибка отключения бота ${username}: ${error}`, 'error');
       }
     });
 
@@ -344,7 +344,7 @@ export class MonitoringManager {
           }
         });
       } catch (error) {
-        log(`Ошибка сбрасывания задач и состояний бота ${username}: ${error}`, 'error');
+        logger.log(`Ошибка сбрасывания задач и состояний бота ${username}: ${error}`, 'error');
       }
     });
 
@@ -361,7 +361,7 @@ export class MonitoringManager {
 
         history.forEach(m => this.filterMessage(type.value, m.textContent || '') ? content?.appendChild(m) : null);
       } catch (error) {
-        log(`Ошибка фильтровки чата: ${error}`, 'error');
+        logger.log(`Ошибка фильтровки чата: ${error}`, 'error');
       }
     });
 
