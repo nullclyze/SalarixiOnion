@@ -5,7 +5,6 @@ import { logger } from '../utils/logger';
 import { date } from '../utils/date';
 import { process } from '../main';
 
-
 interface BotProfile {
   status: any;
   username: string;
@@ -38,6 +37,7 @@ export class MonitoringManager {
 
   public maxChatHistoryLength: number = 0;
 
+  /** Метод инициализации функций, связанных с мониторингом. */
   public async init(): Promise<void> {
     this.statusText = document.getElementById('monitoring-status-text');
     this.cards = document.getElementById('bot-cards-container');
@@ -53,14 +53,10 @@ export class MonitoringManager {
         const receiver = payload.receiver;
         const message = payload.message;
 
-        if (!this.chatHistoryFilters[receiver]) {
-          this.chatHistoryFilters[receiver] = 'all';
-        }
-
+        if (!this.chatHistoryFilters[receiver]) this.chatHistoryFilters[receiver] = 'all';
         if (!this.filterMessage(this.chatHistoryFilters[receiver], message)) return;
 
         const chat = document.getElementById(`monitoring-chat-content-${receiver}`);
-
         if (!chat) return;
 
         const line = document.createElement('div');
@@ -82,10 +78,9 @@ export class MonitoringManager {
         if (!this.chatMessageCounter[receiver]) {
           this.chatMessageCounter[receiver] = 1;
         } else {
-          this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] + 1;
-
+          this.chatMessageCounter[receiver]++;
           if (this.chatMessageCounter[receiver] > this.maxChatHistoryLength) {
-            this.chatMessageCounter[receiver] = this.chatMessageCounter[receiver] - 1;
+            this.chatMessageCounter[receiver]--;
             chat.firstChild?.remove();
           }
         }
@@ -95,14 +90,15 @@ export class MonitoringManager {
     });
   }
 
+  /** Метод переключения состояния мониторинга на ожидание. */
   public wait(): void {
     this.statusText!.innerText = 'Ожидание активных ботов...';
     this.statusText!.style.color = '#646464f7';
-
     this.cards!.innerHTML = '';
     this.cards!.style.display = 'flex';
   }
 
+  /** Метод активации мониторинга. */
   public enable(delay: number): void {
     try {
       let isFirst = true;
@@ -116,19 +112,15 @@ export class MonitoringManager {
         try {
           const profiles = await invoke('get_bot_profiles') as Record<string, BotProfile>;
 
-          for (const nickname in profiles) {
+          for (const username in profiles) {
             if (isFirst) {
               this.statusText!.style.display = 'none';
               isFirst = false;
             }
 
-            const profile = profiles[nickname];
+            const profile = profiles[username];
 
-            if (this.usernameList.includes(nickname)) {
-              this.updateBotCard(nickname, profile);
-            } else {
-              this.createBotCard(nickname, profile);
-            }
+            this.usernameList.includes(username) ? this.updateBotCard(username, profile) : this.createBotCard(username, profile);
           }
         } catch (error) {
           logger.log(`Ошибка мониторинга профилей: ${error}`, 'error');
@@ -139,10 +131,9 @@ export class MonitoringManager {
     }
   }
 
+  /** Метод очистки и выключения мониторинга. */
   public disable(): void {
-    for (const [id, data] of this.listeners) {
-      document.getElementById(id)?.removeEventListener(data.event, data.listener);
-    }
+    for (const [id, data] of this.listeners) document.getElementById(id)?.removeEventListener(data.event, data.listener);
 
     this.listeners.clear();
 
@@ -158,11 +149,13 @@ export class MonitoringManager {
     this.cards!.style.display = 'none';
   }
 
+  /** Метод добавления временного слушателя событий. */
   private addTempListener(id: string, event: string, listener: EventListener): void {
     document.getElementById(id)?.addEventListener(event, listener);
     this.listeners.set(id, { event: event, listener: listener });
   }
 
+  /** Метод создания карточки бота. */
   private createBotCard(username: string, profile: BotProfile): void {
     const steveIconPath = document.getElementById('steve-img') as HTMLImageElement;
 
@@ -204,9 +197,9 @@ export class MonitoringManager {
       </div>
 
       <div class="buttons">
-        <button class="btn min pretty" id="open-chat-${username}">Открыть чат</button>
-        <button class="btn min pretty" id="reset-${username}">Сбросить</button>
-        <button class="btn min pretty" id="disconnect-${username}">Отключить</button>
+        <button class="btn min" id="open-chat-${username}">Открыть чат</button>
+        <button class="btn min" id="reset-${username}">Сбросить</button>
+        <button class="btn min" id="disconnect-${username}">Отключить</button>
       </div>
     `;
 
@@ -214,6 +207,7 @@ export class MonitoringManager {
     this.initializeBotCard(username);
   }
 
+  /** Метод создания обёркти чата у бота. */
   private createChatWrapper(username: string): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'cover';
@@ -265,6 +259,7 @@ export class MonitoringManager {
     return wrapper;
   }
 
+  /** Метод обновления карточки бота. */
   private updateBotCard(username: string, profile: BotProfile): void {
     const status = document.getElementById(`monitoring-status-${username}`) as HTMLElement;
     const proxy = document.getElementById(`monitoring-proxy-${username}`) as HTMLElement;
@@ -273,33 +268,32 @@ export class MonitoringManager {
 
     if (health.innerText.split('/')[0].replace(' ', '') != profile.health.toString()) {
       const card = document.getElementById(`bot-card-${username}`);
-      
       card?.classList.add('glow');
-
-      setTimeout(() => {
-        card?.classList.remove('glow');
-      }, 300);
+      setTimeout(() => card?.classList.remove('glow'), 300);
     }
 
     let statusColor = '';
 
     switch (profile.status) {
-      case 'Connecting':
-        statusColor = '#8f8f8fff'; break;
       case 'Online':
-        statusColor = '#22ed17ff'; break;
+        statusColor = 'rgb(34, 237, 23)';
+        break;
       case 'Offline':
-        statusColor = '#ed1717ff'; break;
+        statusColor = 'rgb(237, 23, 23)'; 
+        break;
+      default:
+        statusColor = 'rgb(143, 143, 143)'; 
+        break;
     }
 
     status.innerText = profile.status;
     status.style.color = statusColor;
-
     proxy.innerText = profile.proxy.ip_address;
     ping.innerText = profile.ping.toString();
     health.innerText = profile.health.toString();
   }
 
+  /** Метод инициализации карточки бота. */
   private initializeBotCard(username: string): void {
     this.chatHistoryFilters[username] = 'all';
     this.usernameList.push(username);
@@ -388,6 +382,7 @@ export class MonitoringManager {
     });
   }
 
+  /** Метод создания триграмм из слова. */
   private createTrigrams(word: string): string[] {
     const trigrams = [];
 
@@ -398,6 +393,7 @@ export class MonitoringManager {
     return trigrams;
   }
 
+  /** Метод проверки слова на наличие определённых паттернов. */
   private checkPatterns(word: string, patterns: string[]): boolean {
     if (word.length < 3) return false;
 
@@ -425,6 +421,7 @@ export class MonitoringManager {
     return false;
   }
 
+  /** Метод фильтровки сообщения. */
   private filterMessage(type: string, message: string): boolean {
     if (type === 'all') {
       return true;
@@ -438,9 +435,7 @@ export class MonitoringManager {
       ];
 
       let result = false;
-      
       patterns.forEach(p => message.toLowerCase().includes(p) ? result = true : null);
-
       return result;
     } else {
       const patterns: Record<string, string[]> = {
@@ -464,12 +459,7 @@ export class MonitoringManager {
       };
 
       let results: boolean[] = [];
-
-      for (const word of message.split(' ')) {
-        const result = this.checkPatterns(word, patterns[type]);
-        results.push(result);
-      }
-
+      for (const word of message.split(' ')) results.push(this.checkPatterns(word, patterns[type]));
       if (results.includes(true)) return true;
     }
       

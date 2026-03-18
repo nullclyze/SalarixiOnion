@@ -13,8 +13,8 @@ export class ChartManager {
   private graphicActiveBots: HTMLElement | null = null;
   private graphicMemoryUsage: HTMLElement | null = null;
 
-  private chartActiveBots: any = null;
-  private chartMemoryUsage: any = null;
+  private chartActiveBots: Chart | null = null;
+  private chartMemoryUsage: Chart | null = null;
 
   private intervals: { activeBots: any, memoryUsage: any } = { activeBots: null, memoryUsage: null };
 
@@ -33,8 +33,8 @@ export class ChartManager {
     try {
       this.active = true;
 
-      this.createGraphicActiveBots();
-      this.createGraphicMemoryUsage();
+      this.createChartActiveBots();
+      this.createChartMemoryUsage();
 
       this.graphicActiveBots!.style.display = 'flex';
       this.graphicMemoryUsage!.style.display = 'flex';
@@ -49,16 +49,21 @@ export class ChartManager {
 
         try {
           const data = await invoke('get_active_bots_count') as number;
-          this.addGraphicDataActiveBots(data || 0);
+          this.updateChart(this.chartActiveBots, data || 0);
         } catch (error) {
           logger.log(`Ошибка ChartManager (active-bots-graphic): ${error}`, 'error');
         }
       }, 1800);
 
       this.intervals.memoryUsage = setInterval(async () => {
+        if (!this.active) {
+          clearInterval(this.intervals.memoryUsage);
+          return;
+        }
+
         try {
           const data = await invoke('get_memory_usage') as number;
-          this.addGraphicDataMemoryUsage(parseFloat(data.toFixed(3)) || 0);
+          this.updateChart(this.chartMemoryUsage, parseFloat(data.toFixed(3)) || 0);
         } catch (error) {
           logger.log(`Ошибка ChartManager (memory-usage-graphic): ${error}`, 'error');
         }
@@ -98,11 +103,11 @@ export class ChartManager {
     this.statusText!.style.display = 'flex';
   }
 
-  private createGraphic(context: CanvasRenderingContext2D, label: string, title: string, maxY: number, tag: string): any {
+  private createChart(context: CanvasRenderingContext2D, label: string, title: string, maxY: number, tag: string): any {
     const initialLabels: string[] = [];
     const initialData: number[] = [];
     
-    for (let i = 0; i < 28; i++) {
+    for (let i = 0; i < 10; i++) {
       initialLabels.push(date());
       initialData.push(0);
     }
@@ -117,11 +122,12 @@ export class ChartManager {
             data: initialData,
             fill: true,
             borderWidth: 2,
-            borderColor: '#6ff34ef1',
+            borderColor: '#41e219f1',
             backgroundColor: '#83ff3b23',
             tension: 0.1,
-            pointStyle: 'line',
-            pointRadius: 2
+            pointStyle: 'circle',
+            pointRadius: 3,
+            pointBackgroundColor: '#41e219f1'
           }
         ]
       },
@@ -174,43 +180,29 @@ export class ChartManager {
     return chart;
   }
   
-  private createGraphicActiveBots(): void {
+  private createChartActiveBots(): void {
     const context = (document.getElementById('graphic-active-bots') as HTMLCanvasElement).getContext('2d');
     if (!context) return;
-    this.chartActiveBots = this.createGraphic(context, 'Активные боты', 'График активных ботов', 500, 'active-bots');
+    this.chartActiveBots = this.createChart(context, 'Активные боты', 'График активных ботов', 500, 'active-bots');
   }
 
-  private createGraphicMemoryUsage(): void {
+  private createChartMemoryUsage(): void {
     const context = (document.getElementById('graphic-memory-usage') as HTMLCanvasElement).getContext('2d');
     if (!context) return;
-    this.chartMemoryUsage = this.createGraphic(context, 'Используется', 'График используемой памяти', 1024, 'memory-usage');
+    this.chartMemoryUsage = this.createChart(context, 'Используется', 'График используемой памяти', 1024, 'memory-usage');
   }
 
-  private addGraphicDataActiveBots(activeBotsQuantity: number): void {
-    if (!this.chartActiveBots) return;
+  private updateChart(chart: Chart | null, data: number): void {
+    if (!chart) return;
+    
+    chart.data.labels?.push(date());
+    chart.data.datasets[0].data.push(data);
 
-    this.chartActiveBots.data.labels?.push(date());
-    this.chartActiveBots.data.datasets[0].data.push(activeBotsQuantity);
-
-    if (this.chartActiveBots.data.labels && this.chartActiveBots.data.labels.length > 28) {
-      this.chartActiveBots.data.labels.shift();
-      this.chartActiveBots.data.datasets[0].data.shift();
+    if (chart.data.labels && chart.data.labels.length > 10) {
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
     }
-      
-    this.chartActiveBots.update(); 
-  }
 
-  private addGraphicDataMemoryUsage(memoryUsage: number): void {
-    if (!this.chartMemoryUsage) return;
-
-    this.chartMemoryUsage.data.labels?.push(date());
-    this.chartMemoryUsage.data.datasets[0].data.push(memoryUsage);
-
-    if (this.chartMemoryUsage.data.labels && this.chartMemoryUsage.data.labels.length > 28) {
-      this.chartMemoryUsage.data.labels.shift();
-      this.chartMemoryUsage.data.datasets[0].data.shift();
-    }
-      
-    this.chartMemoryUsage.update(); 
+    chart.update(); 
   }
 }

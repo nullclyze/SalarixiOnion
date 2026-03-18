@@ -5,18 +5,18 @@ import { Chart, registerables } from 'chart.js';
 
 import { plugins } from './common/structs';
 import { logger } from './utils/logger';
-import { initConfig } from './modules/config';
+import { configurator } from './modules/configurator';
 import { AccountManager } from './modules/accounts';
 import { ProxyCollectorManager } from './modules/proxy_collector';
 import { ChartManager } from './modules/chart';
-import { ScriptManager } from './modules/script';
+import { scriptManager } from './modules/script';
 import { MonitoringManager } from './modules/monitoring';
 import { CaptchaBypassManager } from './modules/captcha_bypass';
 import { RadarManager } from './modules/radar';
-import { PingManager } from './modules/ping';
-import { translate, Language } from './modules/translator';
+import { pinger } from './modules/pinger';
+import { translator } from './modules/translator';
 import { messages } from './utils/message';
-import { downloadJsonContent } from './downloader/downloader';
+import { download } from './utils/downloader';
 import { disableParticles, enableParticles } from './particles';
 import { switchControlWrapper, switchGlobalWrapper } from './utils/switchers';
 import { triggerRegistry } from './modules/trigger_registry';
@@ -34,11 +34,9 @@ export let quickTasksAllowed: boolean = true;
 const accountManager = new AccountManager();
 const proxyCollectorManager = new ProxyCollectorManager();
 const chartManager = new ChartManager();
-const scriptManager = new ScriptManager();
 const monitoringManager = new MonitoringManager();
 const captchaBypassManager = new CaptchaBypassManager();
 const radarManager = new RadarManager();
-const pingManager = new PingManager();
 
 const pressedKeys: { [x: string]: boolean } = {
   alt: false,
@@ -72,7 +70,7 @@ export function setQuickTasksAllowed(value: boolean): void {
 
 async function initUserGuide(): Promise<void> {
   try {
-    const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
+    const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
 
     if (content) {
       (document.getElementById('guide-latest-update') as HTMLElement).innerText = content['latest-update'];
@@ -250,7 +248,7 @@ function initPlugins(): void {
 
 async function initPluginDescriptions(): Promise<void> {
   try {
-    const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
+    const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
     
     if (content) {
       for (const plugin of content['list']) {
@@ -309,7 +307,7 @@ async function initPluginDescriptions(): Promise<void> {
 
 async function initDownloadCount(): Promise<void> {
   try {
-    const content = await downloadJsonContent('https://api.github.com/repos/nullclyze/SalarixiOnion/releases');
+    const content = await download('https://api.github.com/repos/nullclyze/SalarixiOnion/releases');
     
     if (content) {
       let globalDownloadCount = 0;
@@ -519,11 +517,6 @@ async function initFunctions(): Promise<void> {
     await controlBots(e.name, state);
   }));
 
-  document.getElementById('execute-script')?.addEventListener('click', async () => await scriptManager.execute());
-  document.getElementById('stop-script')?.addEventListener('click', async () => await scriptManager.stop());
-
-  document.getElementById('ping-server')?.addEventListener('click', async () => await pingManager.ping_server());
-
   document.addEventListener('keydown', async (e) => {
     if (process === 'sleep' || !quickTasksAllowed) return;
     const key = e.key.toLowerCase();
@@ -610,9 +603,6 @@ async function initFunctions(): Promise<void> {
     (document.getElementById('settings_option_bots-count') as HTMLInputElement).value = '';
     (document.getElementById('settings_option_join-delay') as HTMLInputElement).value = '';
   });
-
-  document.getElementById('interface_select_client-language')?.addEventListener('change', async () => await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language));
-  await translate((document.getElementById('interface_select_client-language') as HTMLSelectElement).value as Language);
 
   document.getElementById('interface_select_discord-rpc')?.addEventListener('change', async () => await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' }));
   await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' });
@@ -1236,7 +1226,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     enableParticles();
 
     initPlugins();
-    initConfig();
+    
+    configurator.init();
 
     addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
     addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
@@ -1248,6 +1239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartManager.init();
     radarManager.init();
     scriptManager.init();
+    pinger.init();
 
     await listenEvents();
 
@@ -1255,6 +1247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await captchaBypassManager.init();
     
     await initFunctions();
+    await translator.init();
 
     logger.log('Инициализация прошла успешно', 'extended');
 
