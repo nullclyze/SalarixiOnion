@@ -247,24 +247,10 @@ body {
   background-color: rgb(27, 27, 27);
 }
 
-.dashboard .pretty-btn.selected {
-  color: rgb(255, 255, 255);
-}
-
-.dashboard .pretty-btn.selected svg {
-  color: rgb(255, 255, 255);
-}
-
-.dashboard .pretty-btn.selected::before {
-  background-color: var(--spec-color);
-  box-shadow: 0 0 10px var(--spec-color);
-  opacity: 1;
-}
-
 .dashboard .pretty-btn svg {
   display: flex;
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   justify-content: center;
   align-items: center;
 }
@@ -274,6 +260,17 @@ body {
   font-weight: normal;
   font-family: var(--panel-font-family);
   margin-top: var(--panel-text-margin-top);
+}
+
+.dashboard .pretty-btn.selected .text,
+.dashboard .pretty-btn.selected svg {
+  color: rgb(255, 255, 255);
+}
+
+.dashboard .pretty-btn.selected::before {
+  background-color: var(--spec-color);
+  box-shadow: 0 0 10px var(--spec-color);
+  opacity: 1;
 }
 
 .main-wrapper {
@@ -1196,13 +1193,11 @@ p {
   flex-direction: column;
   justify-content: start;
   align-items: center;
-  width: 100%;
+  width: 760px;
   height: 100%;
-  max-height: 540px;
-  border: none;
-  margin-top: 20px;
+  max-height: 470px;
   overflow-y: auto;
-  gap: 6px;
+  gap: 10px;
 }
 
 .anti-captcha-wrapper .options {
@@ -1513,11 +1508,11 @@ p {
 }
 
 .checkmark {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   background-color: rgb(24, 24, 24);
   border: 1px solid rgb(37, 37, 37);
-  border-radius: 4px;
+  border-radius: 6px;
   margin-right: 10px;
   display: flex;
   align-items: center;
@@ -1531,9 +1526,9 @@ p {
 .checkbox-container input[type='checkbox']:checked ~ .checkmark:after {
   display: flex;
   content: '';
-  width: 5px;
-  height: 10px;
-  border: 1px solid rgb(153, 153, 153);
+  width: 4px;
+  height: 8px;
+  border: 1px solid rgb(255, 255, 255);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
   margin-top: -4px;
@@ -1640,10 +1635,12 @@ p {
   flex-direction: column;
   justify-content: start;
   align-items: center;
+  overflow-y: auto;
   width: 760px;
   height: 100%;
-  max-height: 500px;
+  max-height: 470px;
   margin-top: 5px;
+  gap: 10px;
 }
 
 .monitoring-wrapper::-webkit-scrollbar {

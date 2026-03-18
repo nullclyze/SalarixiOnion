@@ -107,8 +107,8 @@ export class CaptchaBypassManager {
       </div>
 
       <div class="buttons">
-        <button class="btn min pretty" id="solve-captcha-${username}">Решить</button>
-        <button class="btn min pretty" id="remove-captcha-${username}">Удалить</button>
+        <button class="btn min" id="solve-captcha-${username}">Решить</button>
+        <button class="btn min" id="remove-captcha-${username}">Удалить</button>
       </div>
     `;
 

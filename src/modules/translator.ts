@@ -1,40 +1,47 @@
-import { downloadJsonContent } from '../downloader/downloader';
+import { download } from '../utils/downloader';
 import { logger } from '../utils/logger';
 
 export type Language = 'ru' | 'en';
 
-let cache_map: any = null;
+class Translator {
+  private cache: any;
 
-export async function translate(lang: Language) {
-  try {
-    let map: any = null;
+  constructor() {
+    this.cache = null;
+  }
 
-    if (!cache_map) {
-      const content = await downloadJsonContent('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
-    
-      if (content) {
-        map = content['map'];
+  /** Метод инициализации функций, связанных с переводчиком. */
+  public async init(): Promise<void> {
+    const langSelect = document.getElementById('interface_select_client-language') as HTMLSelectElement;
+    langSelect.addEventListener('change', async () => await this.translate(langSelect.value as Language));
+    if (langSelect.value != 'ru') await this.translate(langSelect.value as Language);
+  }
+
+  /** Функция получения и установки актуального перевода. */
+  private async translate(lang: Language): Promise<void> {
+    try {
+      let map = null;
+
+      if (this.cache) {
+        map = this.cache;
       } else {
-        logger.log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
+        const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
+        content ? map = content['map'] : logger.log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
       }
-    } else {
-      map = cache_map;
-    }
 
-    if (map) {
+      if (!map) return;
+
       document.querySelectorAll<HTMLElement>('[translator-tag]').forEach(e => {
         const tag = e.getAttribute('translator-tag');
-
-        if (tag) {
-          for (const el of map) {
-            if (el.tags.includes(tag)) {
-              e.innerText = el.lang[lang];
-            }
-          }
-        }
+        if (!tag) return;
+        for (const el of map) el.tags.includes(tag) ? e.innerText = el.lang[lang] : null;
       });
+    } catch (error) {
+      logger.log(`Ошибка перевода: ${error}`, 'error');
     }
-  } catch (error) {
-    logger.log(`Ошибка перевода: ${error}`, 'error');
   }
 }
+
+const translator = new Translator();
+
+export { translator }

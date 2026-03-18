@@ -3,7 +3,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { logger } from '../utils/logger';
 import { generateId } from '../utils/generator';
 
-
 interface ServerInformation {
   ip_address: string;
   server_icon: string | null;
@@ -15,8 +14,14 @@ interface ServerInformation {
   list_of_players: Array<{ username: string; uuid: string; }>;
 }
 
-export class PingManager {
-	public async ping_server() {
+class Pinger {
+  /** Метод инициализации функций, связанных с пингованием. */
+  public init(): void {
+    document.getElementById('ping-server')?.addEventListener('click', async () => await this.ping_server());
+  }
+
+  /** Метод пингования сервера. */
+	private async ping_server(): Promise<void> {
 		try {
 			const address = (document.getElementById('ping-server-address') as HTMLInputElement).value;
 
@@ -121,3 +126,7 @@ export class PingManager {
 		}
 	}
 }
+
+const pinger = new Pinger();
+
+export { pinger };
