@@ -120,15 +120,15 @@ class Configurator {
       const config = localStorage.getItem('salarixionion:storage:config');
       if (!config) return;
 
-      const clean_config: Record<string, ConfigValue> = {};
+      const public_config: Record<string, ConfigValue> = {};
 
       for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
         const el = document.getElementById(id.replaceAll('.', '_'));
-        el && !el.getAttribute('ignore-config') ? clean_config[id] = value : null;
+        el && !el.getAttribute('ignore-config') ? public_config[id] = value : null;
       }
 
       let encoder = new TextEncoder();
-      let buffer = encoder.encode(JSON.stringify(clean_config, null, 2));
+      let buffer = encoder.encode(JSON.stringify(public_config, null, 2));
 
       await writeFile(await path.join(directory, 'salarixi.config.json'), buffer);
 

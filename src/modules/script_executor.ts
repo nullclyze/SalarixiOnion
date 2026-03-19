@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { logger } from '../utils/logger';
 import { setQuickTasksAllowed } from '../main';
 
-class ScriptManager {
+class ScriptExecutor {
 	private editor: HTMLTextAreaElement | null;
 	private lineCounter: HTMLDivElement | null; 
 	
@@ -71,6 +71,6 @@ class ScriptManager {
 	}
 }
 
-const scriptManager = new ScriptManager();
+const scriptExecutor = new ScriptExecutor();
 
-export { scriptManager }
+export { scriptExecutor }

@@ -39,41 +39,50 @@ const upcServices = {
   'text:iplocate-proxy-list': 'https://raw.githubusercontent.com/iplocate/free-proxy-list/refs/heads/main/protocols/socks5.txt'
 };
 
-export class ProxyCollectorManager {
-  private proxyList: HTMLTextAreaElement | null = null;
-  private proxyCounter: HTMLElement | null = null;
+class ProxyCollector {
+  private list: HTMLTextAreaElement | null;
+  private counter: HTMLElement | null;
+  private status: HTMLElement | null;
 
-  private proxyFinderStatus: HTMLElement | null = null;
-
+  constructor() {
+    this.list = null;
+    this.counter = null;
+    this.status = null;
+  }
+  
+  /** Метод инициализации функций, связанных с сборщиком прокси. */
   public init(): void {
-    this.proxyList = document.getElementById('proxy-list') as HTMLTextAreaElement;
-    this.proxyFinderStatus = document.getElementById('proxy-finder-status') as HTMLElement;
-    this.proxyCounter = document.getElementById('proxy-counter') as HTMLElement;
+    this.list = document.getElementById('proxy-list') as HTMLTextAreaElement;
+    this.counter = document.getElementById('proxy-counter') as HTMLElement;
+    this.status = document.getElementById('proxy-finder-status') as HTMLElement;
 
-    this.proxyList.addEventListener('input', () => this.updateCount());
+    this.list.addEventListener('input', () => this.updateCounter());
 
     document.getElementById('clear-proxy-list')?.addEventListener('click', () => {
-      this.proxyList!.value = '';
-      this.updateCount();
+      this.list!.value = '';
+      this.updateCounter();
     });
 
     document.getElementById('find-proxy')?.addEventListener('click', () => this.collectProxy());
 
-    this.updateCount();
+    this.updateCounter();
   }
 
-  private updateCount(): void {
+  /** Метод обновления счётчика прокси. */
+  private updateCounter(): void {
     let counter = 0;
+    this.list!.value.split('\n').forEach(element => element.match(/((?:\d{1,3}\.){3}\d{1,3}):(\d+)/g) || element.match(/(\w+)\:\/\/((?:\d{1,3}\.){3}\d{1,3}):(\d+)/g) ? counter++ : null);
+    this.counter!.innerText = counter.toString();
+  }
 
-    String(this.proxyList!.value).split('\n').forEach(element => {
-      if (element.match(/((?:\d{1,3}\.){3}\d{1,3}):(\d+)/g) || element.match(/(\w+)\:\/\/((?:\d{1,3}\.){3}\d{1,3}):(\d+)/g)) {
-        counter++;
-      }
-    });
-
-    this.proxyCounter!.innerText = counter.toString();
+  /** Метод установки статуса поиска прокси. */
+  private setStatus(text: string, color?: string): void {
+    if (!this.status) return;
+    this.status!.style.color = color ?? '#848080';
+    this.status!.innerText = text;
   }
   
+  /** Метод сборки прокси с различных ресурсов. */
   private async collectProxy(): Promise<void> {
     try {
       const algorithm = (document.getElementById('proxy-finder_select_algorithm') as HTMLSelectElement).value;
@@ -82,7 +91,7 @@ export class ProxyCollectorManager {
       const port = (document.getElementById('proxy-finder_select_port') as HTMLSelectElement).value;
       const count = (document.getElementById('proxy-finder_select_count') as HTMLInputElement).value;
 
-      this.proxyFinderStatus!.innerText = 'Поиск прокси...';
+      this.setStatus('Поиск прокси...');
 
       const proxies = await this.scrape({
         algorithm: algorithm,
@@ -93,30 +102,23 @@ export class ProxyCollectorManager {
       });
 
       if (proxies) {
-        this.proxyFinderStatus!.style.color = '#0cd212ff';
-        this.proxyFinderStatus!.innerText = 'Поиск окончен';
-        this.proxyList!.value = Array.from(String(proxies).split('\n')).filter(p => p && p.trim() !== '').join('\n');
+        this.setStatus('Поиск окончен', '#0cd212ff');
+        this.list!.value = Array.from(String(proxies).split('\n')).filter(p => p && p.trim() !== '').join('\n');
       } else {
-        this.proxyFinderStatus!.style.color = '#cc1d1dff';
-        this.proxyFinderStatus!.innerText = 'Ошибка поиска';
-
-        logger.log('Ошибка поиска прокси', 'error');
+        this.setStatus('Ошибка поиска', '#cc1d1dff');
+        logger.log('Ошибка сборщика прокси: Could not find a proxies', 'error');
       }
     } catch (error) {
-      this.proxyFinderStatus!.style.color = '#cc1d1dff';
-      this.proxyFinderStatus!.innerText = 'Ошибка поиска';
-
-      logger.log(`Ошибка поиска прокси: ${error}`, 'error');
+      this.setStatus('Ошибка поиска', '#cc1d1dff');
+      logger.log(`Ошибка сборщика прокси: ${error}`, 'error');
     } finally {
-      this.updateCount();
-      setTimeout(() => {
-        this.proxyFinderStatus!.style.color = '#848080';
-        this.proxyFinderStatus!.innerText = 'Поиск неактивен';
-      }, 2000);
+      this.updateCounter();
+      setTimeout(() => this.setStatus('Поиск неактивен'), 2000);
     }
   }
 
-  private async scrape(options: Options): Promise<string | unknown> {
+  /** Метод скрапинга прокси. */
+  private async scrape(options: Options): Promise<string | null> {
     try {
       let proxy_list: any[] = [];
 
@@ -126,32 +128,25 @@ export class ProxyCollectorManager {
         proxy_list = await this.UPc(options.protocol);
       }
 
-      if (options.count !== 'max') {
-        proxy_list = proxy_list.slice(0, Number(options.count));
-      }
+      if (options.count !== 'max') proxy_list = proxy_list.slice(0, Number(options.count));
 
       proxy_list = Array.from(new Set(proxy_list.map(String)));
 
       let result: string[] = [];
 
       if (options.port != 'any') {
-        for (const proxy of proxy_list) {
-          if (proxy.includes(options.port)) {
-            result.push(proxy);
-          }
-        }
+        for (const proxy of proxy_list) proxy.includes(options.port) ? result.push(proxy) : null;
       } else {
-        for (const proxy of proxy_list) {
-          result.push(proxy);
-        }
+        for (const proxy of proxy_list) result.push(proxy);
       }
 
       return result.join('\n');
-    } catch (error) {
-      return error;
+    } catch (_) {
+      return null;
     }
   }
 
+  /** Метод отправки запроса на определённый URL. */
   private async request(name: string, url: string, type: string) {
     try {
       const res = await fetch(url, {
@@ -169,21 +164,23 @@ export class ProxyCollectorManager {
     }
   }
 
+  /** Метод создания потока задач (потока запросов). */
   private createTaskFlow(urls: any) {
     const tasks = [];
 
     for (const [name, url] of Object.entries(urls)) {
       if (Array.isArray(url)) {
-        for (const u of url) tasks.push(this.request(String(name.split(':')[1]), u, String(name.split(':')[0])));
+        for (const u of url) tasks.push(this.request(name.split(':')[1], u, name.split(':')[0]));
       } else {
-        tasks.push(this.request(String(name.split(':')[1]), url as string, String(name.split(':')[0])));
+        tasks.push(this.request(name.split(':')[1], url as string, name.split(':')[0]));
       }
     }
 
     return tasks;
   }
 
-  private async UPc(protocol: string) {
+  /** Метод поиска прокси по алгоритму UPc. */
+  private async UPc(protocol: string): Promise<any[]> {
     let proxies = [];
 
     const apicList = await this.APIc(protocol, 'any');
@@ -195,24 +192,22 @@ export class ProxyCollectorManager {
 
     for (const r of results) {
       if (!r.success) continue;
+
       const data = String(r.data).trim().split('\n');
       const name = r.name;
 
       if (name.includes('gfpcom-proxy-list')) {
-        for (const proxy of data ?? []) {
-          if (protocol === 'any' || String(proxy.split('://')[0]).toLowerCase() === protocol) proxies.push(proxy);
-        }
+        for (const proxy of data ?? []) protocol === 'any' || proxy.split('://')[0].toLowerCase() === protocol ? proxies.push(proxy) : null;
       } else if (name.includes('fyvri-proxy-list') || name.includes('r00tee-proxy-list') || name.includes('vmheaven-proxy-list') || name.includes('iplocate-proxy-list')) {
-        for (const proxy of data ?? []) {
-          if (protocol === 'socks5') proxies.push(`socks5://${proxy}`);
-        }
+        for (const proxy of data ?? []) protocol === 'socks5' ? proxies.push(`socks5://${proxy}`) : null;
       }
     } 
 
     return proxies;
   }
 
-  private async APIc(protocol: string, country: string) {
+  /** Метод поиска прокси по алгоритму APIc. */
+  private async APIc(protocol: string, country: string): Promise<any[]> {
     const tasks = this.createTaskFlow(apicServices);
     const results = await Promise.all(tasks);
 
@@ -220,77 +215,42 @@ export class ProxyCollectorManager {
 
     for (const r of results) {
       if (!r.success) continue;
+
       const data = r.data;
       const name = r.name;
 
       if (name === 'proxyscrape') {
-        for (const proxy of data.proxies ?? []) {
-          if (country === 'any' || proxy.ip_data?.countryCode === country.toUpperCase()) {
-            if (protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol) proxies.push(proxy.proxy);
-          }
-        }
+        for (const proxy of data.proxies ?? []) country === 'any' || proxy.ip_data?.countryCode === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
       } else if (name === 'proxifly') {
-        for (const proxy of data ?? []) {
-          if (country === 'any' || proxy.geolocation?.country === country.toUpperCase()) {
-            if (protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol) proxies.push(proxy.proxy);
-          }
-        }
+        for (const proxy of data ?? []) country === 'any' || proxy.geolocation?.country === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
       } else if (name === 'jetkai-proxy-list') {
         for (const proxy of data ?? []) {
           if (country === 'any' || proxy.location?.isocode === country.toUpperCase()) {
-            const type = proxy.protocols?.[0]?.type;
-            if (protocol === 'any' || String(type).toLowerCase() === protocol) {
-              proxies.push(`${type}://${proxy.ip}:${proxy.port}`);
-            }
+            const type = String(proxy.protocols?.[0]?.type);
+            protocol === 'any' || type.toLowerCase() === protocol ? proxies.push(`${type}://${proxy.ip}:${proxy.port}`) : null;
           }
         }
       } else if (name === 'monosans-proxy-list') {
-        for (const proxy of data ?? []) {
-          if (proxy.username == null && proxy.password == null) {
-            if (country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase()) {
-              if (protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol) {
-                proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`);
-              }
-            }
-          }
-        }
+        for (const proxy of data ?? []) proxy.username == null && proxy.password == null ? country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase() ? protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol ? proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`) : null : null : null;
       } else if (name === 'vakhov-proxy-list') {
         for (const proxy of data ?? []) {
           if (country === 'any' || proxy.country_code === country.toUpperCase()) {
             if (protocol === 'any') {
-              for (const p of ['socks5', 'socks4', 'http']) {
-                if (Number(proxy[p]) !== 0) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
-              }
+              for (const p of ['socks5', 'socks4', 'http']) Number(proxy[p]) !== 0 ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
             } else {
-              if (Number(proxy[protocol]) !== 0) proxies.push(`${protocol}://${proxy.ip}:${proxy.port}`);
+              Number(proxy[protocol]) !== 0 ? proxies.push(`${protocol}://${proxy.ip}:${proxy.port}`) : null;
             }
           }
         }
-      } else if (name === 'geonode') {
-        for (const proxy of data.data ?? []) {
-          if (country === 'any' || proxy.country === country.toUpperCase()) {
-            const protocols = (proxy.protocols ?? []).map((p: string) => p.toLowerCase());
-            if (protocol === 'any') {
-              for (const p of protocols) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
-            } else {
-              for (const p of protocols) if (p === protocol) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
-            }
-          }
-        }
-      } else if (name === 'proxyfreeonly') {
-        for (const proxy of data ?? []) {
-          if (country === 'any' || proxy.country === country.toUpperCase()) {
-            const protocols = (proxy.protocols ?? []).map((p: string) => p.toLowerCase());
-            if (protocol === 'any') {
-              for (const p of protocols) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
-            } else {
-              for (const p of protocols) if (p === protocol) proxies.push(`${p}://${proxy.ip}:${proxy.port}`);
-            }
-          }
-        }
+      } else if (name === 'geonode' || name === 'proxyfreeonly') {
+        for (const proxy of data ?? []) if (country === 'any' || proxy.country === country.toUpperCase()) for (const p of (proxy.protocols ?? []).map((p: string) => p.toLowerCase())) protocol === 'any' || p === protocol ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
       }
     }
 
     return proxies;
   }
 }        
+
+const proxyCollector = new ProxyCollector();
+
+export { proxyCollector }

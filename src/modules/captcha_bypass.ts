@@ -11,13 +11,14 @@ interface Captcha {
   }
 }
 
-export class CaptchaBypassManager {
+class CaptchaBypass {
   private settings: HTMLElement | null = null;
   private cards: HTMLElement | null = null;
   private wrappers: HTMLElement | null = null;
 
   private listeners: Map<string, any> = new Map();
 
+  /** Метод инициализации функций, связанных с обходом капчи. */
   public async init(): Promise<void> {
     this.settings = document.getElementById('anti-captcha-settings');
     this.cards = document.getElementById('anti-captcha-cards');
@@ -60,6 +61,7 @@ export class CaptchaBypassManager {
     });
   }
 
+  /** Метод активации обхода капчи. */
   public enable(type: string, mode: string): void {
     if (type === 'map' || mode === 'manual') {
       this.settings!.style.display = 'none';
@@ -69,12 +71,14 @@ export class CaptchaBypassManager {
     }
   }
 
+  /** Метод очистки и выключения обхода капчи. */
   public disable(): void {
-    for (const [id, data] of this.listeners) {
-      document.getElementById(id)?.removeEventListener(data.event, data.listener);
-    }
+    for (const [id, data] of this.listeners) document.getElementById(id)?.removeEventListener(data.event, data.listener);
 
     this.listeners.clear();
+
+    document.querySelectorAll('[wrapper="captcha-card"]').forEach(w => w.remove());
+    document.querySelectorAll('[wrapper="captcha-img"]').forEach(w => w.remove());
 
     this.cards!.innerHTML = '';
     this.cards!.style.display = 'none';
@@ -84,11 +88,13 @@ export class CaptchaBypassManager {
     this.settings!.style.display = 'flex';
   }
 
+  /** Метод добавления временного слушателя событий. */
   private addTempListener(id: string, event: string, listener: EventListener): void {
     document.getElementById(id)?.addEventListener(event, listener);
     this.listeners.set(id, { event: event, listener: listener });
   }
 
+  /** Метод создания карточки капчи. */
   private createCaptchaCard(username: string, captcha: Captcha): void {
     const oldCard = document.getElementById(`bot-captcha-${username}`);
 
@@ -100,6 +106,7 @@ export class CaptchaBypassManager {
     const card = document.createElement('div');
     card.className = 'bot-captcha';
     card.id = `bot-captcha-${username}`;
+    card.setAttribute('wrapper', 'captcha-card');
     
     card.innerHTML = `
       <div class="head">
@@ -117,19 +124,18 @@ export class CaptchaBypassManager {
     this.initializeCaptchaCard(username, captcha);
   }
 
+  /** Метод инициализации карточки капчи. */
   private initializeCaptchaCard(username: string, captcha: Captcha): void {
     if (captcha.type === 'web') {
       this.addTempListener(`solve-captcha-${username}`, 'click', async () => {
         const url = captcha.data.url;
-
-        if (url && url !== '') {
-          await invoke('open_url', { url: url });
-        }
+        if (url && url !== '') await invoke('open_url', { url: url });
       });
     } else {
       const wrapper = document.createElement('div');
       wrapper.className = 'cover';
       wrapper.id = `captcha-wrapper-${username}`;
+      wrapper.setAttribute('wrapper', 'captcha-img');
       
       wrapper.innerHTML = `
         <div class="panel with-header" style="margin-bottom: 20px;">
@@ -189,3 +195,7 @@ export class CaptchaBypassManager {
     });
   }
 }   
+
+const captchaBypass = new CaptchaBypass();
+
+export { captchaBypass }

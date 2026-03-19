@@ -3,7 +3,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { date } from '../utils/date';
 import { logger } from '../utils/logger';
 import { readFile, writeFile } from '@tauri-apps/plugin-fs';
-import { path } from '@tauri-apps/api';
+import { join } from '@tauri-apps/api/path';
 import { messages } from '../utils/message';
 
 type AccountFields = {
@@ -14,13 +14,14 @@ type AccountFields = {
   proxy_password: string | null;
 }
 
-export class AccountManager {
+class AccountManager {
   private accountList: HTMLDivElement | null = null;
   private accountCounter: HTMLSpanElement | null = null;
   private wrappers: HTMLDivElement | null = null;
 
   private accounts: Record<string, AccountFields | null> = {};
 
+  /** Метод инициализации функций, связанных с аккаунтами. */
   public init(): void {
     this.accountList = document.getElementById('account-list') as HTMLDivElement;
     this.accountCounter = document.getElementById('account-counter') as HTMLSpanElement;
@@ -59,39 +60,36 @@ export class AccountManager {
         const path = await open({
           directory: false,
           multiple: false,
-          filters: [
-            {
-              name: 'Accounts',
-              extensions: ['json']
-            }
-          ]
+          filters: [{
+            name: 'Accounts',
+            extensions: ['json']
+          }]
         });
 
-        if (path) {
-          this.clearAccounts();
+        if (!path) return;
 
-          const buffer = await readFile(path);
+        this.clearAccounts();
 
-          const decoder = new TextDecoder();
-          const accounts = JSON.parse(decoder.decode(buffer));
+        const buffer = await readFile(path);
 
-          for (const username in accounts) {
-            const data = accounts[username];
-            if (!data) continue;
+        const decoder = new TextDecoder();
+        const accounts = JSON.parse(decoder.decode(buffer));
 
-            this.createAccountCard(username, {
-              creation_date: date('exact'),
-              password: data.password,
-              proxy: data.proxy,
-              proxy_username: data.proxy_username,
-              proxy_password: data.proxy_password
-            });
-          } 
-          
-          this.updateAccountCounter();
+        for (const username in accounts) {
+          const data = accounts[username];
+          if (!data) continue;
+          this.createAccountCard(username, {
+            creation_date: date('exact'),
+            password: data.password,
+            proxy: data.proxy,
+            proxy_username: data.proxy_username,
+            proxy_password: data.proxy_password
+          });
+        } 
+        
+        this.updateAccountCounter();
 
-          messages.message('Импорт аккаунтов', `Аккаунты успешно импортированы`);
-        }
+        messages.message('Импорт аккаунтов', `Аккаунты успешно импортированы`);
       } catch (error) {
         logger.log(`Ошибка импорта аккаунтов: ${error}`, 'error');
       }
@@ -104,85 +102,67 @@ export class AccountManager {
           multiple: false
         });
 
-        if (directory) {
-          const accounts: any = {};
+        if (!directory) return;
 
-          for (const username in this.accounts) {
-            const data = this.accounts[username];
-            if (!data) continue;
+        const accounts: any = {};
 
-            accounts[username] = {
-              password: data.password,
-              proxy: data.proxy,
-              proxy_username: data.proxy_username,
-              proxy_password: data.proxy_password
-            };
-          }
-
-          let encoder = new TextEncoder();
-          let data = encoder.encode(JSON.stringify(accounts, null, 2));
-
-          await writeFile(await path.join(directory, 'salarixi.accounts.json'), data);
-
-          messages.message('Экспорт аккаунтов', `Аккаунты успешно экспортированы`);
+        for (const username in this.accounts) {
+          const data = this.accounts[username];
+          if (!data) continue;
+          accounts[username] = {
+            password: data.password,
+            proxy: data.proxy,
+            proxy_username: data.proxy_username,
+            proxy_password: data.proxy_password
+          };
         }
+
+        const path = await join(directory, 'salarixi.accounts.json');
+        let encoder = new TextEncoder();
+        let buffer = encoder.encode(JSON.stringify(accounts, null, 2));
+
+        await writeFile(path, buffer);
+
+        messages.message('Экспорт аккаунтов', `Аккаунты успешно экспортированы`);
       } catch (error) {
         logger.log(`Ошибка экспорта аккаунтов: ${error}`, 'error');
       }
     });
 
-    setInterval(() => {
-      localStorage.setItem('salarixionion:storage:accounts', JSON.stringify(this.accounts));
-    }, 1000);
+    setInterval(() => localStorage.setItem('salarixionion:storage:accounts', JSON.stringify(this.accounts)), 1000);
   }
 
+  /** Метод получения всех существующих аккаунтов и их опций. */
   public getAccounts(): Record<string, AccountFields | null> {
     return this.accounts;
   }
 
+  /** Метод обновления счётчика аккаунтов. */
   private updateAccountCounter(): void {
     let count = 0;
-
-    for (const _ in this.accounts) {
-      count++;
-    }
-
-    if (this.accountCounter) {
-      this.accountCounter.innerText = count.toString();
-    }
+    for (const _ in this.accounts) count++;
+    if (this.accountCounter) this.accountCounter.innerText = count.toString();
   }
 
+  /** Метод полной очистки всех аккаунтов. */
   private clearAccounts(): void {
-    document.querySelectorAll('[account-editor="true"]').forEach(e => e.remove());
-
-    for (const username in this.accounts) {
-      const card = document.getElementById(`account-${username}`) as HTMLDivElement;
-      card.remove();
-    }
-
+    document.querySelectorAll('[wrapper="account-editor"]').forEach(w => w.remove());
+    document.querySelectorAll('[wrapper="account-card"]').forEach(w => w.remove());
+    for (const username in this.accounts) document.getElementById(`account-${username}`)?.remove();
     this.accounts = {};
-
     localStorage.removeItem('salarixionion:storage:accounts');
-
     this.updateAccountCounter();
   }
 
+  /** Метод загрузки сохранённых аккаунтов из локального хранилища. */
   private loadSavedAccounts(): void {
     const accounts = localStorage.getItem('salarixionion:storage:accounts');
-
-    if (accounts) {
-      const json = JSON.parse(accounts);
-
-      for (const [username, fields] of Object.entries<AccountFields | null>(json)) {
-        if (fields) {
-          this.createAccountCard(username, fields);
-        }
-      }
-
-      this.updateAccountCounter();
-    }
+    if (!accounts) return;
+    for (const [username, fields] of Object.entries<AccountFields | null>(JSON.parse(accounts))) fields ? this.createAccountCard(username, fields) : null;
+    this.updateAccountCounter();
   }
 
+  /** Метод создания карточки аккаунта. */
   private createAccountCard(username: string, fields: AccountFields): void {
     this.accounts[username] = {
       creation_date: fields.creation_date,
@@ -195,6 +175,7 @@ export class AccountManager {
     const card = document.createElement('div');
     card.className = 'account';
     card.id = `account-${username}`;
+    card.setAttribute('wrapper', 'account-card');
 
     card.innerHTML = `
       <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
@@ -227,11 +208,12 @@ export class AccountManager {
     this.initializeAccountCard(card, username, fields);
   }
 
+  /** Метод создания обёркти редактора настроек аккаунта. */
   private createEditWrapper(username: string): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'cover';
     wrapper.id = `account-editor-${username}`;
-    wrapper.setAttribute('account-editor', 'true');
+    wrapper.setAttribute('wrapper', 'account-editor');
 
     wrapper.innerHTML = `
       <div class="panel with-header" style="margin-bottom: 20px;">
@@ -274,17 +256,13 @@ export class AccountManager {
     return wrapper;
   }
 
+  /** Метод инициализации карточки аккаунта. */
   private initializeAccountCard(card: HTMLDivElement, username: string, fields: AccountFields): void {
     try {
       const editorWrapper = this.createEditWrapper(username);
 
-      document.getElementById(`edit-account-${username}`)?.addEventListener('click', () => {
-        editorWrapper.style.display = 'flex';
-      });
-
-      document.getElementById(`close-account-editor-${username}`)?.addEventListener('click', () => {
-        editorWrapper.style.display = 'none';
-      });
+      document.getElementById(`edit-account-${username}`)?.addEventListener('click', () => editorWrapper.style.display = 'flex');
+      document.getElementById(`close-account-editor-${username}`)?.addEventListener('click', () => editorWrapper.style.display = 'none');
 
       document.getElementById(`remove-account-${username}`)?.addEventListener('click', () => {
         card.remove();
@@ -317,3 +295,7 @@ export class AccountManager {
     }
   }
 }
+
+const accountManager = new AccountManager();
+
+export { accountManager }
