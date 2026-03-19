@@ -1,3 +1,4 @@
+/** Локальная структура, содержащая информацию о плагинах текущей версии программы. */
 export const plugins: Record<string, { header: string; enable: boolean; date: string }> = {
   'auto-armor': {
     header: 'Авто Доспехи',

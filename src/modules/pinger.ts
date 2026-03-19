@@ -80,9 +80,7 @@ class Pinger {
 
         element.innerHTML = `
           <p class="username">Никнейм</p>
-
           <div class="sep"></div>
-
           <p class="uuid">UUID</p>
         `;
 
@@ -94,9 +92,7 @@ class Pinger {
 
           el.innerHTML = `
             <p class="username">${player.username}</p>
-
             <div class="sep"></div>
-
             <p class="uuid">${player.uuid}</>
           `;
 
@@ -107,9 +103,7 @@ class Pinger {
       } else {
         const header = document.createElement('div');
         header.className = 'header';
-
-        header.innerText = 'Не удалось получить список игроков'
-
+        header.innerText = 'Не удалось получить список игроков';
         card.appendChild(header);
       }
 

@@ -5,7 +5,6 @@ import { Chart } from 'chart.js';
 import { logger } from '../utils/logger';
 import { messages } from '../utils/message';
 
-
 interface RadarInfo {
   status: string;
   uuid: string;
@@ -18,7 +17,7 @@ interface RadarInfo {
   };
 }
 
-export class RadarManager {
+class Radar {
   private active: boolean = false;
 
   private targetCardsContainer: HTMLElement | null = null;
@@ -27,6 +26,7 @@ export class RadarManager {
   private updateFrequency: number = 1500;
   private targets: Map<string, { data: any, interval: any, chart: any }> = new Map();
 
+  /** Метод инициализации функций, связанных с радаром. */
   public init(): void {
     this.targetCardsContainer = document.getElementById('radar-target-cards-container') as HTMLElement;
     this.targetWrappersContainer = document.getElementById('radar-target-wrappers-container') as HTMLElement;
@@ -133,15 +133,8 @@ export class RadarManager {
       this.initializeTargetCard(username);
     });
 
-    openSettingsBtn.addEventListener('click', () => {
-      const settings = document.getElementById('radar-settings') as HTMLElement;
-      settings.style.display = 'flex';
-    }); 
-
-    closeSettingsBtn.addEventListener('click', () => {
-      const settings = document.getElementById('radar-settings') as HTMLElement;
-      settings.style.display = 'none';
-    }); 
+    openSettingsBtn.addEventListener('click', () => (document.getElementById('radar-settings') as HTMLElement).style.display = 'flex'); 
+    closeSettingsBtn.addEventListener('click', () => (document.getElementById('radar-settings') as HTMLElement).style.display = 'none'); 
 
     removeAllTargetsBtn.addEventListener('click', () => {
       this.targets.forEach((v, n) => {
@@ -164,14 +157,17 @@ export class RadarManager {
     });
   }
 
+  /** Метод активации радара. */
   public enable(): void {
     this.active = true;
   }
 
+  /** Метод выключения радара. */
   public disable(): void {
     this.active = false;
   }
 
+  /** Метод инициализации карточки цели. */
   private initializeTargetCard(nickname: string): void {
     try {
       const openRouteBtn = document.getElementById(`radar-open-route-${nickname}`) as HTMLButtonElement;
@@ -179,15 +175,8 @@ export class RadarManager {
       const removeTargetBtn = document.getElementById(`radar-remove-target-${nickname}`) as HTMLButtonElement;
       const copyTargetInfoBtn = document.getElementById(`radar-copy-target-info-${nickname}`) as HTMLButtonElement;
 
-      openRouteBtn.addEventListener('click', () => {
-        const routeContainer = document.getElementById(`radar-route-${nickname}`) as HTMLElement;
-        routeContainer.style.display = 'flex';
-      });
-
-      closeRouteBtn.addEventListener('click', () => {
-        const routeContainer = document.getElementById(`radar-route-${nickname}`) as HTMLElement;
-        routeContainer.style.display = 'none';
-      });
+      openRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${nickname}`) as HTMLElement).style.display = 'flex');
+      closeRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${nickname}`) as HTMLElement).style.display = 'none');
 
       removeTargetBtn.addEventListener('click', () => {
         const card = document.getElementById(`radar-target-${nickname}`) as HTMLElement;
@@ -231,12 +220,13 @@ UUID: ${uuid}
     }
   }
 
-  private setTargetUpdateInterval(nickname: string, frequency: number) {
+  /** Метод установки частоты обновления. */
+  private setTargetUpdateInterval(username: string, frequency: number) {
     let lx = '';
     let ly = '';
     let lz = '';
 
-    const target = this.targets.get(nickname);
+    const target = this.targets.get(username);
 
     if (target) {
       target.interval = setInterval(async () => {
@@ -246,69 +236,70 @@ UUID: ${uuid}
         }
 
         try {
-          const data = await invoke('get_radar_data', { target: nickname }) as RadarInfo;
+          const data = await invoke('get_radar_data', { target: username }) as RadarInfo;
 
-          if (data) {
-            const x = data.x.toFixed(3);
-            const y = data.y.toFixed(3);
-            const z = data.z.toFixed(3);
+          if (!data) return;
 
-            (document.getElementById(`radar-target-status-${nickname}`) as HTMLElement).innerText = data.status;
-            (document.getElementById(`radar-target-uuid-${nickname}`) as HTMLElement).innerText = data.uuid.substr(0, 12) + '...';
-            (document.getElementById(`radar-target-x-${nickname}`) as HTMLElement).innerText = x;
-            (document.getElementById(`radar-target-y-${nickname}`) as HTMLElement).innerText = y;
-            (document.getElementById(`radar-target-z-${nickname}`) as HTMLElement).innerText = z;
+          const x = data.x.toFixed(3);
+          const y = data.y.toFixed(3);
+          const z = data.z.toFixed(3);
 
-            if (target) {
-              target.data = {
-                fullUUID: data.uuid
-              };
-            }
+          (document.getElementById(`radar-target-status-${username}`) as HTMLElement).innerText = data.status;
+          (document.getElementById(`radar-target-uuid-${username}`) as HTMLElement).innerText = data.uuid.substr(0, 12) + '...';
+          (document.getElementById(`radar-target-x-${username}`) as HTMLElement).innerText = x;
+          (document.getElementById(`radar-target-y-${username}`) as HTMLElement).innerText = y;
+          (document.getElementById(`radar-target-z-${username}`) as HTMLElement).innerText = z;
 
-            if (lx !== x || ly !== y || lz !== z) {
-              const card = document.getElementById(`radar-target-${nickname}`) as HTMLElement;
-              card.classList.add('glow');
-              setTimeout(() => card.classList.remove('glow'), 300);
-            }
+          if (target) {
+            target.data = {
+              fullUUID: data.uuid
+            };
+          }
 
-            lx = data.x.toFixed(3);
-            ly = data.y.toFixed(3);
-            lz = data.z.toFixed(3);
+          if (lx !== x || ly !== y || lz !== z) {
+            const card = document.getElementById(`radar-target-${username}`) as HTMLElement;
+            card.classList.add('glow');
+            setTimeout(() => card.classList.remove('glow'), 300);
+          }
 
-            this.addRoutePointToChart(nickname, parseFloat(x), parseFloat(z), data.observer);
+          lx = data.x.toFixed(3);
+          ly = data.y.toFixed(3);
+          lz = data.z.toFixed(3);
 
-            if ((document.getElementById('radar_chbx_auto-save') as HTMLInputElement).checked) {
-              const path = (document.getElementById('radar_option_path') as HTMLInputElement).value;
-              const filename = (document.getElementById('radar_option_filename') as HTMLInputElement).value;
+          this.addRoutePointToChart(username, parseFloat(x), parseFloat(z), data.observer);
 
-              if (await isAbsolute(path)) {
-                await invoke('save_radar_data', {
-                  target: nickname,
-                  path: path,
-                  filename: filename || 'radar_#t',
-                  x: parseFloat(x),
-                  y: parseFloat(y),
-                  z: parseFloat(z)
-                });
-              }
+          if ((document.getElementById('radar_chbx_auto-save') as HTMLInputElement).checked) {
+            const path = (document.getElementById('radar_option_path') as HTMLInputElement).value;
+            const filename = (document.getElementById('radar_option_filename') as HTMLInputElement).value;
+
+            if (await isAbsolute(path)) {
+              await invoke('save_radar_data', {
+                target: username,
+                path: path,
+                filename: filename || 'radar_#t',
+                x: parseFloat(x),
+                y: parseFloat(y),
+                z: parseFloat(z)
+              });
             }
           }
         } catch (error) {
-          logger.log(`Ошибка обновления radar-цели ${nickname}: ${error}`, 'error');
+          logger.log(`Ошибка обновления цели радара ${username}: ${error}`, 'error');
         }
       }, frequency);
     }
   }
 
-  private createTargetChart(nickname: string) {
-    const ctx = document.getElementById(`radar-chart-${nickname}`) as HTMLCanvasElement;
+  /** Метод создания обёртки маршрута цели. */
+  private createTargetChart(username: string) {
+    const ctx = document.getElementById(`radar-chart-${username}`) as HTMLCanvasElement;
 
     const chart = new Chart(ctx, {
       type: 'scatter', 
       data: {
         datasets: [
           {
-            label: ` Маршрут ${nickname}`,
+            label: ` Маршрут ${username}`,
             data: [], 
             backgroundColor: '#39a10fff',
             borderColor: '#0f8f0bff', 
@@ -384,34 +375,37 @@ UUID: ${uuid}
       }
     });
 
-    const target = this.targets.get(nickname);
+    const target = this.targets.get(username);
 
-    if (target) {
-      target.chart = chart;
-    }
+    if (target) target.chart = chart;
   }
 
-  private addRoutePointToChart(nickname: string, x: number, z: number, observer: { x: number, z: number }) {
-    const target = this.targets.get(nickname);
+  /** Метод добавления поинта цели (её текущей позиции) на чарт маршрута. */
+  private addRoutePointToChart(username: string, x: number, z: number, observer: { x: number, z: number }) {
+    const target = this.targets.get(username);
 
-    if (target) {
-      target.chart.data.datasets[0].data.push({ x: x, y: z });
-      target.chart.data.datasets[1].data.push({ x: observer.x, y: observer.z });
+    if (!target) return;
 
-      if (target.chart.data.datasets[0].data.length > 30) target.chart.data.datasets[0].data.shift();
-      if (target.chart.data.datasets[1].data.length > 1) target.chart.data.datasets[1].data.shift();
+    target.chart.data.datasets[0].data.push({ x: x, y: z });
+    target.chart.data.datasets[1].data.push({ x: observer.x, y: observer.z });
 
-      const xMin = Number(x.toFixed(1)) - 200;
-      const xMax = Number(x.toFixed(1)) + 200;
-      const zMin = Number(z.toFixed(1)) - 200;
-      const zMax = Number(z.toFixed(1)) + 200;
-      
-      target.chart.options.scales.x.min = xMin;
-      target.chart.options.scales.x.max = xMax;
-      target.chart.options.scales.y.min = zMin;
-      target.chart.options.scales.y.max = zMax;
+    if (target.chart.data.datasets[0].data.length > 30) target.chart.data.datasets[0].data.shift();
+    if (target.chart.data.datasets[1].data.length > 1) target.chart.data.datasets[1].data.shift();
 
-      target.chart.update();
-    }
+    const xMin = Number(x.toFixed(1)) - 200;
+    const xMax = Number(x.toFixed(1)) + 200;
+    const zMin = Number(z.toFixed(1)) - 200;
+    const zMax = Number(z.toFixed(1)) + 200;
+    
+    target.chart.options.scales.x.min = xMin;
+    target.chart.options.scales.x.max = xMax;
+    target.chart.options.scales.y.min = zMin;
+    target.chart.options.scales.y.max = zMax;
+
+    target.chart.update();
   }
 }
+
+const radar = new Radar();
+
+export { radar }

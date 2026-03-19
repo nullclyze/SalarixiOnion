@@ -23,7 +23,7 @@ interface BotProfile {
   group: string;
 }
 
-export class MonitoringManager {
+class Monitoring {
   private usernameList: string[] = [];
 
   private statusText: HTMLElement | null = null;
@@ -137,7 +137,12 @@ export class MonitoringManager {
 
     this.listeners.clear();
 
+    document.querySelectorAll('[wrapper="bot-chat"]').forEach(w => w.remove());
+    document.querySelectorAll('[wrapper="bot-card"]').forEach(w => w.remove());
+
     this.cards!.innerHTML = '';
+    this.wrappers!.innerHTML = '';
+
     this.chatMessageCounter = {};
     this.chatHistoryFilters = {};
     this.usernameList = [];
@@ -173,6 +178,7 @@ export class MonitoringManager {
     const card = document.createElement('div');
     card.className = 'bot-card';
     card.id = `bot-card-${username}`;
+    card.setAttribute('wrapper', 'bot-card');
     
     card.innerHTML = `
       <div class="head">
@@ -212,6 +218,7 @@ export class MonitoringManager {
     const wrapper = document.createElement('div');
     wrapper.className = 'cover';
     wrapper.id = `chat-${username}`;
+    wrapper.setAttribute('wrapper', 'bot-chat');
 
     wrapper.innerHTML = `
       <div class="panel">
@@ -346,11 +353,9 @@ export class MonitoringManager {
       try {
         const content = document.getElementById(`monitoring-chat-content-${username}`);
         const type = document.getElementById(`select-chat-filter-${username}`) as HTMLSelectElement;
-
         const history = [...document.querySelectorAll(`[monitoring-message="${username}"]`).values()];
         
         content!.innerHTML = '';
-
         this.chatHistoryFilters[username] = type.value;
 
         history.forEach(m => this.filterMessage(type.value, m.textContent || '') ? content?.appendChild(m) : null);
@@ -365,7 +370,7 @@ export class MonitoringManager {
       this.chatMessageCounter[username] = 0;
     });
 
-    this.addTempListener(`chat-${username}`, 'keydown', async (e: Event) => {
+    this.addTempListener(`chat-${username}`, 'keydown', async (e) => {
       if ((e as KeyboardEvent).key === 'Enter') {
         const input = document.getElementById(`chat-message-${username}`) as HTMLInputElement;
 
@@ -385,11 +390,7 @@ export class MonitoringManager {
   /** Метод создания триграмм из слова. */
   private createTrigrams(word: string): string[] {
     const trigrams = [];
-
-    for (let i = 0; i <= word.length - 3; i++) {
-      trigrams.push(word.substr(i, 3));
-    }
-
+    for (let i = 0; i <= word.length - 3; i++) trigrams.push(word.substr(i, 3));
     return trigrams;
   }
 
@@ -403,20 +404,9 @@ export class MonitoringManager {
     const wts = this.createTrigrams(word);
     totalTrigrams = wts.length;
 
-    for (const p of patterns) {
-      const pts = this.createTrigrams(p);
-      for (const wt of wts) {
-        for (const pt of pts) {
-          if (wt.toLowerCase() == pt.toLowerCase()) {
-            similarTrigrams++;
-          }
-        }
-      }
-    }
+    for (const p of patterns) for (const wt of wts) for (const pt of this.createTrigrams(p)) wt.toLowerCase() == pt.toLowerCase() ? similarTrigrams++ : null;
 
-    if (similarTrigrams >= totalTrigrams / 2) {
-      return true;
-    } 
+    if (similarTrigrams >= totalTrigrams / 2) return true;
 
     return false;
   }
@@ -466,3 +456,7 @@ export class MonitoringManager {
     return false;
   }
 }   
+
+const monitoring = new Monitoring();
+
+export { monitoring }

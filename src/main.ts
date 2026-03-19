@@ -6,13 +6,13 @@ import { Chart, registerables } from 'chart.js';
 import { plugins } from './common/structs';
 import { logger } from './utils/logger';
 import { configurator } from './modules/configurator';
-import { AccountManager } from './modules/accounts';
-import { ProxyCollectorManager } from './modules/proxy_collector';
-import { ChartManager } from './modules/chart';
-import { scriptManager } from './modules/script';
-import { MonitoringManager } from './modules/monitoring';
-import { CaptchaBypassManager } from './modules/captcha_bypass';
-import { RadarManager } from './modules/radar';
+import { accountManager } from './modules/account_manager';
+import { proxyCollector } from './modules/proxy_collector';
+import { graphic } from './modules/graphic';
+import { scriptExecutor } from './modules/script_executor';
+import { monitoring } from './modules/monitoring';
+import { captchaBypass } from './modules/captcha_bypass';
+import { radar } from './modules/radar';
 import { pinger } from './modules/pinger';
 import { translator } from './modules/translator';
 import { messages } from './utils/message';
@@ -30,13 +30,6 @@ const client = {
 
 export let process: 'active' | 'sleep' = 'sleep';
 export let quickTasksAllowed: boolean = true;
-
-const accountManager = new AccountManager();
-const proxyCollectorManager = new ProxyCollectorManager();
-const chartManager = new ChartManager();
-const monitoringManager = new MonitoringManager();
-const captchaBypassManager = new CaptchaBypassManager();
-const radarManager = new RadarManager();
 
 const pressedKeys: { [x: string]: boolean } = {
   alt: false,
@@ -64,77 +57,80 @@ export let globalWrappers: Array<{ id: string; el: HTMLElement }> = [];
 export let controlWrappers: Array<{ id: string; el: HTMLElement }> = [];
 export let latestControlWrapper: HTMLElement | null = null;
 
+/** Функция задания значения для ```quickTasksAllowed```. */
 export function setQuickTasksAllowed(value: boolean): void {
   quickTasksAllowed = value;
 }
 
+/** Функция инициализации руководства по использованию. */
 async function initUserGuide(): Promise<void> {
   try {
     const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.guide.json');
 
-    if (content) {
-      (document.getElementById('guide-latest-update') as HTMLElement).innerText = content['latest-update'];
+    if (!content) return;
 
-      const guide = document.getElementById('guide-wrapper') as HTMLElement; 
+    (document.getElementById('guide-latest-update') as HTMLElement).innerText = content['latest-update'];
 
-      const sections = content['sections'];
+    const guide = document.getElementById('guide-wrapper') as HTMLElement; 
 
-      for (const section of sections) {
-        const sectionElement = document.createElement('div');
-        sectionElement.className = 'section';
-  
-        const header = section['header'];
-        const subsections = section['subsections'];
+    const sections = content['sections'];
 
-        if (header) {
-          const el = document.createElement('div');
-          el.className = 'header';
-          el.innerText = header;
+    for (const section of sections) {
+      const sectionElement = document.createElement('div');
+      sectionElement.className = 'section';
 
-          sectionElement.appendChild(el);
-        }
+      const header = section['header'];
+      const subsections = section['subsections'];
 
-        for (const subsection of subsections) {
-          const subsectionElement = document.createElement('div');
-          subsectionElement.className = 'subsection';
+      if (header) {
+        const el = document.createElement('div');
+        el.className = 'header';
+        el.innerText = header;
 
-          const subheader = subsection['subheader'];
-          const paragraphs = subsection['paragraphs'];
-
-          if (subheader) {
-            const el = document.createElement('div');
-            el.className = 'subheader';
-            el.innerText = subheader;
-
-            subsectionElement.appendChild(el);
-          }
-
-          for (const paragraph of paragraphs) {
-            const el = document.createElement('p');
-
-            const html = String(paragraph)
-              .replaceAll('/*', '<span class="bold">')
-              .replaceAll('/!', '<span class="highlight">')
-              .replaceAll('/#', '<span class="link">')
-              .replaceAll('/:', '<span class="code">')
-              .replaceAll('/&', '</span>');
-
-            el.innerHTML = html;
-
-            subsectionElement.appendChild(el);
-          }
-
-          sectionElement.appendChild(subsectionElement);
-        }
-
-        guide.appendChild(sectionElement);
+        sectionElement.appendChild(el);
       }
+
+      for (const subsection of subsections) {
+        const subsectionElement = document.createElement('div');
+        subsectionElement.className = 'subsection';
+
+        const subheader = subsection['subheader'];
+        const paragraphs = subsection['paragraphs'];
+
+        if (subheader) {
+          const el = document.createElement('div');
+          el.className = 'subheader';
+          el.innerText = subheader;
+
+          subsectionElement.appendChild(el);
+        }
+
+        for (const paragraph of paragraphs) {
+          const el = document.createElement('p');
+
+          const html = String(paragraph)
+            .replaceAll('/*', '<span class="bold">')
+            .replaceAll('/!', '<span class="highlight">')
+            .replaceAll('/#', '<span class="link">')
+            .replaceAll('/:', '<span class="code">')
+            .replaceAll('/&', '</span>');
+
+          el.innerHTML = html;
+
+          subsectionElement.appendChild(el);
+        }
+
+        sectionElement.appendChild(subsectionElement);
+      }
+
+      guide.appendChild(sectionElement);
     }
   } catch (error) {
     logger.log(`Ошибка загрузки руководства: ${error}`, 'error');
   }
 }
 
+/** Функция обновления и сохранения состояния плагина (включен / выключен). */
 export function updatePluginState(name: string, state: boolean) {
   if (process === 'sleep') {
     plugins[name].enable = state;
@@ -162,6 +158,7 @@ export function updatePluginState(name: string, state: boolean) {
   }
 }
 
+/** Функция инициализации карточек плагинов. */
 function initPlugins(): void {
   try {
     for (const name in plugins) {
@@ -228,76 +225,73 @@ function initPlugins(): void {
 
     document.querySelectorAll('[plugin-open-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
-      if (path) {
-        const container = document.getElementById(path) as HTMLElement;
-        container.style.display = 'flex';
-      }
+      if (!path) return;
+      (document.getElementById(path) as HTMLElement).style.display = 'flex';
     })); 
 
     document.querySelectorAll('[plugin-close-description="true"]').forEach(e => e.addEventListener('click', () => {
       const path = e.getAttribute('path');
-      if (path) {
-        const container = document.getElementById(path) as HTMLElement;
-        container.style.display = 'none';
-      }
+      if (!path) return;
+      (document.getElementById(path) as HTMLElement).style.display = 'none';
     })); 
   } catch (error) {
     logger.log(`Ошибка инициализации плагинов: ${error}`, 'error');
   }
 }
 
+/** Функция инициализации описаний плагинов. */
 async function initPluginDescriptions(): Promise<void> {
   try {
     const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
     
-    if (content) {
-      for (const plugin of content['list']) {
-        const name = plugin['name'];
-        const description = plugin['description'];
-        const latestUpdate = plugin['latest-update'];
+    if (!content) return;
 
-        if (plugins[name]?.date) {
-          if (latestUpdate != plugins[name].date) {
-            document.getElementById(`${name}-plugin`)?.classList.add('deprecated');
-            
-            const tag = document.createElement('span');
-            tag.className = 'tag';
-            tag.innerText = 'Устарел';
+    for (const plugin of content['list']) {
+      const name = plugin['name'];
+      const description = plugin['description'];
+      const latestUpdate = plugin['latest-update'];
 
-            document.getElementById(`${name}-header`)?.appendChild(tag);
-          }
+      if (plugins[name]?.date) {
+        if (latestUpdate != plugins[name].date) {
+          document.getElementById(`${name}-plugin`)?.classList.add('deprecated');
+          
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.innerText = 'Устарел';
 
-          const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
-          const pluginLatestUpdateContainer = document.getElementById(`${name}-latest-update`) as HTMLElement;
-
-          for (const p of description) {
-            const el = document.createElement('p');
-            el.innerText = p;
-
-            pluginDescriptionContainer.appendChild(el);
-          }
-
-          pluginLatestUpdateContainer.innerText = latestUpdate;
-        } else {
-          const pluginCard = document.createElement('div');
-          pluginCard.className = 'plugin-card';
-          pluginCard.classList.add('unavailable');
-
-          pluginCard.innerHTML = `
-            <div class="head">
-              <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
-              </svg>
-
-              <div class="text">
-                <div class="header">${plugin['header']} <span class="tag">Недоступен</span></div>
-                <div class="meta">Статус: <span class="status">Недоступен</span></div>
-              </div>
-            </div>
-          `;
-
-          document.getElementById('plugin-list')?.appendChild(pluginCard);
+          document.getElementById(`${name}-header`)?.appendChild(tag);
         }
+
+        const pluginDescriptionContainer = document.getElementById(`${name}-description`) as HTMLElement;
+        const pluginLatestUpdateContainer = document.getElementById(`${name}-latest-update`) as HTMLElement;
+
+        for (const p of description) {
+          const el = document.createElement('p');
+          el.innerText = p;
+
+          pluginDescriptionContainer.appendChild(el);
+        }
+
+        pluginLatestUpdateContainer.innerText = latestUpdate;
+      } else {
+        const pluginCard = document.createElement('div');
+        pluginCard.className = 'plugin-card';
+        pluginCard.classList.add('unavailable');
+
+        pluginCard.innerHTML = `
+          <div class="head">
+            <svg class="image" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 2.898 5.673c-.167-.121-.216-.406-.002-.62l1.8-1.8a3.5 3.5 0 0 0 4.572-.328l1.414-1.415a.5.5 0 0 0 0-.707l-.707-.707 1.559-1.563a.5.5 0 1 0-.708-.706l-1.559 1.562-1.414-1.414 1.56-1.562a.5.5 0 1 0-.707-.706l-1.56 1.56-.707-.706a.5.5 0 0 0-.707 0L5.318 5.975a3.5 3.5 0 0 0-.328 4.571l-1.8 1.8c-.58.58-.62 1.6.121 2.137A8 8 0 1 0 0 8a.5.5 0 0 0 1 0"/>
+            </svg>
+
+            <div class="text">
+              <div class="header">${plugin['header']} <span class="tag">Недоступен</span></div>
+              <div class="meta">Статус: <span class="status">Недоступен</span></div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('plugin-list')?.appendChild(pluginCard);
       }
     }
   } catch (error) {
@@ -305,29 +299,22 @@ async function initPluginDescriptions(): Promise<void> {
   }
 }
 
+/** Функция получения количества скачиваний программы. */
 async function initDownloadCount(): Promise<void> {
   try {
     const content = await download('https://api.github.com/repos/nullclyze/SalarixiOnion/releases');
+    if (!content) return;
+
+    let globalDownloadCount = 0;
+    for (const release of content) for (const build of release['assets']) globalDownloadCount += build['download_count'] ? build['download_count'] as number : 0;
     
-    if (content) {
-      let globalDownloadCount = 0;
-
-      for (const release of content) {
-        const assets = release['assets']
-        
-        for (const build of assets) {
-          const downloadCount = build['download_count'] ? build['download_count'] as number : 0;
-          globalDownloadCount += downloadCount;
-        }
-      }
-
-      (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCount.toString();
-    }
+    (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCount.toString();
   } catch (error) {
     logger.log(`Ошибка загрузки количества скачиваний: ${error}`, 'error');
   }
 }
 
+/** Функция запуска ботов (передача информации в поток Rust). */
 async function startBots(): Promise<void> {
   try {
     const options: {
@@ -375,9 +362,7 @@ async function startBots(): Promise<void> {
 
     options.accounts = accountManager.getAccounts();
 
-    for (const name in plugins) {
-      options.plugins[name.replaceAll('-', '_')] = plugins[name].enable;
-    }
+    for (const name in plugins) options.plugins[name.replaceAll('-', '_')] = plugins[name].enable;
 
     const text = `Запуск ботов на сервер ${options.basic.address}...`;
 
@@ -386,67 +371,57 @@ async function startBots(): Promise<void> {
 
     const success = await invoke('launch_bots', { options: options }) as boolean;
 
-    if (success) {
-      process = 'active';
+    if (!success) return;
 
-      chartManager.enable();
+    process = 'active';
 
-      monitoringManager.maxChatHistoryLength = parseInt((document.getElementById('monitoring_option_chat-history-length') as HTMLInputElement).value || '50');
+    graphic.enable();
 
-      monitoringManager.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
-      monitoringManager.wait();
+    monitoring.maxChatHistoryLength = parseInt((document.getElementById('monitoring_option_chat-history-length') as HTMLInputElement).value || '50');
 
-      if (options.basic.use_anti_captcha) {
-        captchaBypassManager.enable(options.captcha_bypass.captcha_type, options.captcha_bypass.solve_mode);
-      }
+    monitoring.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
+    monitoring.wait();
 
-      radarManager.enable();
-    }
+    if (options.basic.use_anti_captcha) captchaBypass.enable(options.captcha_bypass.captcha_type, options.captcha_bypass.solve_mode);
+
+    radar.enable();
   } catch (error) {
     logger.log(`Ошибка (start-bots-process): ${error}`, 'error');
   }
 }
 
+/** Функция остановки ботов (передача информации в поток Rust). */
 async function stopBots(): Promise<void> {
   logger.log('Остановка ботов...', 'info');
 
   try {
     const success = await invoke('stop_bots') as boolean;
 
-    if (success) {
-      process = 'sleep';
+    if (!success) return;
 
-      logger.log('Выключение мониторинга...', 'system');
+    process = 'sleep';
 
-      chartManager.disable();
-      monitoringManager.disable();
-      captchaBypassManager.disable();
-      radarManager.disable();
+    logger.log('Выключение мониторинга...', 'system');
 
-      logger.log('Мониторинг выключен', 'system');
-    }
+    graphic.disable();
+    monitoring.disable();
+    captchaBypass.disable();
+    radar.disable();
+
+    logger.log('Мониторинг выключен', 'system');
   } catch (error) {
     logger.log(`Ошибка (stop-bots-process): ${error}`, 'error');
   }
 }
 
+/** Функция отправки данных в поток Rust для модулей управления. */
 async function controlBots(name: string, state: boolean | string): Promise<void> {
   try {
     const elements = document.querySelectorAll(`[control="${name}"]`);
 
     let options: Record<string, any> = {};
 
-    elements.forEach(e => {
-      if (e.tagName.toLowerCase() === 'select') {
-        options[(e as HTMLSelectElement).name] = (e as HTMLSelectElement).value;
-      } else if (e.tagName.toLowerCase() === 'input') {
-        if ((e as HTMLInputElement).type === 'checkbox') {
-          options[(e as HTMLInputElement).name] = (e as HTMLInputElement).checked;
-        } else {
-          options[(e as HTMLInputElement).name] = (e as HTMLInputElement).type === 'number' ? Number((e as HTMLInputElement).value) : (e as HTMLInputElement).value;
-        }
-      }
-    });
+    elements.forEach(e => e.tagName.toLowerCase() === 'select' ? options[(e as HTMLSelectElement).name] = (e as HTMLSelectElement).value : (e as HTMLInputElement).type === 'checkbox' ? options[(e as HTMLInputElement).name] = (e as HTMLInputElement).checked : options[(e as HTMLInputElement).name] = (e as HTMLInputElement).type === 'number' ? Number((e as HTMLInputElement).value) : (e as HTMLInputElement).value);
 
     const group = (document.getElementById('control-group') as HTMLInputElement).value.replace(' ', '');
 
@@ -463,6 +438,7 @@ async function controlBots(name: string, state: boolean | string): Promise<void>
   }
 }
 
+/** Функция инициализации различных функций. */
 async function initFunctions(): Promise<void> {
   const startBotsProcessBtn = document.getElementById('start') as HTMLButtonElement;
   const stopBotsProcessBtn = document.getElementById('stop') as HTMLButtonElement;
@@ -1138,6 +1114,7 @@ export function replenishTriggerRegistry(): void {
   });
 }
 
+/** Функция добавления открывающейся ссылки для определённого события элемента. */
 function addOpeningUrlTo(id: string, event: string, url: string): void {
   const el = document.getElementById(id);
   if (!el) return;
@@ -1150,6 +1127,7 @@ function addOpeningUrlTo(id: string, event: string, url: string): void {
   });
 }
 
+/** Функция проверки наличия обновлений программы. */
 async function checkUpdate(): Promise<void> {
   try {
     const notice = document.getElementById('notice') as HTMLElement;
@@ -1181,12 +1159,14 @@ async function checkUpdate(): Promise<void> {
   }
 }
 
+/** Вспомогательная функция инициализации титул бара. */
 function initTitleBar(): void {
   (document.getElementById('title-version') as HTMLElement).innerText = `v${client.version}`;
   (document.getElementById('window-minimize') as HTMLButtonElement).addEventListener('click', async () => await getCurrentWindow().minimize());
   (document.getElementById('window-close') as HTMLButtonElement).addEventListener('click', async () => await invoke('exit'));
 }
 
+/** Функция инициализации слушателей основных событий. */
 async function listenEvents(): Promise<void> {
   await listen('log', (event) => {
     try {
@@ -1207,6 +1187,7 @@ async function listenEvents(): Promise<void> {
   });
 }
 
+// Вызывающийся слушатель при загрузке DOMContent.
 document.addEventListener('DOMContentLoaded', async () => {
   logger.init();
   logger.log('Клиент запущен', 'info');
@@ -1226,25 +1207,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     enableParticles();
 
     initPlugins();
-    
-    configurator.init();
 
     addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
     addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
     addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/SalarixiOnion'); 
     addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixionion'); 
 
+    configurator.init();
+
     accountManager.init();
-    proxyCollectorManager.init();
-    chartManager.init();
-    radarManager.init();
-    scriptManager.init();
+    proxyCollector.init();
+    graphic.init();
+    radar.init();
+    scriptExecutor.init();
     pinger.init();
 
     await listenEvents();
 
-    await monitoringManager.init();
-    await captchaBypassManager.init();
+    await monitoring.init();
+    await captchaBypass.init();
     
     await initFunctions();
     await translator.init();
