@@ -10,7 +10,8 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::{common::convert_hotbar_slot_to_inventory_slot, extensions::ClickMode};
+use crate::common::convert_hotbar_slot_to_inventory_slot; 
+use crate::extensions::InvClick;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
 use crate::extensions::{
@@ -319,13 +320,13 @@ impl ScriptExecutor {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
           let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
-          bot.inventory_click(selected_slot, ClickMode::DropAll, lock);
+          bot.inventory_click(selected_slot, InvClick::from(4), lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
         let selected_slot = convert_hotbar_slot_to_inventory_slot(bot.get_selected_slot());
-        bot.inventory_click(selected_slot, ClickMode::DropAll, lock);
+        bot.inventory_click(selected_slot, InvClick::from(4), lock);
       }
     }
   }
@@ -336,7 +337,7 @@ impl ScriptExecutor {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
           if let Some(menu) = bot.get_inventory_menu() {
             for (slot, _) in menu.slots().iter().enumerate() {
-              bot.inventory_click(slot, ClickMode::DropAll, lock);
+              bot.inventory_click(slot, InvClick::from(4), lock);
             }
           }
         }
@@ -345,55 +346,37 @@ impl ScriptExecutor {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
         if let Some(menu) = bot.get_inventory_menu() {
           for (slot, _) in menu.slots().iter().enumerate() {
-            bot.inventory_click(slot, ClickMode::DropAll, lock);
+            bot.inventory_click(slot, InvClick::from(4), lock);
           }
         }
       }
     }
   }
 
-  fn inv_click(username: &str, slot: usize, mode: u8, lock: bool) {
-    let click_mode = match mode {
-      0 => ClickMode::Left,
-      1 => ClickMode::Right,
-      2 => ClickMode::Shift,
-      3 => ClickMode::Drop,
-      4 => ClickMode::DropAll,
-      _ => return
-    };
-
+  fn inv_click(username: &str, slot: usize, click_mode: u8, lock: bool) {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_click(slot, click_mode.clone(), lock);
+          bot.inventory_click(slot, InvClick::from(click_mode), lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_click(slot, click_mode, lock);
+        bot.inventory_click(slot, InvClick::from(click_mode), lock);
       }
     }
   }
 
-  fn inv_click_on(username: &str, name: &str, mode: u8, lock: bool) {
-    let click_mode = match mode {
-      0 => ClickMode::Left,
-      1 => ClickMode::Right,
-      2 => ClickMode::Shift,
-      3 => ClickMode::Drop,
-      4 => ClickMode::DropAll,
-      _ => return
-    };
-
+  fn inv_click_on(username: &str, name: &str, click_mode: u8, lock: bool) {
     if username == "*" {
       PROFILES.get_all().keys().for_each(|name| {
         if let Some(bot) = BOT_REGISTRY.get_bot(name) {
-          bot.inventory_click_on(name, click_mode.clone(), lock);
+          bot.inventory_click_on(name, InvClick::from(click_mode), lock);
         }
       });
     } else {
       if let Some(bot) = BOT_REGISTRY.get_bot(username) {
-        bot.inventory_click_on(name, click_mode, lock);
+        bot.inventory_click_on(name, InvClick::from(click_mode), lock);
       }
     }
   }
