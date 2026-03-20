@@ -45,7 +45,7 @@ class Pinger {
         <div class="panel">
           <div class="address">${address}</div>
 
-          <button class="btn min pretty" id="${removeBtnId}">
+          <button class="btn min" id="${removeBtnId}">
             ⨉
           </button>
         </div>

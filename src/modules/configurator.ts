@@ -1,9 +1,7 @@
 import { readFile, writeFile } from '@tauri-apps/plugin-fs';
 import { path } from '@tauri-apps/api';
 
-import { plugins } from '../common/structs';
 import { logger } from '../utils/logger';
-import { updatePluginState } from '../main';
 import { messages } from '../utils/message';
 import { open } from '@tauri-apps/plugin-dialog';
 import { triggerRegistry } from './trigger_registry';
@@ -19,7 +17,6 @@ class Configurator {
       logger.log('Загрузка конфига...', 'system');
 
       for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(current_config))) this.setValue(id, value);
-      for (const name in plugins) updatePluginState(name, localStorage.getItem(`plugin-state:${name}`) === 'true');
 
       triggerRegistry.triggerAll();
 
