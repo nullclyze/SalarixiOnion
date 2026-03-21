@@ -842,7 +842,7 @@ p {
 .button-card .button-list .sep {
   width: 90%;
   border-bottom: 1px solid var(--global-border);
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .button-card::-webkit-scrollbar {
@@ -915,6 +915,7 @@ p {
 
 .control-btn .text {
   font-size: 15px;
+  font-weight: normal;
   font-family: var(--global-font-family);
 }
 
@@ -1490,7 +1491,7 @@ p {
   border: 1px solid var(--secondary-border);
   border-radius: 12px;
   color: var(--text-secondary);
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .feature-card svg {
@@ -1507,6 +1508,7 @@ p {
 
 .feature-card:hover {
   color: var(--spec-color);
+  border-color: rgb(51, 51, 51)
 }
 
 .highlight {
