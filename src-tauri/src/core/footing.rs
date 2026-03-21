@@ -262,11 +262,11 @@ struct CustomAccount {
   options: Option<AccountOptions>,
 }
 
-/// Функция генерации никнейма или пароля
-pub fn generate_username_or_password(item: &str, t: String, template: String) -> String {
-  match t.as_str() {
+/// Функция генерации юзернейма или пароля
+fn generate_username_or_password(item: &str, class: &str, template: &str) -> String {
+  match class {
     "legit" => {
-      let mut value = randelem(if item == "nickname" {
+      let mut value = randelem(if item == "username" {
         LEGIT_NICKNAMES
       } else {
         LEGIT_PASSWORDS
@@ -330,9 +330,30 @@ pub fn generate_username_or_password(item: &str, t: String, template: String) ->
 
       mutate_text(chosen_template.to_string())
     }
-    "custom" => mutate_text(template),
+    "custom" => mutate_text(template.to_string()),
     _ => String::new(),
   }
+}
+
+/// Функция генерации уникального юзернейма
+fn generate_unique_username(class: &str, template: &str) -> Option<String> {
+  for _ in 0..5 {
+    let username = generate_username_or_password("username", class, template);
+    let mut is_unique = true;
+
+    for name in PROFILES.get_all().keys() {
+      if username == *name {
+        is_unique = false;
+        break;
+      }
+    }
+
+    if is_unique {
+      return Some(username);
+    }
+  }
+
+  None
 }
 
 /// Функция получения количества активных ботов
@@ -362,6 +383,15 @@ pub fn current_options() -> Option<LaunchOptions> {
 /// Функция проверки активности основного процесса
 pub fn process_is_active() -> bool {
   ACTIVE.load(Ordering::Relaxed)
+}
+
+fn clear_proxy(proxy: &str) -> String {
+  proxy
+    .trim_start_matches("socks5://")
+    .trim_start_matches("socks4://")
+    .trim_start_matches("https://")
+    .trim_start_matches("http://")
+    .to_string()
 }
 
 /// Функция запуска ботов на сервер
@@ -452,11 +482,12 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
           }
         } else {
           for _ in 0..options.basic.bots_count {
-            let username = generate_username_or_password(
-              "nickname",
-              options.basic.nickname_type.clone(),
-              options.basic.nickname_template.clone(),
-            );
+            let Some(username) = generate_unique_username(
+              &options.basic.nickname_type,
+              &options.basic.nickname_template,
+            ) else {
+              continue;
+            };
 
             let password;
 
@@ -467,8 +498,8 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
             } else {
               password = Some(generate_username_or_password(
                 "password",
-                options.basic.password_type.clone(),
-                options.basic.password_template.clone(),
+                &options.basic.password_type,
+                &options.basic.password_template,
               ));
             }
 
@@ -497,15 +528,11 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
                     password: None,
                   };
 
-                  let clean_proxy_str = proxy
-                    .trim_start_matches("socks5://")
-                    .trim_start_matches("socks4://")
-                    .trim_start_matches("https://")
-                    .trim_start_matches("http://");
+                  let clean_proxy = clear_proxy(&proxy);
 
-                  profile_proxy.proxy = Some(clean_proxy_str.to_string());
+                  profile_proxy.proxy = Some(clean_proxy.to_string());
 
-                  if let Ok(addr) = clean_proxy_str.parse::<SocketAddr>() {
+                  if let Ok(addr) = clean_proxy.parse::<SocketAddr>() {
                     let mut proxy = Proxy::new(addr, None);
 
                     if let Some(username) = account_opts.proxy_username {
@@ -522,7 +549,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
                     join_opts = join_opts.proxy(proxy);
 
-                    let split_address: Vec<&str> = clean_proxy_str.split(":").collect();
+                    let split_address: Vec<&str> = clean_proxy.split(":").collect();
 
                     let Some(ip_address) = split_address.get(0) else {
                       continue;
@@ -552,15 +579,10 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
                     password: None,
                   };
 
-                  let proxy_str = list[i % list.len()];
+                  let proxy = list[i % list.len()];
+                  let clean_proxy = clear_proxy(&proxy);
 
-                  let clean_proxy_str = proxy_str
-                    .trim_start_matches("socks5://")
-                    .trim_start_matches("socks4://")
-                    .trim_start_matches("https://")
-                    .trim_start_matches("http://");
-
-                  let proxy_address: Vec<&str> = clean_proxy_str.split("@").collect();
+                  let proxy_address: Vec<&str> = clean_proxy.split("@").collect();
 
                   let Some(address) = proxy_address.get(0) else {
                     continue;
