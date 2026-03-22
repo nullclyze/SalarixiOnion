@@ -183,13 +183,13 @@ async fn quick_task(name: String) {
 /// Функция выполнения пользовательского скрипта
 #[tauri::command]
 async fn execute_script(script: String) {
-  SCRIPT_EXECUTOR.write().unwrap().execute(script);
+  SCRIPT_EXECUTOR.execute("#".to_string(), script);
 }
 
 /// Функция остановки пользовательского скрипта
 #[tauri::command]
 async fn stop_script() {
-  SCRIPT_EXECUTOR.write().unwrap().stop();
+  SCRIPT_EXECUTOR.stop();
 }
 
 /// Функция пингования сервера
