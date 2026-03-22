@@ -212,10 +212,10 @@ fn exit() {
 
 /// Функция задания статуса Discord RPC
 #[tauri::command]
-async fn set_discord_rpc(state: bool) {
+async fn set_discord_rpc(version: String, state: bool) {
   tokio::spawn(async move {
     if state {
-      DISCORD_RPC_MANAGER.write().unwrap().enable();
+      DISCORD_RPC_MANAGER.write().unwrap().enable(version);
     } else {
       DISCORD_RPC_MANAGER.write().unwrap().disable();
     }

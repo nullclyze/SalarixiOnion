@@ -16,14 +16,18 @@ impl DiscordRpcManager {
     Self { client: None }
   }
 
-  pub fn enable(&mut self) {
+  pub fn enable(&mut self, version: String) {
     self.client = Some(Client::new(1477312950271213729));
 
     if let Some(client) = self.client.as_mut() {
       client.start();
       let _ = client.block_until_event(discord_presence::Event::Ready);
 
-      match client.set_activity(|act| act.state("Best client for Minecraft botting")) {
+      match client.set_activity(|act| {
+        act
+          .details(format!("Версия: {}", version))
+          .state("Сайт: https://salarixi.wuaze.com/")
+      }) {
         Ok(_) => {}
         Err(err) => {
           send_log(format!("Ошибка включения Discord RPC: {}", err), "error");

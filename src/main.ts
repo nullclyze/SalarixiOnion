@@ -1067,8 +1067,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await monitoring.init();
     await captchaBypass.init();
 
-    document.getElementById('interface_select_discord-rpc')?.addEventListener('change', async () => await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' }));
-    await invoke('set_discord_rpc', { state: (document.getElementById('interface_select_discord-rpc') as HTMLSelectElement).value === 'enable' });
+    // Инициализация Discord RPC
+    const selectDiscordRpcMode = document.getElementById('interface_select_discord-rpc') as HTMLSelectElement;
+
+    selectDiscordRpcMode.addEventListener('change', async () => await invoke('set_discord_rpc', { version: client.version, state: selectDiscordRpcMode.value === 'enable' }));
+    await invoke('set_discord_rpc', { version: client.version, state: selectDiscordRpcMode.value === 'enable' });
 
     // Контент с web-ресурсов загружаем после основной инициализации, чтобы в случае долгой загрузки не блокировать важные функции.
     await initUserGuide();
