@@ -4,7 +4,7 @@ use azalea::{
   WalkDirection,
 };
 use once_cell::sync::Lazy;
-use rhai::Engine;
+use rhai::{Dynamic, Engine, EvalAltResult};
 use std::sync::{
   atomic::{AtomicBool, Ordering},
   Arc, RwLock,
@@ -20,18 +20,15 @@ use crate::extensions::{
 };
 use crate::webhook::*;
 
-pub static SCRIPT_EXECUTOR: Lazy<Arc<RwLock<ScriptExecutor>>> =
-  Lazy::new(|| Arc::new(RwLock::new(ScriptExecutor::new())));
+pub static SCRIPT_EXECUTOR: Lazy<ScriptExecutor> = Lazy::new(|| ScriptExecutor::new());
 
-pub struct ScriptExecutor {
-  pub active: Arc<AtomicBool>,
-}
+static EXECUTOR_STATE: Lazy<Arc<RwLock<AtomicBool>>> = Lazy::new(|| Arc::new(RwLock::new(AtomicBool::new(false))));
+
+pub struct ScriptExecutor;
 
 impl ScriptExecutor {
   pub fn new() -> Self {
-    Self {
-      active: Arc::new(AtomicBool::new(false)),
-    }
+    Self
   }
 
   fn chat(username: &str, message: String) {
@@ -456,16 +453,22 @@ impl ScriptExecutor {
     }
   }
 
-  pub fn execute(&mut self, script: String) {
-    self.active.store(true, Ordering::Relaxed);
+  fn parse_username(su: &str, mu: &str) -> String {
+    if su == "#" {
+      mu.to_string()
+    } else {
+      su.to_string()
+    }
+  }
+
+  pub fn execute(&self, su: String, script: String) {
+    EXECUTOR_STATE.read().unwrap().store(true, Ordering::Relaxed);
 
     let mut engine = Engine::new();
-
-    let active_clone = self.active.clone();
-
+    
     engine.on_progress(move |_| {
-      if !active_clone.load(Ordering::Relaxed) {
-        Some(rhai::Dynamic::UNIT)
+      if !EXECUTOR_STATE.read().unwrap().load(Ordering::Relaxed) {
+        Some(Dynamic::UNIT)
       } else {
         None
       }
@@ -490,123 +493,217 @@ impl ScriptExecutor {
     engine.register_fn("active_bots_count", || active_bots_count());
 
     engine
-      .register_fn("get_bot_id", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| b.id().0 as i64)
+      .register_fn("get_bot_id", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.id().0 as i64)
+        }
       })
-      .register_fn("get_bot_ping", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| b.ping())
+      .register_fn("get_bot_ping", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.ping())
+        }
       })
-      .register_fn("get_bot_feet_pos", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| {
-          let pos = b.feet_pos();
-          (pos.x, pos.y, pos.z)
-        })
+      .register_fn("get_bot_feet_pos", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| {
+            let pos = b.feet_pos();
+            (pos.x, pos.y, pos.z)
+          })
+        }
       })
-      .register_fn("get_bot_eye_pos", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| {
-          let pos = b.eye_pos();
-          (pos.x, pos.y, pos.z)
-        })
+      .register_fn("get_bot_eye_pos", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| {
+            let pos = b.eye_pos();
+            (pos.x, pos.y, pos.z)
+          })
+        }
       })
-      .register_fn("get_bot_health", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| b.get_health())
+      .register_fn("get_bot_health", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.get_health())
+        }
       })
-      .register_fn("get_bot_satiety", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| b.get_satiety())
+      .register_fn("get_bot_satiety", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.get_satiety())
+        }
       })
-      .register_fn("bot_is_workable", |username: &str| {
-        BOT_REGISTRY.get_bot(username).map(|b| b.workable())
+      .register_fn("bot_is_workable", {
+        let su = su.clone();
+        move |mu: &str| {
+          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.workable())
+        }
       });
 
     engine
-      .register_fn("chat", |username: &str, message: &str| {
-        Self::chat(username, message.to_string())
+      .register_fn("chat", {
+        let su = su.clone();
+        move |mu: &str, message: &str| {
+          Self::chat(Self::parse_username(&su, mu).as_str(), message.to_string())
+        }
       })
-      .register_fn("jump", |username: &str| Self::jump(username))
-      .register_fn("swing_arm", |username: &str| Self::swing_arm(username))
-      .register_fn("set_jumping", |username: &str, state: bool| {
-        Self::set_jumping(username, state)
+      .register_fn("jump", {
+        let su = su.clone();
+        move |mu: &str| Self::jump(Self::parse_username(&su, mu).as_str())
       })
-      .register_fn("set_crouching", |username: &str, state: bool| {
-        Self::set_crouching(username, state)
+      .register_fn("swing_arm", {
+        let su = su.clone();
+        move |mu: &str| Self::swing_arm(Self::parse_username(&su, mu).as_str())
       })
-      .register_fn(
-        "set_velocity",
-        |username: &str, axis: &str, velocity: f64| Self::set_velocity(username, axis, velocity),
-      )
-      .register_fn("set_on_ground", |username: &str, on_ground: bool| {
-        Self::set_on_ground(username, on_ground)
+      .register_fn("set_jumping", {
+        let su = su.clone();
+        move |mu: &str, state: bool| {
+          Self::set_jumping(Self::parse_username(&su, mu).as_str(), state)
+        }
       })
-      .register_fn(
-        "set_old_position",
-        |username: &str, x: f64, y: f64, z: f64| Self::set_old_position(username, x, y, z),
-      )
-      .register_fn("set_no_jump_delay", |username: &str, delay: i64| {
-        Self::set_no_jump_delay(username, delay as u32)
+      .register_fn("set_crouching", {
+        let su = su.clone();
+        move |mu: &str, state: bool| {
+          Self::set_crouching(Self::parse_username(&su, mu).as_str(), state)
+        }
       })
-      .register_fn("set_was_touching_water", |username: &str, state: bool| {
-        Self::set_was_touching_water(username, state)
+      .register_fn("set_velocity", {
+        let su = su.clone();
+        move |mu: &str, axis: &str, velocity: f64| {
+          Self::set_velocity(Self::parse_username(&su, mu).as_str(), axis, velocity)
+        }
       })
-      .register_fn("set_has_impulse", |username: &str, state: bool| {
-        Self::set_has_impulse(username, state)
+      .register_fn("set_on_ground", {
+        let su = su.clone();
+        move |mu: &str, on_ground: bool| {
+          Self::set_on_ground(Self::parse_username(&su, mu).as_str(), on_ground)
+        }
       })
-      .register_fn("start_walking", |username: &str, direction: &str| {
-        Self::start_walking(username, direction.to_string())
+      .register_fn("set_old_position", {
+        let su = su.clone();
+        move |mu: &str, x: f64, y: f64, z: f64| {
+          Self::set_old_position(Self::parse_username(&su, mu).as_str(), x, y, z)
+        }
       })
-      .register_fn("start_sprinting", |username: &str, direction: &str| {
-        Self::start_sprinting(username, direction)
+      .register_fn("set_no_jump_delay", {
+        let su = su.clone();
+        move |mu: &str, delay: i64| {
+          Self::set_no_jump_delay(Self::parse_username(&su, mu).as_str(), delay as u32)
+        }
       })
-      .register_fn("start_pathfinder", |username: &str, x: i64, z: i64| {
-        Self::start_pathfinder(username, x as i32, z as i32)
+      .register_fn("set_was_touching_water", {
+        let su = su.clone();
+        move |mu: &str, state: bool| {
+          Self::set_was_touching_water(Self::parse_username(&su, mu).as_str(), state)
+        }
       })
-      .register_fn("stop_move", |username: &str| Self::stop_move(username))
-      .register_fn("stop_pathfinder", |username: &str| {
-        Self::stop_pathfinder(username)
+      .register_fn("set_has_impulse", {
+        let su = su.clone();
+        move |mu: &str, state: bool| {
+          Self::set_has_impulse(Self::parse_username(&su, mu).as_str(), state)
+        }
+      })
+      .register_fn("start_walking", {
+        let su = su.clone();
+        move |mu: &str, direction: &str| {
+          Self::start_walking(Self::parse_username(&su, mu).as_str(), direction.to_string())
+        }
+      })
+      .register_fn("start_sprinting", {
+        let su = su.clone();
+        move |mu: &str, direction: &str| {
+          Self::start_sprinting(Self::parse_username(&su, mu).as_str(), direction)
+        }
+      })
+      .register_fn("start_pathfinder", {
+        let su = su.clone();
+        move |mu: &str, x: i64, z: i64| {
+          Self::start_pathfinder(Self::parse_username(&su, mu).as_str(), x as i32, z as i32)
+        }
+      })
+      .register_fn("stop_move", {
+        let su = su.clone();
+        move |mu: &str| Self::stop_move(Self::parse_username(&su, mu).as_str())
+      })
+      .register_fn("stop_pathfinder", {
+        let su = su.clone();
+        move |mu: &str| {
+          Self::stop_pathfinder(Self::parse_username(&su, mu).as_str())
+        }
       });
 
     engine
-      .register_fn("place_block", |username: &str, x: i64, y: i64, z: i64| {
-        Self::place_block(username, x as i32, y as i32, z as i32)
+      .register_fn("place_block", {
+        let su = su.clone();
+        move |mu: &str, x: i64, y: i64, z: i64| {
+          Self::place_block(Self::parse_username(&su, mu).as_str(), x as i32, y as i32, z as i32)
+        }
       })
-      .register_fn("look_at", |username: &str, x: f64, y: f64, z: f64| {
-        Self::look_at(username, x, y, z)
+      .register_fn("look_at", {
+        let su = su.clone();
+        move |mu: &str, x: f64, y: f64, z: f64| {
+          Self::look_at(Self::parse_username(&su, mu).as_str(), x, y, z)
+        }
       })
-      .register_fn("look_at_block", |username: &str, x: i64, y: i64, z: i64| {
-        Self::look_at_block(username, x as i32, y as i32, z as i32)
+      .register_fn("look_at_block", {
+        let su = su.clone();
+        move |mu: &str, x: i64, y: i64, z: i64| {
+          Self::look_at_block(Self::parse_username(&su, mu).as_str(), x as i32, y as i32, z as i32)
+        }
       });
 
     engine
-      .register_fn("drop_selected_item", |username: &str, lock: bool| {
-        Self::drop_selected_item(username, lock)
+      .register_fn("drop_selected_item", {
+        let su = su.clone();
+        move |mu: &str, lock: bool| {
+          Self::drop_selected_item(Self::parse_username(&su, mu).as_str(), lock)
+        }
       })
-      .register_fn("drop_all_items", |username: &str, lock: bool| {
-        Self::drop_all_items(username, lock)
+      .register_fn("drop_all_items", {
+        let su = su.clone();
+        move |mu: &str, lock: bool| {
+          Self::drop_all_items(Self::parse_username(&su, mu).as_str(), lock)
+        }
       })
-      .register_fn("inv_click", |username: &str, slot: i64, mode: i64, lock: bool| {
-        Self::inv_click(username, slot as usize, mode as u8, lock)
+      .register_fn("inv_click", {
+        let su = su.clone();
+        move |mu: &str, slot: i64, mode: i64, lock: bool| {
+          Self::inv_click(Self::parse_username(&su, mu).as_str(), slot as usize, mode as u8, lock)
+        }
       })
-      .register_fn("inv_click_on", |username: &str, name: &str, mode: i64, lock: bool| {
-        Self::inv_click_on(username, name, mode as u8, lock)
+      .register_fn("inv_click_on", {
+        let su = su.clone();
+        move |mu: &str, name: &str, mode: i64, lock: bool| {
+          Self::inv_click_on(Self::parse_username(&su, mu).as_str(), name, mode as u8, lock)
+        }
       })
-      .register_fn(
-        "set_selected_slot",
-        |username: &str, slot: i64| {
-          Self::set_selected_slot(username, slot as u8)
-        },
-      );
+      .register_fn("set_selected_slot", {
+        let su = su.clone();
+        move |mu: &str, slot: i64| {
+          Self::set_selected_slot(Self::parse_username(&su, mu).as_str(), slot as u8)
+        }
+      });
 
     engine
-      .register_fn(
-        "attack",
-        |username: &str, target: &str, distance: f64, look_at_target: bool| {
-          Self::attack(username, target.to_string(), distance, look_at_target);
-        },
-      )
-      .register_fn("start_use_item", |username: &str, hand: &str| {
-        Self::start_use_item(username, hand)
+      .register_fn("attack", {
+        let su = su.clone();
+        move |mu: &str, target: &str, distance: f64, look_at_target: bool| {
+          Self::attack(Self::parse_username(&su, mu).as_str(), target.to_string(), distance, look_at_target);
+        }
       })
-      .register_fn("release_use_item", |username: &str| {
-        Self::release_use_item(username)
+      .register_fn("start_use_item", {
+        let su = su.clone();
+        move |mu: &str, hand: &str| {
+          Self::start_use_item(Self::parse_username(&su, mu).as_str(), hand)
+        }
+      })
+      .register_fn("release_use_item", {
+        let su = su.clone();
+        move |mu: &str| {
+          Self::release_use_item(Self::parse_username(&su, mu).as_str())
+        }
       });
 
     match engine.eval::<()>(script.as_str()) {
@@ -615,20 +712,25 @@ impl ScriptExecutor {
         send_message("Скриптинг", "Скрипт выполнен".to_string());
       }
       Err(err) => {
-        send_log(format!("Ошибка выполнения скрипта: {}", err), "error");
-        send_message("Скриптинг", "Не удалось выполнить скрипт".to_string());
+        match err.as_ref() {
+          &EvalAltResult::ErrorTerminated(_, _) => {
+            send_log("Скрипт принудительно остановлен".to_string(), "info");
+            send_message("Скриптинг", "Скрипт принудительно остановлен".to_string());
+          }
+          _ => {
+            send_log(format!("Ошибка выполнения скрипта: {}", err), "error");
+            send_message("Скриптинг", "Не удалось выполнить скрипт".to_string());
+          }
+        }
       }
     }
 
-    self.active.store(false, Ordering::Relaxed);
+    EXECUTOR_STATE.read().unwrap().store(false, Ordering::Relaxed);
   }
 
-  pub fn stop(&mut self) {
-    if self.active.load(Ordering::Relaxed) {
-      self.active.store(false, Ordering::Relaxed);
-
-      send_log("Скрипт принудительно остановлен".to_string(), "info");
-      send_message("Скриптинг", "Скрипт принудительно остановлен".to_string());
+  pub fn stop(&self) {
+    if EXECUTOR_STATE.read().unwrap().load(Ordering::Relaxed) {
+      EXECUTOR_STATE.read().unwrap().store(false, Ordering::Relaxed);
     }
   }
 }
