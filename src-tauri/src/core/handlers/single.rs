@@ -12,6 +12,7 @@ use crate::core::*;
 use crate::emit::*;
 use crate::extensions::BotDefaultExt;
 use crate::generators::*;
+use crate::script::SCRIPT_EXECUTOR;
 use crate::webhook::*;
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -107,6 +108,12 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
             &username, str_pos, health
           ),
         );
+
+        if options.basic.use_auto_script {
+          if let Some(script) = options.basic.script {
+            SCRIPT_EXECUTOR.execute(bot.name(), script);
+          }
+        }
 
         default_authorize(&bot).await;
       }

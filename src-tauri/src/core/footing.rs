@@ -206,6 +206,7 @@ pub struct BasicOptions {
   pub use_auto_rejoin: bool,
   pub use_auto_register: bool,
   pub use_auto_login: bool,
+  pub use_auto_script: bool,
   pub use_proxy: bool,
   pub use_anti_captcha: bool,
   pub use_webhook: bool,
@@ -215,6 +216,7 @@ pub struct BasicOptions {
   pub set_skin_command: Option<String>,
   pub custom_skin_by_nickname: Option<String>,
   pub proxy_list: Option<String>,
+  pub script: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -491,6 +491,13 @@
       }
     },
     { 
+      "tags": ["checkbox:auto-script"], 
+      "lang": {
+        "ru": "Использовать Auto-Script",
+        "en": "Use Auto-Script"
+      }
+    },
+    { 
       "tags": ["checkbox:use-proxy"], 
       "lang": {
         "ru": "Использовать прокси",

@@ -192,6 +192,8 @@ async function startBots(): Promise<void> {
       }
     });
 
+    options.basic['script'] = options.basic.use_auto_script ? (document.getElementById('user-script') as HTMLTextAreaElement).value : null;
+
     options.accounts = accountManager.getAccounts();
 
     for (const name in plugins) options.plugins[name.replaceAll('-', '_')] = plugins[name].enable;
