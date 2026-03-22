@@ -10,7 +10,7 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::common::convert_hotbar_slot_to_inventory_slot; 
+use crate::{common::convert_hotbar_slot_to_inventory_slot, core::{get_state, set_state}}; 
 use crate::extensions::InvClick;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
@@ -496,19 +496,19 @@ impl ScriptExecutor {
       .register_fn("get_bot_id", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.id().0 as i64)
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.id().0 as i64)
         }
       })
       .register_fn("get_bot_ping", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.ping())
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.ping())
         }
       })
       .register_fn("get_bot_feet_pos", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| {
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| {
             let pos = b.feet_pos();
             (pos.x, pos.y, pos.z)
           })
@@ -517,7 +517,7 @@ impl ScriptExecutor {
       .register_fn("get_bot_eye_pos", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| {
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| {
             let pos = b.eye_pos();
             (pos.x, pos.y, pos.z)
           })
@@ -526,19 +526,19 @@ impl ScriptExecutor {
       .register_fn("get_bot_health", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.get_health())
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.get_health() as f64)
         }
       })
       .register_fn("get_bot_satiety", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.get_satiety())
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.get_satiety() as i64)
         }
       })
       .register_fn("bot_is_workable", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(Self::parse_username(&su, mu).as_str()).map(|b| b.workable())
+          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.workable())
         }
       });
 
@@ -546,91 +546,91 @@ impl ScriptExecutor {
       .register_fn("chat", {
         let su = su.clone();
         move |mu: &str, message: &str| {
-          Self::chat(Self::parse_username(&su, mu).as_str(), message.to_string())
+          Self::chat(&Self::parse_username(&su, mu), message.to_string())
         }
       })
       .register_fn("jump", {
         let su = su.clone();
-        move |mu: &str| Self::jump(Self::parse_username(&su, mu).as_str())
+        move |mu: &str| Self::jump(&Self::parse_username(&su, mu))
       })
       .register_fn("swing_arm", {
         let su = su.clone();
-        move |mu: &str| Self::swing_arm(Self::parse_username(&su, mu).as_str())
+        move |mu: &str| Self::swing_arm(&Self::parse_username(&su, mu))
       })
       .register_fn("set_jumping", {
         let su = su.clone();
         move |mu: &str, state: bool| {
-          Self::set_jumping(Self::parse_username(&su, mu).as_str(), state)
+          Self::set_jumping(&Self::parse_username(&su, mu), state)
         }
       })
       .register_fn("set_crouching", {
         let su = su.clone();
         move |mu: &str, state: bool| {
-          Self::set_crouching(Self::parse_username(&su, mu).as_str(), state)
+          Self::set_crouching(&Self::parse_username(&su, mu), state)
         }
       })
       .register_fn("set_velocity", {
         let su = su.clone();
         move |mu: &str, axis: &str, velocity: f64| {
-          Self::set_velocity(Self::parse_username(&su, mu).as_str(), axis, velocity)
+          Self::set_velocity(&Self::parse_username(&su, mu), axis, velocity)
         }
       })
       .register_fn("set_on_ground", {
         let su = su.clone();
         move |mu: &str, on_ground: bool| {
-          Self::set_on_ground(Self::parse_username(&su, mu).as_str(), on_ground)
+          Self::set_on_ground(&Self::parse_username(&su, mu), on_ground)
         }
       })
       .register_fn("set_old_position", {
         let su = su.clone();
         move |mu: &str, x: f64, y: f64, z: f64| {
-          Self::set_old_position(Self::parse_username(&su, mu).as_str(), x, y, z)
+          Self::set_old_position(&Self::parse_username(&su, mu), x, y, z)
         }
       })
       .register_fn("set_no_jump_delay", {
         let su = su.clone();
         move |mu: &str, delay: i64| {
-          Self::set_no_jump_delay(Self::parse_username(&su, mu).as_str(), delay as u32)
+          Self::set_no_jump_delay(&Self::parse_username(&su, mu), delay as u32)
         }
       })
       .register_fn("set_was_touching_water", {
         let su = su.clone();
         move |mu: &str, state: bool| {
-          Self::set_was_touching_water(Self::parse_username(&su, mu).as_str(), state)
+          Self::set_was_touching_water(&Self::parse_username(&su, mu), state)
         }
       })
       .register_fn("set_has_impulse", {
         let su = su.clone();
         move |mu: &str, state: bool| {
-          Self::set_has_impulse(Self::parse_username(&su, mu).as_str(), state)
+          Self::set_has_impulse(&Self::parse_username(&su, mu), state)
         }
       })
       .register_fn("start_walking", {
         let su = su.clone();
         move |mu: &str, direction: &str| {
-          Self::start_walking(Self::parse_username(&su, mu).as_str(), direction.to_string())
+          Self::start_walking(&Self::parse_username(&su, mu), direction.to_string())
         }
       })
       .register_fn("start_sprinting", {
         let su = su.clone();
         move |mu: &str, direction: &str| {
-          Self::start_sprinting(Self::parse_username(&su, mu).as_str(), direction)
+          Self::start_sprinting(&Self::parse_username(&su, mu), direction)
         }
       })
       .register_fn("start_pathfinder", {
         let su = su.clone();
         move |mu: &str, x: i64, z: i64| {
-          Self::start_pathfinder(Self::parse_username(&su, mu).as_str(), x as i32, z as i32)
+          Self::start_pathfinder(&Self::parse_username(&su, mu), x as i32, z as i32)
         }
       })
       .register_fn("stop_move", {
         let su = su.clone();
-        move |mu: &str| Self::stop_move(Self::parse_username(&su, mu).as_str())
+        move |mu: &str| Self::stop_move(&Self::parse_username(&su, mu))
       })
       .register_fn("stop_pathfinder", {
         let su = su.clone();
         move |mu: &str| {
-          Self::stop_pathfinder(Self::parse_username(&su, mu).as_str())
+          Self::stop_pathfinder(&Self::parse_username(&su, mu))
         }
       });
 
@@ -638,19 +638,19 @@ impl ScriptExecutor {
       .register_fn("place_block", {
         let su = su.clone();
         move |mu: &str, x: i64, y: i64, z: i64| {
-          Self::place_block(Self::parse_username(&su, mu).as_str(), x as i32, y as i32, z as i32)
+          Self::place_block(&Self::parse_username(&su, mu), x as i32, y as i32, z as i32)
         }
       })
       .register_fn("look_at", {
         let su = su.clone();
         move |mu: &str, x: f64, y: f64, z: f64| {
-          Self::look_at(Self::parse_username(&su, mu).as_str(), x, y, z)
+          Self::look_at(&Self::parse_username(&su, mu), x, y, z)
         }
       })
       .register_fn("look_at_block", {
         let su = su.clone();
         move |mu: &str, x: i64, y: i64, z: i64| {
-          Self::look_at_block(Self::parse_username(&su, mu).as_str(), x as i32, y as i32, z as i32)
+          Self::look_at_block(&Self::parse_username(&su, mu), x as i32, y as i32, z as i32)
         }
       });
 
@@ -658,31 +658,31 @@ impl ScriptExecutor {
       .register_fn("drop_selected_item", {
         let su = su.clone();
         move |mu: &str, lock: bool| {
-          Self::drop_selected_item(Self::parse_username(&su, mu).as_str(), lock)
+          Self::drop_selected_item(&Self::parse_username(&su, mu), lock)
         }
       })
       .register_fn("drop_all_items", {
         let su = su.clone();
         move |mu: &str, lock: bool| {
-          Self::drop_all_items(Self::parse_username(&su, mu).as_str(), lock)
+          Self::drop_all_items(&Self::parse_username(&su, mu), lock)
         }
       })
       .register_fn("inv_click", {
         let su = su.clone();
         move |mu: &str, slot: i64, mode: i64, lock: bool| {
-          Self::inv_click(Self::parse_username(&su, mu).as_str(), slot as usize, mode as u8, lock)
+          Self::inv_click(&Self::parse_username(&su, mu), slot as usize, mode as u8, lock)
         }
       })
       .register_fn("inv_click_on", {
         let su = su.clone();
         move |mu: &str, name: &str, mode: i64, lock: bool| {
-          Self::inv_click_on(Self::parse_username(&su, mu).as_str(), name, mode as u8, lock)
+          Self::inv_click_on(&Self::parse_username(&su, mu), name, mode as u8, lock)
         }
       })
       .register_fn("set_selected_slot", {
         let su = su.clone();
         move |mu: &str, slot: i64| {
-          Self::set_selected_slot(Self::parse_username(&su, mu).as_str(), slot as u8)
+          Self::set_selected_slot(&Self::parse_username(&su, mu), slot as u8)
         }
       });
 
@@ -690,19 +690,33 @@ impl ScriptExecutor {
       .register_fn("attack", {
         let su = su.clone();
         move |mu: &str, target: &str, distance: f64, look_at_target: bool| {
-          Self::attack(Self::parse_username(&su, mu).as_str(), target.to_string(), distance, look_at_target);
+          Self::attack(&Self::parse_username(&su, mu), target.to_string(), distance, look_at_target);
         }
       })
       .register_fn("start_use_item", {
         let su = su.clone();
         move |mu: &str, hand: &str| {
-          Self::start_use_item(Self::parse_username(&su, mu).as_str(), hand)
+          Self::start_use_item(&Self::parse_username(&su, mu), hand)
         }
       })
       .register_fn("release_use_item", {
         let su = su.clone();
         move |mu: &str| {
-          Self::release_use_item(Self::parse_username(&su, mu).as_str())
+          Self::release_use_item(&Self::parse_username(&su, mu))
+        }
+      });
+
+    engine
+      .register_fn("set_state", {
+        let su = su.clone();
+        move |mu: &str, field: &str, value: bool| {
+          set_state(&Self::parse_username(&su, mu), field, value)
+        }
+      })
+      .register_fn("get_state", {
+        let su = su.clone();
+        move |mu: &str, field: &str| {
+          get_state(&Self::parse_username(&su, mu), field)
         }
       });
 
