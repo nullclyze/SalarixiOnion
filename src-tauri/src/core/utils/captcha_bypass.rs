@@ -3,8 +3,11 @@ use base64::Engine;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::sync::{Arc, RwLock};
+use std::time::Instant;
 use thirtyfour::{
   common::capabilities::firefox::FirefoxPreferences, error::WebDriverError, CapabilitiesHelper,
   ChromiumLikeCapabilities, DesiredCapabilities, WebDriver,
@@ -521,48 +524,179 @@ impl MapCaptchaBypass {
 
     base64_code
   }
+}
 
-  pub fn create_combined_png_image(
-    &self,
-    maps: Vec<(u32, u32, Vec<u8>)>,
-    cols: u32,
-    rows: u32,
-  ) -> String {
-    if maps.is_empty() {
-      return String::new();
+#[derive(Clone)]
+pub struct MapData {
+  pub width: u32,
+  pub height: u32,
+  pub colors: Vec<u8>,
+  pub x: f64,
+  pub z: f64,
+  pub pos_x: f64,
+  pub pos_z: f64,
+  pub yaw: f32,
+}
+
+pub struct MapAccumulator {
+  maps: RwLock<HashMap<String, Vec<MapData>>>,
+  frame_positions: RwLock<HashMap<String, Vec<(i32, f64, f64, f64)>>>,
+  processing: RwLock<HashMap<String, bool>>,
+  last_captcha_time: RwLock<HashMap<String, Instant>>,
+}
+
+impl MapAccumulator {
+  pub fn new() -> Self {
+    Self {
+      maps: RwLock::new(HashMap::new()),
+      frame_positions: RwLock::new(HashMap::new()),
+      processing: RwLock::new(HashMap::new()),
+      last_captcha_time: RwLock::new(HashMap::new()),
+    }
+  }
+
+  pub fn add_frame_position(&self, username: &str, entity_id: i32, x: f64, y: f64, z: f64) {
+    let mut positions = self.frame_positions.write().unwrap();
+    let user_positions = positions.entry(username.to_string()).or_insert_with(Vec::new);
+    user_positions.push((entity_id, x, y, z));
+  }
+
+  pub fn add_map_data(&self, username: &str, width: u32, height: u32, colors: Vec<u8>, pos_x: f64, pos_z: f64, yaw: f32) {
+    let mut maps = self.maps.write().unwrap();
+    let user_maps = maps.entry(username.to_string()).or_insert_with(Vec::new);
+    
+    user_maps.push(MapData {
+      width,
+      height,
+      colors,
+      x: 0.0,
+      z: 0.0,
+      pos_x,
+      pos_z,
+      yaw,
+    });
+  }
+
+  pub fn get_maps(&self, username: &str) -> Option<Vec<MapData>> {
+    let maps = self.maps.read().unwrap();
+    maps.get(username).cloned()
+  }
+
+  pub fn is_processing(&self, username: &str) -> bool {
+    let processing = self.processing.read().unwrap();
+    processing.get(username).copied().unwrap_or(false)
+  }
+
+  pub fn set_processing(&self, username: &str, value: bool) {
+    let mut processing = self.processing.write().unwrap();
+    processing.insert(username.to_string(), value);
+  }
+
+  pub fn update_captcha_time(&self, username: &str) {
+    let mut last_time = self.last_captcha_time.write().unwrap();
+    last_time.insert(username.to_string(), Instant::now());
+  }
+
+  pub fn combine_all(&self, username: &str) -> Option<String> {
+    let mut map_data = self.get_maps(username)?;
+    let positions = self.frame_positions.read().unwrap();
+
+    let Some(opts) = current_options() else {
+      return None;
+    };
+
+    let num_frames = (opts.captcha_bypass.number_of_columns * opts.captcha_bypass.number_of_rows) as usize;
+
+    if map_data.is_empty() || map_data.len() < num_frames {
+      return None;
     }
 
-    let map_width = maps.get(0).map(|(w, _, _)| *w).unwrap_or(128);
-    let map_height = maps.get(0).map(|(_, h, _)| *h).unwrap_or(128);
+    if !map_data.is_empty() {
+      let first_map = &map_data[0];
+      let yaw = first_map.yaw;
+      let pos_x = first_map.pos_x;
+      let pos_z = first_map.pos_z;
 
-    let total_width = map_width * cols;
-    let total_height = map_height * rows;
+      let yaw_rad = (yaw as f64).to_radians();
+
+      map_data.retain(|map| {
+        let dx = map.x - pos_x;
+        let dz = map.z - pos_z;
+        let distance = (dx * dx + dz * dz).sqrt();
+        
+        let angle_to_frame = dz.atan2(dx);
+        let angle_diff = (angle_to_frame - yaw_rad).abs();
+        
+        let normalized_angle = if angle_diff > PI {
+          2.0 * PI - angle_diff
+        } else {
+          angle_diff
+        };
+
+        distance < 20.0 && normalized_angle < PI / 2.0
+      });
+    }
+
+    if map_data.len() < num_frames {
+      let all_maps = self.get_maps(username)?;
+      map_data = all_maps;
+    }
+
+    map_data.truncate(num_frames);
+
+    if let Some(user_positions) = positions.get(username) {
+      if user_positions.len() >= num_frames {
+        let mut sorted_positions = user_positions.clone();
+        
+        sorted_positions.sort_by(|a, b| {
+          match b.2.partial_cmp(&a.2).unwrap_or(Ordering::Equal) {
+            Ordering::Equal => a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal),
+            other => other,
+          }
+        });
+
+        let mut sorted_maps = vec![];
+
+        for (_, _, _, _) in sorted_positions.iter().take(num_frames) {
+          if let Some(map) = map_data.pop() {
+            sorted_maps.push(map);
+          }
+        }
+
+        map_data = sorted_maps;
+      }
+    }
+
+    let frames: Vec<_> = map_data.iter().take(num_frames).collect();
+
+    let frame_width = frames[0].width;
+    let frame_height = frames[0].height;
+
+    let cols = opts.captcha_bypass.number_of_columns;
+    let rows = opts.captcha_bypass.number_of_rows;
+
+    let total_width = frame_width * cols;
+    let total_height = frame_height * rows;
 
     let mut combined_img = ImageBuffer::new(total_width, total_height);
 
-    for (idx, (width, height, map_data)) in maps.iter().enumerate() {
-      if idx >= (cols * rows) as usize {
-        break;
-      }
-
+    for (idx, frame) in frames.iter().enumerate() {
       let col = (idx as u32) % cols;
       let row = (idx as u32) / cols;
 
-      let x_offset = col * map_width;
-      let y_offset = row * map_height;
+      let x_offset = col * frame_width;
+      let y_offset = row * frame_height;
 
-      for (i, &id) in map_data.iter().enumerate() {
-        let rgb = self.convert_id_to_rgb_color(id);
-        let local_x = (i as u32) % width;
-        let local_y = (i as u32) / width;
+      for (i, &id) in frame.colors.iter().enumerate() {
+        let rgb = MAP_CAPTCHA_BYPASS.convert_id_to_rgb_color(id);
+        let local_x = (i as u32) % frame.width;
+        let local_y = (i as u32) / frame.width;
 
-        if local_x < *width && local_y < *height {
-          let final_x = x_offset + local_x;
-          let final_y = y_offset + local_y;
+        let final_x = x_offset + local_x;
+        let final_y = y_offset + local_y;
 
-          if final_x < total_width && final_y < total_height {
-            combined_img.put_pixel(final_x, final_y, Rgb([rgb.0, rgb.1, rgb.2]));
-          }
+        if final_x < total_width && final_y < total_height {
+          combined_img.put_pixel(final_x, final_y, Rgb([rgb.0, rgb.1, rgb.2]));
         }
       }
     }
@@ -572,69 +706,28 @@ impl MapCaptchaBypass {
 
     let _ = combined_img.write_to(&mut cursor, ImageFormat::Png);
 
-    BASE64_STANDARD.encode(&bytes)
-  }
-}
-
-#[derive(Clone)]
-pub struct MapData {
-  pub width: u32,
-  pub height: u32,
-  pub colors: Vec<u8>,
-}
-
-pub struct MapAccumulator {
-  maps: RwLock<HashMap<String, Vec<MapData>>>,
-}
-
-impl MapAccumulator {
-  pub fn new() -> Self {
-    Self {
-      maps: RwLock::new(HashMap::new()),
-    }
-  }
-
-  pub fn add_map(&self, username: &str, width: u32, height: u32, colors: Vec<u8>) {
-    let mut maps = self.maps.write().unwrap();
-    let user_maps = maps.entry(username.to_string()).or_insert_with(Vec::new);
-
-    user_maps.push(MapData {
-      width,
-      height,
-      colors,
-    });
-  }
-
-  pub fn get_maps(&self, username: &str) -> Option<Vec<MapData>> {
-    let maps = self.maps.read().unwrap();
-    maps.get(username).cloned()
+    Some(BASE64_STANDARD.encode(&bytes))
   }
 
   pub fn clear_maps(&self, username: &str) {
     let mut maps = self.maps.write().unwrap();
+    let mut positions = self.frame_positions.write().unwrap();
+    let mut processing = self.processing.write().unwrap();
+
     maps.remove(username);
+    positions.remove(username);
+    processing.remove(username);
   }
 
-  pub fn combine_and_render(&self, username: &str) -> Option<String> {
-    let map_data = self.get_maps(username)?;
+  pub fn clear_all(&self) {
+    let mut maps = self.maps.write().unwrap();
+    let mut positions = self.frame_positions.write().unwrap();
+    let mut processing = self.processing.write().unwrap();
+    let mut last_captcha_time = self.last_captcha_time.write().unwrap();
 
-    let Some(opts) = current_options() else {
-      return None;
-    };
-
-    if map_data.is_empty() || map_data.len() < opts.captcha_bypass.number_of_frames {
-      return None;
-    }
-
-    let mut maps = Vec::new();
-
-    for map in map_data.iter().take(opts.captcha_bypass.number_of_frames) {
-      maps.push((map.width, map.height, map.colors.clone()));
-    }
-
-    let cols = 4u32;
-    let rows = 3u32;
-
-    Some(MAP_CAPTCHA_BYPASS.create_combined_png_image(maps, cols, rows))
+    maps.clear();
+    positions.clear();
+    processing.clear();
+    last_captcha_time.clear();
   }
 }

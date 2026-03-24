@@ -1240,6 +1240,7 @@ p {
   display: flex;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
   height: 80px;
   width: 680px;
   background-color: var(--common-bg);
@@ -1265,6 +1266,7 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  box-sizing: border-box;
   align-items: center;
   border-left: 1px solid var(--common-border);
   padding: 0 6px;
@@ -1277,6 +1279,21 @@ p {
   width: 120px;
   height: 28px;
   transition: none;
+}
+
+.bot-captcha-wrapper {
+  width: 100%; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  overflow-y: auto; 
+  height: 100%;
+}
+
+.bot-captcha-wrapper .captcha-img {
+  max-height: 330px; 
+  max-width: 500px;
+  image-rendering: pixelated;
 }
 
 .webhook-options {
@@ -1304,8 +1321,6 @@ p {
   border: 1px solid var(--secondary-border);
   scrollbar-width: none;
   -ms-overflow-style: none;
-  contain: strict; 
-  will-change: transform;
   text-rendering: optimizeSpeed;
 }
 
@@ -1317,7 +1332,7 @@ p {
 
 .log-line {
   display: flex;
-  min-height: 20px;
+  box-sizing: border-box;
   animation: show-log-line 0.15s;
 }
 
@@ -1844,7 +1859,7 @@ p {
 .pretty-input-wrapper .signature {
   font-family: var(--global-font-family);
   font-size: 15px;
-  font-weight: bold;
+  font-weight: normal;
   color: rgb(182, 182, 182);
   margin-left: 12px;
 }

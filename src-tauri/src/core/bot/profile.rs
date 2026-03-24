@@ -125,6 +125,10 @@ impl ProfileManager {
     send_log(format!("Профили ботов очищены"), "extended");
   }
 
+  pub fn get_count(&self) -> usize {
+    self.map.read().unwrap().len()
+  }
+
   pub fn set_status(&self, username: &str, status: ProfileStatus) {
     self.map.read().unwrap().get(username).map(|arc| {
       let mut profile = arc.lock().unwrap();

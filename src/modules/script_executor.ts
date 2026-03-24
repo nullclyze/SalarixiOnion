@@ -38,6 +38,8 @@ class ScriptExecutor {
 
 		document.getElementById('execute-script')?.addEventListener('click', async () => await this.execute());
   	document.getElementById('stop-script')?.addEventListener('click', async () => await this.stop());
+
+		this.updateLineCounter();
 	}
 
 	/** Метод обновления счётчика строк. */

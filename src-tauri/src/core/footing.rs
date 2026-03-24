@@ -247,7 +247,8 @@ pub struct CaptchaBypassOptions {
   pub regex: String,
   pub required_url_part: Option<String>,
   pub webdriver_server_url: Option<String>,
-  pub number_of_frames: usize,
+  pub number_of_columns: u32,
+  pub number_of_rows: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -679,6 +680,7 @@ pub fn stop_bots_and_destroy_data() -> bool {
   PROFILES.clear();
 
   WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::StopProcessing);
+  MAP_ACCUMULATOR.clear_all();
 
   BOT_REGISTRY.clear();
 
