@@ -216,7 +216,7 @@ async function startBots(): Promise<void> {
     monitoring.enable(parseInt((document.getElementById('monitoring_option_update-frequency') as HTMLInputElement).value || '1800'));
     monitoring.wait();
 
-    if (options.basic.use_anti_captcha) captchaBypass.enable(options.captcha_bypass.captcha_type, options.captcha_bypass.solve_mode);
+    if (options.basic.use_anti_captcha) captchaBypass.enable(options.captcha_bypass.solve_mode);
 
     radar.enable();
   } catch (error) {
@@ -536,12 +536,50 @@ export function replenishTriggerRegistry(): void {
     }
   });
 
+  const mf1 = (current: HTMLSelectElement) => {
+    const antiCaptchaType = (document.getElementById('captcha-bypass_select_captcha-type') as HTMLSelectElement).value;
+    const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
+    const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
+    const antiMapCaptchaApiInputContainer = document.getElementById('anti-map-captcha-api-key-container') as HTMLElement;
+    const antiMapCaptchaApiServiceSelectContainer = document.getElementById('anti-map-captcha-select-api-service-container') as HTMLElement;
+
+    if (current.value === 'auto') {
+      if (antiCaptchaType === 'web') {
+        antiWebCaptchaWebDriverServerUrlContainer.style.display = 'flex';
+        antiWebCaptchaSelectBrowserContainer.style.display = 'grid';
+      } else {
+        antiMapCaptchaApiInputContainer.style.display = 'flex';
+        antiMapCaptchaApiServiceSelectContainer.style.display = 'grid';
+      }
+    } else {
+      antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
+      antiWebCaptchaSelectBrowserContainer.style.display = 'none';
+      antiMapCaptchaApiInputContainer.style.display = 'none';
+      antiMapCaptchaApiServiceSelectContainer.style.display = 'none';
+    }
+  }
+
+  const mf2 = (current: HTMLSelectElement) => {
+    const antiMapCaptchaNumberOfColumnsInput = document.getElementById('anti-map-captcha-number-of-columns-container') as HTMLElement;
+    const antiMapCaptchaNumberOfRowsInput = document.getElementById('anti-map-captcha-number-of-rows-container') as HTMLElement;
+
+    if (current.value === 'inventory') {
+      antiMapCaptchaNumberOfColumnsInput.style.display = 'none';
+      antiMapCaptchaNumberOfRowsInput.style.display = 'none';
+    } else if (current.value === 'frame') {
+      antiMapCaptchaNumberOfColumnsInput.style.display = 'flex';
+      antiMapCaptchaNumberOfRowsInput.style.display = 'flex';
+    }
+  }
+
   triggerRegistry.register('captcha-bypass_select_captcha-type', 'select', (current: HTMLSelectElement) => {
     const antiWebCaptchaOptionsContainer = document.getElementById('anti-web-captcha-options') as HTMLElement;
     const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
     const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
     const antiMapCaptchaSelectsContainer = document.getElementById('anti-map-captha-selects-container') as HTMLElement;
     const antiMapCaptchaSelectSubtype = document.getElementById('captcha-bypass_select_captcha-subtype') as HTMLSelectElement;
+    const antiMapCaptchaNumberOfColumnsInput = document.getElementById('anti-map-captcha-number-of-columns-container') as HTMLElement;
+    const antiMapCaptchaNumberOfRowsInput = document.getElementById('anti-map-captcha-number-of-rows-container') as HTMLElement;
 
     if (current.value === 'web') {
       antiWebCaptchaOptionsContainer.style.display = 'flex';
@@ -552,37 +590,23 @@ export function replenishTriggerRegistry(): void {
       antiWebCaptchaOptionsContainer.style.display = 'none';
       antiWebCaptchaSelectsContainer.style.display = 'none';
       antiMapCaptchaSelectsContainer.style.display = 'flex';
+      antiMapCaptchaOptionsContainer.style.display = 'flex';
 
       if (antiMapCaptchaSelectSubtype.value === 'frame') {
-        antiMapCaptchaOptionsContainer.style.display = 'flex';
+        antiMapCaptchaNumberOfColumnsInput.style.display = 'flex';
+        antiMapCaptchaNumberOfRowsInput.style.display = 'flex';
       } else {
-        antiMapCaptchaOptionsContainer.style.display = 'none';
+        antiMapCaptchaNumberOfColumnsInput.style.display = 'none';
+        antiMapCaptchaNumberOfRowsInput.style.display = 'none';
       }
     }
+
+    mf1(document.getElementById('captcha-bypass_select_solve-mode') as HTMLSelectElement);
+    mf2(document.getElementById('captcha-bypass_select_captcha-subtype') as HTMLSelectElement);
   });
 
-  triggerRegistry.register('captcha-bypass_select_solve-mode', 'select', (current: HTMLSelectElement) => {
-    const antiWebCaptchaWebDriverServerUrlContainer = document.getElementById('anti-web-captcha-webdriver-server-url-container') as HTMLElement;
-    const antiWebCaptchaSelectBrowserContainer = document.getElementById('select-captcha-browser-container') as HTMLElement;
-
-    if (current.value === 'auto') {
-      antiWebCaptchaWebDriverServerUrlContainer.style.display = 'flex';
-      antiWebCaptchaSelectBrowserContainer.style.display = 'grid';
-    } else {
-      antiWebCaptchaWebDriverServerUrlContainer.style.display = 'none';
-      antiWebCaptchaSelectBrowserContainer.style.display = 'none';
-    }
-  });
-
-  triggerRegistry.register('captcha-bypass_select_captcha-subtype', 'select', (current: HTMLSelectElement) => {
-    const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
-
-    if (current.value === 'inventory') {
-      antiMapCaptchaOptionsContainer.style.display = 'none';
-    } else if (current.value === 'frame') {
-      antiMapCaptchaOptionsContainer.style.display = 'flex';
-    }
-  });
+  triggerRegistry.register('captcha-bypass_select_solve-mode', 'select', mf1);
+  triggerRegistry.register('captcha-bypass_select_captcha-subtype', 'select', mf2);
 
   triggerRegistry.register('module_chat_select_mode', 'select', (current: HTMLSelectElement) => {
     const chatSpammingChbxContainer = document.getElementById('chat-spamming-chbx-container') as HTMLElement;

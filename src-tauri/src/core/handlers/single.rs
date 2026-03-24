@@ -351,12 +351,16 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
                     "info",
                   );
 
-                  send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
-                    AntiMapCaptchaEventPayload {
-                      base64_code: combined_base64,
-                      nickname: nickname.to_string(),
-                    },
-                  ));
+                  if options.captcha_bypass.solve_mode == "auto" {
+                    MAP_CAPTCHA_BYPASS.solve_captcha(bot.name(), combined_base64, options.captcha_bypass);
+                  } else {
+                    send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
+                      AntiMapCaptchaEventPayload {
+                        base64_code: combined_base64,
+                        nickname: nickname.to_string(),
+                      },
+                    ));
+                  }
 
                   MAP_ACCUMULATOR.clear_maps(&nickname);
                 } else {
@@ -384,12 +388,16 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
                   "info",
                 );
 
-                send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
-                  AntiMapCaptchaEventPayload {
-                    base64_code,
-                    nickname: nickname.to_string(),
-                  },
-                ));
+                if options.captcha_bypass.solve_mode == "auto" {
+                  MAP_CAPTCHA_BYPASS.solve_captcha(bot.name(), base64_code, options.captcha_bypass);
+                } else {
+                  send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
+                    AntiMapCaptchaEventPayload {
+                      base64_code,
+                      nickname: nickname.to_string(),
+                    },
+                  ));
+                }
               }
             }
           }

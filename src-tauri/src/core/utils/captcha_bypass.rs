@@ -3,6 +3,7 @@ use base64::Engine;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -14,6 +15,7 @@ use thirtyfour::{
 };
 use tokio::sync::broadcast;
 
+use crate::core::{BOT_REGISTRY, CaptchaBypassOptions};
 use crate::{core::current_options, emit::send_log, generators::randint};
 
 pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> =
@@ -285,6 +287,56 @@ impl WebCaptchaBypass {
 /// Обход map-капчи
 pub struct MapCaptchaBypass;
 
+#[derive(Serialize)]
+struct CreateTaskRequest {
+  #[serde(rename = "clientKey")]
+  client_key: String,
+  task: Service2CaptchaRequest,
+  #[serde(rename = "languagePool")]
+  language_pool: String,
+}
+
+#[derive(Serialize)]
+struct Service2CaptchaRequest {
+  #[serde(rename = "type")]
+  task_type: &'static str,
+  body: String,
+  phrase: bool,
+  #[serde(rename = "case")]
+  case_sensitive: bool,
+  numeric: i32,
+  math: bool,
+  #[serde(rename = "minLength")]
+  min_length: i32,
+  #[serde(rename = "maxLength")]
+  max_length: i32,
+  comment: String,
+}
+
+#[derive(Deserialize)]
+struct Service2CaptchaOkResponse {
+  errorId: i32,
+  status: String,
+  solution: Service2CaptchaOkResponseSolution,
+  cost: f64,
+  ip: String,
+  createTime: u64,
+  endTime: u64,
+  solveCount: i32
+}
+
+#[derive(Deserialize)]
+struct Service2CaptchaOkResponseSolution {
+  text: String
+}
+
+#[derive(Deserialize)]
+struct Service2CaptchaBadResponse {
+  errorId: i32,
+  errorCode: String,
+  errorDescription: String
+}
+
 impl MapCaptchaBypass {
   pub fn new() -> Self {
     Self
@@ -523,6 +575,68 @@ impl MapCaptchaBypass {
     let base64_code = BASE64_STANDARD.encode(&bytes);
 
     base64_code
+  }
+
+  pub fn solve_captcha(&self, username: String, base64_code: String, options: CaptchaBypassOptions) {
+    tokio::spawn(async move {
+      let url = match options.api_service.as_str() {
+        "2captcha" => "https://api.2captcha.com/createTask",
+        _ => return
+      };
+
+      let Some(api_key) = options.api_key else {
+        return;
+      };
+
+      let req_body = CreateTaskRequest {
+        client_key: api_key,
+        task: Service2CaptchaRequest {
+          task_type: "ImageToTextTask",
+          body: base64_code,
+          phrase: false,
+          case_sensitive: true,
+          numeric: 0,
+          math: false,
+          min_length: 0,
+          max_length: 0,
+          comment: "enter the code you see on the image".to_string(),
+        },
+        language_pool: "en".to_string(),
+      };
+
+      let client = reqwest::Client::new();
+
+      let resp = match client
+        .post(url)
+        .json(&req_body)
+        .send()
+        .await {
+        Ok(r) => r,
+        Err(_) => return
+      };
+
+      if !resp.status().is_success() {
+        return;
+      }
+
+      let body = resp.bytes().await.expect("Response data could not be retrieved");
+
+      let body_str = std::str::from_utf8(&body).unwrap_or("<non-utf8>");
+
+      if let Ok(ok_resp) = serde_json::from_slice::<Service2CaptchaOkResponse>(&body) {
+        if ok_resp.errorId != 0 {
+          return;
+        }
+
+        BOT_REGISTRY.async_get_bot(&username, async |bot| {
+          bot.chat(ok_resp.solution.text);
+        }).await;
+      } else if let Ok(bad_resp) = serde_json::from_slice::<Service2CaptchaBadResponse>(&body) {
+        send_log(format!("Бот {} не смог решить капчу с помощью {}: {}", username, options.api_service, bad_resp.errorDescription), "error");
+      } else {
+        send_log(format!("Бот {} получил неизвестный формат ответа от {}: {}", username, options.api_service, body_str), "error");
+      }
+    });
   }
 }
 

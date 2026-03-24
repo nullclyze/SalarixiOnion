@@ -62,8 +62,8 @@ class CaptchaBypass {
   }
 
   /** Метод активации обхода капчи. */
-  public enable(type: string, mode: string): void {
-    if (type === 'map' || mode === 'manual') {
+  public enable(mode: string): void {
+    if (mode === 'manual') {
       this.settings!.style.display = 'none';
 
       this.cards!.innerHTML = '';
