@@ -277,7 +277,7 @@ impl QuickTaskManager {
 
               let average_cords = get_average_coordinates_of_bots(&positions);
 
-              let angle = 2.0 * PI * (number as f32) / (PROFILES.map.read().unwrap().len() as f32);
+              let angle = 2.0 * PI * (number as f32) / (PROFILES.get_count() as f32);
               let x = average_cords.0 + positions.len() as f64 * 0.5 * angle.cos() as f64;
               let z = average_cords.2 + positions.len() as f64 * 0.5 * angle.sin() as f64;
 

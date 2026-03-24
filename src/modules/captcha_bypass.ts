@@ -144,14 +144,14 @@ class CaptchaBypass {
           </div>
 
           <div class="right">
-            <button class="btn min pretty" id="close-captcha-wrapper-${username}">
+            <button class="btn min" id="close-captcha-wrapper-${username}">
               ⨉
             </button>
           </div>
         </div>
 
-        <div style="width: 100%; display: flex; justify-content: center; align-items: center; overflow-y: auto; height: 100%;">
-          <img id="captcha-img-${username}" src="data:image/png;base64,${captcha.data.base64}" draggable="false" style="max-width: 100%; height: auto; image-rendering: pixelated;">
+        <div class="bot-captcha-wrapper">
+          <img class="captcha-img" id="captcha-img-${username}" src="data:image/png;base64,${captcha.data.base64}" draggable="false">
         </div>
 
         <div class="pretty-input-wrapper" style="margin-top: 20px;">

@@ -1,7 +1,9 @@
 use azalea::entity::HumanoidArm;
+use azalea::entity::LookDirection;
 use azalea::prelude::*;
 use azalea::protocol::common::client_information::ParticleStatus;
 use azalea::protocol::packets::game::ClientboundGamePacket;
+use azalea::registry::builtin::EntityKind;
 use azalea::{ClientInformation, NoState};
 use std::io;
 use std::time::Duration;
@@ -12,7 +14,6 @@ use crate::core::*;
 use crate::emit::*;
 use crate::extensions::BotDefaultExt;
 use crate::generators::*;
-use crate::script::SCRIPT_EXECUTOR;
 use crate::webhook::*;
 
 const ACCOUNTS_WITH_SKINS: &[&str] = &[
@@ -81,7 +82,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
         let pos = bot.feet_pos();
         let health = bot.get_health();
 
-        let str_pos = format!("{}, {}, {}", pos.x.floor(), pos.y.floor(), pos.z.floor());
+        let str_pos = format!("{}, {}, {}", pos.x, pos.y, pos.z);
 
         if options.basic.use_webhook {
           send_webhook(
@@ -108,12 +109,6 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
             &username, str_pos, health
           ),
         );
-
-        if options.basic.use_auto_script {
-          if let Some(script) = options.basic.script {
-            SCRIPT_EXECUTOR.execute(bot.name(), script);
-          }
-        }
 
         default_authorize(&bot).await;
       }
@@ -286,6 +281,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
       }
     }
     Event::Packet(packet) => match &*packet {
+      ClientboundGamePacket::AddEntity(entity_packet) => {
+        if entity_packet.entity_type == EntityKind::ItemFrame || entity_packet.entity_type == EntityKind::GlowItemFrame {
+          let nickname = bot.name();
+          let pos = entity_packet.position;
+          MAP_ACCUMULATOR.add_frame_position(&nickname, entity_packet.id.0 as i32, pos.x, pos.y, pos.z);
+        }
+      }
       ClientboundGamePacket::MapItemData(data) => {
         let nickname = bot.name();
 
@@ -303,34 +305,77 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
             if !profile.captcha_caught {
               let is_frame = options.captcha_bypass.captcha_subtype.as_str() == "frame";
 
-              if is_frame {
-                MAP_ACCUMULATOR.add_map(
+              if is_frame {          
+                let pos = bot.feet_pos();
+                let yaw = if let Some(look_dir) = bot.get_component::<LookDirection>() {
+                  look_dir.y_rot()
+                } else {
+                  0.0
+                };
+                
+                MAP_ACCUMULATOR.add_map_data(
                   &nickname,
                   map_patch.width as u32,
                   map_patch.height as u32,
                   map_patch.map_colors.clone(),
+                  pos.x,
+                  pos.z,
+                  yaw,
                 );
-              }
 
-              let base64_code;
+                if MAP_ACCUMULATOR.is_processing(&nickname) {
+                  return Ok(());
+                }
 
-              if is_frame {
-                base64_code = MAP_ACCUMULATOR.combine_and_render(&nickname);
+                let maps = MAP_ACCUMULATOR.get_maps(&nickname).unwrap_or_default();
+                
+                if maps.len() < (options.captcha_bypass.number_of_columns * options.captcha_bypass.number_of_rows) as usize {
+                  return Ok(());
+                }
+
+                MAP_ACCUMULATOR.set_processing(&nickname, true);
+
+                if let Some(combined_base64) = MAP_ACCUMULATOR.combine_all(&nickname) {
+                  PROFILES.set_bool(&nickname, "captcha_caught", true);
+                  MAP_ACCUMULATOR.update_captcha_time(&nickname);
+
+                  if options.basic.use_webhook && options.webhook.send_information {
+                    send_webhook(
+                      options.webhook.url,
+                      format!("Бот {} получил капчу с карты", nickname),
+                    );
+                  }
+
+                  send_log(
+                    format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
+                    "info",
+                  );
+
+                  send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
+                    AntiMapCaptchaEventPayload {
+                      base64_code: combined_base64,
+                      nickname: nickname.to_string(),
+                    },
+                  ));
+
+                  MAP_ACCUMULATOR.clear_maps(&nickname);
+                } else {
+                  MAP_ACCUMULATOR.clear_maps(&nickname);
+                }
               } else {
-                base64_code = Some(MAP_CAPTCHA_BYPASS.create_png_image(
+                let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(
                   map_patch.width as u32,
                   map_patch.height as u32,
                   &map_patch.map_colors,
-                ));
-              }
+                );
 
-              if let Some(code) = base64_code {
                 PROFILES.set_bool(&nickname, "captcha_caught", true);
+                MAP_ACCUMULATOR.update_captcha_time(&nickname);
 
                 if options.basic.use_webhook && options.webhook.send_information {
                   send_webhook(
                     options.webhook.url,
-                    format!("Бот {} получил капчу с карты: {}", nickname, code),
+                    format!("Бот {} получил капчу с карты", nickname),
                   );
                 }
 
@@ -341,14 +386,10 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
 
                 send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
                   AntiMapCaptchaEventPayload {
-                    base64_code: code,
+                    base64_code,
                     nickname: nickname.to_string(),
                   },
                 ));
-
-                if is_frame {
-                  MAP_ACCUMULATOR.clear_maps(&nickname);
-                }
               }
             }
           }

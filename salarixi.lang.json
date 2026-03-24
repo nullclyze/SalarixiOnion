@@ -715,10 +715,17 @@
       }
     },
     { 
-      "tags": ["label:number-of-frames"], 
+      "tags": ["label:number-of-columns"], 
       "lang": {
-        "ru": "Количество рамок",
-        "en": "Number of Frames"
+        "ru": "Количество колонн",
+        "en": "Number of Columns"
+      }
+    },
+    { 
+      "tags": ["label:number-of-rows"], 
+      "lang": {
+        "ru": "Количество рядов",
+        "en": "Number of Rows"
       }
     },
     { 

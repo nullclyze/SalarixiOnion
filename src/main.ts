@@ -541,6 +541,7 @@ export function replenishTriggerRegistry(): void {
     const antiMapCaptchaOptionsContainer = document.getElementById('anti-map-captcha-options') as HTMLElement;
     const antiWebCaptchaSelectsContainer = document.getElementById('anti-web-captha-selects-container') as HTMLElement;
     const antiMapCaptchaSelectsContainer = document.getElementById('anti-map-captha-selects-container') as HTMLElement;
+    const antiMapCaptchaSelectSubtype = document.getElementById('captcha-bypass_select_captcha-subtype') as HTMLSelectElement;
 
     if (current.value === 'web') {
       antiWebCaptchaOptionsContainer.style.display = 'flex';
@@ -551,6 +552,12 @@ export function replenishTriggerRegistry(): void {
       antiWebCaptchaOptionsContainer.style.display = 'none';
       antiWebCaptchaSelectsContainer.style.display = 'none';
       antiMapCaptchaSelectsContainer.style.display = 'flex';
+
+      if (antiMapCaptchaSelectSubtype.value === 'frame') {
+        antiMapCaptchaOptionsContainer.style.display = 'flex';
+      } else {
+        antiMapCaptchaOptionsContainer.style.display = 'none';
+      }
     }
   });
 
