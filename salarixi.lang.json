@@ -686,6 +686,13 @@
         "en": "Captcha Subtype:"
       }
     },
+    { 
+      "tags": ["label:api-service"], 
+      "lang": {
+        "ru": "API сервис:",
+        "en": "API Service:"
+      }
+    },
     {
       "tags": ["label:captcha-solve-mode"], 
       "lang": {
@@ -726,6 +733,13 @@
       "lang": {
         "ru": "Количество рядов",
         "en": "Number of Rows"
+      }
+    },
+    { 
+      "tags": ["label:api-key"], 
+      "lang": {
+        "ru": "API ключ",
+        "en": "API Key"
       }
     },
     { 

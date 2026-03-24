@@ -121,7 +121,7 @@ class Configurator {
 
       for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
         const el = document.getElementById(id.replaceAll('.', '_'));
-        el && !el.getAttribute('ignore-config') ? public_config[id] = value : null;
+        el && !el.getAttribute('not-public') ? public_config[id] = value : null;
       }
 
       let encoder = new TextEncoder();

@@ -249,6 +249,8 @@ pub struct CaptchaBypassOptions {
   pub webdriver_server_url: Option<String>,
   pub number_of_columns: u32,
   pub number_of_rows: u32,
+  pub api_key: Option<String>,
+  pub api_service: String
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

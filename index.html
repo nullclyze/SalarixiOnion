@@ -605,7 +605,7 @@
         <div class="pretty-textarea" aria-labelledby="ta-label">
           <div class="frame">
             <label id="ta-label" class="label" translator-tag="label:proxy-list">Список прокси</label>
-            <textarea id="proxy-list" placeholder="Введите список прокси..." keep="true" key="proxy_list" ignore-config="true" launch-option></textarea>
+            <textarea id="proxy-list" placeholder="Введите список прокси..." keep="true" key="proxy_list" not-public launch-option></textarea>
           </div>
         </div>
       </div>
@@ -723,15 +723,15 @@
           </select>
         </div>
 
-        <div id="anti-web-captha-selects-container" style="display: flex; flex-direction: column; gap: 6px;">
-          <div class="custom-select between">
-            <label translator-tag="label:captcha-solve-mode">Режим: </label>
-            <select id="captcha-bypass_select_solve-mode" section="captcha_bypass" key="solve_mode" keep="true" trigger launch-option>
-              <option value="manual">Ручной</option>
-              <option value="auto">Авто</option>
-            </select>
-          </div>
+        <div class="custom-select between">
+          <label translator-tag="label:captcha-solve-mode">Режим: </label>
+          <select id="captcha-bypass_select_solve-mode" section="captcha_bypass" key="solve_mode" keep="true" trigger launch-option>
+            <option value="manual">Ручной</option>
+            <option value="auto">Авто</option>
+          </select>
+        </div>
 
+        <div id="anti-web-captha-selects-container" style="display: flex; flex-direction: column; gap: 6px;">
           <div class="custom-select between" id="select-captcha-browser-container">
             <label translator-tag="label:anti-captcha-browser">Браузер: </label>
             <select id="captcha-bypass_select_browser" section="captcha_bypass" key="browser" keep="true" launch-option>
@@ -745,6 +745,13 @@
         </div>
 
         <div id="anti-map-captha-selects-container" style="display: none; flex-direction: column; gap: 6px;">
+          <div class="custom-select between" id="anti-map-captcha-select-api-service-container">
+            <label translator-tag="label:api-service">API сервис: </label>
+            <select id="captcha-bypass_select_captcha-service" section="captcha_bypass" key="api_service" keep="true" launch-option>
+              <option value="2captcha">2Captcha</option>
+            </select>
+          </div>
+          
           <div class="custom-select between">
             <label translator-tag="label:captcha-subtype">Подтип капчи: </label>
             <select id="captcha-bypass_select_captcha-subtype" section="captcha_bypass" key="captcha_subtype" keep="true" trigger launch-option>
@@ -773,14 +780,19 @@
       </div>
 
       <div class="options" id="anti-map-captcha-options" style="display: none;">
-        <div class="form-input">
+        <div class="form-input" id="anti-map-captcha-number-of-columns-container">
           <label for="captcha-bypass_map_number-of-columns" class="text" translator-tag="label:number-of-columns">Количество коллон</label>
           <input type="number" id="captcha-bypass_map_number-of-columns" placeholder="4" value="4" keep="true" section="captcha_bypass" key="number_of_columns" default="4" launch-option>
         </div>
 
-        <div class="form-input">
+        <div class="form-input" id="anti-map-captcha-number-of-rows-container">
           <label for="captcha-bypass_map_number-of-rows" class="text" translator-tag="label:number-of-rows">Количество рядов</label>
           <input type="number" id="captcha-bypass_map_number-of-rows" placeholder="3" value="3" keep="true" section="captcha_bypass" key="number_of_rows" default="3" launch-option>
+        </div>
+
+        <div class="form-input" id="anti-map-captcha-api-key-container">
+          <label for="captcha-bypass_web_map-captcha-api-key" class="text" translator-tag="label:api-key">API ключ</label>
+          <input type="text" id="captcha-bypass_map-captcha-api-key" placeholder="u72ks-73ujhd-8j3j3j83-jdu73hrhf" keep="true" not-public section="captcha_bypass" key="api_key" launch-option>
         </div>
       </div>
     </div>
@@ -795,24 +807,24 @@
 
     <div class="form-input">
       <label for="webhook_url" class="text" translator-tag="label:webhook-link">Ссылка</label>
-      <input type="text" id="webhook_url" placeholder="https://discord.com/api/webhooks/..." keep="true" section="webhook" key="url" ignore-config="true" launch-option>
+      <input type="text" id="webhook_url" placeholder="https://discord.com/api/webhooks/..." keep="true" section="webhook" key="url" not-public launch-option>
     </div>
 
     <div class="checkbox-group webhook-options">
       <label class="checkbox-container">
-        <input type="checkbox" id="webhook_send-information" keep="true" section="webhook" key="send_information" ignore-config="true" launch-option>
+        <input type="checkbox" id="webhook_send-information" keep="true" section="webhook" key="send_information" not-public launch-option>
         <span class="checkmark"></span>
         <span translator-tag="label:webhook-information">Информация</span>
       </label>
 
       <label class="checkbox-container">
-        <input type="checkbox" id="webhook_send-data" keep="true" section="webhook" ignore-config="true" key="send_data" launch-option>
+        <input type="checkbox" id="webhook_send-data" keep="true" section="webhook" not-public key="send_data" launch-option>
         <span class="checkmark"></span>
         <span translator-tag="label:webhook-data">Данные</span>
       </label>
 
       <label class="checkbox-container">
-        <input type="checkbox" id="webhook_send-actions" keep="true" section="webhook" ignore-config="true" key="send_actions" launch-option>
+        <input type="checkbox" id="webhook_send-actions" keep="true" section="webhook" not-public key="send_actions" launch-option>
         <span class="checkmark"></span>
         <span translator-tag="label:webhook-actions">Действия</span>
       </label>
@@ -1697,7 +1709,7 @@
 
         <div class="script-editor-container">
           <div class="line-counter" id="line-counter">1</div>
-          <textarea id="user-script" class="script-editor" keep="true" ignore-config="true" placeholder="// Напишите ваш скрипт здесь..."></textarea>
+          <textarea id="user-script" class="script-editor" keep="true" not-public placeholder="// Напишите ваш скрипт здесь..."></textarea>
         </div>
       </div>
     </div>
@@ -1741,7 +1753,7 @@
       <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
         <div class="form-input">
           <label for="ping-server-address" class="text" translator-tag="label:address">Адрес сервера</label>
-          <input type="text" id="ping-server-address" placeholder="mineblaze.net" keep="true" ignore-config="true">
+          <input type="text" id="ping-server-address" placeholder="mineblaze.net" keep="true" not-public>
         </div>
 
         <button class="btn min" id="ping-server" style="margin-top: 20px;">
@@ -1818,12 +1830,12 @@
       <div class="auto-save-settings">
         <div class="form-input">
           <label for="radar_option_path" class="text" translator-tag="label:radar-full-path">Полный путь</label>
-          <input type="text" id="radar_option_path" placeholder="/home/User/MyFolder/" keep="true" ignore-config="true">
+          <input type="text" id="radar_option_path" placeholder="/home/User/MyFolder/" keep="true" not-public>
         </div>
 
         <div class="form-input">
           <label for="radar_option_filename" class="text" translator-tag="label:radar-file-name">Имя файла</label>
-          <input type="text" id="radar_option_filename" placeholder="radar_#t" value="radar_#t" keep="true" ignore-config="true">
+          <input type="text" id="radar_option_filename" placeholder="radar_#t" value="radar_#t" keep="true" not-public>
         </div>
 
         <div style="display: flex; width: max-content; margin-top: 20px; justify-content: left; align-items: start; padding-left: 5px;">
