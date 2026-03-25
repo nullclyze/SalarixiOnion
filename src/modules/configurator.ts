@@ -121,7 +121,8 @@ class Configurator {
 
       for (const [id, value] of Object.entries<ConfigValue>(JSON.parse(config))) {
         const el = document.getElementById(id.replaceAll('.', '_'));
-        el && !el.getAttribute('not-public') ? public_config[id] = value : null;
+        if (!el) continue;
+        el.getAttribute('public') === 'false' ? null : public_config[id] = value;
       }
 
       let encoder = new TextEncoder();
