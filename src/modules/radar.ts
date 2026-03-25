@@ -61,7 +61,7 @@ class Radar {
         <div class="sep"></div>
 
         <div class="info" style="min-width: 220px; max-width: 220px;">
-          <p>Никнейм: <span>${username.length <= 16 ? username : username.substr(0, 16) + '...'}</span></p>
+          <p>Никнейм: <span>${username.length <= 16 ? username : username.substring(0, 16) + '...'}</span></p>
           <p>Статус: <span id="radar-target-status-${username}">Не найден</span></p>
           <p>UUID: <span id="radar-target-uuid-${username}">?</span></p>
         </div>
@@ -262,7 +262,7 @@ UUID: ${uuid}
           const z = data.z.toFixed(3);
 
           (document.getElementById(`radar-target-status-${username}`) as HTMLElement).innerText = data.status;
-          (document.getElementById(`radar-target-uuid-${username}`) as HTMLElement).innerText = data.uuid.substr(0, 12) + '...';
+          (document.getElementById(`radar-target-uuid-${username}`) as HTMLElement).innerText = data.uuid.substring(0, 12) + '...';
           (document.getElementById(`radar-target-x-${username}`) as HTMLElement).innerText = x;
           (document.getElementById(`radar-target-y-${username}`) as HTMLElement).innerText = y;
           (document.getElementById(`radar-target-z-${username}`) as HTMLElement).innerText = z;

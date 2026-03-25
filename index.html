@@ -545,7 +545,7 @@
     <h1 class="title" translator-tag="title:accounts">Аккаунты</h1>
 
     <div class="accounts-top-panel">
-      <input type="text" id="account-username" placeholder="MyBot_12345" style="width: 140px;">
+      <input type="text" id="account-username" placeholder="MyBot_12345" maxlength="16" style="width: 140px;">
 
       <div class="sep"></div>
 
@@ -567,7 +567,14 @@
       </div>
     </div>
 
-    <div class="account-list" id="account-list"></div>
+    <div class="account-table-wrapper">
+      <div class="account-table-header">
+        <div class="header-cell username-header">Имя пользователя</div>
+        <div class="header-cell date-header">Дата создания</div>
+        <div class="header-cell actions-header">Действия</div>
+      </div>
+      <div class="account-list" id="account-list"></div>
+    </div>
 
     <div class="accounts-bottom-panel">
       <p class="account-counter">Всего аккаунтов: <span id="account-counter">0</span></p>
