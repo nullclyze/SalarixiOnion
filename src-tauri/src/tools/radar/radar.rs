@@ -7,7 +7,7 @@ use std::io::Write;
 use std::sync::Arc;
 
 use crate::core::{BOT_REGISTRY, PROFILES};
-use crate::extensions::BotDefaultExt;
+use crate::extensions::{BotDefaultExt, go_to};
 
 pub static RADAR_MANAGER: Lazy<Arc<RadarManager>> = Lazy::new(|| Arc::new(RadarManager::new()));
 
@@ -100,5 +100,11 @@ impl RadarManager {
       .unwrap();
 
     writeln!(&mut file, "{}", content).unwrap();
+  }
+
+  pub fn follow(&self, x: i32, z: i32) {
+    for username in PROFILES.get_all().into_keys() {
+      go_to(username, x, z);
+    }
   }
 }

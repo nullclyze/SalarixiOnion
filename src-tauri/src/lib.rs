@@ -101,6 +101,12 @@ async fn save_radar_data(target: String, path: String, filename: String, x: f64,
   RADAR_MANAGER.save_data(target, path, filename, x, y, z);
 }
 
+/// Функция преследования radar-цели
+#[tauri::command]
+async fn follow_radar_target(x: i32, z: i32) {
+  RADAR_MANAGER.follow(x, z);
+}
+
 /// Функция получения количества активных ботов
 #[tauri::command]
 async fn get_active_bots_count() -> i32 {
@@ -246,6 +252,7 @@ pub fn run() {
       send_command,
       get_radar_data,
       save_radar_data,
+      follow_radar_target,
       set_group,
       get_active_bots_count,
       get_memory_usage,

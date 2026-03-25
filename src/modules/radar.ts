@@ -40,7 +40,7 @@ class Radar {
     addTargetBtn.addEventListener('click', () => {
       if (!this.active) return;
 
-      const usernameInput = document.getElementById('radar-target-nickname') as HTMLInputElement;
+      const usernameInput = document.getElementById('radar-target-username') as HTMLInputElement;
       const username = usernameInput.value;
 
       if (this.targets.has(username)) return;
@@ -92,7 +92,7 @@ class Radar {
           </div>
 
           <div class="btn-group-flex" style="margin-top: 0;">
-            <button class="btn min" disabled>
+            <button class="btn min" id="radar-follow-target-${username}">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crosshair" viewBox="0 0 16 16">
                 <path d="M8.5.5a.5.5 0 0 0-1 0v.518A7 7 0 0 0 1.018 7.5H.5a.5.5 0 0 0 0 1h.518A7 7 0 0 0 7.5 14.982v.518a.5.5 0 0 0 1 0v-.518A7 7 0 0 0 14.982 8.5h.518a.5.5 0 0 0 0-1h-.518A7 7 0 0 0 8.5 1.018zm-6.48 7A6 6 0 0 1 7.5 2.02v.48a.5.5 0 0 0 1 0v-.48a6 6 0 0 1 5.48 5.48h-.48a.5.5 0 0 0 0 1h.48a6 6 0 0 1-5.48 5.48v-.48a.5.5 0 0 0-1 0v.48A6 6 0 0 1 2.02 8.5h.48a.5.5 0 0 0 0-1zM8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
               </svg>
@@ -168,34 +168,35 @@ class Radar {
   }
 
   /** Метод инициализации карточки цели. */
-  private initializeTargetCard(nickname: string): void {
+  private initializeTargetCard(username: string): void {
     try {
-      const openRouteBtn = document.getElementById(`radar-open-route-${nickname}`) as HTMLButtonElement;
-      const closeRouteBtn = document.getElementById(`radar-close-route-${nickname}`) as HTMLButtonElement;
-      const removeTargetBtn = document.getElementById(`radar-remove-target-${nickname}`) as HTMLButtonElement;
-      const copyTargetInfoBtn = document.getElementById(`radar-copy-target-info-${nickname}`) as HTMLButtonElement;
+      const openRouteBtn = document.getElementById(`radar-open-route-${username}`) as HTMLButtonElement;
+      const closeRouteBtn = document.getElementById(`radar-close-route-${username}`) as HTMLButtonElement;
+      const removeTargetBtn = document.getElementById(`radar-remove-target-${username}`) as HTMLButtonElement;
+      const copyTargetInfoBtn = document.getElementById(`radar-copy-target-info-${username}`) as HTMLButtonElement;
+      const followTargetBtn = document.getElementById(`radar-follow-target-${username}`) as HTMLButtonElement;
 
-      openRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${nickname}`) as HTMLElement).style.display = 'flex');
-      closeRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${nickname}`) as HTMLElement).style.display = 'none');
+      openRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${username}`) as HTMLElement).style.display = 'flex');
+      closeRouteBtn.addEventListener('click', () => (document.getElementById(`radar-route-${username}`) as HTMLElement).style.display = 'none');
 
       removeTargetBtn.addEventListener('click', () => {
-        const card = document.getElementById(`radar-target-${nickname}`) as HTMLElement;
-        this.targets.get(nickname)?.chart.destroy();
+        const card = document.getElementById(`radar-target-${username}`) as HTMLElement;
+        this.targets.get(username)?.chart.destroy();
         card.remove();
-        clearInterval(this.targets.get(nickname)?.interval);
-        this.targets.delete(nickname);
+        clearInterval(this.targets.get(username)?.interval);
+        this.targets.delete(username);
       });
 
       copyTargetInfoBtn.addEventListener('click', async () => {
         try {
-          const status = (document.getElementById(`radar-target-status-${nickname}`) as HTMLElement).textContent;
-          const uuid = this.targets.get(nickname)?.data?.fullUUID ? this.targets.get(nickname)?.data.fullUUID : '?';
-          const x = (document.getElementById(`radar-target-x-${nickname}`) as HTMLElement).textContent;
-          const y = (document.getElementById(`radar-target-y-${nickname}`) as HTMLElement).textContent;
-          const z = (document.getElementById(`radar-target-z-${nickname}`) as HTMLElement).textContent;
+          const status = (document.getElementById(`radar-target-status-${username}`) as HTMLElement).textContent;
+          const uuid = this.targets.get(username)?.data?.fullUUID ? this.targets.get(username)?.data.fullUUID : '?';
+          const x = (document.getElementById(`radar-target-x-${username}`) as HTMLElement).textContent;
+          const y = (document.getElementById(`radar-target-y-${username}`) as HTMLElement).textContent;
+          const z = (document.getElementById(`radar-target-z-${username}`) as HTMLElement).textContent;
 
           const text = `
-Никнейм: ${nickname}
+Никнейм: ${username}
 Статус: ${status}
 UUID: ${uuid}
 Координата X: ${x}
@@ -205,18 +206,34 @@ UUID: ${uuid}
 
           await navigator.clipboard.writeText(text);
 
-          messages.message('Радар', `Данные игрока ${nickname} успешно скопированы в буфер обмена`);
+          messages.message('Радар', `Данные игрока ${username} успешно скопированы в буфер обмена`);
         } catch (error) {
-          logger.log(`Ошибка копирования radar-данных: ${error}`, 'error');
+          logger.log(`Ошибка копирования данных радара: ${error}`, 'error');
         }
       });
 
-      this.targets.set(nickname, { data: null, interval: null, chart: null });
+      followTargetBtn.addEventListener('click', async () => {
+        try {
+          const x = parseInt((document.getElementById(`radar-target-x-${username}`) as HTMLElement).textContent);
+          const z = parseInt((document.getElementById(`radar-target-z-${username}`) as HTMLElement).textContent);
 
-      this.createTargetChart(nickname);
-      this.setTargetUpdateInterval(nickname, this.updateFrequency);
+          await invoke('follow_radar_target', {
+            x: x,
+            z: z
+          });
+
+          messages.message('Радар', `Боты начали преследовать игрока ${username} (X: ${x}, Z: ${z})`);
+        } catch (error) {
+          logger.log(`Ошибка преследования цели радара: ${error}`, 'error');
+        }
+      });
+
+      this.targets.set(username, { data: null, interval: null, chart: null });
+
+      this.createTargetChart(username);
+      this.setTargetUpdateInterval(username, this.updateFrequency);
     } catch (error) {
-      logger.log(`Ошибка инициализации radar-цели: ${error}`, 'error');
+      logger.log(`Ошибка инициализации цели радара: ${error}`, 'error');
     }
   }
 
