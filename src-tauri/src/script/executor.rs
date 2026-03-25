@@ -10,19 +10,23 @@ use std::sync::{
   Arc, RwLock,
 };
 
-use crate::{common::convert_hotbar_slot_to_inventory_slot, core::{get_state, set_state}}; 
-use crate::extensions::InvClick;
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
+use crate::extensions::InvClick;
 use crate::extensions::{
   entity_type_from, go_to, BotDefaultExt, BotInteractExt, BotInventoryExt, BotMovementExt,
   BotPhysicsExt, BotRotationExt,
 };
 use crate::webhook::*;
+use crate::{
+  common::convert_hotbar_slot_to_inventory_slot,
+  core::{get_state, set_state},
+};
 
 pub static SCRIPT_EXECUTOR: Lazy<ScriptExecutor> = Lazy::new(|| ScriptExecutor::new());
 
-static EXECUTOR_STATE: Lazy<Arc<RwLock<AtomicBool>>> = Lazy::new(|| Arc::new(RwLock::new(AtomicBool::new(false))));
+static EXECUTOR_STATE: Lazy<Arc<RwLock<AtomicBool>>> =
+  Lazy::new(|| Arc::new(RwLock::new(AtomicBool::new(false))));
 
 pub struct ScriptExecutor;
 
@@ -462,10 +466,13 @@ impl ScriptExecutor {
   }
 
   pub fn execute(&self, su: String, script: String) {
-    EXECUTOR_STATE.read().unwrap().store(true, Ordering::Relaxed);
+    EXECUTOR_STATE
+      .read()
+      .unwrap()
+      .store(true, Ordering::Relaxed);
 
     let mut engine = Engine::new();
-    
+
     engine.on_progress(move |_| {
       if !EXECUTOR_STATE.read().unwrap().load(Ordering::Relaxed) {
         Some(Dynamic::UNIT)
@@ -496,49 +503,63 @@ impl ScriptExecutor {
       .register_fn("get_bot_id", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.id().0 as i64)
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| b.id().0 as i64)
         }
       })
       .register_fn("get_bot_ping", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.ping())
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| b.ping())
         }
       })
       .register_fn("get_bot_feet_pos", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| {
-            let pos = b.feet_pos();
-            (pos.x, pos.y, pos.z)
-          })
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| {
+              let pos = b.feet_pos();
+              (pos.x, pos.y, pos.z)
+            })
         }
       })
       .register_fn("get_bot_eye_pos", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| {
-            let pos = b.eye_pos();
-            (pos.x, pos.y, pos.z)
-          })
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| {
+              let pos = b.eye_pos();
+              (pos.x, pos.y, pos.z)
+            })
         }
       })
       .register_fn("get_bot_health", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.get_health() as f64)
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| b.get_health() as f64)
         }
       })
       .register_fn("get_bot_satiety", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.get_satiety() as i64)
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| b.get_satiety() as i64)
         }
       })
       .register_fn("bot_is_workable", {
         let su = su.clone();
         move |mu: &str| {
-          BOT_REGISTRY.get_bot(&Self::parse_username(&su, mu)).map(|b| b.workable())
+          BOT_REGISTRY
+            .get_bot(&Self::parse_username(&su, mu))
+            .map(|b| b.workable())
         }
       });
 
@@ -559,15 +580,11 @@ impl ScriptExecutor {
       })
       .register_fn("set_jumping", {
         let su = su.clone();
-        move |mu: &str, state: bool| {
-          Self::set_jumping(&Self::parse_username(&su, mu), state)
-        }
+        move |mu: &str, state: bool| Self::set_jumping(&Self::parse_username(&su, mu), state)
       })
       .register_fn("set_crouching", {
         let su = su.clone();
-        move |mu: &str, state: bool| {
-          Self::set_crouching(&Self::parse_username(&su, mu), state)
-        }
+        move |mu: &str, state: bool| Self::set_crouching(&Self::parse_username(&su, mu), state)
       })
       .register_fn("set_velocity", {
         let su = su.clone();
@@ -601,9 +618,7 @@ impl ScriptExecutor {
       })
       .register_fn("set_has_impulse", {
         let su = su.clone();
-        move |mu: &str, state: bool| {
-          Self::set_has_impulse(&Self::parse_username(&su, mu), state)
-        }
+        move |mu: &str, state: bool| Self::set_has_impulse(&Self::parse_username(&su, mu), state)
       })
       .register_fn("start_walking", {
         let su = su.clone();
@@ -629,9 +644,7 @@ impl ScriptExecutor {
       })
       .register_fn("stop_pathfinder", {
         let su = su.clone();
-        move |mu: &str| {
-          Self::stop_pathfinder(&Self::parse_username(&su, mu))
-        }
+        move |mu: &str| Self::stop_pathfinder(&Self::parse_username(&su, mu))
       });
 
     engine
@@ -657,20 +670,21 @@ impl ScriptExecutor {
     engine
       .register_fn("drop_selected_item", {
         let su = su.clone();
-        move |mu: &str, lock: bool| {
-          Self::drop_selected_item(&Self::parse_username(&su, mu), lock)
-        }
+        move |mu: &str, lock: bool| Self::drop_selected_item(&Self::parse_username(&su, mu), lock)
       })
       .register_fn("drop_all_items", {
         let su = su.clone();
-        move |mu: &str, lock: bool| {
-          Self::drop_all_items(&Self::parse_username(&su, mu), lock)
-        }
+        move |mu: &str, lock: bool| Self::drop_all_items(&Self::parse_username(&su, mu), lock)
       })
       .register_fn("inv_click", {
         let su = su.clone();
         move |mu: &str, slot: i64, mode: i64, lock: bool| {
-          Self::inv_click(&Self::parse_username(&su, mu), slot as usize, mode as u8, lock)
+          Self::inv_click(
+            &Self::parse_username(&su, mu),
+            slot as usize,
+            mode as u8,
+            lock,
+          )
         }
       })
       .register_fn("inv_click_on", {
@@ -690,20 +704,21 @@ impl ScriptExecutor {
       .register_fn("attack", {
         let su = su.clone();
         move |mu: &str, target: &str, distance: f64, look_at_target: bool| {
-          Self::attack(&Self::parse_username(&su, mu), target.to_string(), distance, look_at_target);
+          Self::attack(
+            &Self::parse_username(&su, mu),
+            target.to_string(),
+            distance,
+            look_at_target,
+          );
         }
       })
       .register_fn("start_use_item", {
         let su = su.clone();
-        move |mu: &str, hand: &str| {
-          Self::start_use_item(&Self::parse_username(&su, mu), hand)
-        }
+        move |mu: &str, hand: &str| Self::start_use_item(&Self::parse_username(&su, mu), hand)
       })
       .register_fn("release_use_item", {
         let su = su.clone();
-        move |mu: &str| {
-          Self::release_use_item(&Self::parse_username(&su, mu))
-        }
+        move |mu: &str| Self::release_use_item(&Self::parse_username(&su, mu))
       });
 
     engine
@@ -715,9 +730,7 @@ impl ScriptExecutor {
       })
       .register_fn("get_state", {
         let su = su.clone();
-        move |mu: &str, field: &str| {
-          get_state(&Self::parse_username(&su, mu), field)
-        }
+        move |mu: &str, field: &str| get_state(&Self::parse_username(&su, mu), field)
       });
 
     match engine.eval::<()>(script.as_str()) {
@@ -725,26 +738,30 @@ impl ScriptExecutor {
         send_log("Скрипт выполнен".to_string(), "info");
         send_message("Скриптинг", "Скрипт выполнен".to_string());
       }
-      Err(err) => {
-        match err.as_ref() {
-          &EvalAltResult::ErrorTerminated(_, _) => {
-            send_log("Скрипт принудительно остановлен".to_string(), "info");
-            send_message("Скриптинг", "Скрипт принудительно остановлен".to_string());
-          }
-          _ => {
-            send_log(format!("Ошибка выполнения скрипта: {}", err), "error");
-            send_message("Скриптинг", "Не удалось выполнить скрипт".to_string());
-          }
+      Err(err) => match err.as_ref() {
+        &EvalAltResult::ErrorTerminated(_, _) => {
+          send_log("Скрипт принудительно остановлен".to_string(), "info");
+          send_message("Скриптинг", "Скрипт принудительно остановлен".to_string());
         }
-      }
+        _ => {
+          send_log(format!("Ошибка выполнения скрипта: {}", err), "error");
+          send_message("Скриптинг", "Не удалось выполнить скрипт".to_string());
+        }
+      },
     }
 
-    EXECUTOR_STATE.read().unwrap().store(false, Ordering::Relaxed);
+    EXECUTOR_STATE
+      .read()
+      .unwrap()
+      .store(false, Ordering::Relaxed);
   }
 
   pub fn stop(&self) {
     if EXECUTOR_STATE.read().unwrap().load(Ordering::Relaxed) {
-      EXECUTOR_STATE.read().unwrap().store(false, Ordering::Relaxed);
+      EXECUTOR_STATE
+        .read()
+        .unwrap()
+        .store(false, Ordering::Relaxed);
     }
   }
 }

@@ -27,13 +27,13 @@ pub struct ChatEventPayload {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiWebCaptchaEventPayload {
   pub captcha_url: String,
-  pub nickname: String,
+  pub username: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AntiMapCaptchaEventPayload {
   pub base64_code: String,
-  pub nickname: String,
+  pub username: String,
 }
 
 pub struct EmitManager {

@@ -15,7 +15,7 @@ use thirtyfour::{
 };
 use tokio::sync::broadcast;
 
-use crate::core::{BOT_REGISTRY, CaptchaBypassOptions};
+use crate::core::{CaptchaBypassOptions, BOT_REGISTRY};
 use crate::{core::current_options, emit::send_log, generators::randint};
 
 pub static WEB_CAPTCHA_BYPASS: Lazy<Arc<WebCaptchaBypass>> =
@@ -313,28 +313,32 @@ struct Service2CaptchaRequest {
   comment: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Service2CaptchaOkResponse {
-  errorId: i32,
+  error_id: i32,
   status: String,
   solution: Service2CaptchaOkResponseSolution,
   cost: f64,
   ip: String,
-  createTime: u64,
-  endTime: u64,
-  solveCount: i32
+  create_time: u64,
+  end_time: u64,
+  solve_count: i32,
 }
 
 #[derive(Deserialize)]
 struct Service2CaptchaOkResponseSolution {
-  text: String
+  text: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Service2CaptchaBadResponse {
-  errorId: i32,
-  errorCode: String,
-  errorDescription: String
+  error_id: i32,
+  error_code: String,
+  error_description: String,
 }
 
 impl MapCaptchaBypass {
@@ -577,11 +581,16 @@ impl MapCaptchaBypass {
     base64_code
   }
 
-  pub fn solve_captcha(&self, username: String, base64_code: String, options: CaptchaBypassOptions) {
+  pub fn solve_captcha(
+    &self,
+    username: String,
+    base64_code: String,
+    options: CaptchaBypassOptions,
+  ) {
     tokio::spawn(async move {
       let url = match options.api_service.as_str() {
         "2captcha" => "https://api.2captcha.com/createTask",
-        _ => return
+        _ => return,
       };
 
       let Some(api_key) = options.api_key else {
@@ -606,35 +615,48 @@ impl MapCaptchaBypass {
 
       let client = reqwest::Client::new();
 
-      let resp = match client
-        .post(url)
-        .json(&req_body)
-        .send()
-        .await {
+      let resp = match client.post(url).json(&req_body).send().await {
         Ok(r) => r,
-        Err(_) => return
+        Err(_) => return,
       };
 
       if !resp.status().is_success() {
         return;
       }
 
-      let body = resp.bytes().await.expect("Response data could not be retrieved");
+      let body = resp
+        .bytes()
+        .await
+        .expect("Response data could not be retrieved");
 
       let body_str = std::str::from_utf8(&body).unwrap_or("<non-utf8>");
 
       if let Ok(ok_resp) = serde_json::from_slice::<Service2CaptchaOkResponse>(&body) {
-        if ok_resp.errorId != 0 {
+        if ok_resp.error_id != 0 {
           return;
         }
 
-        BOT_REGISTRY.async_get_bot(&username, async |bot| {
-          bot.chat(ok_resp.solution.text);
-        }).await;
+        BOT_REGISTRY
+          .async_get_bot(&username, async |bot| {
+            bot.chat(ok_resp.solution.text);
+          })
+          .await;
       } else if let Ok(bad_resp) = serde_json::from_slice::<Service2CaptchaBadResponse>(&body) {
-        send_log(format!("Бот {} не смог решить капчу с помощью {}: {}", username, options.api_service, bad_resp.errorDescription), "error");
+        send_log(
+          format!(
+            "Бот {} не смог решить капчу с помощью {}: {}",
+            username, options.api_service, bad_resp.error_description
+          ),
+          "error",
+        );
       } else {
-        send_log(format!("Бот {} получил неизвестный формат ответа от {}: {}", username, options.api_service, body_str), "error");
+        send_log(
+          format!(
+            "Бот {} получил неизвестный формат ответа от {}: {}",
+            username, options.api_service, body_str
+          ),
+          "error",
+        );
       }
     });
   }
@@ -671,14 +693,25 @@ impl MapAccumulator {
 
   pub fn add_frame_position(&self, username: &str, entity_id: i32, x: f64, y: f64, z: f64) {
     let mut positions = self.frame_positions.write().unwrap();
-    let user_positions = positions.entry(username.to_string()).or_insert_with(Vec::new);
+    let user_positions = positions
+      .entry(username.to_string())
+      .or_insert_with(Vec::new);
     user_positions.push((entity_id, x, y, z));
   }
 
-  pub fn add_map_data(&self, username: &str, width: u32, height: u32, colors: Vec<u8>, pos_x: f64, pos_z: f64, yaw: f32) {
+  pub fn add_map_data(
+    &self,
+    username: &str,
+    width: u32,
+    height: u32,
+    colors: Vec<u8>,
+    pos_x: f64,
+    pos_z: f64,
+    yaw: f32,
+  ) {
     let mut maps = self.maps.write().unwrap();
     let user_maps = maps.entry(username.to_string()).or_insert_with(Vec::new);
-    
+
     user_maps.push(MapData {
       width,
       height,
@@ -719,7 +752,8 @@ impl MapAccumulator {
       return None;
     };
 
-    let num_frames = (opts.captcha_bypass.number_of_columns * opts.captcha_bypass.number_of_rows) as usize;
+    let num_frames =
+      (opts.captcha_bypass.number_of_columns * opts.captcha_bypass.number_of_rows) as usize;
 
     if map_data.is_empty() || map_data.len() < num_frames {
       return None;
@@ -737,10 +771,10 @@ impl MapAccumulator {
         let dx = map.x - pos_x;
         let dz = map.z - pos_z;
         let distance = (dx * dx + dz * dz).sqrt();
-        
+
         let angle_to_frame = dz.atan2(dx);
         let angle_diff = (angle_to_frame - yaw_rad).abs();
-        
+
         let normalized_angle = if angle_diff > PI {
           2.0 * PI - angle_diff
         } else {
@@ -761,13 +795,13 @@ impl MapAccumulator {
     if let Some(user_positions) = positions.get(username) {
       if user_positions.len() >= num_frames {
         let mut sorted_positions = user_positions.clone();
-        
-        sorted_positions.sort_by(|a, b| {
-          match b.2.partial_cmp(&a.2).unwrap_or(Ordering::Equal) {
+
+        sorted_positions.sort_by(
+          |a, b| match b.2.partial_cmp(&a.2).unwrap_or(Ordering::Equal) {
             Ordering::Equal => a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal),
             other => other,
-          }
-        });
+          },
+        );
 
         let mut sorted_maps = vec![];
 
