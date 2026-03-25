@@ -206,11 +206,14 @@ pub struct BasicOptions {
   pub use_auto_rejoin: bool,
   pub use_auto_register: bool,
   pub use_auto_login: bool,
+  pub use_chat_signing: bool,
+  pub use_auto_respawn: bool,
+  pub use_accept_rp: bool,
+  pub use_pathfinder: bool,
   pub use_auto_script: bool,
   pub use_proxy: bool,
   pub use_anti_captcha: bool,
   pub use_webhook: bool,
-  pub use_chat_signing: bool,
   pub use_accounts: bool,
   pub skin_type: String,
   pub set_skin_command: Option<String>,
@@ -452,23 +455,36 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
     rt.block_on(async move {
       let local_set = tokio::task::LocalSet::new();
 
-      let default_plugins = azalea::DefaultPlugins;
-      let mut plugins = default_plugins.build();
+      let mut swarm_plugins = azalea::DefaultPlugins.build();
 
       if !options.basic.use_auto_rejoin {
-        plugins = plugins.disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
+        swarm_plugins = swarm_plugins.disable::<azalea::auto_reconnect::AutoReconnectPlugin>();
       } else {
         AutoReconnectDelay::new(Duration::from_millis(options.basic.rejoin_delay));
       }
 
       if !options.basic.use_chat_signing {
-        plugins = plugins.disable::<azalea::chat_signing::ChatSigningPlugin>();
+        swarm_plugins = swarm_plugins.disable::<azalea::chat_signing::ChatSigningPlugin>();
+      }
+
+      let mut bot_plugins = azalea::bot::DefaultBotPlugins.build();
+
+      if !options.basic.use_auto_respawn {
+        bot_plugins = bot_plugins.disable::<azalea::auto_respawn::AutoRespawnPlugin>();
+      }
+
+      if !options.basic.use_accept_rp {
+        bot_plugins = bot_plugins.disable::<azalea::accept_resource_packs::AcceptResourcePacksPlugin>();
+      }
+
+      if !options.basic.use_pathfinder {
+        bot_plugins = bot_plugins.disable::<azalea::pathfinder::PathfinderPlugin>();
       }
 
       local_set.spawn_local(async move {
         let mut flow = SwarmBuilder::new_without_plugins()
-          .add_plugins(plugins)
-          .add_plugins(azalea::bot::DefaultBotPlugins)
+          .add_plugins(swarm_plugins)
+          .add_plugins(bot_plugins)
           .add_plugins(azalea::swarm::DefaultSwarmPlugins)
           .join_delay(Duration::from_millis(options.basic.join_delay))
           .set_swarm_handler(swarm_handler)

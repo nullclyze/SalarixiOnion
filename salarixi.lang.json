@@ -491,6 +491,41 @@
       }
     },
     { 
+      "tags": ["checkbox:auto-rejoin"], 
+      "lang": {
+        "ru": "Использовать Auto-Rejoin",
+        "en": "Use Auto-Rejoin"
+      }
+    },
+    { 
+      "tags": ["checkbox:chat-signing"], 
+      "lang": {
+        "ru": "Использовать Chat-Signing",
+        "en": "Use Chat-Signing"
+      }
+    },
+    { 
+      "tags": ["checkbox:auto-respawn"], 
+      "lang": {
+        "ru": "Использовать Auto-Respawn",
+        "en": "Use Auto-Respawn"
+      }
+    },
+    { 
+      "tags": ["checkbox:accept-rp"], 
+      "lang": {
+        "ru": "Использовать Accept-RP",
+        "en": "Use Accept-RP"
+      }
+    },
+    { 
+      "tags": ["checkbox:pathfinder"], 
+      "lang": {
+        "ru": "Использовать Pathfinder",
+        "en": "Use Pathfinder"
+      }
+    },
+    { 
       "tags": ["checkbox:auto-script"], 
       "lang": {
         "ru": "Использовать Auto-Script",
@@ -537,20 +572,6 @@
       "lang": {
         "ru": "Сборщик мусора",
         "en": "Garbage Collector"
-      }
-    },
-    { 
-      "tags": ["checkbox:auto-rejoin"], 
-      "lang": {
-        "ru": "Использовать Auto-Rejoin",
-        "en": "Use Auto-Rejoin"
-      }
-    },
-    { 
-      "tags": ["checkbox:chat-signing"], 
-      "lang": {
-        "ru": "Использовать Chat-Signing",
-        "en": "Use Chat-Signing"
       }
     },
     { 
