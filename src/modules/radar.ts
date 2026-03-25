@@ -214,8 +214,13 @@ UUID: ${uuid}
 
       followTargetBtn.addEventListener('click', async () => {
         try {
-          const x = parseInt((document.getElementById(`radar-target-x-${username}`) as HTMLElement).textContent);
-          const z = parseInt((document.getElementById(`radar-target-z-${username}`) as HTMLElement).textContent);
+          const xText = document.getElementById(`radar-target-x-${username}`)?.textContent;
+          const zText = document.getElementById(`radar-target-z-${username}`)?.textContent;
+
+          if (!xText || !zText) return;
+
+          const x = parseInt(xText);
+          const z = parseInt(zText);
 
           await invoke('follow_radar_target', {
             x: x,
