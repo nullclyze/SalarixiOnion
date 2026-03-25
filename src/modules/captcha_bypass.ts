@@ -26,11 +26,11 @@ class CaptchaBypass {
 
     await listen('anti-web-captcha', (event) => {
       try {
-        const payload = event.payload as { captcha_url: string; nickname: string; };
+        const payload = event.payload as { captcha_url: string; username: string; };
         const captcha_url = payload.captcha_url;
-        const nickname = payload.nickname;
+        const username = payload.username;
 
-        this.createCaptchaCard(nickname, {
+        this.createCaptchaCard(username, {
           type: 'web',
           data: {
             url: captcha_url,
@@ -44,11 +44,11 @@ class CaptchaBypass {
 
     await listen('anti-map-captcha', (event) => {
       try {
-        const payload = event.payload as { base64_code: string; nickname: string; };
+        const payload = event.payload as { base64_code: string; username: string; };
         const base64 = payload.base64_code;
-        const nickname = payload.nickname;
+        const username = payload.username;
 
-        this.createCaptchaCard(nickname, {
+        this.createCaptchaCard(username, {
           type: 'map',
           data: {
             url: null,
