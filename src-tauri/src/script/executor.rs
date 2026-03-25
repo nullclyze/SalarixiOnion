@@ -505,7 +505,7 @@ impl ScriptExecutor {
         move |mu: &str| {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
-            .map(|b| b.id().0 as i64)
+            .map(|b| b.id().0 as i64).unwrap_or(0)
         }
       })
       .register_fn("get_bot_ping", {
@@ -513,7 +513,7 @@ impl ScriptExecutor {
         move |mu: &str| {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
-            .map(|b| b.ping())
+            .map(|b| b.ping() as i64).unwrap_or(0)
         }
       })
       .register_fn("get_bot_feet_pos", {
@@ -524,7 +524,7 @@ impl ScriptExecutor {
             .map(|b| {
               let pos = b.feet_pos();
               (pos.x, pos.y, pos.z)
-            })
+            }).unwrap_or((0.0, 0.0, 0.0))
         }
       })
       .register_fn("get_bot_eye_pos", {
@@ -535,7 +535,7 @@ impl ScriptExecutor {
             .map(|b| {
               let pos = b.eye_pos();
               (pos.x, pos.y, pos.z)
-            })
+            }).unwrap_or((0.0, 0.0, 0.0))
         }
       })
       .register_fn("get_bot_health", {
@@ -543,7 +543,7 @@ impl ScriptExecutor {
         move |mu: &str| {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
-            .map(|b| b.get_health() as f64)
+            .map(|b| b.get_health() as f64).unwrap_or(0.0)
         }
       })
       .register_fn("get_bot_satiety", {
@@ -551,7 +551,7 @@ impl ScriptExecutor {
         move |mu: &str| {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
-            .map(|b| b.get_satiety() as i64)
+            .map(|b| b.get_satiety() as i64).unwrap_or(0)
         }
       })
       .register_fn("bot_is_workable", {
@@ -559,7 +559,7 @@ impl ScriptExecutor {
         move |mu: &str| {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
-            .map(|b| b.workable())
+            .map(|b| b.workable()).unwrap_or(false)
         }
       });
 
