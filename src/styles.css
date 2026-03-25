@@ -774,6 +774,12 @@ p {
   background: rgb(17, 17, 17);
 }
 
+.btn.min:disabled {
+  cursor: default;
+  background: #0f0f0f;
+  border-color: #0f0f0f;
+}
+
 .btn.pretty:disabled {
   cursor: default;
   color: #727070;
