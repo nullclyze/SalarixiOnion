@@ -390,7 +390,7 @@ class Monitoring {
   /** Метод создания триграмм из слова. */
   private createTrigrams(word: string): string[] {
     const trigrams = [];
-    for (let i = 0; i <= word.length - 3; i++) trigrams.push(word.substr(i, 3));
+    for (let i = 0; i <= word.length - 3; i++) trigrams.push(word.substring(i, 3));
     return trigrams;
   }
 
