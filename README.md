@@ -46,6 +46,7 @@ The client has several large sections, they will be presented below in the table
 |------|-------------------------------------------------------|
 | Main / Главная |  Starting and stopping bots, basic settings           |
 | Settings / Настройки     |      Various bot settings       |
+| Accounts / Аккаунты    | Set up accounts for bots            |
 | Plugins / Плагины     |      Plugins for bots      |
 | Proxy / Прокси    | Setting up a proxy for bots            |
 | Anti-Captcha / Анти-Капча    | Anti-Captcha settings        |
@@ -55,8 +56,7 @@ The client has several large sections, they will be presented below in the table
 | Scripting / Скриптинг     |  Writing scripts for bots         |
 | Monitoring / Мониторинг     |  Real-time bot monitoring           |
 | Graphic / График     |  Data in the form of graphs          |
-| Analysis / Анализ     |  In development         |
-| Spy / Шпион     |  In development          |
+| Analysis / Анализ     |  In development...         |
 | Radar / Радар     |  Detection of players and their positions          |
 | Ping / Пинг     |  Pinging servers  |
 | Journal / Журнал     |  Event logging         |
@@ -107,7 +107,14 @@ The client has several large sections, they will be presented below in the table
 
 ### Windows (MSI)
 
-1. Download **.msi** file from GitHub
+1. Download **setup .msi** file from GitHub
+2. Run downloaded file
+3. Go through installation process
+4. Ready
+
+### Windows (NSIS)
+
+1. Download **setup .exe** file from GitHub
 2. Run downloaded file
 3. Go through installation process
 4. Ready
@@ -118,14 +125,14 @@ The client has several large sections, they will be presented below in the table
 2. Run downloaded file
 3. Ready
 
-### Ubuntu Linux
+### Debian-based Linux
 
 1. Download **.deb** file from GitHub
 2. Open directory with downloaded file in terminal
 3. Write ```sudo dpkg -i FILENAME.deb```
 4. Ready
 
-### Fedora Linux
+### RedHat-based Linux
 
 1. Download **.rpm** file from GitHub
 2. Open directory with downloaded file in terminal
@@ -134,8 +141,8 @@ The client has several large sections, they will be presented below in the table
 
 ## 📜 Additional Information
 
-- **License:** [License](./LICENSE)
-- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.8-release)
+- **License:** [Apache-2.0 license](./LICENSE)
+- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.9-release)
 
 ## 💸 Donate
 
