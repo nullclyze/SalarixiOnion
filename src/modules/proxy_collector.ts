@@ -23,7 +23,7 @@ const apicServices = {
     'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=1&sortBy=lastChecked&sortType=desc',
     'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=2&sortBy=lastChecked&sortType=desc',
     'https://proxyfreeonly.com/api/free-proxy-list?limit=500&page=3&sortBy=lastChecked&sortType=desc',
-  ],
+  ]
 };
 
 const upcServices = {
@@ -101,7 +101,7 @@ class ProxyCollector {
         count: count
       });
 
-      if (proxies) {
+      if (proxies && proxies.trim() !== '') {
         this.setStatus('Поиск окончен', '#0cd212ff');
         this.list!.value = Array.from(String(proxies).split('\n')).filter(p => p && p.trim() !== '').join('\n');
       } else {
@@ -140,7 +140,7 @@ class ProxyCollector {
         for (const proxy of proxy_list) result.push(proxy);
       }
 
-      return result.join('\n');
+      return result.length > 0 ? result.join('\n') : null;
     } catch (_) {
       return null;
     }
@@ -193,13 +193,17 @@ class ProxyCollector {
     for (const r of results) {
       if (!r.success) continue;
 
-      const data = String(r.data).trim().split('\n');
-      const name = r.name;
+      try {
+        const data = String(r.data).trim().split('\n');
+        const name = r.name;
 
-      if (name.includes('gfpcom-proxy-list')) {
-        for (const proxy of data ?? []) protocol === 'any' || proxy.split('://')[0].toLowerCase() === protocol ? proxies.push(proxy) : null;
-      } else if (name.includes('fyvri-proxy-list') || name.includes('r00tee-proxy-list') || name.includes('vmheaven-proxy-list') || name.includes('iplocate-proxy-list')) {
-        for (const proxy of data ?? []) protocol === 'socks5' ? proxies.push(`socks5://${proxy}`) : null;
+        if (name.includes('gfpcom-proxy-list')) {
+          for (const proxy of data ?? []) protocol === 'any' || proxy.split('://')[0].toLowerCase() === protocol ? proxies.push(proxy) : null;
+        } else if (name.includes('fyvri-proxy-list') || name.includes('r00tee-proxy-list') || name.includes('vmheaven-proxy-list') || name.includes('iplocate-proxy-list')) {
+          for (const proxy of data ?? []) protocol === 'socks5' ? proxies.push(`socks5://${proxy}`) : null;
+        }
+      } catch (_) {
+        continue;
       }
     } 
 
@@ -216,34 +220,38 @@ class ProxyCollector {
     for (const r of results) {
       if (!r.success) continue;
 
-      const data = r.data;
-      const name = r.name;
+      try {
+        const data = r.data;
+        const name = r.name;
 
-      if (name === 'proxyscrape') {
-        for (const proxy of data.proxies ?? []) country === 'any' || proxy.ip_data?.countryCode === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
-      } else if (name === 'proxifly') {
-        for (const proxy of data ?? []) country === 'any' || proxy.geolocation?.country === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
-      } else if (name === 'jetkai-proxy-list') {
-        for (const proxy of data ?? []) {
-          if (country === 'any' || proxy.location?.isocode === country.toUpperCase()) {
-            const type = String(proxy.protocols?.[0]?.type);
-            protocol === 'any' || type.toLowerCase() === protocol ? proxies.push(`${type}://${proxy.ip}:${proxy.port}`) : null;
-          }
-        }
-      } else if (name === 'monosans-proxy-list') {
-        for (const proxy of data ?? []) proxy.username == null && proxy.password == null ? country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase() ? protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol ? proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`) : null : null : null;
-      } else if (name === 'vakhov-proxy-list') {
-        for (const proxy of data ?? []) {
-          if (country === 'any' || proxy.country_code === country.toUpperCase()) {
-            if (protocol === 'any') {
-              for (const p of ['socks5', 'socks4', 'http']) Number(proxy[p]) !== 0 ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
-            } else {
-              Number(proxy[protocol]) !== 0 ? proxies.push(`${protocol}://${proxy.ip}:${proxy.port}`) : null;
+        if (name === 'proxyscrape') {
+          for (const proxy of data.proxies ?? []) country === 'any' || proxy.ip_data?.countryCode === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
+        } else if (name === 'proxifly') {
+          for (const proxy of data ?? []) country === 'any' || proxy.geolocation?.country === country.toUpperCase() ? protocol === 'any' || proxy.protocol.toLowerCase() === protocol ? proxies.push(proxy.proxy) : null : null;
+        } else if (name === 'jetkai-proxy-list') {
+          for (const proxy of data ?? []) {
+            if (country === 'any' || proxy.location?.isocode === country.toUpperCase()) {
+              const type = String(proxy.protocols?.[0]?.type);
+              protocol === 'any' || type.toLowerCase() === protocol ? proxies.push(`${type}://${proxy.ip}:${proxy.port}`) : null;
             }
           }
+        } else if (name === 'monosans-proxy-list') {
+          for (const proxy of data ?? []) proxy.username == null && proxy.password == null ? country === 'any' || proxy.geolocation?.country?.iso_code === country.toUpperCase() ? protocol === 'any' || String(proxy.protocol).toLowerCase() === protocol ? proxies.push(`${proxy.protocol}://${proxy.host}:${proxy.port}`) : null : null : null;
+        } else if (name === 'vakhov-proxy-list') {
+          for (const proxy of data ?? []) {
+            if (country === 'any' || proxy.country_code === country.toUpperCase()) {
+              if (protocol === 'any') {
+                for (const p of ['socks5', 'socks4', 'http']) Number(proxy[p]) !== 0 ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
+              } else {
+                Number(proxy[protocol]) !== 0 ? proxies.push(`${protocol}://${proxy.ip}:${proxy.port}`) : null;
+              }
+            }
+          }
+        } else if (name === 'geonode' || name === 'proxyfreeonly') {
+          for (const proxy of data ?? []) if (country === 'any' || proxy.country === country.toUpperCase()) for (const p of (proxy.protocols ?? []).map((p: string) => p.toLowerCase())) protocol === 'any' || p === protocol ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
         }
-      } else if (name === 'geonode' || name === 'proxyfreeonly') {
-        for (const proxy of data ?? []) if (country === 'any' || proxy.country === country.toUpperCase()) for (const p of (proxy.protocols ?? []).map((p: string) => p.toLowerCase())) protocol === 'any' || p === protocol ? proxies.push(`${p}://${proxy.ip}:${proxy.port}`) : null;
+      } catch (_) {
+        continue;
       }
     }
 
