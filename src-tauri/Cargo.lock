@@ -313,21 +313,22 @@ dependencies = [
 [[package]]
 name = "azalea"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afd200ac47c50ea6ae84485a86d99c331d03d77a8ae6f3aa7700c3d583475a28"
 dependencies = [
- "azalea-auth",
- "azalea-block",
- "azalea-brigadier",
- "azalea-buf",
- "azalea-chat",
- "azalea-client",
- "azalea-core",
- "azalea-entity",
- "azalea-inventory",
- "azalea-physics",
- "azalea-protocol",
- "azalea-registry",
- "azalea-world",
+ "azalea-auth 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-brigadier 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-client 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-entity 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-physics 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-protocol 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-world 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "bevy_app",
  "bevy_ecs",
  "bevy_tasks",
@@ -341,6 +342,66 @@ dependencies = [
  "parking_lot",
  "rustc-hash",
  "serde",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "azalea-auth 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-brigadier 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-client 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-entity 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-physics 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-protocol 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-world 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_tasks",
+ "derive_more 2.1.1",
+ "futures",
+ "futures-lite",
+ "indexmap 2.12.1",
+ "nohash-hasher",
+ "num-format",
+ "num-traits",
+ "parking_lot",
+ "rustc-hash",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-auth"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "582d2396c7992afe6039aee6be1ac914f151463c39f1c347d59f0700592a890d"
+dependencies = [
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-crypto 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64 0.22.1",
+ "chrono",
+ "crypto-bigint",
+ "crypto-primes",
+ "indexmap 2.12.1",
+ "reqwest 0.12.28",
+ "rsa",
+ "serde",
+ "serde_json",
+ "signature",
+ "thiserror 2.0.17",
  "tokio",
  "tracing",
  "uuid",
@@ -351,8 +412,8 @@ name = "azalea-auth"
 version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-buf",
- "azalea-crypto",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-crypto 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "base64 0.22.1",
  "chrono",
  "crypto-bigint",
@@ -372,11 +433,33 @@ dependencies = [
 [[package]]
 name = "azalea-block"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11b8385d1a3c1078482d5f387a7ae67fa25598cb95b450db2d203881f0c8c7a1"
+dependencies = [
+ "azalea-block-macros 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "azalea-block"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-block-macros",
- "azalea-buf",
- "azalea-registry",
+ "azalea-block-macros 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+]
+
+[[package]]
+name = "azalea-block-macros"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43f9b9c5f121a90373f4f5f64ea29a558799196b4ad787a177753360a9bf8a50"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -392,19 +475,31 @@ dependencies = [
 [[package]]
 name = "azalea-brigadier"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3000ee497c9242b009109541d0bd64736059c91a5fd5195af6120497a97c4f3f"
+dependencies = [
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parking_lot",
+]
+
+[[package]]
+name = "azalea-brigadier"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-buf",
- "azalea-chat",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "parking_lot",
 ]
 
 [[package]]
 name = "azalea-buf"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b431eb83e6af556c996d3494413541865d0d4852003338e34c35274183f6a57f"
 dependencies = [
- "azalea-buf-macros",
+ "azalea-buf-macros 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder",
  "indexmap 2.12.1",
  "serde_json",
@@ -412,6 +507,32 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "azalea-buf"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "azalea-buf-macros 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "byteorder",
+ "indexmap 2.12.1",
+ "serde_json",
+ "simdnbt",
+ "thiserror 2.0.17",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-buf-macros"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0b66d3b884efbc2e377e7da30fd7a787661a3383b963006c7222f20d8ca65cb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -427,11 +548,26 @@ dependencies = [
 [[package]]
 name = "azalea-chat"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6953c16c16d9eba377b5acad2a6c44e1d6625a3d67fecfd1fb93641ed8b07e3"
+dependencies = [
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-language 0.15.1+mc1.21.11",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+ "serde_json",
+ "simdnbt",
+ "tracing",
+]
+
+[[package]]
+name = "azalea-chat"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-buf",
- "azalea-language",
- "azalea-registry",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-language 0.15.0+mc1.21.11",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "serde",
  "serde_json",
  "simdnbt",
@@ -441,21 +577,22 @@ dependencies = [
 [[package]]
 name = "azalea-client"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37bb31dc9c5eabd95c8cc89ad3cf3e424cf7fe3c76b16f1381ae5797cc243479"
 dependencies = [
  "async-compat",
- "azalea-auth",
- "azalea-block",
- "azalea-buf",
- "azalea-chat",
- "azalea-core",
- "azalea-crypto",
- "azalea-entity",
- "azalea-inventory",
- "azalea-physics",
- "azalea-protocol",
- "azalea-registry",
- "azalea-world",
+ "azalea-auth 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-crypto 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-entity 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-physics 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-protocol 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-world 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "bevy_app",
  "bevy_ecs",
  "bevy_log",
@@ -478,13 +615,72 @@ dependencies = [
 ]
 
 [[package]]
+name = "azalea-client"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "async-compat",
+ "azalea-auth 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-crypto 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-entity 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-physics 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-protocol 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-world 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_tasks",
+ "bevy_time",
+ "bevy_utils",
+ "chrono",
+ "derive_more 2.1.1",
+ "indexmap 2.12.1",
+ "minecraft_folder_path",
+ "parking_lot",
+ "pastey 0.2.1",
+ "regex",
+ "reqwest 0.12.28",
+ "simdnbt",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-core"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35a3f0ec7a7e1dcd1c38e498c214d5672c154bea5142111adbac7a2c184d266f"
+dependencies = [
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_ecs",
+ "crc32c",
+ "indexmap 2.12.1",
+ "nohash-hasher",
+ "num-traits",
+ "serde",
+ "simdnbt",
+ "thiserror 2.0.17",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "azalea-core"
 version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-buf",
- "azalea-chat",
- "azalea-registry",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "bevy_ecs",
  "crc32c",
  "indexmap 2.12.1",
@@ -500,10 +696,29 @@ dependencies = [
 [[package]]
 name = "azalea-crypto"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f804fb4bb4b57cd6a997ecf069cf5641f54a0463f26250485626611220c2cc4"
+dependencies = [
+ "aes",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfb8",
+ "md-5",
+ "num-bigint",
+ "rand 0.10.0-rc.5",
+ "rsa",
+ "rsa_public_encrypt_pkcs1",
+ "sha1",
+ "sha2 0.11.0-rc.3",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-crypto"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
  "aes",
- "azalea-buf",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "cfb8",
  "md-5",
  "num-bigint",
@@ -519,15 +734,42 @@ dependencies = [
 [[package]]
 name = "azalea-entity"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f02b7b6ff7feda652e211f6490033d46cf03f1a9afcf5bfbc11d9a819b46724"
+dependencies = [
+ "azalea-auth 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-world 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_app",
+ "bevy_ecs",
+ "derive_more 2.1.1",
+ "enum-as-inner",
+ "indexmap 2.12.1",
+ "nohash-hasher",
+ "parking_lot",
+ "simdnbt",
+ "thiserror 2.0.17",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-entity"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-block",
- "azalea-buf",
- "azalea-chat",
- "azalea-core",
- "azalea-inventory",
- "azalea-registry",
- "azalea-world",
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-world 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "bevy_app",
  "bevy_ecs",
  "derive_more 2.1.1",
@@ -542,19 +784,49 @@ dependencies = [
 [[package]]
 name = "azalea-inventory"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d0674827c0d85ba5db7de0cacdceffaea66cfdd2512f84135f1bf78b9e111a1"
 dependencies = [
- "azalea-auth",
- "azalea-buf",
- "azalea-chat",
- "azalea-core",
- "azalea-inventory-macros",
- "azalea-registry",
+ "azalea-auth 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory-macros 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "indexmap 2.12.1",
  "serde",
  "simdnbt",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "azalea-inventory"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "azalea-auth 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory-macros 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "indexmap 2.12.1",
+ "serde",
+ "simdnbt",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-inventory-macros"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "932db2936b8c200ad2dd0112712b14d19610dc6940bafe58c59384f2136fc732"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -577,16 +849,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "azalea-language"
+version = "0.15.1+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40a1d8fd3ef7d495fd037aa95263b197a77a648de43d013af140697b2376a426"
+dependencies = [
+ "compact_str",
+ "serde_json",
+]
+
+[[package]]
+name = "azalea-physics"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0b1ff41de607585cfff4aacbf7b0781bfcb710f660fef631dd29f7e3a29b2db"
+dependencies = [
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-entity 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-world 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_app",
+ "bevy_ecs",
+ "parking_lot",
+ "tracing",
+]
+
+[[package]]
 name = "azalea-physics"
 version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-block",
- "azalea-core",
- "azalea-entity",
- "azalea-inventory",
- "azalea-registry",
- "azalea-world",
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-entity 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-world 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "bevy_app",
  "bevy_ecs",
  "parking_lot",
@@ -596,20 +896,56 @@ dependencies = [
 [[package]]
 name = "azalea-protocol"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b307900989f9c0e0191433fb0028c076ef7e38299d3dd525f4c054f9174268d7"
+dependencies = [
+ "azalea-auth 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-brigadier 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-chat 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-crypto 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-entity 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-inventory 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-protocol-macros 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-world 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_ecs",
+ "flate2",
+ "futures",
+ "futures-lite",
+ "hickory-resolver",
+ "indexmap 2.12.1",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "simdnbt",
+ "socks5-impl",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "azalea-protocol"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
- "azalea-auth",
- "azalea-block",
- "azalea-brigadier",
- "azalea-buf",
- "azalea-chat",
- "azalea-core",
- "azalea-crypto",
- "azalea-entity",
- "azalea-inventory",
- "azalea-protocol-macros",
- "azalea-registry",
- "azalea-world",
+ "azalea-auth 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-brigadier 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-chat 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-crypto 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-entity 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-inventory 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-protocol-macros 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-world 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "bevy_ecs",
  "flate2",
  "futures",
@@ -631,6 +967,17 @@ dependencies = [
 [[package]]
 name = "azalea-protocol-macros"
 version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b303ed98b36402ba16ae497950e3f64b955018276f39940d148ad025f898494"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
+]
+
+[[package]]
+name = "azalea-protocol-macros"
+version = "0.15.0+mc1.21.11"
 source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
 dependencies = [
  "proc-macro2",
@@ -641,12 +988,34 @@ dependencies = [
 [[package]]
 name = "azalea-registry"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18d4ed4267c0ed3f3844bddbb594d7ae8e707231d491ff228d306c86c121950a"
 dependencies = [
- "azalea-buf",
- "azalea-registry-macros",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry-macros 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "simdnbt",
+]
+
+[[package]]
+name = "azalea-registry"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry-macros 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "serde",
+ "simdnbt",
+]
+
+[[package]]
+name = "azalea-registry-macros"
+version = "0.15.0+mc1.21.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03674668286fcab10245eb8260cdaf2e881c15dbbc66f195aca36805198ee322"
+dependencies = [
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -665,7 +1034,7 @@ source = "git+https://github.com/azalea-rs/azalea-viaversion#ff4f0078bb8b535cdab
 dependencies = [
  "anyhow",
  "async-compat",
- "azalea",
+ "azalea 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
  "futures-util",
  "kdam",
  "lazy-regex",
@@ -679,18 +1048,37 @@ dependencies = [
 [[package]]
 name = "azalea-world"
 version = "0.15.0+mc1.21.11"
-source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16954d22ba02bf79b73ad884cafca0ec6be299bf9e4572c2313b6fcb915c0580"
 dependencies = [
- "azalea-block",
- "azalea-buf",
- "azalea-core",
- "azalea-registry",
+ "azalea-block 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-buf 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-core 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azalea-registry 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "bevy_ecs",
  "derive_more 2.1.1",
  "nohash-hasher",
  "parking_lot",
  "rustc-hash",
  "serde",
+ "thiserror 2.0.17",
+ "tracing",
+]
+
+[[package]]
+name = "azalea-world"
+version = "0.15.0+mc1.21.11"
+source = "git+https://github.com/azalea-rs/azalea#aae744918e26c505e0932a65624c4aac65815d19"
+dependencies = [
+ "azalea-block 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-buf 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-core 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "azalea-registry 0.15.0+mc1.21.11 (git+https://github.com/azalea-rs/azalea)",
+ "bevy_ecs",
+ "derive_more 2.1.1",
+ "nohash-hasher",
+ "parking_lot",
+ "rustc-hash",
  "tracing",
 ]
 
@@ -5150,7 +5538,7 @@ checksum = "62049b2877bf12821e8f9ad256ee38fdc31db7387ec2d3b3f403024de2034aea"
 name = "salarixionion"
 version = "1.0.9"
 dependencies = [
- "azalea",
+ "azalea 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "azalea-viaversion",
  "base64 0.22.1",
  "chrono",
