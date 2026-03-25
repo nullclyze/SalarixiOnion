@@ -216,7 +216,7 @@ pub struct BasicOptions {
   pub set_skin_command: Option<String>,
   pub custom_skin_by_nickname: Option<String>,
   pub proxy_list: Option<String>,
-  pub script: Option<String>
+  pub script: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -250,7 +250,7 @@ pub struct CaptchaBypassOptions {
   pub number_of_columns: u32,
   pub number_of_rows: u32,
   pub api_key: Option<String>,
-  pub api_service: String
+  pub api_service: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -10,7 +10,9 @@ use tokio::time::sleep;
 
 use crate::common::{get_average_coordinates_of_bots, this_is_solid_block};
 use crate::core::*;
-use crate::extensions::{BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, InvClick, go_to};
+use crate::extensions::{
+  go_to, BotDefaultExt, BotInventoryExt, BotMovementExt, BotPhysicsExt, InvClick,
+};
 use crate::generators::{randfloat, randint, randuint};
 
 pub static QUICK_TASK_MANAGER: Lazy<Arc<QuickTaskManager>> =

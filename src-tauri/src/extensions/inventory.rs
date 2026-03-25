@@ -44,7 +44,7 @@ pub enum InvClickMode {
   Right,
   Shift,
   Drop,
-  DropAll
+  DropAll,
 }
 
 #[derive(Debug, Clone)]
@@ -60,7 +60,7 @@ impl InvClick {
       4 => InvClickMode::DropAll,
 
       // Значение по умолчанию
-      _ => InvClickMode::Shift
+      _ => InvClickMode::Shift,
     })
   }
 }
@@ -259,7 +259,7 @@ impl BotInventoryExt for Client {
       }
     }
   }
-  
+
   fn inventory_click_on(&self, name: &str, click: InvClick, lock: bool) {
     let string_name = name.to_string();
 
@@ -267,8 +267,8 @@ impl BotInventoryExt for Client {
       for (slot, item) in menu.slots().iter().enumerate() {
         let Some(item_name) = item.get_component::<ItemName>() else {
           continue;
-        }; 
-        
+        };
+
         if item_name.name.to_string() == string_name {
           self.inventory_click(slot, click, lock);
           break;

@@ -207,14 +207,14 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
       }
     }
     Event::Chat(packet) => {
-      let nickname = bot.name();
+      let username = bot.name();
 
       let Some(options) = current_options() else {
         return Ok(());
       };
 
       send_optional_event(OptionalEmitEvent::Chat(ChatEventPayload {
-        receiver: nickname.clone(),
+        receiver: username.clone(),
         message: packet.message().to_html(),
       }));
 
@@ -224,22 +224,22 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
           options.captcha_bypass.regex.as_str(),
           options.captcha_bypass.required_url_part,
         ) {
-          let Some(profile) = PROFILES.get(&nickname) else {
+          let Some(profile) = PROFILES.get(&username) else {
             return Ok(());
           };
 
           if !profile.captcha_caught {
-            PROFILES.set_bool(&nickname, "captcha_caught", true);
+            PROFILES.set_bool(&username, "captcha_caught", true);
 
             if options.basic.use_webhook && options.webhook.send_information {
               send_webhook(
                 options.webhook.url,
-                format!("Бот {} получил ссылку на капчу: {}", nickname, url),
+                format!("Бот {} получил ссылку на капчу: {}", username, url),
               );
             }
 
             send_log(
-              format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", nickname),
+              format!("[ Анти-Капча ]: Бот {} получил ссылку на капчу", username),
               "info",
             );
 
@@ -254,7 +254,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
               send_optional_event(OptionalEmitEvent::AntiWebCaptcha(
                 AntiWebCaptchaEventPayload {
                   captcha_url: url,
-                  nickname: nickname,
+                  username: username,
                 },
               ));
             }
@@ -265,9 +265,9 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
       trigger_authorize(&bot, packet.message().to_string()).await;
     }
     Event::Tick => {
-      let nickname = bot.name();
+      let username = bot.name();
 
-      let Some(profile) = PROFILES.get(&nickname) else {
+      let Some(profile) = PROFILES.get(&username) else {
         return Ok(());
       };
 
@@ -276,20 +276,28 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
           return Ok(());
         }
 
-        PROFILES.set_num(&nickname, "ping", bot.ping());
-        PROFILES.set_num(&nickname, "health", bot.get_health() as u32);
+        PROFILES.set_num(&username, "ping", bot.ping());
+        PROFILES.set_num(&username, "health", bot.get_health() as u32);
       }
     }
     Event::Packet(packet) => match &*packet {
       ClientboundGamePacket::AddEntity(entity_packet) => {
-        if entity_packet.entity_type == EntityKind::ItemFrame || entity_packet.entity_type == EntityKind::GlowItemFrame {
-          let nickname = bot.name();
+        if entity_packet.entity_type == EntityKind::ItemFrame
+          || entity_packet.entity_type == EntityKind::GlowItemFrame
+        {
+          let username = bot.name();
           let pos = entity_packet.position;
-          MAP_ACCUMULATOR.add_frame_position(&nickname, entity_packet.id.0 as i32, pos.x, pos.y, pos.z);
+          MAP_ACCUMULATOR.add_frame_position(
+            &username,
+            entity_packet.id.0 as i32,
+            pos.x,
+            pos.y,
+            pos.z,
+          );
         }
       }
       ClientboundGamePacket::MapItemData(data) => {
-        let nickname = bot.name();
+        let username = bot.name();
 
         if let Some(options) = current_options() {
           if options.basic.use_anti_captcha && options.captcha_bypass.captcha_type.as_str() == "map"
@@ -298,23 +306,23 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
               return Ok(());
             };
 
-            let Some(profile) = PROFILES.get(&nickname) else {
+            let Some(profile) = PROFILES.get(&username) else {
               return Ok(());
             };
 
             if !profile.captcha_caught {
               let is_frame = options.captcha_bypass.captcha_subtype.as_str() == "frame";
 
-              if is_frame {          
+              if is_frame {
                 let pos = bot.feet_pos();
                 let yaw = if let Some(look_dir) = bot.get_component::<LookDirection>() {
                   look_dir.y_rot()
                 } else {
                   0.0
                 };
-                
+
                 MAP_ACCUMULATOR.add_map_data(
-                  &nickname,
+                  &username,
                   map_patch.width as u32,
                   map_patch.height as u32,
                   map_patch.map_colors.clone(),
@@ -323,48 +331,55 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
                   yaw,
                 );
 
-                if MAP_ACCUMULATOR.is_processing(&nickname) {
+                if MAP_ACCUMULATOR.is_processing(&username) {
                   return Ok(());
                 }
 
-                let maps = MAP_ACCUMULATOR.get_maps(&nickname).unwrap_or_default();
-                
-                if maps.len() < (options.captcha_bypass.number_of_columns * options.captcha_bypass.number_of_rows) as usize {
+                let maps = MAP_ACCUMULATOR.get_maps(&username).unwrap_or_default();
+
+                if maps.len()
+                  < (options.captcha_bypass.number_of_columns
+                    * options.captcha_bypass.number_of_rows) as usize
+                {
                   return Ok(());
                 }
 
-                MAP_ACCUMULATOR.set_processing(&nickname, true);
+                MAP_ACCUMULATOR.set_processing(&username, true);
 
-                if let Some(combined_base64) = MAP_ACCUMULATOR.combine_all(&nickname) {
-                  PROFILES.set_bool(&nickname, "captcha_caught", true);
-                  MAP_ACCUMULATOR.update_captcha_time(&nickname);
+                if let Some(combined_base64) = MAP_ACCUMULATOR.combine_all(&username) {
+                  PROFILES.set_bool(&username, "captcha_caught", true);
+                  MAP_ACCUMULATOR.update_captcha_time(&username);
 
                   if options.basic.use_webhook && options.webhook.send_information {
                     send_webhook(
                       options.webhook.url,
-                      format!("Бот {} получил капчу с карты", nickname),
+                      format!("Бот {} получил капчу с карты", username),
                     );
                   }
 
                   send_log(
-                    format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
+                    format!("[ Анти-Капча ]: Бот {} получил капчу с карты", username),
                     "info",
                   );
 
                   if options.captcha_bypass.solve_mode == "auto" {
-                    MAP_CAPTCHA_BYPASS.solve_captcha(bot.name(), combined_base64, options.captcha_bypass);
+                    MAP_CAPTCHA_BYPASS.solve_captcha(
+                      bot.name(),
+                      combined_base64,
+                      options.captcha_bypass,
+                    );
                   } else {
                     send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
                       AntiMapCaptchaEventPayload {
                         base64_code: combined_base64,
-                        nickname: nickname.to_string(),
+                        username: username.to_string(),
                       },
                     ));
                   }
 
-                  MAP_ACCUMULATOR.clear_maps(&nickname);
+                  MAP_ACCUMULATOR.clear_maps(&username);
                 } else {
-                  MAP_ACCUMULATOR.clear_maps(&nickname);
+                  MAP_ACCUMULATOR.clear_maps(&username);
                 }
               } else {
                 let base64_code = MAP_CAPTCHA_BYPASS.create_png_image(
@@ -373,18 +388,18 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
                   &map_patch.map_colors,
                 );
 
-                PROFILES.set_bool(&nickname, "captcha_caught", true);
-                MAP_ACCUMULATOR.update_captcha_time(&nickname);
+                PROFILES.set_bool(&username, "captcha_caught", true);
+                MAP_ACCUMULATOR.update_captcha_time(&username);
 
                 if options.basic.use_webhook && options.webhook.send_information {
                   send_webhook(
                     options.webhook.url,
-                    format!("Бот {} получил капчу с карты", nickname),
+                    format!("Бот {} получил капчу с карты", username),
                   );
                 }
 
                 send_log(
-                  format!("[ Анти-Капча ]: Бот {} получил капчу с карты", nickname),
+                  format!("[ Анти-Капча ]: Бот {} получил капчу с карты", username),
                   "info",
                 );
 
@@ -394,7 +409,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
                   send_optional_event(OptionalEmitEvent::AntiMapCaptcha(
                     AntiMapCaptchaEventPayload {
                       base64_code,
-                      nickname: nickname.to_string(),
+                      username: username.to_string(),
                     },
                   ));
                 }

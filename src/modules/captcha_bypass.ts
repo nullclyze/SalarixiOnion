@@ -38,7 +38,7 @@ class CaptchaBypass {
           }
         });
       } catch (error) {
-        logger.log(`Ошибка receive-payload: ${error}`, 'error');
+        logger.log(`Ошибка обработки события (anti-web-captcha): ${error}`, 'error');
       }
     });
 
@@ -56,7 +56,7 @@ class CaptchaBypass {
           }
         });
       } catch (error) {
-        logger.log(`Ошибка receive-payload: ${error}`, 'error');
+        logger.log(`Ошибка обработки события (anti-map-captcha): ${error}`, 'error');
       }
     });
   }
