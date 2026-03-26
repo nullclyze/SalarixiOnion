@@ -81,27 +81,17 @@ The client has several large sections, they will be presented below in the table
 
 ## 📷 Gallery
 
-![](./images/main.png)
+![](./screenshots/main.png)
 
-![](./images/settings.png)
+![](./screenshots/settings.png)
 
-![](./images/plugins.png)
+![](./screenshots/accounts.png)
 
-![](./images/proxy.png)
+![](./screenshots/plugins.png)
 
-![](./images/anti_captcha.png)
+![](./screenshots/anti_captcha.png)
 
-![](./images/control.png)
-
-![](./images/monitoring.png)
-
-![](./images/radar.png)
-
-![](./images/ping.png)
-
-![](./images/interface.png)
-
-![](./images/config.png)
+![](./screenshots/control.png)
 
 ## 💾 Installation
 
