@@ -5536,7 +5536,7 @@ checksum = "62049b2877bf12821e8f9ad256ee38fdc31db7387ec2d3b3f403024de2034aea"
 
 [[package]]
 name = "salarixionion"
-version = "1.0.9"
+version = "1.1.0"
 dependencies = [
  "azalea 0.15.0+mc1.21.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "azalea-viaversion",
