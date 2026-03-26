@@ -26,7 +26,7 @@ import { pluginManager } from './modules/plugin_manager';
 Chart.register(...registerables);
 
 const client = {
-  version: '1.0.9'
+  version: '1.1.0'
 };
 
 export let process: 'active' | 'sleep' = 'sleep';
