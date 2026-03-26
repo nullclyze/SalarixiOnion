@@ -1064,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[global="true"]').forEach(c => globalWrappers.push({ id: c.id, el: c as HTMLDivElement }));
     document.querySelectorAll('[sector="true"]').forEach(c => controlWrappers.push({ id: c.id, el: c as HTMLDivElement }));
 
-    // Перед инициализацией включаем фоновые партиклы, чтобы он мог применить к ним состояние (включены / выключены).
+    // Перед инициализацией конфигуратора включаем фоновые партиклы, чтобы он мог применить к ним состояние (включены / выключены).
     enableParticles();
 
     // Инициализируем конфигуратор.
@@ -1100,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await monitoring.init();
     await captchaBypass.init();
 
-    // Инициализация Discord RPC
+    // Инициализируем Discord RPC.
     const selectDiscordRpcMode = document.getElementById('interface_select_discord-rpc') as HTMLSelectElement;
 
     selectDiscordRpcMode.addEventListener('change', async () => await invoke('set_discord_rpc', { version: client.version, state: selectDiscordRpcMode.value === 'enable' }));
