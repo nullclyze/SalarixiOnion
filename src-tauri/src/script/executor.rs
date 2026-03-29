@@ -4,7 +4,7 @@ use azalea::{
   WalkDirection,
 };
 use once_cell::sync::Lazy;
-use rhai::{Dynamic, Engine, EvalAltResult};
+use rhai::{Dynamic, Engine, EvalAltResult, Map};
 use std::sync::{
   atomic::{AtomicBool, Ordering},
   Arc, RwLock,
@@ -465,6 +465,14 @@ impl ScriptExecutor {
     }
   }
 
+  fn create_dynamic_vec(x: f64, y: f64, z: f64) -> Dynamic {
+    let mut map = Map::new();
+    map.insert("x".into(), Dynamic::from_float(x));
+    map.insert("y".into(), Dynamic::from_float(y));
+    map.insert("z".into(), Dynamic::from_float(z));
+    Dynamic::from_map(map)
+  }
+
   pub fn execute(&self, su: String, script: String) {
     EXECUTOR_STATE
       .read()
@@ -482,11 +490,11 @@ impl ScriptExecutor {
     });
 
     engine
-      .register_fn("print", |str: &str| {
+      .register_fn("println", |str: &str| {
         println!("[ salarixi onion / script ]: {}", str);
       })
       .register_fn("log", |text: &str, class: &str| {
-        send_log(text.to_string(), class)
+        send_log(text.to_string(), class);
       })
       .register_fn("message", |name: &str, content: &str| {
         send_message(name, content.to_string());
@@ -523,8 +531,8 @@ impl ScriptExecutor {
             .get_bot(&Self::parse_username(&su, mu))
             .map(|b| {
               let pos = b.feet_pos();
-              (pos.x, pos.y, pos.z)
-            }).unwrap_or((0.0, 0.0, 0.0))
+              Self::create_dynamic_vec(pos.x, pos.y, pos.z)
+            }).unwrap_or(Self::create_dynamic_vec(0.0, 0.0, 0.0))
         }
       })
       .register_fn("get_bot_eye_pos", {
@@ -534,8 +542,8 @@ impl ScriptExecutor {
             .get_bot(&Self::parse_username(&su, mu))
             .map(|b| {
               let pos = b.eye_pos();
-              (pos.x, pos.y, pos.z)
-            }).unwrap_or((0.0, 0.0, 0.0))
+              Self::create_dynamic_vec(pos.x, pos.y, pos.z)
+            }).unwrap_or(Self::create_dynamic_vec(0.0, 0.0, 0.0))
         }
       })
       .register_fn("get_bot_health", {
