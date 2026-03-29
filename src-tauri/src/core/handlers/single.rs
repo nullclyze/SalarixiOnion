@@ -82,7 +82,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
         let pos = bot.feet_pos();
         let health = bot.get_health();
 
-        let str_pos = format!("{}, {}, {}", pos.x, pos.y, pos.z);
+        let str_pos = format!("{}, {}, {}", pos.x as i32, pos.y as i32, pos.z as i32);
 
         if options.basic.use_webhook {
           send_webhook(
