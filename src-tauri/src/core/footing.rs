@@ -205,6 +205,7 @@ pub struct BasicOptions {
   pub humanoid_arm: Option<String>,
   pub use_auto_rejoin: bool,
   pub use_auto_register: bool,
+  pub use_double_auth: bool,
   pub use_auto_login: bool,
   pub use_chat_signing: bool,
   pub use_auto_respawn: bool,
