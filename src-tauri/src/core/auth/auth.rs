@@ -18,6 +18,8 @@ pub async fn default_authorize(bot: &Client) {
     let mut template = "@cmd @pass".to_string();
 
     if let Some(profile) = PROFILES.get(&username) {
+      let mut action = "";
+
       if !profile.registered {
         if opts.basic.use_auto_register && opts.basic.register_mode == "default" {
           c = opts.basic.register_command.as_str().trim().to_string();
@@ -26,7 +28,12 @@ pub async fn default_authorize(bot: &Client) {
           max_delay = opts.basic.register_max_delay;
 
           PROFILES.set_bool(&username, "registered", true);
-          PROFILES.set_bool(&username, "logined", true);
+
+          action = "зарегистрировался";
+
+          if !opts.basic.use_double_auth {
+            PROFILES.set_bool(&username, "logined", true);
+          }
         }
       } else if !profile.logined {
         if opts.basic.use_auto_login && opts.basic.login_mode == "default" {
@@ -34,6 +41,8 @@ pub async fn default_authorize(bot: &Client) {
           template = opts.basic.login_template.trim().to_string();
           min_delay = opts.basic.login_min_delay;
           max_delay = opts.basic.login_max_delay;
+
+          action = "залогинился";
 
           PROFILES.set_bool(&username, "logined", true);
         }
@@ -54,7 +63,7 @@ pub async fn default_authorize(bot: &Client) {
         bot.chat(&cmd);
 
         send_log(
-          format!("Бот {} авторизировался: {}", &username, &cmd),
+          format!("Бот {} {}: {}", &username, action, &cmd),
           "info",
         );
       }
@@ -85,18 +94,27 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
       let mut c = "!NONE".to_string();
       let mut template = "@cmd @pass".to_string();
 
+      let mut action = "";
+
       if !profile.registered {
         if opts.basic.use_auto_register && opts.basic.register_mode == "trigger" {
           c = opts.basic.register_command.as_str().trim().to_string();
           template = opts.basic.register_template.trim().to_string();
 
+          action = "зарегистрировался";
+
           PROFILES.set_bool(&username, "registered", true);
-          PROFILES.set_bool(&username, "logined", true);
+
+          if !opts.basic.use_double_auth {
+            PROFILES.set_bool(&username, "logined", true);
+          }
         }
       } else if !profile.logined && opts.basic.login_mode == "trigger" {
         if opts.basic.use_auto_login {
           c = opts.basic.login_command.as_str().trim().to_string();
           template = opts.basic.login_template.trim().to_string();
+
+          action = "залогинился";
 
           PROFILES.set_bool(&username, "logined", true);
         }
@@ -115,7 +133,7 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
         bot.chat(&cmd);
 
         send_log(
-          format!("Бот {} авторизировался: {}", &username, &cmd),
+          format!("Бот {} {}: {}", &username, action, &cmd),
           "info",
         );
       }

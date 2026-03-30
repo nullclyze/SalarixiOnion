@@ -491,6 +491,13 @@
       }
     },
     { 
+      "tags": ["checkbox:double-auth"], 
+      "lang": {
+        "ru": "Использовать Double-Auth",
+        "en": "Use Double-Auth"
+      }
+    },
+    { 
       "tags": ["checkbox:auto-rejoin"], 
       "lang": {
         "ru": "Использовать Auto-Rejoin",
