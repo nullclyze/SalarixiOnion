@@ -5,10 +5,9 @@ use azalea::{
 };
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Engine, EvalAltResult, Map};
-use std::sync::{
-  atomic::{AtomicBool, Ordering},
-  Arc, RwLock,
-};
+use std::{str::FromStr, sync::{
+  Arc, RwLock, atomic::{AtomicBool, Ordering}
+}};
 
 use crate::core::{active_bots_count, current_options, BOT_REGISTRY, PROFILES};
 use crate::emit::{send_log, send_message};
@@ -473,6 +472,26 @@ impl ScriptExecutor {
     Dynamic::from_map(map)
   }
 
+  fn create_dynamic_profile(username: &str) -> Dynamic {
+    let mut map = Map::new();
+
+    if let Some(profile) = PROFILES.get(username) {
+      map.insert("ping".into(), Dynamic::from_int(profile.ping as i64));
+      map.insert("captcha_caught".into(), Dynamic::from_bool(profile.captcha_caught));
+      map.insert("registered".into(), Dynamic::from_bool(profile.registered));
+      map.insert("logined".into(), Dynamic::from_bool(profile.logined));
+      map.insert("skin_is_set".into(), Dynamic::from_bool(profile.skin_is_set));
+      map.insert("group".into(), Dynamic::from_str(profile.group.as_str()).unwrap());
+      map.insert("health".into(), Dynamic::from_int(profile.health as i64));
+      
+      if let Some(password) = profile.password {
+        map.insert("password".into(), Dynamic::from_str(password.as_str()).unwrap());
+      }
+    }
+
+    Dynamic::from_map(map)
+  }
+
   pub fn execute(&self, su: String, script: String) {
     EXECUTOR_STATE
       .read()
@@ -568,6 +587,12 @@ impl ScriptExecutor {
           BOT_REGISTRY
             .get_bot(&Self::parse_username(&su, mu))
             .map(|b| b.workable()).unwrap_or(false)
+        }
+      })
+      .register_fn("get_bot_profile", {
+        let su = su.clone();
+        move |mu: &str| {
+          Self::create_dynamic_profile(&Self::parse_username(&su, mu))
         }
       });
 
