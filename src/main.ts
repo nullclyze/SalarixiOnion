@@ -140,7 +140,17 @@ async function initDownloadCount(): Promise<void> {
     let globalDownloadCount = 0;
     for (const release of content) for (const build of release['assets']) globalDownloadCount += build['download_count'] ? build['download_count'] as number : 0;
     
-    (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCount.toString();
+    let globalDownloadCountStr = '0';
+
+    if (globalDownloadCount < 1000) {
+      globalDownloadCountStr = globalDownloadCount.toString();
+    } else if (globalDownloadCount >= 1000 && globalDownloadCount < 1_000_000) {
+      globalDownloadCountStr = (globalDownloadCount / 1000).toFixed(2) + 'k';
+    } else {
+      globalDownloadCountStr = (globalDownloadCount / 1_000_000).toFixed(2) + 'm';
+    }
+
+    (document.getElementById('download-count') as HTMLElement).innerText = globalDownloadCountStr;
   } catch (error) {
     logger.log(`Ошибка загрузки количества скачиваний: ${error}`, 'error');
   }
