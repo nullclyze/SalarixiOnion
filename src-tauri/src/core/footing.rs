@@ -5,10 +5,10 @@ use azalea::protocol::connect::Proxy;
 use azalea::swarm::*;
 use azalea::JoinOpts;
 use azalea_viaversion::ViaVersionPlugin;
+use hashbrown::HashMap;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use socks5_impl::protocol::UserKey;
-use std::collections::HashMap;
 use std::io;
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
@@ -420,12 +420,13 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
   ACTIVE.store(true, Ordering::Relaxed);
 
   tokio::spawn(registry_event_loop());
-  tokio::spawn(WEB_CAPTCHA_BYPASS.webdriver_event_loop());
 
   if options.basic.use_anti_captcha
     && options.captcha_bypass.captcha_type.as_str() == "web"
     && options.captcha_bypass.solve_mode.as_str() == "auto"
   {
+    tokio::spawn(WEB_CAPTCHA_BYPASS.webdriver_event_loop());
+
     tokio::spawn(async {
       sleep(Duration::from_millis(100)).await;
       WEB_CAPTCHA_BYPASS.send_webdriver_event(WebDriverEvent::CreateWebDriver {
@@ -544,7 +545,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
               if let Some(account_opts) = account.options.clone() {
                 if let Some(proxy) = account_opts.proxy {
                   let mut profile_proxy = ProfileProxy {
-                    ip_address: "-".to_string(),
+                    ip_address: None,
                     proxy: None,
                     username: None,
                     password: None,
@@ -577,7 +578,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
                       continue;
                     };
 
-                    profile_proxy.ip_address = ip_address.to_string();
+                    profile_proxy.ip_address = Some(ip_address.to_string());
 
                     PROFILES.set_proxy(&account.object.username, profile_proxy);
                   }
@@ -595,7 +596,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
 
                 if !list.is_empty() {
                   let mut profile_proxy = ProfileProxy {
-                    ip_address: "-".to_string(),
+                    ip_address: None,
                     proxy: None,
                     username: None,
                     password: None,
@@ -643,7 +644,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
                       continue;
                     };
 
-                    profile_proxy.ip_address = ip_address.to_string();
+                    profile_proxy.ip_address = Some(ip_address.to_string());
 
                     PROFILES.set_proxy(&account.object.username, profile_proxy);
                   }

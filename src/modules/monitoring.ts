@@ -10,7 +10,7 @@ interface BotProfile {
   username: string;
   password: string | null;
   proxy: { 
-    ip_address: string;
+    ip_address: string | null;
     proxy: string | null;
     username: string | null;
     password: string | null;
@@ -295,7 +295,7 @@ class Monitoring {
 
     status.innerText = profile.status;
     status.style.color = statusColor;
-    proxy.innerText = profile.proxy.ip_address;
+    proxy.innerText = profile.proxy.ip_address ? profile.proxy.ip_address : 'No proxy';
     ping.innerText = profile.ping.toString();
     health.innerText = profile.health.toString();
   }

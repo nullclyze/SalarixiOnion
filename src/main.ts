@@ -296,8 +296,9 @@ function initGlobalElements(): void {
     if (btn.id === 'main') btn.classList.add('selected');
     btn.addEventListener('click', () => {
       const path = btn.getAttribute('path');
-      if (!path) return;
-      switchGlobalWrapper(path);
+      const name = btn.getAttribute('section-name');
+      if (!path || !name) return;
+      switchGlobalWrapper(path, name);
       dashboardBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
@@ -429,12 +430,13 @@ function initGlobalElements(): void {
 export function replenishTriggerRegistry(): void {
   triggerRegistry.register('settings_chbx_use-proxy', 'checkbox', (current: HTMLInputElement) => {
     const version = document.getElementById('settings_option_version') as HTMLInputElement;
+    const versionContainer = document.getElementById('settings-option-version-container') as HTMLDivElement;
 
     if (current.checked) {
       version.value = '1.21.11';
-      version.disabled = true;
+      versionContainer.style.display = 'none';
     } else {
-      version.disabled = false;
+      versionContainer.style.display = 'flex';
     }
   });
 
@@ -517,7 +519,7 @@ export function replenishTriggerRegistry(): void {
     const openProxySectionBtn = document.getElementById('proxy') as HTMLButtonElement;
 
     const useProxyChbx = document.getElementById('settings_chbx_use-proxy') as HTMLInputElement;
-    const botsCountInput = document.getElementById('settings_option_bots-count') as HTMLInputElement;
+    const botsCountInput = document.getElementById('settings-option-bots-count-container') as HTMLDivElement;
     const selectNicknameType = document.getElementById('settings_select_nickname-type') as HTMLSelectElement;
     const selectPasswordType = document.getElementById('settings_select_password-type') as HTMLSelectElement;
     const nicknameTemplateInput = document.getElementById('settings_option_nickname-template') as HTMLInputElement;
@@ -527,22 +529,23 @@ export function replenishTriggerRegistry(): void {
       openProxySectionBtn.style.display = 'none';
       openAccountsSectionBtn.style.display = 'flex';
 
+      useProxyChbx.checked = false;
       useProxyChbx.disabled = true;
-      botsCountInput.disabled = true;
       selectNicknameType.disabled = true;
       selectPasswordType.disabled = true;
       nicknameTemplateInput.disabled = true;
       passwordTemplateInput.disabled = true;
+      botsCountInput.style.display = 'none';
     } else {
       openProxySectionBtn.style.display = 'flex';
       openAccountsSectionBtn.style.display = 'none';
 
       useProxyChbx.disabled = false;
-      botsCountInput.disabled = false;
       selectNicknameType.disabled = false;
       selectPasswordType.disabled = false;
       nicknameTemplateInput.disabled = false;
       passwordTemplateInput.disabled = false;
+      botsCountInput.style.display = 'flex';
     }
   });
 

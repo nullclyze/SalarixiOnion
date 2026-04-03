@@ -14,27 +14,32 @@ class Translator {
   public async init(): Promise<void> {
     const langSelect = document.getElementById('interface_select_client-language') as HTMLSelectElement;
     langSelect.addEventListener('change', async () => await this.translate(langSelect.value as Language));
-    if (langSelect.value != 'ru') await this.translate(langSelect.value as Language);
+    if (langSelect.value !== 'ru') await this.translate(langSelect.value as Language);
   }
 
-  /** Функция получения и установки актуального перевода. */
+  /** Метод получения кэша. */
+  public getCache(): any {
+    return this.cache;
+  }
+
+  /** Метод получения и установки актуального перевода. */
   private async translate(lang: Language): Promise<void> {
     try {
-      let map = null;
-
-      if (this.cache) {
-        map = this.cache;
-      } else {
+      if (!this.cache) {
         const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
-        content ? map = content['map'] : logger.log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
-      }
 
-      if (!map) return;
+        if (content) {
+          this.cache = content['map'];
+        } else {
+          logger.log(`Ошибка загрузки перевода: Failed to load JSON-content`, 'error');
+          return;
+        }
+      }
 
       document.querySelectorAll<HTMLElement>('[translator-tag]').forEach(e => {
         const tag = e.getAttribute('translator-tag');
         if (!tag) return;
-        for (const el of map) el.tags.includes(tag) ? e.innerText = el.lang[lang] : null;
+        for (const el of this.cache) el.tags.includes(tag) ? e.innerText = el.lang[lang] : null;
       });
     } catch (error) {
       logger.log(`Ошибка перевода: ${error}`, 'error');
