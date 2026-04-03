@@ -11,14 +11,18 @@
   
 <body>
   <div data-tauri-drag-region class="title-bar">
-    <div class="title">
+    <div class="left">
       <label>Salarixi Onion</label>
       <label id="title-version"></label>
     </div>
 
-    <div class="controls">
-      <button id="window-minimize">─</button>
-      <button id="window-close">✕</button>
+    <div class="right">
+      <div id="current-section-name" translator-tag="title:main">Главная</div>
+
+      <div class="controls">
+        <button id="window-minimize">─</button>
+        <button id="window-close">✕</button>
+      </div>
     </div>
   </div>
 
@@ -56,7 +60,7 @@
   </div>
 
   <div class="dashboard">
-    <button class="pretty-btn" id="main" path="main-container">
+    <button class="pretty-btn" id="main" path="main-container" section-name="Главная">
       <svg panel-btn-icon="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
@@ -64,7 +68,7 @@
       <span class="text" translator-tag="panel-btn:main">Главная</span>
     </button>
 
-    <button class="pretty-btn" id="settings" path="settings-container">
+    <button class="pretty-btn" id="settings" path="settings-container" section-name="Настройки">
       <svg panel-btn-icon="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -72,35 +76,35 @@
       <span class="text" translator-tag="panel-btn:settings">Настройки</span>
     </button>
 
-    <button class="pretty-btn" id="accounts" path="accounts-container" style="display: none;">
+    <button class="pretty-btn" id="accounts" path="accounts-container" style="display: none;" section-name="Аккаунты">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
         <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
       </svg>
       <span class="text" translator-tag="panel-btn:accounts">Аккаунты</span>
     </button>
 
-    <button class="pretty-btn" id="plugins" path="plugins-container">
+    <button class="pretty-btn" id="plugins" path="plugins-container" section-name="Плагины">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plug-fill" viewBox="0 0 16 16">
         <path d="M6 0a.5.5 0 0 1 .5.5V3h3V.5a.5.5 0 0 1 1 0V3h1a.5.5 0 0 1 .5.5v3A3.5 3.5 0 0 1 8.5 10c-.002.434-.01.845-.04 1.22-.041.514-.126 1.003-.317 1.424a2.08 2.08 0 0 1-.97 1.028C6.725 13.9 6.169 14 5.5 14c-.998 0-1.61.33-1.974.718A1.92 1.92 0 0 0 3 16H2c0-.616.232-1.367.797-1.968C3.374 13.42 4.261 13 5.5 13c.581 0 .962-.088 1.218-.219.241-.123.4-.3.514-.55.121-.266.193-.621.23-1.09.027-.34.035-.718.037-1.141A3.5 3.5 0 0 1 4 6.5v-3a.5.5 0 0 1 .5-.5h1V.5A.5.5 0 0 1 6 0"/>
       </svg>
       <span class="text" translator-tag="panel-btn:plugins">Плагины</span>
     </button>
 
-    <button class="pretty-btn" id="proxy" path="proxy-container">
+    <button class="pretty-btn" id="proxy" path="proxy-container" section-name="Прокси">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe-americas" viewBox="0 0 16 16">
         <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484q-.121.12-.242.234c-.416.396-.787.749-.758 1.266.035.634.618.824 1.214 1.017.577.188 1.168.38 1.286.983.082.417-.075.988-.22 1.52-.215.782-.406 1.48.22 1.48 1.5-.5 3.798-3.186 4-5 .138-1.243-2-2-3.5-2.5-.478-.16-.755.081-.99.284-.172.15-.322.279-.51.216-.445-.148-2.5-2-1.5-2.5.78-.39.952-.171 1.227.182.078.099.163.208.273.318.609.304.662-.132.723-.633.039-.322.081-.671.277-.867.434-.434 1.265-.791 2.028-1.12.712-.306 1.365-.587 1.579-.88A7 7 0 1 1 2.04 4.327Z"/>
       </svg>
       <span class="text" translator-tag="panel-btn:proxy">Прокси</span>
     </button>
 
-    <button class="pretty-btn" id="anti-captcha" path="anti-captcha-container">
+    <button class="pretty-btn" id="anti-captcha" path="anti-captcha-container" section-name="Анти-Капча">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bug" viewBox="0 0 16 16">
         <path d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A5 5 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A5 5 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623M4 7v4a4 4 0 0 0 3.5 3.97V7zm4.5 0v7.97A4 4 0 0 0 12 11V7zM12 6a4 4 0 0 0-1.334-2.982A3.98 3.98 0 0 0 8 2a3.98 3.98 0 0 0-2.667 1.018A4 4 0 0 0 4 6z"/>
       </svg>
       <span class="text" translator-tag="panel-btn:anti-captcha">Анти-Капча</span>
     </button>
 
-    <button class="pretty-btn" id="webhook" path="webhook-container">
+    <button class="pretty-btn" id="webhook" path="webhook-container" section-name="Вебхук">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/>
       </svg>
@@ -109,7 +113,7 @@
 
     <div class="separator"></div>
 
-    <button class="pretty-btn" id="control" path="control-container">
+    <button class="pretty-btn" id="control" path="control-container" section-name="Управление">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-controller" viewBox="0 0 16 16">
         <path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/>
         <path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.39c.655-.079 1.35-.117 2.043-.117.72 0 1.443.041 2.12.126a.5.5 0 0 1 .622-.399l1.932.518a.5.5 0 0 1 .306.729q.211.136.373.297c.408.408.78 1.05 1.095 1.772.32.733.599 1.591.805 2.466s.34 1.78.364 2.606c.024.816-.059 1.602-.328 2.21a1.42 1.42 0 0 1-1.445.83c-.636-.067-1.115-.394-1.513-.773-.245-.232-.496-.526-.739-.808-.126-.148-.25-.292-.368-.423-.728-.804-1.597-1.527-3.224-1.527s-2.496.723-3.224 1.527c-.119.131-.242.275-.368.423-.243.282-.494.575-.739.808-.398.38-.877.706-1.513.773a1.42 1.42 0 0 1-1.445-.83c-.27-.608-.352-1.395-.329-2.21.024-.826.16-1.73.365-2.606.206-.875.486-1.733.805-2.466.315-.722.687-1.364 1.094-1.772a2.3 2.3 0 0 1 .433-.335l-.028-.079zm2.036.412c-.877.185-1.469.443-1.733.708-.276.276-.587.783-.885 1.465a14 14 0 0 0-.748 2.295 12.4 12.4 0 0 0-.339 2.406c-.022.755.062 1.368.243 1.776a.42.42 0 0 0 .426.24c.327-.034.61-.199.929-.502.212-.202.4-.423.615-.674.133-.156.276-.323.44-.504C4.861 9.969 5.978 9.027 8 9.027s3.139.942 3.965 1.855c.164.181.307.348.44.504.214.251.403.472.615.674.318.303.601.468.929.503a.42.42 0 0 0 .426-.241c.18-.408.265-1.02.243-1.776a12.4 12.4 0 0 0-.339-2.406 14 14 0 0 0-.748-2.295c-.298-.682-.61-1.19-.885-1.465-.264-.265-.856-.523-1.733-.708-.85-.179-1.877-.27-2.913-.27s-2.063.091-2.913.27"/>
@@ -117,28 +121,28 @@
       <span class="text" translator-tag="panel-btn:control">Управление</span>
     </button>
 
-    <button class="pretty-btn" id="script" path="script-container">
+    <button class="pretty-btn" id="script" path="scripting-container" section-name="Скриптинг">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-code-slash" viewBox="0 0 16 16">
         <path d="M10.478 1.647a.5.5 0 1 0-.956-.294l-4 13a.5.5 0 0 0 .956.294zM4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0m6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0"/>
       </svg>
       <span class="text" translator-tag="panel-btn:scripting">Скриптинг</span>
     </button>
 
-    <button class="pretty-btn" id="graphic" path="graphic-container">
+    <button class="pretty-btn" id="graphic" path="graphic-container" section-name="График">
       <svg panel-btn-icon="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3"/>
       </svg>
       <span class="text" translator-tag="panel-btn:graphic">График</span>
     </button>
 
-    <button class="pretty-btn" id="monitoring" path="monitoring-container">
+    <button class="pretty-btn" id="monitoring" path="monitoring-container" section-name="Мониторинг">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">
         <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
       </svg>
       <span class="text" translator-tag="panel-btn:monitoring">Мониторинг</span>
     </button>
 
-    <button class="pretty-btn" id="analysis" path="analysis-container">
+    <button class="pretty-btn" id="analysis" path="analysis-container" section-name="Анализ">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-data" viewBox="0 0 16 16">
         <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0zM7 9a1 1 0 0 1 2 0v3a1 1 0 1 1-2 0z"/>
         <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
@@ -149,14 +153,14 @@
 
     <div class="separator"></div>
 
-    <button class="pretty-btn" id="radar" path="radar-container">
+    <button class="pretty-btn" id="radar" path="radar-container" section-name="Радар">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-radar" viewBox="0 0 16 16">
         <path d="M6.634 1.135A7 7 0 0 1 15 8a.5.5 0 0 1-1 0 6 6 0 1 0-6.5 5.98v-1.005A5 5 0 1 1 13 8a.5.5 0 0 1-1 0 4 4 0 1 0-4.5 3.969v-1.011A2.999 2.999 0 1 1 11 8a.5.5 0 0 1-1 0 2 2 0 1 0-2.5 1.936v-1.07a1 1 0 1 1 1 0V15.5a.5.5 0 0 1-1 0v-.518a7 7 0 0 1-.866-13.847"/>
       </svg>
       <span class="text" translator-tag="panel-btn:radar">Радар</span>
     </button>
 
-    <button class="pretty-btn" id="ping" path="ping-container">
+    <button class="pretty-btn" id="ping" path="ping-container" section-name="Пинг">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-activity" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2"/>
       </svg>
@@ -165,7 +169,7 @@
 
     <div class="separator"></div>
 
-    <button class="pretty-btn" id="journal" path="journal-container">
+    <button class="pretty-btn" id="journal" path="journal-container" section-name="Журнал">
       <svg panel-btn-icon="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
         <polyline points="14 2 14 8 20 8"/>
@@ -176,14 +180,14 @@
       <span class="text" translator-tag="panel-btn:journal">Журнал</span>
     </button>
 
-    <button class="pretty-btn" id="interface" path="interface-container">
+    <button class="pretty-btn" id="interface" path="interface-container" section-name="Интерфейс">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sliders" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1z"/>
       </svg>
       <span class="text" translator-tag="panel-btn:interface">Интерфейс</span>
     </button>
 
-    <button class="pretty-btn" id="config" path="config-container">
+    <button class="pretty-btn" id="config" path="config-container" section-name="Конфиг">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-gear" viewBox="0 0 16 16">
         <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m.256 7a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
       </svg>
@@ -192,7 +196,7 @@
 
     <div class="separator"></div>
 
-    <button class="pretty-btn" id="guide" path="guide-container">
+    <button class="pretty-btn" id="guide" path="guide-container" section-name="Руководство">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
         <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
         <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
@@ -201,7 +205,7 @@
       <span class="text" translator-tag="panel-btn:guide">Руководство</span>
     </button>
 
-    <button class="pretty-btn" id="about" path="about-container">
+    <button class="pretty-btn" id="about" path="about-container" section-name="О проекте">
       <svg panel-btn-icon="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightning-charge-fill" viewBox="0 0 16 16">
         <path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/>
       </svg>
@@ -211,21 +215,19 @@
   
   <div class="messages-wrapper" id="messages-wrapper"></div>
 
-  <div class="main-wrapper" id="main-container" global="true">
-    <h1 class="title" translator-tag="title:main">Главная</h1>
-
-    <div class="column-wrap" style="align-items: center; margin-top: 30px;">
+  <div class="main-wrapper centered" id="main-container" global="true">
+    <div class="column-wrap">
       <div class="form-input small">
         <label for="settings_option_address" class="text" translator-tag="label:address">Адрес сервера</label>
         <input type="text" id="settings_option_address" key="address" default="localhost" placeholder="127.0.0.1:25565" autocomplete="off" keep="true" launch-option>
       </div> 
   
-      <div class="form-input small">
+      <div class="form-input small" id="settings-option-version-container">
         <label for="settings_option_version" class="text" translator-tag="label:version">Версия Minecraft</label>
         <input type="text" id="settings_option_version" key="version" default="1.21.11" placeholder="1.20.1" autocomplete="off" keep="true" launch-option>
       </div>
     
-      <div class="form-input small">
+      <div class="form-input small" id="settings-option-bots-count-container">
         <label for="settings_option_bots-count" class="text" translator-tag="label:bots-count">Кол-во ботов</label>
         <input type="number" id="settings_option_bots-count" key="bots_count" default="3" placeholder="20" autocomplete="off" keep="true" launch-option>
       </div>
@@ -274,9 +276,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="settings-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:settings">Настройки</h1>
-
+  <div class="main-wrapper centered" id="settings-container" style="display: none;" global="true">
     <div class="settings-layout">
       <div class="settings-column left">
         <div class="separator" style="margin: 0; margin-bottom: 25px;">
@@ -479,6 +479,8 @@
             <span translator-tag="checkbox:double-auth">Использовать Double-Auth</span>
           </label>
 
+          <div class="simple-sep"></div>
+
           <label class="checkbox-container">
             <input type="checkbox" id="settings_chbx_use-auto-rejoin" keep="true" key="use_auto_rejoin" trigger launch-option checked>
             <span class="checkmark"></span>
@@ -547,9 +549,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="accounts-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:accounts">Аккаунты</h1>
-
+  <div class="main-wrapper centered" id="accounts-container" style="display: none;" global="true">
     <div class="accounts-top-panel">
       <input type="text" id="account-username" placeholder="MyBot_12345" maxlength="16" style="width: 140px;">
 
@@ -609,14 +609,10 @@
   </div>
 
   <div class="main-wrapper" id="plugins-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:plugins">Плагины</h1>
-
     <div class="plugin-list" id="plugin-list"></div>
   </div>
 
-  <div class="main-wrapper" id="proxy-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:proxy">Прокси</h1>
-
+  <div class="main-wrapper centered" id="proxy-container" style="display: none;" global="true">
     <div class="between-wrapper">
       <div class="left">
         <div class="pretty-textarea" aria-labelledby="ta-label">
@@ -727,9 +723,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="anti-captcha-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:anti-captcha">Анти-Капча</h1>
-
+  <div class="main-wrapper centered" id="anti-captcha-container" style="display: none;" global="true">
     <div class="anti-captcha-wrapper" id="anti-captcha-settings">
       <div class="column-wrap" style="gap: 6px; width: max-content;">
         <div class="custom-select between">
@@ -820,8 +814,6 @@
   </div>
 
   <div class="main-wrapper" id="webhook-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:webhook">Вебхук</h1>
-
     <div class="form-input">
       <label for="webhook_url" class="text" translator-tag="label:webhook-link">Ссылка</label>
       <input type="text" id="webhook_url" placeholder="https://discord.com/api/webhooks/..." keep="true" section="webhook" key="url" public="false" launch-option>
@@ -1699,9 +1691,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="script-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:scripting">Скриптинг</h1>
-
+  <div class="main-wrapper centered" id="scripting-container" style="display: none;" global="true">
     <div class="scripting-layout">
       <div class="script-editor-wrapper">
         <div class="script-editor-header">
@@ -1732,9 +1722,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="monitoring-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:monitoring">Мониторинг</h1>
-
+  <div class="main-wrapper centered" id="monitoring-container" style="display: none;" global="true">
     <img src="./src/assets/steve.png" id="steve-img" draggable="false" style="display: none;">
 
     <h1 class="info-text" id="monitoring-status-text">Объекты ботов отсутствуют</h1>
@@ -1743,9 +1731,7 @@
     <div id="bot-wrappers-container"></div>
   </div>
 
-  <div class="main-wrapper" id="graphic-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:graphic">График</h1>
-
+  <div class="main-wrapper centered" id="graphic-container" style="display: none;" global="true">
     <h1 class="info-text" id="graphic-status-text">Данные отсутствуют</h1>
 
     <div class="graphic-wrapper" id="graphic-active-bots-container" style="display: none;">
@@ -1757,15 +1743,11 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="analysis-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:analysis">Анализ</h1>
-
+  <div class="main-wrapper centered" id="analysis-container" style="display: none;" global="true">
     <h1 class="info-text" translator-tag="label:info-text">Данный раздел не работает</h1>
   </div>
 
   <div class="main-wrapper" id="ping-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:ping">Пинг</h1>
-
     <div class="ping-wrapper">
       <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
         <div class="form-input">
@@ -1786,8 +1768,6 @@
   </div>
 
   <div class="main-wrapper" id="radar-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:radar">Радар</h1>
-
     <div class="radar-panel">
       <input type="text" id="radar-target-username" placeholder="player_123" style="width: 140px;">
 
@@ -1869,9 +1849,7 @@
     <div id="radar-target-wrappers-container"></div>
   </div>
 
-  <div class="main-wrapper" id="journal-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:journal">Журнал</h1>
-
+  <div class="main-wrapper centered" id="journal-container" style="display: none;" global="true">
     <div class="log-content" id="log-content"></div>
 
     <div class="log-options-wrap">
@@ -1903,9 +1881,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="interface-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:interface">Интерфейс</h1>
-
+  <div class="main-wrapper centered" id="interface-container" style="display: none;" global="true">
     <div class="interface-settings-wrapper">
       <div class="section">
         <div class="header" translator-tag="label:interface-section-global">Глобальные</div>
@@ -2023,9 +1999,7 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="config-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:config">Конфиг</h1>
-    
+  <div class="main-wrapper centered" id="config-container" style="display: none;" global="true">
     <div class="config-wrapper">
       <div class="card" id="upload-config">
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
@@ -2046,17 +2020,13 @@
     </div>
   </div>
 
-  <div class="main-wrapper" id="guide-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:guide">Руководство</h1>
-
+  <div class="main-wrapper centered" id="guide-container" style="display: none;" global="true">
     <div class="guide-wrapper" id="guide-wrapper"></div>
 
     <div class="guide-latest-update">Последнее обновление руководства: <span id="guide-latest-update">?</span></div>
   </div>
 
   <div class="main-wrapper" id="about-container" style="display: none;" global="true">
-    <h1 class="title" translator-tag="title:about">О проекте</h1>
-
     <div class="about-wrapper">
       <p class="description">
         <span class="highlight">Salarixi Onion</span> - современный, функциональный и оптимизированный клиент, который позволяет запускать ботов на сервера Minecraft и управлять ими в реальном времени.

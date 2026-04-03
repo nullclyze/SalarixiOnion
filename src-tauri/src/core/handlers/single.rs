@@ -67,7 +67,7 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
     Event::Spawn => {
       let username = bot.name();
 
-      BOT_REGISTRY.register_bot(&username, bot.clone());
+      BOT_REGISTRY.register_bot(&username, bot);
 
       BOT_REGISTRY.send_event(RegistryEvent::LoadPlugins {
         username: username.clone(),
@@ -78,10 +78,13 @@ pub async fn single_handler(bot: Client, event: Event, _state: NoState) -> io::R
 
       PROFILES.set_status(&username, ProfileStatus::Online);
 
+      let Some(bot) = BOT_REGISTRY.get_bot(&username) else {
+        return Ok(());
+      };
+
       if let Some(options) = current_options() {
         let pos = bot.feet_pos();
         let health = bot.get_health();
-
         let str_pos = format!("{}, {}, {}", pos.x as i32, pos.y as i32, pos.z as i32);
 
         if options.basic.use_webhook {

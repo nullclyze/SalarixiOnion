@@ -1,7 +1,7 @@
+use hashbrown::HashMap;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 use crate::emit::send_log;
 
@@ -32,7 +32,7 @@ pub enum ProfileStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfileProxy {
-  pub ip_address: String,
+  pub ip_address: Option<String>,
   pub proxy: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
@@ -45,7 +45,7 @@ impl Profile {
       username: username.to_string(),
       password: password,
       proxy: ProfileProxy {
-        ip_address: "-".to_string(),
+        ip_address: None,
         proxy: None,
         username: None,
         password: None,
@@ -102,7 +102,7 @@ impl Profile {
 }
 
 pub struct ProfileManager {
-  pub map: RwLock<HashMap<String, Arc<Mutex<Profile>>>>,
+  pub map: RwLock<HashMap<String, Profile>>,
 }
 
 impl ProfileManager {
@@ -112,10 +112,10 @@ impl ProfileManager {
     }
   }
 
-  pub fn push(&self, username: &String, password: Option<String>) {
-    let arc = Arc::new(Mutex::new(Profile::new(username, password)));
+  pub fn push(&self, username: &str, password: Option<String>) {
+    let profile = Profile::new(username, password);
     let mut profiles = self.map.write().unwrap();
-    profiles.insert(username.clone(), arc);
+    profiles.insert(username.to_string(), profile);
   }
 
   pub fn clear(&self) {
@@ -130,40 +130,33 @@ impl ProfileManager {
   }
 
   pub fn set_status(&self, username: &str, status: ProfileStatus) {
-    self.map.read().unwrap().get(username).map(|arc| {
-      let mut profile = arc.lock().unwrap();
+    if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       profile.set_status(status);
-    });
+    }
   }
 
   pub fn set_str(&self, username: &str, field: &str, value: &str) {
-    self.map.read().unwrap().get(username).map(|arc| {
-      let mut profile = arc.lock().unwrap();
-
+    if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       match field {
         "password" => profile.set_password(value),
         "group" => profile.set_group(value),
         _ => {}
       }
-    });
+    }
   }
 
   pub fn set_num(&self, username: &str, field: &str, value: u32) {
-    self.map.read().unwrap().get(username).map(|arc| {
-      let mut profile = arc.lock().unwrap();
-
+    if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       match field {
         "ping" => profile.set_ping(value),
         "health" => profile.set_health(value),
         _ => {}
       }
-    });
+    }
   }
 
   pub fn set_bool(&self, username: &str, field: &str, value: bool) {
-    self.map.read().unwrap().get(username).map(|arc| {
-      let mut profile = arc.lock().unwrap();
-
+    if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       match field {
         "registered" => profile.set_registered(value),
         "logined" => profile.set_logined(value),
@@ -171,23 +164,20 @@ impl ProfileManager {
         "captcha_caught" => profile.set_captcha_caught(value),
         _ => {}
       }
-    });
+    }
   }
 
   pub fn set_proxy(&self, username: &str, proxy: ProfileProxy) {
-    self.map.read().unwrap().get(username).map(|arc| {
-      let mut profile = arc.lock().unwrap();
+    if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       profile.set_proxy(proxy);
-    });
+    }
   }
 
   pub fn get(&self, username: &str) -> Option<Profile> {
     let map = self.map.read().unwrap();
 
     if let Some(profile) = map.get(username) {
-      if let Ok(p) = profile.lock() {
-        return Some(p.clone());
-      }
+      return Some(profile.clone());
     }
 
     None
@@ -198,9 +188,7 @@ impl ProfileManager {
     let mut result = HashMap::new();
 
     for (username, profile) in profiles.iter() {
-      if let Ok(p) = profile.lock() {
-        result.insert(username.to_string(), p.clone());
-      }
+      result.insert(username.to_string(), profile.clone());
     }
 
     result
