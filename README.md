@@ -5,15 +5,15 @@
   
   <b>
     Salarixi Onion<br>
-    The best client for Minecraft botting
+    The best tool for Minecraft botting
   </b>
 </div>
 
 ## 🎯 About
 
-**Salarixi Onion** - A functional, optimized, simple, and smart client for Minecraft botting. It has a large number of settings that can be quickly adjusted to your goals. The client also offers many functions for managing bots, which also have options for configuring a particular process. The client is also unique for its optimized and fast monitoring capabilities (graphs, bot profiles, bot chats), they allow you to filter data on the fly, command certain bots.
+**Salarixi Onion** - A multifunctional, optimized, and simple tool for bottling in Minecraft. It has a lot of settings that can be quickly adjusted to your goals. This tool also offers a lot of features for managing bots, there are many separate management modules, scripting, and it is also unique for its optimized and fast monitoring capabilities (graphs, bot profiles, chats with bots), they allow you to filter data on the fly, manage specific bots.
 
-This client uses the [azalea-rs](https://github.com/azalea-rs/azalea) library as a base.
+Uses [azalea-rs](https://github.com/azalea-rs/azalea) library as a base.
 
 📌 The official author of this client is **nullclyze**.
 
@@ -38,9 +38,9 @@ This client uses the [azalea-rs](https://github.com/azalea-rs/azalea) library as
 
 ## 📖 Overview
 
-**Salarixi Onion** is a massive Minecraft botting client. It can be used for stress testing, server analysis, surveillance, bot attacks, and automated farming. The client is actively being developed, improved, and updated, constantly adding new amazing features, new schemes, new algorithms, and new capabilities.
+**Salarixi Onion** is a massive Minecraft botting tool. It can be used for stress testing, server analysis, surveillance, bot attacks, and automated farming. This tool is actively being developed, improved, and updated, constantly adding new amazing features, new schemes, new algorithms, and new capabilities.
 
-The client has several large sections, they will be presented below in the table.
+This tool has several large sections, they will be presented below in the table.
 
 | Name |            Description                                |
 |------|-------------------------------------------------------|
