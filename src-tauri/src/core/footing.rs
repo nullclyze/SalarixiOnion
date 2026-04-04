@@ -185,6 +185,7 @@ pub struct BasicOptions {
   pub join_delay: u64,
   pub nickname_type: String,
   pub password_type: String,
+  pub email_type: String,
   pub nickname_template: String,
   pub password_template: String,
   pub register_mode: String,
@@ -226,6 +227,7 @@ pub struct BasicOptions {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AccountOptions {
   pub password: Option<String>,
+  pub email: Option<String>,
   pub proxy: Option<String>,
   pub proxy_username: Option<String>,
   pub proxy_password: Option<String>,
@@ -272,7 +274,7 @@ struct CustomAccount {
 }
 
 /// Функция генерации юзернейма или пароля
-fn generate_username_or_password(item: &str, class: &str, template: &str) -> String {
+fn generate_username_or_password(item: &str, class: &str, template: &str) -> Option<String> {
   match class {
     "legit" => {
       let mut value = randelem(if item == "username" {
@@ -329,7 +331,7 @@ fn generate_username_or_password(item: &str, class: &str, template: &str) -> Str
         value = format!("{}{}{}", value, separator, suffix);
       }
 
-      value
+      Some(value)
     }
     "random" => {
       let templates = vec![
@@ -337,17 +339,41 @@ fn generate_username_or_password(item: &str, class: &str, template: &str) -> Str
       ];
       let chosen_template = randelem(&templates).unwrap();
 
-      mutate_text(chosen_template.to_string())
+      Some(mutate_text(chosen_template.to_string()))
     }
-    "custom" => mutate_text(template.to_string()),
-    _ => String::new(),
+    "custom" => Some(mutate_text(template.to_string())),
+    _ => None,
+  }
+}
+
+/// Функция генерации электронной почты
+fn generate_email(class: &str) -> Option<String> {
+  match class {
+    "random" => {
+      let templates = vec![
+        "#m#m#m#m", "#n#n#n#n", "#l#l#l#l", 
+        "#m#l#n#m", "#l#m#n#n", "#m#m", "#n#n", "#m#n#l",
+        "#n#n#m#n", "#m#m#m#n#m", "#m#n#m#n#l",
+      ];
+
+      let services = vec!["gmail.com", "proton.me", "yandex.ru", "mail.ru"];
+      
+      let chosen_template = randelem(&templates).unwrap();
+      let chosen_service = randelem(&services).unwrap();
+
+      Some(format!("{}@{}", mutate_text(chosen_template.to_string()), chosen_service))
+    }
+    _ => None,
   }
 }
 
 /// Функция генерации уникального юзернейма
 fn generate_unique_username(class: &str, template: &str) -> Option<String> {
   for _ in 0..5 {
-    let username = generate_username_or_password("username", class, template);
+    let Some(username) = generate_username_or_password("username", class, template) else {
+      continue;
+    };
+
     let mut is_unique = true;
 
     for name in PROFILES.get_all().keys() {
@@ -501,7 +527,7 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
               options: Some(opts.clone()),
             });
 
-            PROFILES.push(username, opts.password.clone());
+            PROFILES.push(username, opts.password.clone(), opts.email.clone());
           }
         } else {
           for _ in 0..options.basic.bots_count {
@@ -512,26 +538,20 @@ pub fn launch_bots_on_server(options: LaunchOptions) -> bool {
               continue;
             };
 
-            let password;
+            let password = generate_username_or_password(
+              "password",
+              &options.basic.password_type,
+              &options.basic.password_template,
+            );
 
-            if options.basic.password_type.as_str() == "custom"
-              && options.basic.password_template.as_str() == ""
-            {
-              password = None;
-            } else {
-              password = Some(generate_username_or_password(
-                "password",
-                &options.basic.password_type,
-                &options.basic.password_template,
-              ));
-            }
+            let email = generate_email(&options.basic.email_type);
 
             accounts.push(CustomAccount {
               object: Account::offline(&username),
               options: None,
             });
 
-            PROFILES.push(&username, password);
+            PROFILES.push(&username, password, email);
           }
         }
 

@@ -368,6 +368,16 @@
     },
     {
       "tags": [
+        "option:without-password"
+      ],
+      "lang": {
+        "ru": "Без пароля",
+        "en": "Without password",
+        "tr": "Şifresiz"
+      }
+    },
+    {
+      "tags": [
         "option:password-legit"
       ],
       "lang": {
@@ -394,6 +404,36 @@
         "ru": "Кастомный",
         "en": "Custom",
         "tr": "Özel"
+      }
+    },
+    {
+      "tags": [
+        "label:email-type"
+      ],
+      "lang": {
+        "ru": "Эл. почта:",
+        "en": "Email:",
+        "tr": "E-posta:"
+      }
+    },
+    {
+      "tags": [
+        "option:without-email"
+      ],
+      "lang": {
+        "ru": "Без почты",
+        "en": "Without email",
+        "tr": "E-posta olmadan"
+      }
+    },
+    {
+      "tags": [
+        "option:email-random"
+      ],
+      "lang": {
+        "ru": "Случайная",
+        "en": "Random",
+        "tr": "Rastgele"
       }
     },
     {

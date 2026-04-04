@@ -487,6 +487,10 @@ impl ScriptExecutor {
       if let Some(password) = profile.password {
         map.insert("password".into(), Dynamic::from_str(password.as_str()).unwrap());
       }
+
+      if let Some(email) = profile.email {
+        map.insert("email".into(), Dynamic::from_str(email.as_str()).unwrap());
+      }
     }
 
     Dynamic::from_map(map)
