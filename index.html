@@ -296,9 +296,18 @@
           <div class="custom-select between">
             <label translator-tag="label:password-type">Пароль: </label>
             <select id="settings_select_password-type" key="password_type" keep="true" trigger launch-option>
-              <option value="legit" translator-tag="option:password-legit">Легитный</option>
+              <option value="without" translator-tag="option:without-password">Без пароля</option>
+              <option value="legit" translator-tag="option:password-legit" selected>Легитный</option>
               <option value="random" selected translator-tag="option:password-random">Случайный</option>
               <option value="custom" translator-tag="option:password-custom">Кастомный</option>
+            </select>
+          </div>
+
+          <div class="custom-select between">
+            <label translator-tag="label:email-type">Эл. почта: </label>
+            <select id="settings_select_email-type" key="email_type" keep="true" trigger launch-option>
+              <option value="without" translator-tag="option:without-email" selected>Без почты</option>
+              <option value="random" selected translator-tag="option:email-random">Случайная</option>
             </select>
           </div>
         </div>

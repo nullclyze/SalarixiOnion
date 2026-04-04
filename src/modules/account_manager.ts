@@ -9,6 +9,7 @@ import { messages } from '../utils/message';
 type AccountFields = {
   creation_date: string;
   password: string | null;
+  email: string | null;
   proxy: string | null;
   proxy_username: string | null;
   proxy_password: string | null;
@@ -45,6 +46,7 @@ class AccountManager {
       this.createAccountCard(username, {
         creation_date: date('exact'),
         password: null,
+        email: null,
         proxy: null,
         proxy_username: null,
         proxy_password: null
@@ -81,6 +83,7 @@ class AccountManager {
           this.createAccountCard(username, {
             creation_date: date('exact'),
             password: data.password,
+            email: data.email,
             proxy: data.proxy,
             proxy_username: data.proxy_username,
             proxy_password: data.proxy_password
@@ -167,6 +170,7 @@ class AccountManager {
     this.accounts[username] = {
       creation_date: fields.creation_date,
       password: fields.password,
+      email: fields.email,
       proxy: fields.proxy,
       proxy_username: fields.proxy_username,
       proxy_password: fields.proxy_password
@@ -229,6 +233,11 @@ class AccountManager {
         </div>
 
         <div class="pretty-input-wrapper">
+          <p class="signature fix">Эл. почта</p>
+          <input type="text" id="account-email-${username}" placeholder="qwerty@gmail.com">
+        </div>
+
+        <div class="pretty-input-wrapper">
           <p class="signature fix">Прокси</p>
           <input type="text" id="account-proxy-${username}" placeholder="socks5://35.91.83.91:1111">
         </div>
@@ -271,16 +280,19 @@ class AccountManager {
       if (!account) return;
 
       const passwordInput = document.getElementById(`account-password-${username}`) as HTMLInputElement;
+      const emailInput = document.getElementById(`account-email-${username}`) as HTMLInputElement;
       const proxyInput = document.getElementById(`account-proxy-${username}`) as HTMLInputElement;
       const proxyUsernameInput = document.getElementById(`account-proxy-username-${username}`) as HTMLInputElement;
       const proxyPasswordInput = document.getElementById(`account-proxy-password-${username}`) as HTMLInputElement;
 
       fields.password ? passwordInput.value = fields.password : null;
+      fields.email ? emailInput.value = fields.email : null;
       fields.proxy ? proxyInput.value = fields.proxy : null;
       fields.proxy_username ? proxyUsernameInput.value = fields.proxy_username : null;
       fields.proxy_password ? proxyPasswordInput.value = fields.proxy_password : null;
 
       passwordInput.addEventListener('input', () => account.password = passwordInput.value);
+      emailInput.addEventListener('input', () => account.email = emailInput.value);
       proxyInput.addEventListener('input', () => account.proxy = proxyInput.value);
       proxyUsernameInput.addEventListener('input', () => account.proxy_username = proxyUsernameInput.value);
       proxyPasswordInput.addEventListener('input', () => account.proxy_password = proxyPasswordInput.value);

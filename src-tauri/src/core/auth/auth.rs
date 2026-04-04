@@ -6,6 +6,8 @@ use crate::core::{current_options, PROFILES};
 use crate::emit::send_log;
 use crate::generators::*;
 
+const DEFAULT_AUTH_TEMPLATE: &str = "$cmd $pass";
+
 /// Функция default-авторизации бота
 pub async fn default_authorize(bot: &Client) {
   let username = bot.username();
@@ -15,7 +17,7 @@ pub async fn default_authorize(bot: &Client) {
     let mut max_delay = 4000;
 
     let mut c = "!NONE".to_string();
-    let mut template = "@cmd @pass".to_string();
+    let mut template = DEFAULT_AUTH_TEMPLATE;
 
     if let Some(profile) = PROFILES.get(&username) {
       let mut action = "";
@@ -23,7 +25,7 @@ pub async fn default_authorize(bot: &Client) {
       if !profile.registered {
         if opts.basic.use_auto_register && opts.basic.register_mode == "default" {
           c = opts.basic.register_command.as_str().trim().to_string();
-          template = opts.basic.register_template.trim().to_string();
+          template = opts.basic.register_template.trim();
           min_delay = opts.basic.register_min_delay;
           max_delay = opts.basic.register_max_delay;
 
@@ -38,7 +40,7 @@ pub async fn default_authorize(bot: &Client) {
       } else if !profile.logined {
         if opts.basic.use_auto_login && opts.basic.login_mode == "default" {
           c = opts.basic.login_command.as_str().trim().to_string();
-          template = opts.basic.login_template.trim().to_string();
+          template = opts.basic.login_template.trim();
           min_delay = opts.basic.login_min_delay;
           max_delay = opts.basic.login_max_delay;
 
@@ -49,16 +51,12 @@ pub async fn default_authorize(bot: &Client) {
       }
 
       if c.as_str() != "!NONE" {
-        let Some(password) = profile.password else {
-          return;
-        };
-
         sleep(Duration::from_millis(randuint(min_delay, max_delay))).await;
 
         let cmd = template
-          .clone()
-          .replace("@cmd", &c)
-          .replace("@pass", &password);
+          .replace("$cmd", &c)
+          .replace("$pass", &profile.password.unwrap_or(String::new()))
+          .replace("$email", &profile.email.unwrap_or(String::new()));
 
         bot.chat(&cmd);
 
@@ -92,14 +90,14 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
   if let Some(profile) = PROFILES.get(&username) {
     if let Some(opts) = current_options() {
       let mut c = "!NONE".to_string();
-      let mut template = "@cmd @pass".to_string();
+      let mut template = DEFAULT_AUTH_TEMPLATE;
 
       let mut action = "";
 
       if !profile.registered {
         if opts.basic.use_auto_register && opts.basic.register_mode == "trigger" {
           c = opts.basic.register_command.as_str().trim().to_string();
-          template = opts.basic.register_template.trim().to_string();
+          template = opts.basic.register_template.trim();
 
           action = "зарегистрировался";
 
@@ -112,7 +110,7 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
       } else if !profile.logined && opts.basic.login_mode == "trigger" {
         if opts.basic.use_auto_login {
           c = opts.basic.login_command.as_str().trim().to_string();
-          template = opts.basic.login_template.trim().to_string();
+          template = opts.basic.login_template.trim();
 
           action = "залогинился";
 
@@ -121,14 +119,10 @@ pub async fn trigger_authorize(bot: &Client, message: String) {
       }
 
       if c.as_str() != "!NONE" {
-        let Some(password) = profile.password else {
-          return;
-        };
-
         let cmd = template
-          .clone()
-          .replace("@cmd", &c)
-          .replace("@pass", &password);
+          .replace("$cmd", &c)
+          .replace("$pass", &profile.password.unwrap_or(String::new()))
+          .replace("$email", &profile.email.unwrap_or(String::new()));
 
         bot.chat(&cmd);
 

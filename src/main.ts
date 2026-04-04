@@ -522,6 +522,7 @@ export function replenishTriggerRegistry(): void {
     const botsCountInput = document.getElementById('settings-option-bots-count-container') as HTMLDivElement;
     const selectNicknameType = document.getElementById('settings_select_nickname-type') as HTMLSelectElement;
     const selectPasswordType = document.getElementById('settings_select_password-type') as HTMLSelectElement;
+    const selectEmailType = document.getElementById('settings_select_email-type') as HTMLSelectElement;
     const nicknameTemplateInput = document.getElementById('settings_option_nickname-template') as HTMLInputElement;
     const passwordTemplateInput = document.getElementById('settings_option_password-template') as HTMLInputElement;
 
@@ -533,6 +534,7 @@ export function replenishTriggerRegistry(): void {
       useProxyChbx.disabled = true;
       selectNicknameType.disabled = true;
       selectPasswordType.disabled = true;
+      selectEmailType.disabled = true;
       nicknameTemplateInput.disabled = true;
       passwordTemplateInput.disabled = true;
       botsCountInput.style.display = 'none';
@@ -543,6 +545,7 @@ export function replenishTriggerRegistry(): void {
       useProxyChbx.disabled = false;
       selectNicknameType.disabled = false;
       selectPasswordType.disabled = false;
+      selectEmailType.disabled = false;
       nicknameTemplateInput.disabled = false;
       passwordTemplateInput.disabled = false;
       botsCountInput.style.display = 'flex';

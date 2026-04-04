@@ -12,6 +12,7 @@ pub struct Profile {
   pub status: ProfileStatus,
   pub username: String,
   pub password: Option<String>,
+  pub email: Option<String>,
   pub proxy: ProfileProxy,
   pub ping: u32,
   pub health: u32,
@@ -39,11 +40,12 @@ pub struct ProfileProxy {
 }
 
 impl Profile {
-  pub fn new(username: &str, password: Option<String>) -> Self {
+  pub fn new(username: &str, password: Option<String>, email: Option<String>) -> Self {
     Self {
       status: ProfileStatus::Preparation,
       username: username.to_string(),
       password: password,
+      email: email,
       proxy: ProfileProxy {
         ip_address: None,
         proxy: None,
@@ -66,6 +68,10 @@ impl Profile {
 
   pub fn set_password(&mut self, password: &str) {
     self.password = Some(password.to_string());
+  }
+
+  pub fn set_email(&mut self, email: &str) {
+    self.email = Some(email.to_string());
   }
 
   pub fn set_proxy(&mut self, proxy: ProfileProxy) {
@@ -112,8 +118,8 @@ impl ProfileManager {
     }
   }
 
-  pub fn push(&self, username: &str, password: Option<String>) {
-    let profile = Profile::new(username, password);
+  pub fn push(&self, username: &str, password: Option<String>, email: Option<String>) {
+    let profile = Profile::new(username, password, email);
     let mut profiles = self.map.write().unwrap();
     profiles.insert(username.to_string(), profile);
   }
@@ -139,6 +145,7 @@ impl ProfileManager {
     if let Some(profile) = self.map.write().unwrap().get_mut(username) {
       match field {
         "password" => profile.set_password(value),
+        "email" => profile.set_email(value),
         "group" => profile.set_group(value),
         _ => {}
       }
