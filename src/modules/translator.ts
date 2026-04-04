@@ -1,7 +1,7 @@
 import { download } from '../utils/downloader';
 import { logger } from '../utils/logger';
 
-export type Language = 'ru' | 'en';
+export type Language = 'ru' | 'en' | 'tr';
 
 class Translator {
   private cache: any;
