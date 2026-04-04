@@ -39,7 +39,7 @@ class Translator {
       document.querySelectorAll<HTMLElement>('[translator-tag]').forEach(e => {
         const tag = e.getAttribute('translator-tag');
         if (!tag) return;
-        for (const el of this.cache) el.tags.includes(tag) ? e.innerText = el.lang[lang] : null;
+        for (const el of this.cache) el.tags.includes(tag) && el.lang[lang] ? e.innerText = el.lang[lang] : null;
       });
     } catch (error) {
       logger.log(`Ошибка перевода: ${error}`, 'error');
