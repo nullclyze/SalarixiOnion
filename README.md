@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./src-tauri/icons/icon.png" width="200px;">
+  <img src="/app/icons/icon.png" width="200px;">
 
   <b></b>
   
@@ -42,42 +42,42 @@ Uses [azalea-rs](https://github.com/azalea-rs/azalea) library as a base.
 
 This tool has several large sections, they will be presented below in the table.
 
-| Name |            Description                                |
-|------|-------------------------------------------------------|
-| Main / Главная |  Starting and stopping bots, basic settings           |
-| Settings / Настройки     |      Various bot settings       |
-| Accounts / Аккаунты    | Set up accounts for bots            |
-| Plugins / Плагины     |      Plugins for bots      |
-| Proxy / Прокси    | Setting up a proxy for bots            |
-| Anti-Captcha / Анти-Капча    | Anti-Captcha settings        |
-| Webhook / Вебхук    | Webhook settings   |
-| Proxy / Прокси    | Setting up a proxy for bots            |
-| Control / Управление     |  Real-time bot management           |
-| Scripting / Скриптинг     |  Writing scripts for bots         |
-| Monitoring / Мониторинг     |  Real-time bot monitoring           |
-| Graphic / График     |  Data in the form of graphs          |
-| Analysis / Анализ     |  In development...         |
-| Radar / Радар     |  Detection of players and their positions          |
-| Ping / Пинг     |  Pinging servers  |
-| Journal / Журнал     |  Event logging         |
-| Interface / Интерфейс     |  Interface settings         |
-| Config / Конфиг     |  Client configuration         |
-| Guide / Руководство     |  Client usage guide        |
-| About / О проекте     |  Just a section about the project         |
+|       Name                  |                     Description                       |
+|-----------------------------|-------------------------------------------------------|
+| Main / Главная              | Starting and stopping bots, basic settings            |
+| Settings / Настройки        | Various bot settings                                  |
+| Accounts / Аккаунты         | Set up accounts for bots                              |
+| Plugins / Плагины           | Plugins for bots                                      |
+| Proxy / Прокси              | Setting up a proxy for bots                           |
+| Anti-Captcha / Анти-Капча   | Anti-Captcha settings                                 |
+| Webhook / Вебхук            | Webhook settings                                      |
+| Proxy / Прокси              | Setting up a proxy for bots                           |
+| Control / Управление        | Real-time bot management                              |
+| Scripting / Скриптинг       | Writing scripts for bots                              |
+| Monitoring / Мониторинг     | Real-time bot monitoring                              |
+| Graphic / График            | Data in the form of graphs                            |
+| Analysis / Анализ           | In development...                                     |
+| Radar / Радар               | Detection of players and their positions              |
+| Ping / Пинг                 | Pinging servers                                       |
+| Journal / Журнал            | Event logging                                         |
+| Interface / Интерфейс       | Interface settings                                    |
+| Config / Конфиг             | Tool configuration                                    |
+| Guide / Руководство         | Tool usage guide                                      |
+| About / О проекте           | Just a section about the project                      |
 
 ## 💥 Features
 
-- 🚀 **Easy to use:** Quick adaptation to the client. Intuitive interface.
-- ⚡ **Fast and smart:** All transactions in the client are fast. The client contains several smart managers for any tasks.
-- 💎 **Absolutely free:** All functionality in the client is free.
-- 💥 **Beautiful design:** The client has a clear and beautiful dark design.
-- 💕 **Open source:** The client is completely open source.
-- 🌀 **Great functionality:** The client offers a lot of functionality that is very flexible in settings and well optimized.
-- 📊 **Data visualization:** For convenience, the client visualizes the data in the form of graphs.
-- 🌐 **Real-time monitoring:** The client has real-time bot monitoring. It is highly optimized and has customizations.
-- 📅 **Event logging:** The client has a log in which any information is logged.
-- 🧨 **Cheat functions:** The client contains unique functionality in the form of real cheats for bots.
-- 🌏 **Proxy support:** The client supports SOCKS5 proxy.
+- 🚀 **Easy to use:** Quick adaptation to the tool. Intuitive interface.
+- ⚡ **Fast and smart:** All transactions in the tool are fast. The tool contains several smart managers for any tasks.
+- 💎 **Absolutely free:** All functionality in the tool is free.
+- 💥 **Beautiful design:** The tool has a clear and beautiful dark design.
+- 💕 **Open source:** The tool is completely open source.
+- 🌀 **Great functionality:** The tool offers a lot of functionality that is very flexible in settings and well optimized.
+- 📊 **Data visualization:** For convenience, the tool visualizes the data in the form of graphs.
+- 🌐 **Real-time monitoring:** The tool has real-time bot monitoring. It is highly optimized and has customizations.
+- 📅 **Event logging:** The tool has a log in which any information is logged.
+- 🧨 **Cheat functions:** The tool contains unique functionality in the form of real cheats for bots.
+- 🌏 **Proxy support:** The tool supports SOCKS5 proxy.
 
 ## 📷 Gallery
 
@@ -128,6 +128,48 @@ This tool has several large sections, they will be presented below in the table.
 2. Open directory with downloaded file in terminal
 3. Write ```sudo dnf install FILENAME.rpm```
 4. Ready
+
+## 📦 Build
+
+### Dependencies
+
+1. Rust & Cargo (nightly)
+2. NodeJS & NPM
+
+**Check dependencies:**
+
+```bash
+rustc --version && cargo --version && node --version && npm --version
+```
+
+**Output example:**
+
+```bash
+rustc 1.94.0-nightly
+cargo 1.94.0-nightly
+v22.19.0
+11.11.1
+```
+
+### Build steps
+
+In the root directory of the project, write in the terminal (installing NodeJS modules):
+
+```bash
+npm i
+```
+
+Then create binary files (will create files along the path `./app/target/release/bundle`):
+
+```bash
+npm run tauri build
+```
+
+To run the application in dev mode:
+
+```bash
+npm run tauri dev
+```
 
 ## 📜 Additional Information
 
