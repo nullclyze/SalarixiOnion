@@ -120,7 +120,7 @@ class PluginManager {
   /** Метод загрузки описаний плагинов. */
   public async loadDescriptions(): Promise<void> {
     try {
-      const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.plugins.json');
+      const content = await download('https://raw.githubusercontent.com/nullclyze/salarixi/refs/heads/main/salarixi.plugins.json');
       
       if (!content) return;
 

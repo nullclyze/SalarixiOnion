@@ -11,7 +11,7 @@ type ConfigValue = string | number | boolean | null;
 class Configurator {
   /** Метод инициализации конфигуратора. */
   public init(): void {
-    const current_config = localStorage.getItem('salarixionion:storage:config');
+    const current_config = localStorage.getItem('salarixi:storage:config');
 
     if (current_config) {
       logger.log('Загрузка конфига...', 'system');
@@ -22,7 +22,7 @@ class Configurator {
 
       logger.log('Конфиг успешно загружен', 'system');
     } else {
-      localStorage.setItem('salarixionion:storage:config', JSON.stringify({}, null, 2));
+      localStorage.setItem('salarixi:storage:config', JSON.stringify({}, null, 2));
     }
 
     document.getElementById('upload-config')?.addEventListener('click', async () => await this.uploadConfig());
@@ -47,7 +47,7 @@ class Configurator {
         }
       }
       
-      localStorage.setItem('salarixionion:storage:config', JSON.stringify(config, null, 2))
+      localStorage.setItem('salarixi:storage:config', JSON.stringify(config, null, 2))
     }, 1500);
   }
 
@@ -114,7 +114,7 @@ class Configurator {
 
       if (!directory) return;
 
-      const config = localStorage.getItem('salarixionion:storage:config');
+      const config = localStorage.getItem('salarixi:storage:config');
       if (!config) return;
 
       const public_config: Record<string, ConfigValue> = {};

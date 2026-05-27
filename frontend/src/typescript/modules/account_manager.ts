@@ -132,7 +132,7 @@ class AccountManager {
       }
     });
 
-    setInterval(() => localStorage.setItem('salarixionion:storage:accounts', JSON.stringify(this.accounts)), 1000);
+    setInterval(() => localStorage.setItem('salarixi:storage:accounts', JSON.stringify(this.accounts)), 1000);
   }
 
   /** Метод получения всех существующих аккаунтов и их опций. */
@@ -153,13 +153,13 @@ class AccountManager {
     document.querySelectorAll('[wrapper="account-card"]').forEach(w => w.remove());
     for (const username in this.accounts) document.getElementById(`account-${username}`)?.remove();
     this.accounts = {};
-    localStorage.removeItem('salarixionion:storage:accounts');
+    localStorage.removeItem('salarixi:storage:accounts');
     this.updateAccountCounter();
   }
 
   /** Метод загрузки сохранённых аккаунтов из локального хранилища. */
   private loadSavedAccounts(): void {
-    const accounts = localStorage.getItem('salarixionion:storage:accounts');
+    const accounts = localStorage.getItem('salarixi:storage:accounts');
     if (!accounts) return;
     for (const [username, fields] of Object.entries<AccountFields | null>(JSON.parse(accounts))) fields ? this.createAccountCard(username, fields) : null;
     this.updateAccountCounter();

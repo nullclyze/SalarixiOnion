@@ -26,7 +26,7 @@ class Translator {
   private async translate(lang: Language): Promise<void> {
     try {
       if (!this.cache) {
-        const content = await download('https://raw.githubusercontent.com/nullclyze/SalarixiOnion/refs/heads/main/salarixi.lang.json');
+        const content = await download('https://raw.githubusercontent.com/nullclyze/salarixi/refs/heads/main/salarixi.lang.json');
 
         if (content) {
           this.cache = content['map'];

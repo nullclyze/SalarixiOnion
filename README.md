@@ -4,28 +4,26 @@
   <b></b>
   
   <b>
-    Salarixi Onion<br>
+    Salarixi<br>
     The best tool for Minecraft botting
   </b>
 </div>
 
 ## 🎯 About
 
-**Salarixi Onion** - A multifunctional, optimized, and simple tool for bottling in Minecraft. It has a lot of settings that can be quickly adjusted to your goals. This tool also offers a lot of features for managing bots, there are many separate management modules, scripting, and it is also unique for its optimized and fast monitoring capabilities (graphs, bot profiles, chats with bots), they allow you to filter data on the fly, manage specific bots.
+**Salarixi** - A multifunctional, optimized, and simple tool for bottling in Minecraft. It has a lot of settings that can be quickly adjusted to your goals. This tool also offers a lot of features for managing bots, there are many separate management modules, scripting, and it is also unique for its optimized and fast monitoring capabilities (graphs, bot profiles, chats with bots), they allow you to filter data on the fly, manage specific bots.
 
-Uses [azalea-rs](https://github.com/azalea-rs/azalea) library as a base.
-
-📌 The official author of this client is **nullclyze**.
+Uses [azalea](https://github.com/azalea-rs/azalea) library as a base.
 
 > [!WARNING]
-> This client does not promise stability and good support on all operating systems. If you encounter any problems, please report them to the [issues](https://github.com/nullclyze/SalarixiOnion/issues).
+> This client does not promise stability and good support on all operating systems. If you encounter any problems, please report them to the [issues](https://github.com/nullclyze/salarixi/issues).
 >
 > If the message concerns an error or bug, it should include the client version, operating system, a clear description of the problem, and screenshots (if possible).
 
 ## 🔗 Social
 
-- [Telegram](https://t.me/salarixionion) - Our official Telegram channel, where we publish client news and upcoming plans
-- [YouTube](https://www.youtube.com/@salarixionion) - Our official YouTube channel, where we publish video reviews of the client
+- [Telegram](https://t.me/salarixi) - Our official Telegram channel, where we publish client news and upcoming plans
+- [YouTube](https://www.youtube.com/@salarixi) - Our official YouTube channel, where we publish video reviews of the client
 - [Discord](https://discord.gg/meSaZdARX) - Our official Discord server, where we communicate and share ideas
 
 ## 💻 System Requirements
@@ -38,7 +36,7 @@ Uses [azalea-rs](https://github.com/azalea-rs/azalea) library as a base.
 
 ## 📖 Overview
 
-**Salarixi Onion** is a massive Minecraft botting tool. It can be used for stress testing, server analysis, surveillance, bot attacks, and automated farming. This tool is actively being developed, improved, and updated, constantly adding new amazing features, new schemes, new algorithms, and new capabilities.
+**Salarixi** is a massive Minecraft botting tool. It can be used for stress testing, server analysis, surveillance, bot attacks, and automated farming. This tool is actively being developed, improved, and updated, constantly adding new amazing features, new schemes, new algorithms, and new capabilities.
 
 This tool has several large sections, they will be presented below in the table.
 
@@ -174,7 +172,7 @@ npm run tauri dev
 ## 📜 Additional Information
 
 - **License:** [Apache-2.0 license](./LICENSE)
-- **Latest Release:** [Release](https://github.com/nullclyze/SalarixiOnion/releases/tag/v1.0.9-release)
+- **Latest Release:** [Release](https://github.com/nullclyze/salarixi/releases/tag/v1.0.9-release)
 
 ## 💸 Donate
 
