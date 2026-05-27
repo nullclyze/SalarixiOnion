@@ -13,12 +13,12 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.5.6", features = [] }
 
 [dependencies]
-tauri = { version = "2.10.3", features = [] }
+tauri = "2.10.3"
 tokio = { version = "1.50.0", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1.0.149", features = [] }
+serde_json = "1.0.149"
 azalea = "0.15.0"
-azalea-viaversion = { git = "https://github.com/azalea-rs/azalea-viaversion", features = [] }
+azalea-viaversion = { git = "https://github.com/azalea-rs/azalea-viaversion" }
 socks5-impl = { version = "0.7.3", features = ["client"] }
 reqwest = { version = "0.13.1", features = ["json"] }
 chrono = { version = "0.4", features = ["clock"] }
