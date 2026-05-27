@@ -22,7 +22,7 @@ Uses [azalea](https://github.com/azalea-rs/azalea) library as a base.
 
 ## 🔗 Social
 
-- [Telegram](https://t.me/salarixi) - Our official Telegram channel, where we publish client news and upcoming plans
+- [Telegram](https://t.me/salarixionion) - Our official Telegram channel, where we publish client news and upcoming plans
 - [YouTube](https://www.youtube.com/@salarixi) - Our official YouTube channel, where we publish video reviews of the client
 - [Discord](https://discord.gg/meSaZdARX) - Our official Discord server, where we communicate and share ideas
 
@@ -128,6 +128,12 @@ This tool has several large sections, they will be presented below in the table.
 4. Ready
 
 ## 📦 Build
+
+### Clone repository
+
+```bash
+git clone https://github.com/nullclyze/salarixi.git
+```
 
 ### Dependencies
 
