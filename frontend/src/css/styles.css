@@ -266,7 +266,6 @@ body {
   cursor: pointer;
   color: #cac7c7;
   outline: none;
-  transition: background-color 0.06s ease, color 0.06s ease, transform 0.2s ease;
 }
 
 .dashboard .pretty-btn::before {
@@ -283,7 +282,6 @@ body {
 }
 
 .dashboard .pretty-btn:hover:not(.selected) {
-  transform: translateX(3px);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -304,12 +302,10 @@ body {
 
 .dashboard .pretty-btn.selected {
   background-color: rgba(255, 255, 255, 0.05);
-  transform: none;
 }
 
 .dashboard .pretty-btn.selected:hover {
   background-color: rgba(255, 255, 255, 0.05);
-  transform: none;
 }
 
 .dashboard .pretty-btn.selected::before {
@@ -931,7 +927,6 @@ p {
   outline: none;
   font-weight: normal;
   position: relative;
-  transition: background-color 0.06s ease, color 0.06s ease, transform 0.2s ease;
 }
 
 .control-btn::before {
@@ -947,13 +942,11 @@ p {
 }
 
 .control-btn:hover:not(.selected) {
-  transform: translateX(3px);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
 .control-btn.selected {
   background-color: rgba(255, 255, 255, 0.05);
-  transform: none;
 }
 
 .control-btn.selected::before {
