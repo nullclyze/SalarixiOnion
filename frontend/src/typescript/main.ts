@@ -1063,6 +1063,29 @@ async function listenEvents(): Promise<void> {
   });
 }
 
+/** Функция загрузки актуальных ссылок на социальные сети */
+async function loadSocialLinks(): Promise<void> {
+  // Думаю нету смысла хранить актуальную ссылку на репозиторий, так как 
+  // если он будет перенесён - загрузить актуальную ссылку не получится
+  addOpeningUrlTo("github", "click", "https://github.com/nullclyze/salarixi");
+
+  let content = await download("https://raw.githubusercontent.com/nullclyze/salarixi/refs/heads/main/salarixi.social.json");
+  
+  if (!content) {
+    [
+      "telegram", 
+      "discord", 
+      "youtube"
+    ].forEach(id => document.getElementById(id)?.remove());
+  } else {
+    [
+      ["telegram", content["telegram"]],
+      ["discord", content["discord"]],
+      ["youtube", content["youtube"]],
+    ].forEach(el => el[1] ? addOpeningUrlTo(el[0], "click", el[1]) : document.getElementById(el[0])?.remove());
+  }
+}
+
 // Слушатель события DOMContent у document (#1, синхронный).
 document.addEventListener('DOMContentLoaded', () => {
   // Инициализируем логгер и сообщения.
@@ -1096,12 +1119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     scriptExecutor.init();
     pinger.init();
 
-    // Добавляем открывающиеся ссылки к кнопкам (раздел `О проекте`).
-    addOpeningUrlTo('telegram', 'click', 'https://t.me/salarixionion'); 
-    addOpeningUrlTo('discord', 'click', 'https://discord.gg/meSaZdARX'); 
-    addOpeningUrlTo('github', 'click', 'https://github.com/nullclyze/salarixi'); 
-    addOpeningUrlTo('youtube', 'click', 'https://www.youtube.com/@salarixi'); 
-
     logger.log('Инициализация прошла успешно', 'extended');
   } catch (error) {
     logger.log(`Ошибка инициализации (sync): ${error}`, 'error');
@@ -1130,6 +1147,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await translator.init();
     await pluginManager.loadDescriptions();
+
+    await loadSocialLinks();
 
     // Проверка обновлений в последнюю очередь.
     await checkUpdate(true); // true - игнорирование проверки обновлений
