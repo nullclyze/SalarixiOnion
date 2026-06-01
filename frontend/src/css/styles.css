@@ -82,14 +82,14 @@ body {
 
 .title-bar .left {
   display: flex;
-  width: 200px;
+  min-width: 200px;
   height: 100%;
   box-sizing: border-box;
   justify-content: center;
   align-items: center;
   text-align: center;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
   font-family: 'Inter', sans-serif;
   border-right: 1px solid var(--global-border);
   background: linear-gradient(to right, rgb(185, 184, 184) 7%, var(--title-color), var(--spec-color), var(--title-color));
